@@ -4912,25 +4912,19 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |_empty_/C#`<init>`(). => primary ctor <init>()
        |_empty_/C#m(). => method m: Int
        |  Int => scala/Int#
-       |local0 => val local a: Int
-       |  Int => scala/Int#
-       |local1 => val local b: Int
-       |  Int => scala/Int#
-       |local2 => val local c: Int
-       |  Int => scala/Int#
-       |local3 => class L extends AnyRef with B { +5 decls }
+       |local0 => class L extends AnyRef with B { +5 decls }
        |  AnyRef => scala/AnyRef#
        |  B => _empty_/B#
-       |local4 => val local d: Int
+       |local1 => val method d: Int
        |  Int => scala/Int#
-       |local5 => private[this] synthetic val method x$2: Tuple2[Int, Int]
+       |local2 => private[this] synthetic val method x$2: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local6 => val local e: Int
+       |local3 => val method e: Int
        |  Int => scala/Int#
-       |local7 => val local f: Int
+       |local4 => val method f: Int
        |  Int => scala/Int#
-       |local8 => primary ctor <init>()
+       |local5 => primary ctor <init>()
        |""".stripMargin,
   )
 
@@ -4949,27 +4943,27 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |[1:6..1:7): A <= _empty_/A#
        |[1:8..1:8):  <= _empty_/A#`<init>`().
        |[1:22..1:23): a <= _empty_/A#a.
-       |[1:34..1:35): b <= local1
-       |[1:37..1:38): c <= local2
+       |[1:34..1:35): b <= _empty_/A#b.
+       |[1:37..1:38): c <= _empty_/A#c.
        |[1:56..1:57): B => _empty_/B#
        |[1:57..1:57):  => java/lang/Object#`<init>`().
        |[2:6..2:7): C <= _empty_/C#
        |[2:8..2:8):  <= _empty_/C#`<init>`().
        |[3:6..3:7): m <= _empty_/C#m().
-       |[4:10..4:11): L <= local3
-       |[4:12..4:12):  <= local8
-       |[4:26..4:27): d <= local4
-       |[4:38..4:39): e <= local6
-       |[4:41..4:42): f <= local7
+       |[4:10..4:11): L <= local0
+       |[4:12..4:12):  <= local5
+       |[4:26..4:27): d <= local1
+       |[4:38..4:39): e <= local3
+       |[4:41..4:42): f <= local4
        |[4:60..4:61): B => _empty_/B#
        |[4:61..4:61):  => java/lang/Object#`<init>`().
-       |[5:8..5:9): L => local3
-       |[5:9..5:9):  => local8
-       |[5:12..5:13): d => local4
+       |[5:8..5:9): L => local0
+       |[5:9..5:9):  => local5
+       |[5:12..5:13): d => local1
        |[5:14..5:15): + => scala/Int#`+`(+4).
-       |[5:20..5:21): L => local3
-       |[5:21..5:21):  => local8
-       |[5:24..5:25): e => local6
+       |[5:20..5:21): L => local0
+       |[5:21..5:21):  => local5
+       |[5:24..5:25): e => local3
        |""".stripMargin,
   )
 

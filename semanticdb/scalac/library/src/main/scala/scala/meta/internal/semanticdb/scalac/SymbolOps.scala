@@ -291,19 +291,29 @@ trait SymbolOps {
     def isTemporary: Boolean = isLocalTemporary || isDefaultCaseBinder || isInLocalCompanion ||
       sym.isParameter && sym.owner.isLocalTemporary
     def isUselessSymbolInformation: Boolean = isUseless || isAnonymousClassConstructor ||
-      isSyntheticAbstractType || isAnonymousSelfParameter || patternValue.exists || isFreshValue
+      isSyntheticAbstractType || isAnonymousSelfParameter || isFreshValue || standsForValue
+    def standsForValue: Boolean = standsForValue(sourceIndex(sym))
+    def standsForValue(idx: => SourceIndex): Boolean = standsFor(idx) ne g.NoSymbol
+    def standsFor(idx: => SourceIndex): g.Symbol = patternValue(idx).orElse(earlyMember)
+    /* scalac copies an early definition, like `val a` of `extends { val a = 1 } with T`, into
+     * the constructor: the member of such a copy */
+    def earlyMember: g.Symbol =
+      if (!sym.hasFlag(gf.PRESUPER | gf.LAZY) || !sym.owner.isConstructor) g.NoSymbol
+      else sym.owner.owner.info.decl(sym.name).filter(_.pos.samePointAs(sym.pos))
     /* scalac desugars `val p = e` into a match of `e` against `p`, and puts the binders of
      * that match at transparent positions: the value that such a binder defines */
-    def patternValue: g.Symbol = {
+    def patternValue(sourceIndex: => SourceIndex): g.Symbol = {
       import g._
       if (sym.pos.isTransparent) {
-        val owner = sym.owner
+        val owner = sym.owner.earlyMember.orElse(sym.owner)
         if (owner.isTerm) {
           val parent = owner.owner
-          if (owner.name.dropLocal == sym.name)
-            return if (parent.isClass) owner.getterIn(parent).orElse(owner) else owner
+          if (owner.name.dropLocal == sym.name && {
+              val index = sourceIndex
+              (index ne null) && index.soleVariables(sym)
+            }) return if (parent.isClass) owner.getterIn(parent).orElse(owner) else owner
           if (owner.isArtifact && parent.isClass)
-            return parent.info.decl(sym.name).filter(_.paramss.isEmpty)
+            return parent.info.decl(sym.name).filter(_.pos.samePointAs(sym.pos))
         }
       }
       NoSymbol
@@ -339,7 +349,7 @@ trait SymbolOps {
   }
 
   private def freshSymbol(sym: g.Symbol): String = {
-    val gval = sym.patternValue
+    val gval = sym.standsFor(sourceIndex(sym))
     if (gval.exists) return gval.toSemantic
     localSymbol(declarationOf(sym))
   }
@@ -560,8 +570,10 @@ trait SymbolOps {
           addedParameterSymbols = sym :: addedParameterSymbols
       } else if (!symbols.contains(sym)) {
         symbols = sym :: symbols
-        if (preferAsRepresentative || (representative eq null))
-          if (isNameWritten(sym, sym.pos)) representative = sym
+        if (preferAsRepresentative || (representative eq null)) {
+          val pos = sym.pos
+          if (isNameWritten(sym, pos) || isTypedPatternValue(sym, pos)) representative = sym
+        }
       }
   }
 
@@ -569,13 +581,37 @@ trait SymbolOps {
   private final class SourceIndex(source: GSourceFile, val body: g.Tree) {
     val declarations = new mutable.HashMap[DeclarationKey, Declarations]
     val existentials = new mutable.HashMap[DeclarationKey, g.Symbol]
+    // the binder of each val pattern with one variable, like `a` of `val Some(a) = x`
+    val soleVariables = new mutable.HashSet[g.Symbol]
 
-    // a binder that stands for a value is not a declaration
-    private def add(sym: g.Symbol, preferAsRepresentative: Boolean = false): Unit = {
+    // the declarations at the key of `sym`, or null if `sym` is not a declaration of the index
+    private def declarationsOf(sym: g.Symbol): Declarations = {
       val pos = sym.pos
-      if (pos.isDefined && (pos.source eq source) && sym.isSemanticdbLocal &&
-        !sym.patternValue.exists) declarations.getOrElseUpdate(DeclarationKey(sym), new Declarations)
-        .add(sym, preferAsRepresentative = preferAsRepresentative)
+      val isDeclaration = pos.isDefined && (pos.source eq source) && sym.isSemanticdbLocal &&
+        !sym.standsForValue(this)
+      if (isDeclaration) declarations.getOrElseUpdate(DeclarationKey(sym), new Declarations)
+      else null
+    }
+
+    // a binder that stands for a value, or an early definition's copy, is not a declaration
+    private def add(sym: g.Symbol, preferAsRepresentative: Boolean = false): Unit = {
+      val decls = declarationsOf(sym)
+      if (decls ne null) decls.add(sym, preferAsRepresentative = preferAsRepresentative)
+    }
+
+    /* the value that a sole variable stands for counts as written at the variable, where scalac
+     * puts the copies of its binder. We may visit the value before the match or after it, so we
+     * list the value once, and it becomes the representative of both keys. */
+    private def addPatternValue(binder: g.Symbol, preferAsRepresentative: Boolean): Unit = {
+      val value = binder.patternValue(this)
+      val decls = declarationsOf(value)
+      if (decls ne null) {
+        if (!decls.symbols.contains(value)) decls.symbols = value :: decls.symbols
+        def represent(decls: Declarations): Unit =
+          if (preferAsRepresentative || (decls.representative eq null)) decls.representative = value
+        represent(decls)
+        represent(declarations.getOrElseUpdate(DeclarationKey(binder), new Declarations))
+      }
     }
 
     new DocumentTraverser(source) {
@@ -603,6 +639,20 @@ trait SymbolOps {
           traverseAnnotations(t)
           if ((syntheticDef eq null) && t.isInstanceOf[g.MemberDef] && sym.isSynthetic)
             syntheticDef = t
+        // scalac desugars `val Some(a) = x` into `x match { case Some(a) => a }`, the pattern first
+        case t: g.Match => t.cases match {
+            case c :: Nil => c.body match {
+                case body: g.Ident =>
+                  val bpos = body.symbol.pos
+                  val spos = t.selector.pos
+                  if (c.pat.pos.includes(bpos) && spos.isDefined && bpos.start < spos.start) {
+                    soleVariables += body.symbol
+                    addPatternValue(body.symbol, preferAsRepresentative = syntheticDef eq null)
+                  }
+                case _ =>
+              }
+            case _ =>
+          }
         case _ =>
       }
     }.traverse(body)
@@ -617,6 +667,13 @@ trait SymbolOps {
     val isFresh = name.startsWith("_$") || name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
     def isPlaceholderAt(at: Int) = isFresh && at < text.length && text(at) == '_'
     isWrittenAt(pos, name) || isPlaceholderAt(pos.start) || isPlaceholderAt(pos.point)
+  }
+
+  // scalac before 2.13.17 puts the value of `val (a: Int) = 1` at the colon
+  // scalac 2.12 also puts the evidence of a context bound there, both the parameter and the field
+  private def isTypedPatternValue(sym: g.Symbol, pos: g.Position): Boolean = {
+    val text = pos.source.content
+    pos.point < text.length && text(pos.point) == ':' && !sym.isParameter && !sym.isParamAccessor
   }
 
   // the index of a unit of the run, or null; Metals can type a unit again into a new body
@@ -636,6 +693,7 @@ trait SymbolOps {
         index
     }
   }
+  private def sourceIndex(sym: g.Symbol): SourceIndex = sourceIndex(sym.pos.source)
 
   // the unit of the run, or null; `compileLate` can add units to the run
   private def runSource(source: GSourceFile): g.CompilationUnit = {

@@ -5494,30 +5494,19 @@ class LocalSymbolsSuite extends FunSuite {
       (
         "class L { val (t: Int) = 1 }",
         "new L().t",
-        if (ScalaVersion.atLeast213_17)
-          """|[1:50..1:51): t <= local3
-             |[1:73..1:74): t => local3
-             |[2:30..2:31): t <= local6
-             |[2:59..2:60): t => local6
-             |[3:53..3:54): t <= local14
-             |[3:80..3:81): t => local14
-             |[4:38..4:39): t <= local17
-             |[4:61..4:62): t => local17
-             |local3 => val method t: Int
-             |local6 => val method t: Int
-             |local14 => val method t: Int
-             |local17 => val method t: Int
-             |""".stripMargin
-        else
-          """|[1:73..1:74): t => local3
-             |[2:59..2:60): t => local6
-             |[3:80..3:81): t => local14
-             |[4:61..4:62): t => local17
-             |local3 => val method t: Int
-             |local6 => val method t: Int
-             |local14 => val method t: Int
-             |local17 => val method t: Int
-             |""".stripMargin,
+        """|[1:50..1:51): t <= local3
+           |[1:73..1:74): t => local3
+           |[2:30..2:31): t <= local6
+           |[2:59..2:60): t => local6
+           |[3:53..3:54): t <= local14
+           |[3:80..3:81): t => local14
+           |[4:38..4:39): t <= local17
+           |[4:61..4:62): t => local17
+           |local3 => val method t: Int
+           |local6 => val method t: Int
+           |local14 => val method t: Int
+           |local17 => val method t: Int
+           |""".stripMargin,
       ),
       (
         "class L(val t: Int)",
@@ -5781,10 +5770,10 @@ class LocalSymbolsSuite extends FunSuite {
            |[3:93..3:94): t => local13
            |[4:45..4:46): t <= local16
            |[4:74..4:75): t => local16
-           |local2 => val local t: Int
-           |local5 => val local t: Int
-           |local13 => val local t: Int
-           |local16 => val local t: Int
+           |local2 => val method t: Int
+           |local5 => val method t: Int
+           |local13 => val method t: Int
+           |local16 => val method t: Int
            |""".stripMargin,
       ),
       (
@@ -5907,10 +5896,10 @@ class LocalSymbolsSuite extends FunSuite {
            |[3:70..3:71): t => local7
            |[4:51..4:52): t <= local10
            |[4:80..4:81): t => local10
-           |local1 => val local t: Int
-           |local4 => val local t: Int
-           |local7 => val local t: Int
-           |local10 => val local t: Int
+           |local1 => val method t: Int
+           |local4 => val method t: Int
+           |local7 => val method t: Int
+           |local10 => val method t: Int
            |""".stripMargin,
       ),
     )) test(s"$defn in a block and in synthetic values")(
@@ -6094,36 +6083,25 @@ class LocalSymbolsSuite extends FunSuite {
        |""".stripMargin,
   ))
 
-  test("an early var pattern of an anonymous class, in a file that an earlier file refers to") {
+  test("an early var pattern of an anonymous class, in a file that an earlier file refers to")(
     assertNoDiff(
       referredFile("def g = new { var Some(t) = Option(1) } with T"),
-      if (ScalaVersion.atLeast213_17)
-        """|local0 => var local t: Int
-           |  Int => scala/Int#
-           |local1 => var method t_=(x$1: Int): Unit
-           |  x$1 => local2
-           |  Int => scala/Int#
-           |  Unit => scala/Unit#
-           |""".stripMargin
-      else
-        """|local0 => var method t: Int
-           |  Int => scala/Int#
-           |local1 => var method t_=(x$1: Int): Unit
-           |  x$1 => local2
-           |  Int => scala/Int#
-           |  Unit => scala/Unit#
-           |local3 => var method t: Int
-           |  Int => scala/Int#
-           |local4 => var local t: Int
-           |  Int => scala/Int#
-           |""".stripMargin,
-    )
-  }
+      """|local0 => var method t: Int
+         |  Int => scala/Int#
+         |local1 => var method t_=(x$1: Int): Unit
+         |  x$1 => local2
+         |  Int => scala/Int#
+         |  Unit => scala/Unit#
+         |""".stripMargin,
+    ),
+  )
 
   test("an early match binder named like its value, in a file that an earlier file refers to")(
     assertNoDiff(
       referredFile("def g = new { val t = 1 match { case t => t } } with T"),
-      """|local0 => val local t: Int
+      """|local0 => val method t: Int
+         |  Int => scala/Int#
+         |local1 => val local t: Int
          |  Int => scala/Int#
          |""".stripMargin,
     ),
@@ -6132,7 +6110,7 @@ class LocalSymbolsSuite extends FunSuite {
   test("a val pattern of two variables in an early val, in a file that an earlier file refers to") {
     assertNoDiff(
       referredFile("def g = new { val t = { val (t, u) = (1, 2); t } } with T"),
-      """|local0 => val local t: Int
+      """|local0 => val method t: Int
          |  Int => scala/Int#
          |local1 => val local t: Int
          |  Int => scala/Int#
@@ -6148,7 +6126,7 @@ class LocalSymbolsSuite extends FunSuite {
   ) {
     assertNoDiff(
       referredFile("def g = new { val t = { val (t, u) = (1, 2); t } } with T", at = "t, u"),
-      """|local0 => val local t: Int
+      """|local0 => val method t: Int
          |  Int => scala/Int#
          |local1 => val local t: Int
          |  Int => scala/Int#
@@ -6354,479 +6332,188 @@ class LocalSymbolsSuite extends FunSuite {
       "Option(1)",
       "t",
       (k, d) =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|method block: t <= local0 ($k local t); t => local0
-              |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
-              |block of a template val: t <= local1 ($k local t); t => local1
-              |local class: t <= local2 ($k method t); t => local2
-              |anonymous class: t <= local3 ($k method t); t => local3
-              |early class: t <= local4 ($k local t); t => b/B.C6#t$d
-              |early object: t <= local5 ($k local t); t => b/B.O7.t$d
-              |early trait: t <= local6 ($k local t); t => b/B.T8#t$d
-              |early local class: t <= local7 ($k local t); t => local7
-              |early anonymous class: t <= local8 ($k local t); t => local8
-              |nested in a method block: t <= local9 ($k local t); t <= local10 ($k local t); t => local10; t => local9
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local11 ($k local t); t => local11
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local12 ($k local t); t => local12
-              |nested in an early anonymous class: t <= local13 ($k local t); t <= local14 ($k local t); t => local14
-              |no definition: a local ($k local t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.T8#t$d ($k method t)
-              |""".stripMargin
-        else
-          s"""|method block: t <= local0 ($k local t); t => local0
-              |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
-              |block of a template val: t <= local1 ($k local t); t => local1
-              |local class: t <= local2 ($k method t); t => local2
-              |anonymous class: t <= local3 ($k method t); t => local3
-              |early class: t <= local4 ($k local t); t => b/B.C6#t$d
-              |early object: t <= local5 ($k local t); t => b/B.O7.t$d
-              |early trait: t <= local6 ($k local t); t => b/B.T8#t$d
-              |early local class: t <= local7 ($k local t); t => local8
-              |early anonymous class: t <= local9 ($k local t); t => local10
-              |nested in a method block: t <= local11 ($k local t); t <= local12 ($k local t); t => local12; t => local11
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local13 ($k local t); t => local13
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local14 ($k local t); t => local14
-              |nested in an early anonymous class: t <= local15 ($k local t); t <= local15 ($k local t); t => local15
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.T8#t$d ($k method t)
-              |no definition: local10 ($k method t)
-              |no definition: local8 ($k method t)
-              |""".stripMargin,
+        s"""|method block: t <= local0 ($k local t); t => local0
+            |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
+            |block of a template val: t <= local1 ($k local t); t => local1
+            |local class: t <= local2 ($k method t); t => local2
+            |anonymous class: t <= local3 ($k method t); t => local3
+            |early class: t <= b/B.C6#t$d ($k method t); t => b/B.C6#t$d
+            |early object: t <= b/B.O7.t$d ($k method t); t => b/B.O7.t$d
+            |early trait: t <= b/B.T8#t$d ($k method t); t => b/B.T8#t$d
+            |early local class: t <= local4 ($k method t); t => local4
+            |early anonymous class: t <= local5 ($k method t); t => local5
+            |nested in a method block: t <= local6 ($k local t); t <= local7 ($k local t); t => local7; t => local6
+            |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local8 ($k local t); t => local8
+            |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local9 ($k local t); t => local9
+            |nested in an early anonymous class: t <= local10 ($k method t); t <= local11 ($k local t); t => local11
+            |""".stripMargin,
     ),
     (
       "t :: Nil",
       "List(1)",
       "t",
       (k, d) =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|method block: t <= local0 ($k local t); t => local0
-              |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
-              |block of a template val: t <= local1 ($k local t); t => local1
-              |local class: t <= local2 ($k method t); t => local2
-              |anonymous class: t <= local3 ($k method t); t => local3
-              |early class: t <= local4 ($k local t); t => b/B.C6#t$d
-              |early object: t <= local5 ($k local t); t => b/B.O7.t$d
-              |early trait: t <= local6 ($k local t); t => b/B.T8#t$d
-              |early local class: t <= local7 ($k local t); t => local7
-              |early anonymous class: t <= local8 ($k local t); t => local8
-              |nested in a method block: t <= local9 ($k local t); t <= local10 ($k local t); t => local10; t => local9
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local11 ($k local t); t => local11
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local12 ($k local t); t => local12
-              |nested in an early anonymous class: t <= local13 ($k local t); t <= local14 ($k local t); t => local14
-              |no definition: a local ($k local t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.T8#t$d ($k method t)
-              |""".stripMargin
-        else
-          s"""|method block: t <= local0 ($k local t); t => local0
-              |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
-              |block of a template val: t <= local1 ($k local t); t => local1
-              |local class: t <= local2 ($k method t); t => local2
-              |anonymous class: t <= local3 ($k method t); t => local3
-              |early class: t <= local4 ($k local t); :: => b/B.C6#t$d; t => b/B.C6#t$d
-              |early object: t <= local5 ($k local t); :: => b/B.O7.t$d; t => b/B.O7.t$d
-              |early trait: t <= local6 ($k local t); :: => b/B.T8#t$d; t => b/B.T8#t$d
-              |early local class: t <= local7 ($k local t); :: => local8; t => local8
-              |early anonymous class: t <= local9 ($k local t); :: => local10; t => local10
-              |nested in a method block: t <= local11 ($k local t); t <= local12 ($k local t); t => local12; t => local11
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local13 ($k local t); t => local13
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local14 ($k local t); t => local14
-              |nested in an early anonymous class: t <= local15 ($k local t); t <= local15 ($k local t); t => local15
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.T8#t$d ($k method t)
-              |no definition: local10 ($k method t)
-              |no definition: local8 ($k method t)
-              |""".stripMargin,
+        s"""|method block: t <= local0 ($k local t); t => local0
+            |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
+            |block of a template val: t <= local1 ($k local t); t => local1
+            |local class: t <= local2 ($k method t); t => local2
+            |anonymous class: t <= local3 ($k method t); t => local3
+            |early class: t <= b/B.C6#t$d ($k method t); t => b/B.C6#t$d
+            |early object: t <= b/B.O7.t$d ($k method t); t => b/B.O7.t$d
+            |early trait: t <= b/B.T8#t$d ($k method t); t => b/B.T8#t$d
+            |early local class: t <= local4 ($k method t); t => local4
+            |early anonymous class: t <= local5 ($k method t); t => local5
+            |nested in a method block: t <= local6 ($k local t); t <= local7 ($k local t); t => local7; t => local6
+            |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local8 ($k local t); t => local8
+            |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local9 ($k local t); t => local9
+            |nested in an early anonymous class: t <= local10 ($k method t); t <= local11 ($k local t); t => local11
+            |""".stripMargin,
     ),
     (
       "(t: Int)",
       "1",
       "t",
       (k, d) =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|method block: t <= local0 ($k local t); t => local0
-              |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
-              |block of a template val: t <= local1 ($k local t); t => local1
-              |local class: t <= local2 ($k method t); t => local2
-              |anonymous class: t <= local3 ($k method t); t => local3
-              |early class: t <= local4 ($k local t); t => b/B.C6#t$d
-              |early object: t <= local5 ($k local t); t => b/B.O7.t$d
-              |early trait: t <= local6 ($k local t); t => b/B.T8#t$d
-              |early local class: t <= local7 ($k local t); t => local7
-              |early anonymous class: t <= local8 ($k local t); t => local8
-              |nested in a method block: t <= local9 ($k local t); t <= local10 ($k local t); t => local10; t => local9
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local11 ($k local t); t => local11
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local12 ($k local t); t => local12
-              |nested in an early anonymous class: t <= local13 ($k local t); t <= local14 ($k local t); t => local14
-              |no definition: a local ($k local t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.T8#t$d ($k method t)
-              |""".stripMargin
-        else
-          s"""|method block: t => local0
-              |template: t => b/B.C2#t$d
-              |block of a template val: t => local1
-              |local class: t => local2
-              |anonymous class: t => local3
-              |early class: t => b/B.C6#t$d
-              |early object: t => b/B.O7.t$d
-              |early trait: t => b/B.T8#t$d
-              |early local class: t => local4
-              |early anonymous class: t => local5
-              |nested in a method block: t <= local6 ($k local t); t => local7; t => local6
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t => local8
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t => local9
-              |nested in an early anonymous class: t <= local10 ($k local t); t => local10
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: b/B.C2#t$d ($k method t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.T8#t$d ($k method t)
-              |no definition: local0 ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local2 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local4 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k local t)
-              |no definition: local8 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|method block: t <= local0 ($k local t); t => local0
+            |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
+            |block of a template val: t <= local1 ($k local t); t => local1
+            |local class: t <= local2 ($k method t); t => local2
+            |anonymous class: t <= local3 ($k method t); t => local3
+            |early class: t <= b/B.C6#t$d ($k method t); t => b/B.C6#t$d
+            |early object: t <= b/B.O7.t$d ($k method t); t => b/B.O7.t$d
+            |early trait: t <= b/B.T8#t$d ($k method t); t => b/B.T8#t$d
+            |early local class: t <= local4 ($k method t); t => local4
+            |early anonymous class: t <= local5 ($k method t); t => local5
+            |nested in a method block: t <= local6 ($k local t); t <= local7 ($k local t); t => local7; t => local6
+            |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local8 ($k local t); t => local8
+            |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local9 ($k local t); t => local9
+            |nested in an early anonymous class: t <= local10 ($k method t); t <= local11 ($k local t); t => local11
+            |""".stripMargin,
     ),
     (
       "(t /* c */ : Int)",
       "1",
       "t",
       (k, d) =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|method block: t <= local0 ($k local t); t => local0
-              |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
-              |block of a template val: t <= local1 ($k local t); t => local1
-              |local class: t <= local2 ($k method t); t => local2
-              |anonymous class: t <= local3 ($k method t); t => local3
-              |early class: t <= local4 ($k local t); t => b/B.C6#t$d
-              |early object: t <= local5 ($k local t); t => b/B.O7.t$d
-              |early trait: t <= local6 ($k local t); t => b/B.T8#t$d
-              |early local class: t <= local7 ($k local t); t => local7
-              |early anonymous class: t <= local8 ($k local t); t => local8
-              |nested in a method block: t <= local9 ($k local t); t <= local10 ($k local t); t => local10; t => local9
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local11 ($k local t); t => local11
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local12 ($k local t); t => local12
-              |nested in an early anonymous class: t <= local13 ($k local t); t <= local14 ($k local t); t => local14
-              |no definition: a local ($k local t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.T8#t$d ($k method t)
-              |""".stripMargin
-        else
-          s"""|method block: t => local0
-              |template: t => b/B.C2#t$d
-              |block of a template val: t => local1
-              |local class: t => local2
-              |anonymous class: t => local3
-              |early class: t => b/B.C6#t$d
-              |early object: t => b/B.O7.t$d
-              |early trait: t => b/B.T8#t$d
-              |early local class: t => local4
-              |early anonymous class: t => local5
-              |nested in a method block: t <= local6 ($k local t); t => local7; t => local6
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t => local8
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t => local9
-              |nested in an early anonymous class: t <= local10 ($k local t); t => local10
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: b/B.C2#t$d ($k method t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.T8#t$d ($k method t)
-              |no definition: local0 ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local2 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local4 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k local t)
-              |no definition: local8 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|method block: t <= local0 ($k local t); t => local0
+            |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
+            |block of a template val: t <= local1 ($k local t); t => local1
+            |local class: t <= local2 ($k method t); t => local2
+            |anonymous class: t <= local3 ($k method t); t => local3
+            |early class: t <= b/B.C6#t$d ($k method t); t => b/B.C6#t$d
+            |early object: t <= b/B.O7.t$d ($k method t); t => b/B.O7.t$d
+            |early trait: t <= b/B.T8#t$d ($k method t); t => b/B.T8#t$d
+            |early local class: t <= local4 ($k method t); t => local4
+            |early anonymous class: t <= local5 ($k method t); t => local5
+            |nested in a method block: t <= local6 ($k local t); t <= local7 ($k local t); t => local7; t => local6
+            |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local8 ($k local t); t => local8
+            |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local9 ($k local t); t => local9
+            |nested in an early anonymous class: t <= local10 ($k method t); t <= local11 ($k local t); t => local11
+            |""".stripMargin,
     ),
     (
       "( /* c */ t: Int)",
       "1",
       "t",
       (k, d) =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|method block: t <= local0 ($k local t); t => local0
-              |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
-              |block of a template val: t <= local1 ($k local t); t => local1
-              |local class: t <= local2 ($k method t); t => local2
-              |anonymous class: t <= local3 ($k method t); t => local3
-              |early class: t <= local4 ($k local t); t => b/B.C6#t$d
-              |early object: t <= local5 ($k local t); t => b/B.O7.t$d
-              |early trait: t <= local6 ($k local t); t => b/B.T8#t$d
-              |early local class: t <= local7 ($k local t); t => local7
-              |early anonymous class: t <= local8 ($k local t); t => local8
-              |nested in a method block: t <= local9 ($k local t); t <= local10 ($k local t); t => local10; t => local9
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local11 ($k local t); t => local11
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local12 ($k local t); t => local12
-              |nested in an early anonymous class: t <= local13 ($k local t); t <= local14 ($k local t); t => local14
-              |no definition: a local ($k local t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.T8#t$d ($k method t)
-              |""".stripMargin
-        else
-          s"""|method block: t => local0
-              |template: t => b/B.C2#t$d
-              |block of a template val: t => local1
-              |local class: t => local2
-              |anonymous class: t => local3
-              |early class: t => b/B.C6#t$d
-              |early object: t => b/B.O7.t$d
-              |early trait: t => b/B.T8#t$d
-              |early local class: t => local4
-              |early anonymous class: t => local5
-              |nested in a method block: t <= local6 ($k local t); t => local7; t => local6
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t => local8
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t => local9
-              |nested in an early anonymous class: t <= local10 ($k local t); t => local10
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: b/B.C2#t$d ($k method t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.T8#t$d ($k method t)
-              |no definition: local0 ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local2 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local4 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k local t)
-              |no definition: local8 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|method block: t <= local0 ($k local t); t => local0
+            |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
+            |block of a template val: t <= local1 ($k local t); t => local1
+            |local class: t <= local2 ($k method t); t => local2
+            |anonymous class: t <= local3 ($k method t); t => local3
+            |early class: t <= b/B.C6#t$d ($k method t); t => b/B.C6#t$d
+            |early object: t <= b/B.O7.t$d ($k method t); t => b/B.O7.t$d
+            |early trait: t <= b/B.T8#t$d ($k method t); t => b/B.T8#t$d
+            |early local class: t <= local4 ($k method t); t => local4
+            |early anonymous class: t <= local5 ($k method t); t => local5
+            |nested in a method block: t <= local6 ($k local t); t <= local7 ($k local t); t => local7; t => local6
+            |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local8 ($k local t); t => local8
+            |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local9 ($k local t); t => local9
+            |nested in an early anonymous class: t <= local10 ($k method t); t <= local11 ($k local t); t => local11
+            |""".stripMargin,
     ),
     (
       "Tuple2(t, _)",
       "(1, 2)",
       "t",
       (k, d) =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|method block: t <= local0 ($k local t); t => local0
-              |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
-              |block of a template val: t <= local1 ($k local t); t => local1
-              |local class: t <= local2 ($k method t); t => local2
-              |anonymous class: t <= local3 ($k method t); t => local3
-              |early class: Tuple2 => b/B.C6#t$d; t <= local4 ($k local t); t => b/B.C6#t$d
-              |early object: Tuple2 => b/B.O7.t$d; t <= local5 ($k local t); t => b/B.O7.t$d
-              |early trait: Tuple2 => b/B.T8#t$d; t <= local6 ($k local t); t => b/B.T8#t$d
-              |early local class: Tuple2 => local7; t <= local7 ($k local t); t => local7
-              |early anonymous class: Tuple2 => local8; t <= local8 ($k local t); t => local8
-              |nested in a method block: t <= local9 ($k local t); t <= local10 ($k local t); t => local10; t => local9
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local11 ($k local t); t => local11
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local12 ($k local t); t => local12
-              |nested in an early anonymous class: t <= local13 ($k local t); t <= local14 ($k local t); t => local14
-              |no definition: a local ($k local t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.T8#t$d ($k method t)
-              |""".stripMargin
-        else
-          s"""|method block: t <= local0 ($k local t); t => local0
-              |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
-              |block of a template val: t <= local1 ($k local t); t => local1
-              |local class: t <= local2 ($k method t); t => local2
-              |anonymous class: t <= local3 ($k method t); t => local3
-              |early class: t <= local4 ($k local t); t => b/B.C6#t$d
-              |early object: t <= local5 ($k local t); t => b/B.O7.t$d
-              |early trait: t <= local6 ($k local t); t => b/B.T8#t$d
-              |early local class: t <= local7 ($k local t); t => local8
-              |early anonymous class: t <= local9 ($k local t); t => local10
-              |nested in a method block: t <= local11 ($k local t); t <= local12 ($k local t); t => local12; t => local11
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local13 ($k local t); t => local13
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local14 ($k local t); t => local14
-              |nested in an early anonymous class: t <= local15 ($k local t); t <= local15 ($k local t); t => local15
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.T8#t$d ($k method t)
-              |no definition: local10 ($k method t)
-              |no definition: local8 ($k method t)
-              |""".stripMargin,
+        s"""|method block: t <= local0 ($k local t); t => local0
+            |template: t <= b/B.C2#t$d ($k method t); t => b/B.C2#t$d
+            |block of a template val: t <= local1 ($k local t); t => local1
+            |local class: t <= local2 ($k method t); t => local2
+            |anonymous class: t <= local3 ($k method t); t => local3
+            |early class: t <= b/B.C6#t$d ($k method t); t => b/B.C6#t$d
+            |early object: t <= b/B.O7.t$d ($k method t); t => b/B.O7.t$d
+            |early trait: t <= b/B.T8#t$d ($k method t); t => b/B.T8#t$d
+            |early local class: t <= local4 ($k method t); t => local4
+            |early anonymous class: t <= local5 ($k method t); t => local5
+            |nested in a method block: t <= local6 ($k local t); t <= local7 ($k local t); t => local7; t => local6
+            |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local8 ($k local t); t => local8
+            |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local9 ($k local t); t => local9
+            |nested in an early anonymous class: t <= local10 ($k method t); t <= local11 ($k local t); t => local11
+            |""".stripMargin,
     ),
     (
       "(t, u)",
       "(1, 2)",
       "t + u",
       (k, d) =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|method block: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
-              |template: t <= b/B.C2#t$d ($k method t); u <= b/B.C2#u$d ($k method u); t => b/B.C2#t$d; u => b/B.C2#u$d
-              |block of a template val: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
-              |local class: t <= local4 ($k method t); u <= local5 ($k method u); t => local4; u => local5
-              |anonymous class: t <= local6 ($k method t); u <= local7 ($k method u); t => local6; u => local7
-              |early class: t <= local8 ($k local t); u <= local9 ($k local u); t => b/B.C6#t$d; u => b/B.C6#u$d
-              |early object: t <= local10 ($k local t); u <= local11 ($k local u); t => b/B.O7.t$d; u => b/B.O7.u$d
-              |early local class: t <= local12 ($k local t); u <= local13 ($k local u); t => local12; u => local13
-              |early anonymous class: t <= local14 ($k local t); u <= local15 ($k local u); t => local14; u => local15
-              |nested in a method block: t <= local16 ($k local t); t <= local17 ($k local t); u <= local18 ($k local u); t => local17; u => local18; t => local16
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local19 ($k local t); u <= local20 ($k local u); t => local19; u => local20
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local21 ($k local t); u <= local22 ($k local u); t => local21; u => local22
-              |nested in an early anonymous class: t <= local23 ($k local t); t <= local24 ($k local t); u <= local25 ($k local u); t => local24; u => local25
-              |no definition: a local ($k local t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.C6#u$d ($k method u)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.O7.u$d ($k method u)
-              |""".stripMargin
-        else
-          s"""|method block: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
-              |template: t <= b/B.C2#t$d ($k method t); u <= b/B.C2#u$d ($k method u); t => b/B.C2#t$d; u => b/B.C2#u$d
-              |block of a template val: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
-              |local class: t <= local4 ($k method t); u <= local5 ($k method u); t => local4; u => local5
-              |anonymous class: t <= local6 ($k method t); u <= local7 ($k method u); t => local6; u => local7
-              |early class: t <= local8 ($k local t); u <= local9 ($k local u); t => b/B.C6#t$d; u => b/B.C6#u$d
-              |early object: t <= local10 ($k local t); u <= local11 ($k local u); t => b/B.O7.t$d; u => b/B.O7.u$d
-              |early local class: t <= local12 ($k local t); u <= local13 ($k local u); t => local12; u => local13
-              |early anonymous class: t <= local14 ($k local t); u <= local15 ($k local u); t => local14; u => local15
-              |nested in a method block: t <= local16 ($k local t); t <= local17 ($k local t); u <= local18 ($k local u); t => local17; u => local18; t => local16
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local19 ($k local t); u <= local20 ($k local u); t => local19; u => local20
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local21 ($k local t); u <= local22 ($k local u); t => local21; u => local22
-              |nested in an early anonymous class: t <= local23 ($k local t); t <= local23 ($k local t); u <= local24 ($k local u); t => local23; u => local24
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.C6#u$d ($k method u)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.O7.u$d ($k method u)
-              |""".stripMargin,
+        s"""|method block: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
+            |template: t <= b/B.C2#t$d ($k method t); u <= b/B.C2#u$d ($k method u); t => b/B.C2#t$d; u => b/B.C2#u$d
+            |block of a template val: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
+            |local class: t <= local4 ($k method t); u <= local5 ($k method u); t => local4; u => local5
+            |anonymous class: t <= local6 ($k method t); u <= local7 ($k method u); t => local6; u => local7
+            |early class: t <= b/B.C6#t$d ($k method t); u <= b/B.C6#u$d ($k method u); t => b/B.C6#t$d; u => b/B.C6#u$d
+            |early object: t <= b/B.O7.t$d ($k method t); u <= b/B.O7.u$d ($k method u); t => b/B.O7.t$d; u => b/B.O7.u$d
+            |early local class: t <= local8 ($k method t); u <= local9 ($k method u); t => local8; u => local9
+            |early anonymous class: t <= local10 ($k method t); u <= local11 ($k method u); t => local10; u => local11
+            |nested in a method block: t <= local12 ($k local t); t <= local13 ($k local t); u <= local14 ($k local u); t => local13; u => local14; t => local12
+            |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local15 ($k local t); u <= local16 ($k local u); t => local15; u => local16
+            |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local17 ($k local t); u <= local18 ($k local u); t => local17; u => local18
+            |nested in an early anonymous class: t <= local19 ($k method t); t <= local20 ($k local t); u <= local21 ($k local u); t => local20; u => local21
+            |""".stripMargin,
     ),
     (
       "Tuple2(t, u)",
       "(1, 2)",
       "t + u",
       (k, d) =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|method block: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
-              |template: t <= b/B.C2#t$d ($k method t); u <= b/B.C2#u$d ($k method u); t => b/B.C2#t$d; u => b/B.C2#u$d
-              |block of a template val: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
-              |local class: t <= local4 ($k method t); u <= local5 ($k method u); t => local4; u => local5
-              |anonymous class: t <= local6 ($k method t); u <= local7 ($k method u); t => local6; u => local7
-              |early class: t <= local8 ($k local t); u <= local9 ($k local u); t => b/B.C6#t$d; u => b/B.C6#u$d
-              |early object: t <= local10 ($k local t); u <= local11 ($k local u); t => b/B.O7.t$d; u => b/B.O7.u$d
-              |early local class: t <= local12 ($k local t); u <= local13 ($k local u); t => local12; u => local13
-              |early anonymous class: t <= local14 ($k local t); u <= local15 ($k local u); t => local14; u => local15
-              |nested in a method block: t <= local16 ($k local t); t <= local17 ($k local t); u <= local18 ($k local u); t => local17; u => local18; t => local16
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local19 ($k local t); u <= local20 ($k local u); t => local19; u => local20
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local21 ($k local t); u <= local22 ($k local u); t => local21; u => local22
-              |nested in an early anonymous class: t <= local23 ($k local t); t <= local24 ($k local t); u <= local25 ($k local u); t => local24; u => local25
-              |no definition: a local ($k local t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.C6#u$d ($k method u)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.O7.u$d ($k method u)
-              |""".stripMargin
-        else
-          s"""|method block: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
-              |template: t <= b/B.C2#t$d ($k method t); u <= b/B.C2#u$d ($k method u); t => b/B.C2#t$d; u => b/B.C2#u$d
-              |block of a template val: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
-              |local class: t <= local4 ($k method t); u <= local5 ($k method u); t => local4; u => local5
-              |anonymous class: t <= local6 ($k method t); u <= local7 ($k method u); t => local6; u => local7
-              |early class: t <= local8 ($k local t); u <= local9 ($k local u); t => b/B.C6#t$d; u => b/B.C6#u$d
-              |early object: t <= local10 ($k local t); u <= local11 ($k local u); t => b/B.O7.t$d; u => b/B.O7.u$d
-              |early local class: t <= local12 ($k local t); u <= local13 ($k local u); t => local12; u => local13
-              |early anonymous class: t <= local14 ($k local t); u <= local15 ($k local u); t => local14; u => local15
-              |nested in a method block: t <= local16 ($k local t); t <= local17 ($k local t); u <= local18 ($k local u); t => local17; u => local18; t => local16
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local19 ($k local t); u <= local20 ($k local u); t => local19; u => local20
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local21 ($k local t); u <= local22 ($k local u); t => local21; u => local22
-              |nested in an early anonymous class: t <= local23 ($k local t); t <= local23 ($k local t); u <= local24 ($k local u); t => local23; u => local24
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.C6#u$d ($k method u)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.O7.u$d ($k method u)
-              |""".stripMargin,
+        s"""|method block: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
+            |template: t <= b/B.C2#t$d ($k method t); u <= b/B.C2#u$d ($k method u); t => b/B.C2#t$d; u => b/B.C2#u$d
+            |block of a template val: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
+            |local class: t <= local4 ($k method t); u <= local5 ($k method u); t => local4; u => local5
+            |anonymous class: t <= local6 ($k method t); u <= local7 ($k method u); t => local6; u => local7
+            |early class: t <= b/B.C6#t$d ($k method t); u <= b/B.C6#u$d ($k method u); t => b/B.C6#t$d; u => b/B.C6#u$d
+            |early object: t <= b/B.O7.t$d ($k method t); u <= b/B.O7.u$d ($k method u); t => b/B.O7.t$d; u => b/B.O7.u$d
+            |early local class: t <= local8 ($k method t); u <= local9 ($k method u); t => local8; u => local9
+            |early anonymous class: t <= local10 ($k method t); u <= local11 ($k method u); t => local10; u => local11
+            |nested in a method block: t <= local12 ($k local t); t <= local13 ($k local t); u <= local14 ($k local u); t => local13; u => local14; t => local12
+            |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local15 ($k local t); u <= local16 ($k local u); t => local15; u => local16
+            |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local17 ($k local t); u <= local18 ($k local u); t => local17; u => local18
+            |nested in an early anonymous class: t <= local19 ($k method t); t <= local20 ($k local t); u <= local21 ($k local u); t => local20; u => local21
+            |""".stripMargin,
     ),
     (
       "t :: u :: Nil",
       "List(1, 2)",
       "t + u",
       (k, d) =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|method block: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
-              |template: t <= b/B.C2#t$d ($k method t); u <= b/B.C2#u$d ($k method u); t => b/B.C2#t$d; u => b/B.C2#u$d
-              |block of a template val: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
-              |local class: t <= local4 ($k method t); u <= local5 ($k method u); t => local4; u => local5
-              |anonymous class: t <= local6 ($k method t); u <= local7 ($k method u); t => local6; u => local7
-              |early class: t <= local8 ($k local t); u <= local9 ($k local u); t => b/B.C6#t$d; u => b/B.C6#u$d
-              |early object: t <= local10 ($k local t); u <= local11 ($k local u); t => b/B.O7.t$d; u => b/B.O7.u$d
-              |early local class: t <= local12 ($k local t); u <= local13 ($k local u); t => local12; u => local13
-              |early anonymous class: t <= local14 ($k local t); u <= local15 ($k local u); t => local14; u => local15
-              |nested in a method block: t <= local16 ($k local t); t <= local17 ($k local t); u <= local18 ($k local u); t => local17; u => local18; t => local16
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local19 ($k local t); u <= local20 ($k local u); t => local19; u => local20
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local21 ($k local t); u <= local22 ($k local u); t => local21; u => local22
-              |nested in an early anonymous class: t <= local23 ($k local t); t <= local24 ($k local t); u <= local25 ($k local u); t => local24; u => local25
-              |no definition: a local ($k local t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.C6#u$d ($k method u)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.O7.u$d ($k method u)
-              |""".stripMargin
-        else
-          s"""|method block: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
-              |template: t <= b/B.C2#t$d ($k method t); u <= b/B.C2#u$d ($k method u); t => b/B.C2#t$d; u => b/B.C2#u$d
-              |block of a template val: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
-              |local class: t <= local4 ($k method t); u <= local5 ($k method u); t => local4; u => local5
-              |anonymous class: t <= local6 ($k method t); u <= local7 ($k method u); t => local6; u => local7
-              |early class: t <= local8 ($k local t); u <= local9 ($k local u); t => b/B.C6#t$d; u => b/B.C6#u$d
-              |early object: t <= local10 ($k local t); u <= local11 ($k local u); t => b/B.O7.t$d; u => b/B.O7.u$d
-              |early local class: t <= local12 ($k local t); u <= local13 ($k local u); t => local12; u => local13
-              |early anonymous class: t <= local14 ($k local t); u <= local15 ($k local u); t => local14; u => local15
-              |nested in a method block: t <= local16 ($k local t); t <= local17 ($k local t); u <= local18 ($k local u); t => local17; u => local18; t => local16
-              |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local19 ($k local t); u <= local20 ($k local u); t => local19; u => local20
-              |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local21 ($k local t); u <= local22 ($k local u); t => local21; u => local22
-              |nested in an early anonymous class: t <= local23 ($k local t); t <= local23 ($k local t); u <= local24 ($k local u); t => local23; u => local24
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: b/B.C6#t$d ($k method t)
-              |no definition: b/B.C6#u$d ($k method u)
-              |no definition: b/B.O7.t$d ($k method t)
-              |no definition: b/B.O7.u$d ($k method u)
-              |""".stripMargin,
+        s"""|method block: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
+            |template: t <= b/B.C2#t$d ($k method t); u <= b/B.C2#u$d ($k method u); t => b/B.C2#t$d; u => b/B.C2#u$d
+            |block of a template val: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
+            |local class: t <= local4 ($k method t); u <= local5 ($k method u); t => local4; u => local5
+            |anonymous class: t <= local6 ($k method t); u <= local7 ($k method u); t => local6; u => local7
+            |early class: t <= b/B.C6#t$d ($k method t); u <= b/B.C6#u$d ($k method u); t => b/B.C6#t$d; u => b/B.C6#u$d
+            |early object: t <= b/B.O7.t$d ($k method t); u <= b/B.O7.u$d ($k method u); t => b/B.O7.t$d; u => b/B.O7.u$d
+            |early local class: t <= local8 ($k method t); u <= local9 ($k method u); t => local8; u => local9
+            |early anonymous class: t <= local10 ($k method t); u <= local11 ($k method u); t => local10; u => local11
+            |nested in a method block: t <= local12 ($k local t); t <= local13 ($k local t); u <= local14 ($k local u); t => local13; u => local14; t => local12
+            |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local15 ($k local t); u <= local16 ($k local u); t => local15; u => local16
+            |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local17 ($k local t); u <= local18 ($k local u); t => local17; u => local18
+            |nested in an early anonymous class: t <= local19 ($k method t); t <= local20 ($k local t); u <= local21 ($k local u); t => local20; u => local21
+            |""".stripMargin,
     ),
   )
-
-  // by pattern, the extra lines in the output of `B` if `A` has the pattern at each `t`
-  private val matrixAtT = Map.empty[String, String]
 
   for {
     (pat, rhs, use, expected) <- patternMatrix
@@ -6834,92 +6521,28 @@ class LocalSymbolsSuite extends FunSuite {
   } test(s"$kind $pat in each place, alone and after a file that refers to it") {
     val alone = expected(kind, if (kind == "var") "()." else ".")
     matrix(kind, s"$kind $pat = $rhs", use, pat).foreach { case (mode, output) =>
-      assertNoDiff(output, if (mode == "at t") alone + matrixAtT.getOrElse(pat, "") else alone, mode)
+      assertNoDiff(output, alone, mode)
     }
   }
 
   /* the output of `B` for a value `t` of kind `k` that the user wrote as a match, where the
    * descriptor of a member ends with `d` */
   private def matchOutput(k: String, d: String) =
-    if (ScalaVersion.is212)
-      s"""|method block: t <= local0 ($k local t); t <= local1 (val local t); t => local1; t => local0
-          |template: t <= b/B.C2#t$d ($k method t); t <= local2 (val local t); t => local2; t => b/B.C2#t$d
-          |block of a template val: t <= local3 ($k local t); t <= local4 (val local t); t => local4; t => local3
-          |local class: t <= local5 ($k method t); t <= local6 (val local t); t => local6; t => local5
-          |anonymous class: t <= local7 ($k method t); t <= local8 (val local t); t => local8; t => local7
-          |early class: t <= b/B.C6#t$d ($k method t); t <= local9 ($k local t); t => local9; t => b/B.C6#t$d
-          |early object: t <= b/B.O7.t$d ($k method t); t <= local10 ($k local t); t => local10; t => b/B.O7.t$d
-          |early trait: t <= b/B.T8#t$d ($k method t); t <= local11 ($k local t); t => local11; t => b/B.T8#t$d
-          |early local class: t <= local12 ($k local t); t <= local12 ($k local t); t => local12; t => local12
-          |early anonymous class: t <= local13 ($k local t); t <= local13 ($k local t); t => local13; t => local13
-          |nested in a method block: t <= local14 ($k local t); t <= local15 ($k local t); t <= local16 (val local t); t => local16; t => local15; t => local14
-          |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local17 ($k local t); t <= local18 (val local t); t => local18; t => local17
-          |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local19 ($k local t); t <= local19 ($k local t); t => local19; t => local19
-          |nested in an early anonymous class: t <= local20 ($k local t); t <= local20 ($k local t); t <= local20 ($k local t); t => local20; t => local20
-          |""".stripMargin
-    else
-      s"""|method block: t <= local0 ($k local t); t <= local1 (val local t); t => local1; t => local0
-          |template: t <= b/B.C2#t$d ($k method t); t <= local2 (val local t); t => local2; t => b/B.C2#t$d
-          |block of a template val: t <= local3 ($k local t); t <= local4 (val local t); t => local4; t => local3
-          |local class: t <= local5 ($k method t); t <= local6 (val local t); t => local6; t => local5
-          |anonymous class: t <= local7 ($k method t); t <= local8 (val local t); t => local8; t => local7
-          |early class: t <= b/B.C6#t$d ($k method t); t <= local9 ($k local t); t => local9; t => b/B.C6#t$d
-          |early object: t <= b/B.O7.t$d ($k method t); t <= local10 ($k local t); t => local10; t => b/B.O7.t$d
-          |early trait: t <= b/B.T8#t$d ($k method t); t <= local11 ($k local t); t => local11; t => b/B.T8#t$d
-          |early local class: t <= local12 ($k local t); t <= local12 ($k local t); t => local12; t => local12
-          |early anonymous class: t <= local13 ($k local t); t <= local13 ($k local t); t => local13; t => local13
-          |nested in a method block: t <= local14 ($k local t); t <= local15 ($k local t); t <= local16 (val local t); t => local16; t => local15; t => local14
-          |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local17 ($k local t); t <= local18 (val local t); t => local18; t => local17
-          |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local19 ($k local t); t <= local19 ($k local t); t => local19; t => local19
-          |nested in an early anonymous class: t <= local20 ($k local t); t <= local21 ($k local t); t <= local21 ($k local t); t => local21; t => local21
-          |no definition: a local ($k local t)
-          |""".stripMargin
-
-  // the output of `B` for a val pattern whose right-hand side is a match
-  private val matchInPatternOutput =
-    if (ScalaVersion.atLeast213_17)
-      """|method block: t <= local0 (val local t); t <= local1 (val local t); t => local1; t => local0
-         |template: t <= b/B.C2#t. (val method t); t <= local2 (val local t); t => local2; t => b/B.C2#t.
-         |block of a template val: t <= local3 (val local t); t <= local4 (val local t); t => local4; t => local3
-         |local class: t <= local5 (val method t); t <= local6 (val local t); t => local6; t => local5
-         |anonymous class: t <= local7 (val method t); t <= local8 (val local t); t => local8; t => local7
-         |early class: t <= local9 (val local t); t <= local9 (val local t); t => local9; t => b/B.C6#t.
-         |early object: t <= local10 (val local t); t <= local10 (val local t); t => local10; t => b/B.O7.t.
-         |early trait: t <= local11 (val local t); t <= local11 (val local t); t => local11; t => b/B.T8#t.
-         |early local class: t <= local12 (val local t); t <= local12 (val local t); t => local12; t => local12
-         |early anonymous class: t <= local13 (val local t); t <= local13 (val local t); t => local13; t => local13
-         |nested in a method block: t <= local14 (val local t); t <= local15 (val local t); t <= local16 (val local t); t => local16; t => local15; t => local14
-         |nested in a template: t <= b/B.N2#t. (val method t); t <= local17 (val local t); t <= local18 (val local t); t => local18; t => local17
-         |nested in an early class: t <= b/B.N3#t. (val method t); t <= local19 (val local t); t <= local19 (val local t); t => local19; t => local19
-         |nested in an early anonymous class: t <= local20 (val local t); t <= local21 (val local t); t <= local21 (val local t); t => local21; t => local21
-         |no definition: a local (val local t)
-         |no definition: b/B.C6#t. (val method t)
-         |no definition: b/B.O7.t. (val method t)
-         |no definition: b/B.T8#t. (val method t)
-         |""".stripMargin
-    else
-      """|method block: t <= local0 (val local t); t <= local1 (val local t); t => local1; t => local0
-         |template: t <= b/B.C2#t. (val method t); t <= local2 (val local t); t => local2; t => b/B.C2#t.
-         |block of a template val: t <= local3 (val local t); t <= local4 (val local t); t => local4; t => local3
-         |local class: t <= local5 (val method t); t <= local6 (val local t); t => local6; t => local5
-         |anonymous class: t <= local7 (val method t); t <= local8 (val local t); t => local8; t => local7
-         |early class: t <= local9 (val local t); t <= local9 (val local t); t => local9; t => b/B.C6#t.
-         |early object: t <= local10 (val local t); t <= local10 (val local t); t => local10; t => b/B.O7.t.
-         |early trait: t <= local11 (val local t); t <= local11 (val local t); t => local11; t => b/B.T8#t.
-         |early local class: t <= local12 (val local t); t <= local12 (val local t); t => local12; t => local13
-         |early anonymous class: t <= local14 (val local t); t <= local14 (val local t); t => local14; t => local15
-         |nested in a method block: t <= local16 (val local t); t <= local17 (val local t); t <= local18 (val local t); t => local18; t => local17; t => local16
-         |nested in a template: t <= b/B.N2#t. (val method t); t <= local19 (val local t); t <= local20 (val local t); t => local20; t => local19
-         |nested in an early class: t <= b/B.N3#t. (val method t); t <= local21 (val local t); t <= local21 (val local t); t => local21; t => local21
-         |nested in an early anonymous class: t <= local22 (val local t); t <= local22 (val local t); t <= local22 (val local t); t => local22; t => local22
-         |no definition: a local (val method t)
-         |no definition: a local (val method t)
-         |no definition: b/B.C6#t. (val method t)
-         |no definition: b/B.O7.t. (val method t)
-         |no definition: b/B.T8#t. (val method t)
-         |no definition: local13 (val method t)
-         |no definition: local15 (val method t)
-         |""".stripMargin
+    s"""|method block: t <= local0 ($k local t); t <= local1 (val local t); t => local1; t => local0
+        |template: t <= b/B.C2#t$d ($k method t); t <= local2 (val local t); t => local2; t => b/B.C2#t$d
+        |block of a template val: t <= local3 ($k local t); t <= local4 (val local t); t => local4; t => local3
+        |local class: t <= local5 ($k method t); t <= local6 (val local t); t => local6; t => local5
+        |anonymous class: t <= local7 ($k method t); t <= local8 (val local t); t => local8; t => local7
+        |early class: t <= b/B.C6#t$d ($k method t); t <= local9 (val local t); t => local9; t => b/B.C6#t$d
+        |early object: t <= b/B.O7.t$d ($k method t); t <= local10 (val local t); t => local10; t => b/B.O7.t$d
+        |early trait: t <= b/B.T8#t$d ($k method t); t <= local11 (val local t); t => local11; t => b/B.T8#t$d
+        |early local class: t <= local12 ($k method t); t <= local13 (val local t); t => local13; t => local12
+        |early anonymous class: t <= local14 ($k method t); t <= local15 (val local t); t => local15; t => local14
+        |nested in a method block: t <= local16 ($k local t); t <= local17 ($k local t); t <= local18 (val local t); t => local18; t => local17; t => local16
+        |nested in a template: t <= b/B.N2#t$d ($k method t); t <= local19 ($k local t); t <= local20 (val local t); t => local20; t => local19
+        |nested in an early class: t <= b/B.N3#t$d ($k method t); t <= local21 ($k local t); t <= local22 (val local t); t => local22; t => local21
+        |nested in an early anonymous class: t <= local23 ($k method t); t <= local24 ($k local t); t <= local25 (val local t); t => local25; t => local24
+        |""".stripMargin
 
   // the output of `B` for a value `v` of a `for` that binds `t`
   private val forOutput =
@@ -6936,8 +6559,7 @@ class LocalSymbolsSuite extends FunSuite {
        |nested in a method block: t <= local10 (val local t); t <= local11 (val local t); t => local11; t => local10
        |nested in a template: t <= b/B.N2#t. (val method t); t <= local12 (val local t); t => local12
        |nested in an early class: t <= b/B.N3#t. (val method t); t <= local13 (val local t); t => local13
-       |nested in an early anonymous class: t <= local14 (val local t); t <= local15 (val local t); t => local15
-       |no definition: a local (val local t)
+       |nested in an early anonymous class: t <= local14 (val method t); t <= local15 (val local t); t => local15
        |""".stripMargin
 
   /* each definition that the user wrote with a match, or with a `for` that binds `t`: the kinds of
@@ -6955,20 +6577,8 @@ class LocalSymbolsSuite extends FunSuite {
       "t",
       matchOutput,
     ),
-    (
-      List("val"),
-      "Some(t) = Option(1) match { case t => t }",
-      "Some(t)",
-      "t",
-      (_, _) => matchInPatternOutput,
-    ),
-    (
-      List("val"),
-      "Some(t) = Option(1) match { case t => t }",
-      "case t",
-      "t",
-      (_, _) => matchInPatternOutput,
-    ),
+    (List("val"), "Some(t) = Option(1) match { case t => t }", "Some(t)", "t", matchOutput),
+    (List("val"), "Some(t) = Option(1) match { case t => t }", "case t", "t", matchOutput),
     (
       List("val"),
       "v = for (Some(t) <- List(Option(1))) yield t",
@@ -7006,116 +6616,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local1
-              |default of a local method: t <= local2 ($k local t); t => local3
-              |default of a second parameter list: t <= local4 ($k local t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); t => local9
-              |default of a case class: t <= local10 ($k local t); t => local11
-              |default of an implicit class: t <= local12 ($k local t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); t => local15
-              |default of a nested class: t <= local16 ($k local t); t => local17
-              |default of a local class: t <= local18 ($k local t); t => local19
-              |default of a local case class: t <= local20 ($k local t); t => local21
-              |argument before a default: t <= local22 ($k local t); t => local22
-              |named argument: t <= local23 ($k local t); t => local23
-              |named by-name argument: t <= local24 ($k local t); t => local24
-              |named argument of a name in scope: t <= local25 ($k local t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k local t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k local t); t => local27
-              |argument of a parent: t <= local28 ($k local t); t => local28
-              |argument of a generic parent: t <= local29 ($k local t); t => local29
-              |argument of a parent annotation: t <= local30 ($k local t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k local t); t => local31
-              |multiple definitions in a template: t <= local32 ($k local t); t => local33
-              |multiple definitions in a block: t <= local34 ($k local t); t => local35
-              |guard of a partial function: t <= local36 ($k local t); t => local37
-              |guard of a function of cases: t <= local38 ($k local t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k local t); t => local39
-              |index of an update operator: t <= local40 ($k local t); t => local40
-              |array of an update operator: t <= local41 ($k local t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k local t); t => local42
-              |generator of a for: t <= local43 ($k local t); t => local43
-              |value definition of a for: t <= local44 ($k local t); t => local44
-              |guard of a for: t <= local45 ($k local t); t => local45
-              |yield of a for: t <= local46 ($k local t); t => local46
-              |s interpolation: t <= local47 ($k local t); t => local47
-              |f interpolation: t <= local48 ($k local t); t => local48
-              |raw interpolation: t <= local49 ($k local t); t => local49
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local33 ($k local t)
-              |no definition: local35 ($k local t)
-              |no definition: local37 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("lazy val"),
@@ -7123,116 +6660,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local1
-              |default of a local method: t <= local2 ($k local t); t => local3
-              |default of a second parameter list: t <= local4 ($k local t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); t => local9
-              |default of a case class: t <= local10 ($k local t); t => local11
-              |default of an implicit class: t <= local12 ($k local t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); t => local15
-              |default of a nested class: t <= local16 ($k local t); t => local17
-              |default of a local class: t <= local18 ($k local t); t => local19
-              |default of a local case class: t <= local20 ($k local t); t => local21
-              |argument before a default: t <= local22 ($k local t); t => local22
-              |named argument: t <= local23 ($k local t); t => local23
-              |named by-name argument: t <= local24 ($k local t); t => local24
-              |named argument of a name in scope: t <= local25 ($k local t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k local t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k local t); t => local27
-              |argument of a parent: t <= local28 ($k local t); t => local28
-              |argument of a generic parent: t <= local29 ($k local t); t => local29
-              |argument of a parent annotation: t <= local30 ($k local t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k local t); t => local31
-              |multiple definitions in a template: t <= local32 ($k local t); t => local33
-              |multiple definitions in a block: t <= local34 ($k local t); t => local35
-              |guard of a partial function: t <= local36 ($k local t); t => local37
-              |guard of a function of cases: t <= local38 ($k local t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k local t); t => local39
-              |index of an update operator: t <= local40 ($k local t); t => local40
-              |array of an update operator: t <= local41 ($k local t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k local t); t => local42
-              |generator of a for: t <= local43 ($k local t); t => local43
-              |value definition of a for: t <= local44 ($k local t); t => local44
-              |guard of a for: t <= local45 ($k local t); t => local45
-              |yield of a for: t <= local46 ($k local t); t => local46
-              |s interpolation: t <= local47 ($k local t); t => local47
-              |f interpolation: t <= local48 ($k local t); t => local48
-              |raw interpolation: t <= local49 ($k local t); t => local49
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: local1 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local33 ($k local t)
-              |no definition: local35 ($k local t)
-              |no definition: local37 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val", "var"),
@@ -7240,116 +6704,43 @@ class LocalSymbolsSuite extends FunSuite {
       "t :: Nil",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local22
-              |multiple definitions in a block: t <= local23 ($k local t); t => local24
-              |guard of a partial function: t <= local25 ($k local t); t => local25
-              |guard of a function of cases: t <= local26 ($k local t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k local t); t => local27
-              |index of an update operator: t <= local28 ($k local t); t => local28
-              |array of an update operator: t <= local29 ($k local t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k local t); t => local30
-              |generator of a for: t <= local31 ($k local t); t => local31
-              |value definition of a for: t <= local32 ($k local t); t => local32
-              |guard of a for: t <= local33 ($k local t); t => local33
-              |yield of a for: t <= local34 ($k local t); t => local34
-              |s interpolation: t <= local35 ($k local t); t => local35
-              |f interpolation: t <= local36 ($k local t); t => local36
-              |raw interpolation: t <= local37 ($k local t); t => local37
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local22 ($k local t)
-              |no definition: local24 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("lazy val"),
@@ -7357,116 +6748,43 @@ class LocalSymbolsSuite extends FunSuite {
       "t :: Nil",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local22
-              |multiple definitions in a block: t <= local23 ($k local t); t => local24
-              |guard of a partial function: t <= local25 ($k local t); t => local25
-              |guard of a function of cases: t <= local26 ($k local t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k local t); t => local27
-              |index of an update operator: t <= local28 ($k local t); t => local28
-              |array of an update operator: t <= local29 ($k local t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k local t); t => local30
-              |generator of a for: t <= local31 ($k local t); t => local31
-              |value definition of a for: t <= local32 ($k local t); t => local32
-              |guard of a for: t <= local33 ($k local t); t => local33
-              |yield of a for: t <= local34 ($k local t); t => local34
-              |s interpolation: t <= local35 ($k local t); t => local35
-              |f interpolation: t <= local36 ($k local t); t => local36
-              |raw interpolation: t <= local37 ($k local t); t => local37
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: local22 ($k local t)
-              |no definition: local24 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val", "var", "lazy val"),
@@ -7474,135 +6792,42 @@ class LocalSymbolsSuite extends FunSuite {
       "(t: Int)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of a parent: t <= local16 ($k local t); t => local16
-              |argument of a generic parent: t <= local17 ($k local t); t => local17
-              |argument of a parent annotation: t <= local18 ($k local t); t => local18
-              |argument of a self-constructor call: t <= local19 ($k local t); t => local19
-              |multiple definitions in a template: t <= local20 ($k local t); t => local20
-              |multiple definitions in a block: t <= local21 ($k local t); t => local21
-              |guard of a partial function: t <= local22 ($k local t); t => local22
-              |guard of a function of cases: t <= local23 ($k local t); t => local23
-              |right-hand side of an assignment operator: t <= local24 ($k local t); t => local24
-              |index of an update operator: t <= local25 ($k local t); t => local25
-              |array of an update operator: t <= local26 ($k local t); t => local26
-              |qualifier of an assignment operator: t <= local27 ($k local t); t => local27
-              |generator of a for: t <= local28 ($k local t); t => local28
-              |value definition of a for: t <= local29 ($k local t); t => local29
-              |guard of a for: t <= local30 ($k local t); t => local30
-              |yield of a for: t <= local31 ($k local t); t => local31
-              |s interpolation: t <= local32 ($k local t); t => local32
-              |f interpolation: t <= local33 ($k local t); t => local33
-              |raw interpolation: t <= local34 ($k local t); t => local34
-              |""".stripMargin
-        else
-          s"""|default of a method: t => local0
-              |default of a local method: t => local1
-              |default of a second parameter list: t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t => local3; t => b/B.p4().(t)
-              |default of a class: t => local4
-              |default of a case class: t => local5
-              |default of an implicit class: t => local6
-              |default of an auxiliary constructor: t => local7
-              |default of a nested class: t => local8
-              |default of a local class: t => local9
-              |default of a local case class: t => local10
-              |argument before a default: t => local11
-              |named argument: t => local12
-              |named by-name argument: t => local13
-              |named argument of a name in scope: t => local14
-              |argument of an ambiguous view: t => local15
-              |argument of a parent: t => local16
-              |argument of a generic parent: t => local17
-              |argument of a parent annotation: t => local18
-              |argument of a self-constructor call: t => local19
-              |multiple definitions in a template: t => local20
-              |multiple definitions in a block: t => local21
-              |guard of a partial function: t => local22
-              |guard of a function of cases: t => local23
-              |right-hand side of an assignment operator: t => local24
-              |index of an update operator: t => local25
-              |array of an update operator: t => local26
-              |qualifier of an assignment operator: t => local27
-              |generator of a for: t => local28
-              |value definition of a for: t => local29
-              |guard of a for: t => local30
-              |yield of a for: t => local31
-              |s interpolation: t => local32
-              |f interpolation: t => local33
-              |raw interpolation: t => local34
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local0 ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local10 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local12 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local14 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local16 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local18 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local2 ($k local t)
-              |no definition: local20 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local22 ($k local t)
-              |no definition: local23 ($k local t)
-              |no definition: local24 ($k local t)
-              |no definition: local25 ($k local t)
-              |no definition: local26 ($k local t)
-              |no definition: local27 ($k local t)
-              |no definition: local28 ($k local t)
-              |no definition: local29 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local30 ($k local t)
-              |no definition: local31 ($k local t)
-              |no definition: local32 ($k local t)
-              |no definition: local33 ($k local t)
-              |no definition: local34 ($k local t)
-              |no definition: local4 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local6 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local8 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of a parent: t <= local16 ($k local t); t => local16
+            |argument of a generic parent: t <= local17 ($k local t); t => local17
+            |argument of a parent annotation: t <= local18 ($k local t); t => local18
+            |argument of a self-constructor call: t <= local19 ($k local t); t => local19
+            |multiple definitions in a template: t <= local20 ($k local t); t => local20
+            |multiple definitions in a block: t <= local21 ($k local t); t => local21
+            |guard of a partial function: t <= local22 ($k local t); t => local22
+            |guard of a function of cases: t <= local23 ($k local t); t => local23
+            |right-hand side of an assignment operator: t <= local24 ($k local t); t => local24
+            |index of an update operator: t <= local25 ($k local t); t => local25
+            |array of an update operator: t <= local26 ($k local t); t => local26
+            |qualifier of an assignment operator: t <= local27 ($k local t); t => local27
+            |generator of a for: t <= local28 ($k local t); t => local28
+            |value definition of a for: t <= local29 ($k local t); t => local29
+            |guard of a for: t <= local30 ($k local t); t => local30
+            |yield of a for: t <= local31 ($k local t); t => local31
+            |s interpolation: t <= local32 ($k local t); t => local32
+            |f interpolation: t <= local33 ($k local t); t => local33
+            |raw interpolation: t <= local34 ($k local t); t => local34
+            |""".stripMargin,
     ),
     (
       List("val", "var", "lazy val"),
@@ -7610,135 +6835,42 @@ class LocalSymbolsSuite extends FunSuite {
       "(t /* c */ : Int)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of a parent: t <= local16 ($k local t); t => local16
-              |argument of a generic parent: t <= local17 ($k local t); t => local17
-              |argument of a parent annotation: t <= local18 ($k local t); t => local18
-              |argument of a self-constructor call: t <= local19 ($k local t); t => local19
-              |multiple definitions in a template: t <= local20 ($k local t); t => local20
-              |multiple definitions in a block: t <= local21 ($k local t); t => local21
-              |guard of a partial function: t <= local22 ($k local t); t => local22
-              |guard of a function of cases: t <= local23 ($k local t); t => local23
-              |right-hand side of an assignment operator: t <= local24 ($k local t); t => local24
-              |index of an update operator: t <= local25 ($k local t); t => local25
-              |array of an update operator: t <= local26 ($k local t); t => local26
-              |qualifier of an assignment operator: t <= local27 ($k local t); t => local27
-              |generator of a for: t <= local28 ($k local t); t => local28
-              |value definition of a for: t <= local29 ($k local t); t => local29
-              |guard of a for: t <= local30 ($k local t); t => local30
-              |yield of a for: t <= local31 ($k local t); t => local31
-              |s interpolation: t <= local32 ($k local t); t => local32
-              |f interpolation: t <= local33 ($k local t); t => local33
-              |raw interpolation: t <= local34 ($k local t); t => local34
-              |""".stripMargin
-        else
-          s"""|default of a method: t => local0
-              |default of a local method: t => local1
-              |default of a second parameter list: t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t => local3; t => b/B.p4().(t)
-              |default of a class: t => local4
-              |default of a case class: t => local5
-              |default of an implicit class: t => local6
-              |default of an auxiliary constructor: t => local7
-              |default of a nested class: t => local8
-              |default of a local class: t => local9
-              |default of a local case class: t => local10
-              |argument before a default: t => local11
-              |named argument: t => local12
-              |named by-name argument: t => local13
-              |named argument of a name in scope: t => local14
-              |argument of an ambiguous view: t => local15
-              |argument of a parent: t => local16
-              |argument of a generic parent: t => local17
-              |argument of a parent annotation: t => local18
-              |argument of a self-constructor call: t => local19
-              |multiple definitions in a template: t => local20
-              |multiple definitions in a block: t => local21
-              |guard of a partial function: t => local22
-              |guard of a function of cases: t => local23
-              |right-hand side of an assignment operator: t => local24
-              |index of an update operator: t => local25
-              |array of an update operator: t => local26
-              |qualifier of an assignment operator: t => local27
-              |generator of a for: t => local28
-              |value definition of a for: t => local29
-              |guard of a for: t => local30
-              |yield of a for: t => local31
-              |s interpolation: t => local32
-              |f interpolation: t => local33
-              |raw interpolation: t => local34
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local0 ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local10 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local12 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local14 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local16 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local18 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local2 ($k local t)
-              |no definition: local20 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local22 ($k local t)
-              |no definition: local23 ($k local t)
-              |no definition: local24 ($k local t)
-              |no definition: local25 ($k local t)
-              |no definition: local26 ($k local t)
-              |no definition: local27 ($k local t)
-              |no definition: local28 ($k local t)
-              |no definition: local29 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local30 ($k local t)
-              |no definition: local31 ($k local t)
-              |no definition: local32 ($k local t)
-              |no definition: local33 ($k local t)
-              |no definition: local34 ($k local t)
-              |no definition: local4 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local6 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local8 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of a parent: t <= local16 ($k local t); t => local16
+            |argument of a generic parent: t <= local17 ($k local t); t => local17
+            |argument of a parent annotation: t <= local18 ($k local t); t => local18
+            |argument of a self-constructor call: t <= local19 ($k local t); t => local19
+            |multiple definitions in a template: t <= local20 ($k local t); t => local20
+            |multiple definitions in a block: t <= local21 ($k local t); t => local21
+            |guard of a partial function: t <= local22 ($k local t); t => local22
+            |guard of a function of cases: t <= local23 ($k local t); t => local23
+            |right-hand side of an assignment operator: t <= local24 ($k local t); t => local24
+            |index of an update operator: t <= local25 ($k local t); t => local25
+            |array of an update operator: t <= local26 ($k local t); t => local26
+            |qualifier of an assignment operator: t <= local27 ($k local t); t => local27
+            |generator of a for: t <= local28 ($k local t); t => local28
+            |value definition of a for: t <= local29 ($k local t); t => local29
+            |guard of a for: t <= local30 ($k local t); t => local30
+            |yield of a for: t <= local31 ($k local t); t => local31
+            |s interpolation: t <= local32 ($k local t); t => local32
+            |f interpolation: t <= local33 ($k local t); t => local33
+            |raw interpolation: t <= local34 ($k local t); t => local34
+            |""".stripMargin,
     ),
     (
       List("val", "var", "lazy val"),
@@ -7746,135 +6878,42 @@ class LocalSymbolsSuite extends FunSuite {
       "( /* c */ t: Int)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of a parent: t <= local16 ($k local t); t => local16
-              |argument of a generic parent: t <= local17 ($k local t); t => local17
-              |argument of a parent annotation: t <= local18 ($k local t); t => local18
-              |argument of a self-constructor call: t <= local19 ($k local t); t => local19
-              |multiple definitions in a template: t <= local20 ($k local t); t => local20
-              |multiple definitions in a block: t <= local21 ($k local t); t => local21
-              |guard of a partial function: t <= local22 ($k local t); t => local22
-              |guard of a function of cases: t <= local23 ($k local t); t => local23
-              |right-hand side of an assignment operator: t <= local24 ($k local t); t => local24
-              |index of an update operator: t <= local25 ($k local t); t => local25
-              |array of an update operator: t <= local26 ($k local t); t => local26
-              |qualifier of an assignment operator: t <= local27 ($k local t); t => local27
-              |generator of a for: t <= local28 ($k local t); t => local28
-              |value definition of a for: t <= local29 ($k local t); t => local29
-              |guard of a for: t <= local30 ($k local t); t => local30
-              |yield of a for: t <= local31 ($k local t); t => local31
-              |s interpolation: t <= local32 ($k local t); t => local32
-              |f interpolation: t <= local33 ($k local t); t => local33
-              |raw interpolation: t <= local34 ($k local t); t => local34
-              |""".stripMargin
-        else
-          s"""|default of a method: t => local0
-              |default of a local method: t => local1
-              |default of a second parameter list: t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t => local3; t => b/B.p4().(t)
-              |default of a class: t => local4
-              |default of a case class: t => local5
-              |default of an implicit class: t => local6
-              |default of an auxiliary constructor: t => local7
-              |default of a nested class: t => local8
-              |default of a local class: t => local9
-              |default of a local case class: t => local10
-              |argument before a default: t => local11
-              |named argument: t => local12
-              |named by-name argument: t => local13
-              |named argument of a name in scope: t => local14
-              |argument of an ambiguous view: t => local15
-              |argument of a parent: t => local16
-              |argument of a generic parent: t => local17
-              |argument of a parent annotation: t => local18
-              |argument of a self-constructor call: t => local19
-              |multiple definitions in a template: t => local20
-              |multiple definitions in a block: t => local21
-              |guard of a partial function: t => local22
-              |guard of a function of cases: t => local23
-              |right-hand side of an assignment operator: t => local24
-              |index of an update operator: t => local25
-              |array of an update operator: t => local26
-              |qualifier of an assignment operator: t => local27
-              |generator of a for: t => local28
-              |value definition of a for: t => local29
-              |guard of a for: t => local30
-              |yield of a for: t => local31
-              |s interpolation: t => local32
-              |f interpolation: t => local33
-              |raw interpolation: t => local34
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local0 ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local10 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local12 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local14 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local16 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local18 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local2 ($k local t)
-              |no definition: local20 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local22 ($k local t)
-              |no definition: local23 ($k local t)
-              |no definition: local24 ($k local t)
-              |no definition: local25 ($k local t)
-              |no definition: local26 ($k local t)
-              |no definition: local27 ($k local t)
-              |no definition: local28 ($k local t)
-              |no definition: local29 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local30 ($k local t)
-              |no definition: local31 ($k local t)
-              |no definition: local32 ($k local t)
-              |no definition: local33 ($k local t)
-              |no definition: local34 ($k local t)
-              |no definition: local4 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local6 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local8 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of a parent: t <= local16 ($k local t); t => local16
+            |argument of a generic parent: t <= local17 ($k local t); t => local17
+            |argument of a parent annotation: t <= local18 ($k local t); t => local18
+            |argument of a self-constructor call: t <= local19 ($k local t); t => local19
+            |multiple definitions in a template: t <= local20 ($k local t); t => local20
+            |multiple definitions in a block: t <= local21 ($k local t); t => local21
+            |guard of a partial function: t <= local22 ($k local t); t => local22
+            |guard of a function of cases: t <= local23 ($k local t); t => local23
+            |right-hand side of an assignment operator: t <= local24 ($k local t); t => local24
+            |index of an update operator: t <= local25 ($k local t); t => local25
+            |array of an update operator: t <= local26 ($k local t); t => local26
+            |qualifier of an assignment operator: t <= local27 ($k local t); t => local27
+            |generator of a for: t <= local28 ($k local t); t => local28
+            |value definition of a for: t <= local29 ($k local t); t => local29
+            |guard of a for: t <= local30 ($k local t); t => local30
+            |yield of a for: t <= local31 ($k local t); t => local31
+            |s interpolation: t <= local32 ($k local t); t => local32
+            |f interpolation: t <= local33 ($k local t); t => local33
+            |raw interpolation: t <= local34 ($k local t); t => local34
+            |""".stripMargin,
     ),
     (
       List("val", "var"),
@@ -7882,116 +6921,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Tuple2(t, _)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local22
-              |multiple definitions in a block: t <= local23 ($k local t); t => local24
-              |guard of a partial function: t <= local25 ($k local t); t => local25
-              |guard of a function of cases: t <= local26 ($k local t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k local t); t => local27
-              |index of an update operator: t <= local28 ($k local t); t => local28
-              |array of an update operator: t <= local29 ($k local t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k local t); t => local30
-              |generator of a for: t <= local31 ($k local t); t => local31
-              |value definition of a for: t <= local32 ($k local t); t => local32
-              |guard of a for: t <= local33 ($k local t); t => local33
-              |yield of a for: t <= local34 ($k local t); t => local34
-              |s interpolation: t <= local35 ($k local t); t => local35
-              |f interpolation: t <= local36 ($k local t); t => local36
-              |raw interpolation: t <= local37 ($k local t); t => local37
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local22 ($k local t)
-              |no definition: local24 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("lazy val"),
@@ -7999,116 +6965,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Tuple2(t, _)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local22
-              |multiple definitions in a block: t <= local23 ($k local t); t => local24
-              |guard of a partial function: t <= local25 ($k local t); t => local25
-              |guard of a function of cases: t <= local26 ($k local t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k local t); t => local27
-              |index of an update operator: t <= local28 ($k local t); t => local28
-              |array of an update operator: t <= local29 ($k local t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k local t); t => local30
-              |generator of a for: t <= local31 ($k local t); t => local31
-              |value definition of a for: t <= local32 ($k local t); t => local32
-              |guard of a for: t <= local33 ($k local t); t => local33
-              |yield of a for: t <= local34 ($k local t); t => local34
-              |s interpolation: t <= local35 ($k local t); t => local35
-              |f interpolation: t <= local36 ($k local t); t => local36
-              |raw interpolation: t <= local37 ($k local t); t => local37
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: local22 ($k local t)
-              |no definition: local24 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val", "var", "lazy val"),
@@ -8248,116 +7141,43 @@ class LocalSymbolsSuite extends FunSuite {
       "(t, _)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local22
-              |multiple definitions in a block: t <= local23 ($k local t); t => local24
-              |guard of a partial function: t <= local25 ($k local t); t => local25
-              |guard of a function of cases: t <= local26 ($k local t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k local t); t => local27
-              |index of an update operator: t <= local28 ($k local t); t => local28
-              |array of an update operator: t <= local29 ($k local t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k local t); t => local30
-              |generator of a for: t <= local31 ($k local t); t => local31
-              |value definition of a for: t <= local32 ($k local t); t => local32
-              |guard of a for: t <= local33 ($k local t); t => local33
-              |yield of a for: t <= local34 ($k local t); t => local34
-              |s interpolation: t <= local35 ($k local t); t => local35
-              |f interpolation: t <= local36 ($k local t); t => local36
-              |raw interpolation: t <= local37 ($k local t); t => local37
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local22 ($k local t)
-              |no definition: local24 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -8365,116 +7185,43 @@ class LocalSymbolsSuite extends FunSuite {
       "(t, 1)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local22
-              |multiple definitions in a block: t <= local23 ($k local t); t => local24
-              |guard of a partial function: t <= local25 ($k local t); t => local25
-              |guard of a function of cases: t <= local26 ($k local t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k local t); t => local27
-              |index of an update operator: t <= local28 ($k local t); t => local28
-              |array of an update operator: t <= local29 ($k local t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k local t); t => local30
-              |generator of a for: t <= local31 ($k local t); t => local31
-              |value definition of a for: t <= local32 ($k local t); t => local32
-              |guard of a for: t <= local33 ($k local t); t => local33
-              |yield of a for: t <= local34 ($k local t); t => local34
-              |s interpolation: t <= local35 ($k local t); t => local35
-              |f interpolation: t <= local36 ($k local t); t => local36
-              |raw interpolation: t <= local37 ($k local t); t => local37
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local22 ($k local t)
-              |no definition: local24 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -8482,116 +7229,43 @@ class LocalSymbolsSuite extends FunSuite {
       "List(t, _*)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local22
-              |multiple definitions in a block: t <= local23 ($k local t); t => local24
-              |guard of a partial function: t <= local25 ($k local t); t => local25
-              |guard of a function of cases: t <= local26 ($k local t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k local t); t => local27
-              |index of an update operator: t <= local28 ($k local t); t => local28
-              |array of an update operator: t <= local29 ($k local t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k local t); t => local30
-              |generator of a for: t <= local31 ($k local t); t => local31
-              |value definition of a for: t <= local32 ($k local t); t => local32
-              |guard of a for: t <= local33 ($k local t); t => local33
-              |yield of a for: t <= local34 ($k local t); t => local34
-              |s interpolation: t <= local35 ($k local t); t => local35
-              |f interpolation: t <= local36 ($k local t); t => local36
-              |raw interpolation: t <= local37 ($k local t); t => local37
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local22 ($k local t)
-              |no definition: local24 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -8599,116 +7273,43 @@ class LocalSymbolsSuite extends FunSuite {
       "t :: _",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local22
-              |multiple definitions in a block: t <= local23 ($k local t); t => local24
-              |guard of a partial function: t <= local25 ($k local t); t => local25
-              |guard of a function of cases: t <= local26 ($k local t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k local t); t => local27
-              |index of an update operator: t <= local28 ($k local t); t => local28
-              |array of an update operator: t <= local29 ($k local t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k local t); t => local30
-              |generator of a for: t <= local31 ($k local t); t => local31
-              |value definition of a for: t <= local32 ($k local t); t => local32
-              |guard of a for: t <= local33 ($k local t); t => local33
-              |yield of a for: t <= local34 ($k local t); t => local34
-              |s interpolation: t <= local35 ($k local t); t => local35
-              |f interpolation: t <= local36 ($k local t); t => local36
-              |raw interpolation: t <= local37 ($k local t); t => local37
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local22 ($k local t)
-              |no definition: local24 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -8716,116 +7317,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t @ _)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local1
-              |default of a local method: t <= local2 ($k local t); t => local3
-              |default of a second parameter list: t <= local4 ($k local t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); t => local9
-              |default of a case class: t <= local10 ($k local t); t => local11
-              |default of an implicit class: t <= local12 ($k local t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); t => local15
-              |default of a nested class: t <= local16 ($k local t); t => local17
-              |default of a local class: t <= local18 ($k local t); t => local19
-              |default of a local case class: t <= local20 ($k local t); t => local21
-              |argument before a default: t <= local22 ($k local t); t => local22
-              |named argument: t <= local23 ($k local t); t => local23
-              |named by-name argument: t <= local24 ($k local t); t => local24
-              |named argument of a name in scope: t <= local25 ($k local t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k local t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k local t); t => local27
-              |argument of a parent: t <= local28 ($k local t); t => local28
-              |argument of a generic parent: t <= local29 ($k local t); t => local29
-              |argument of a parent annotation: t <= local30 ($k local t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k local t); t => local31
-              |multiple definitions in a template: t <= local32 ($k local t); t => local33
-              |multiple definitions in a block: t <= local34 ($k local t); t => local35
-              |guard of a partial function: t <= local36 ($k local t); t => local37
-              |guard of a function of cases: t <= local38 ($k local t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k local t); t => local39
-              |index of an update operator: t <= local40 ($k local t); t => local40
-              |array of an update operator: t <= local41 ($k local t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k local t); t => local42
-              |generator of a for: t <= local43 ($k local t); t => local43
-              |value definition of a for: t <= local44 ($k local t); t => local44
-              |guard of a for: t <= local45 ($k local t); t => local45
-              |yield of a for: t <= local46 ($k local t); t => local46
-              |s interpolation: t <= local47 ($k local t); t => local47
-              |f interpolation: t <= local48 ($k local t); t => local48
-              |raw interpolation: t <= local49 ($k local t); t => local49
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local33 ($k local t)
-              |no definition: local35 ($k local t)
-              |no definition: local37 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -8833,116 +7361,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(Some(t))",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local1
-              |default of a local method: t <= local2 ($k local t); t => local3
-              |default of a second parameter list: t <= local4 ($k local t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); t => local9
-              |default of a case class: t <= local10 ($k local t); t => local11
-              |default of an implicit class: t <= local12 ($k local t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); t => local15
-              |default of a nested class: t <= local16 ($k local t); t => local17
-              |default of a local class: t <= local18 ($k local t); t => local19
-              |default of a local case class: t <= local20 ($k local t); t => local21
-              |argument before a default: t <= local22 ($k local t); t => local22
-              |named argument: t <= local23 ($k local t); t => local23
-              |named by-name argument: t <= local24 ($k local t); t => local24
-              |named argument of a name in scope: t <= local25 ($k local t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k local t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k local t); t => local27
-              |argument of a parent: t <= local28 ($k local t); t => local28
-              |argument of a generic parent: t <= local29 ($k local t); t => local29
-              |argument of a parent annotation: t <= local30 ($k local t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k local t); t => local31
-              |multiple definitions in a template: t <= local32 ($k local t); t => local33
-              |multiple definitions in a block: t <= local34 ($k local t); t => local35
-              |guard of a partial function: t <= local36 ($k local t); t => local37
-              |guard of a function of cases: t <= local38 ($k local t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k local t); t => local39
-              |index of an update operator: t <= local40 ($k local t); t => local40
-              |array of an update operator: t <= local41 ($k local t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k local t); t => local42
-              |generator of a for: t <= local43 ($k local t); t => local43
-              |value definition of a for: t <= local44 ($k local t); t => local44
-              |guard of a for: t <= local45 ($k local t); t => local45
-              |yield of a for: t <= local46 ($k local t); t => local46
-              |s interpolation: t <= local47 ($k local t); t => local47
-              |f interpolation: t <= local48 ($k local t); t => local48
-              |raw interpolation: t <= local49 ($k local t); t => local49
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local33 ($k local t)
-              |no definition: local35 ($k local t)
-              |no definition: local37 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -8950,116 +7405,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some((t: Int))",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local1
-              |default of a local method: t <= local2 ($k local t); t => local3
-              |default of a second parameter list: t <= local4 ($k local t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); t => local9
-              |default of a case class: t <= local10 ($k local t); t => local11
-              |default of an implicit class: t <= local12 ($k local t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); t => local15
-              |default of a nested class: t <= local16 ($k local t); t => local17
-              |default of a local class: t <= local18 ($k local t); t => local19
-              |default of a local case class: t <= local20 ($k local t); t => local21
-              |argument before a default: t <= local22 ($k local t); t => local22
-              |named argument: t <= local23 ($k local t); t => local23
-              |named by-name argument: t <= local24 ($k local t); t => local24
-              |named argument of a name in scope: t <= local25 ($k local t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k local t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k local t); t => local27
-              |argument of a parent: t <= local28 ($k local t); t => local28
-              |argument of a generic parent: t <= local29 ($k local t); t => local29
-              |argument of a parent annotation: t <= local30 ($k local t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k local t); t => local31
-              |multiple definitions in a template: t <= local32 ($k local t); t => local33
-              |multiple definitions in a block: t <= local34 ($k local t); t => local35
-              |guard of a partial function: t <= local36 ($k local t); t => local37
-              |guard of a function of cases: t <= local38 ($k local t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k local t); t => local39
-              |index of an update operator: t <= local40 ($k local t); t => local40
-              |array of an update operator: t <= local41 ($k local t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k local t); t => local42
-              |generator of a for: t <= local43 ($k local t); t => local43
-              |value definition of a for: t <= local44 ($k local t); t => local44
-              |guard of a for: t <= local45 ($k local t); t => local45
-              |yield of a for: t <= local46 ($k local t); t => local46
-              |s interpolation: t <= local47 ($k local t); t => local47
-              |f interpolation: t <= local48 ($k local t); t => local48
-              |raw interpolation: t <= local49 ($k local t); t => local49
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local33 ($k local t)
-              |no definition: local35 ($k local t)
-              |no definition: local37 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -9067,114 +7449,42 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t: Int)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of a parent: t <= local16 ($k local t); t => local16
-              |argument of a generic parent: t <= local17 ($k local t); t => local17
-              |argument of a parent annotation: t <= local18 ($k local t); t => local18
-              |argument of a self-constructor call: t <= local19 ($k local t); t => local19
-              |multiple definitions in a template: t <= local20 ($k local t); t => local20
-              |multiple definitions in a block: t <= local21 ($k local t); t => local21
-              |guard of a partial function: t <= local22 ($k local t); t => local22
-              |guard of a function of cases: t <= local23 ($k local t); t => local23
-              |right-hand side of an assignment operator: t <= local24 ($k local t); t => local24
-              |index of an update operator: t <= local25 ($k local t); t => local25
-              |array of an update operator: t <= local26 ($k local t); t => local26
-              |qualifier of an assignment operator: t <= local27 ($k local t); t => local27
-              |generator of a for: t <= local28 ($k local t); t => local28
-              |value definition of a for: t <= local29 ($k local t); t => local29
-              |guard of a for: t <= local30 ($k local t); t => local30
-              |yield of a for: t <= local31 ($k local t); t => local31
-              |s interpolation: t <= local32 ($k local t); t => local32
-              |f interpolation: t <= local33 ($k local t); t => local33
-              |raw interpolation: t <= local34 ($k local t); t => local34
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local1
-              |default of a local method: t <= local2 ($k local t); t => local3
-              |default of a second parameter list: t <= local4 ($k local t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); t => local9
-              |default of a case class: t <= local10 ($k local t); t => local11
-              |default of an implicit class: t <= local12 ($k local t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); t => local15
-              |default of a nested class: t <= local16 ($k local t); t => local17
-              |default of a local class: t <= local18 ($k local t); t => local19
-              |default of a local case class: t <= local20 ($k local t); t => local21
-              |argument before a default: t <= local22 ($k local t); t => local22
-              |named argument: t <= local23 ($k local t); t => local23
-              |named by-name argument: t <= local24 ($k local t); t => local24
-              |named argument of a name in scope: t <= local25 ($k local t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k local t); t => local26
-              |argument of a parent: t <= local27 ($k local t); t => local27
-              |argument of a generic parent: t <= local28 ($k local t); t => local28
-              |argument of a parent annotation: t <= local29 ($k local t); t => local29
-              |argument of a self-constructor call: t <= local30 ($k local t); t => local30
-              |multiple definitions in a template: t <= local31 ($k local t); t => local32
-              |multiple definitions in a block: t <= local33 ($k local t); t => local34
-              |guard of a partial function: t <= local35 ($k local t); t => local36
-              |guard of a function of cases: t <= local37 ($k local t); t => local37
-              |right-hand side of an assignment operator: t <= local38 ($k local t); t => local38
-              |index of an update operator: t <= local39 ($k local t); t => local39
-              |array of an update operator: t <= local40 ($k local t); t => local40
-              |qualifier of an assignment operator: t <= local41 ($k local t); t => local41
-              |generator of a for: t <= local42 ($k local t); t => local42
-              |value definition of a for: t <= local43 ($k local t); t => local43
-              |guard of a for: t <= local44 ($k local t); t => local44
-              |yield of a for: t <= local45 ($k local t); t => local45
-              |s interpolation: t <= local46 ($k local t); t => local46
-              |f interpolation: t <= local47 ($k local t); t => local47
-              |raw interpolation: t <= local48 ($k local t); t => local48
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local32 ($k local t)
-              |no definition: local34 ($k local t)
-              |no definition: local36 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of a parent: t <= local16 ($k local t); t => local16
+            |argument of a generic parent: t <= local17 ($k local t); t => local17
+            |argument of a parent annotation: t <= local18 ($k local t); t => local18
+            |argument of a self-constructor call: t <= local19 ($k local t); t => local19
+            |multiple definitions in a template: t <= local20 ($k local t); t => local20
+            |multiple definitions in a block: t <= local21 ($k local t); t => local21
+            |guard of a partial function: t <= local22 ($k local t); t => local22
+            |guard of a function of cases: t <= local23 ($k local t); t => local23
+            |right-hand side of an assignment operator: t <= local24 ($k local t); t => local24
+            |index of an update operator: t <= local25 ($k local t); t => local25
+            |array of an update operator: t <= local26 ($k local t); t => local26
+            |qualifier of an assignment operator: t <= local27 ($k local t); t => local27
+            |generator of a for: t <= local28 ($k local t); t => local28
+            |value definition of a for: t <= local29 ($k local t); t => local29
+            |guard of a for: t <= local30 ($k local t); t => local30
+            |yield of a for: t <= local31 ($k local t); t => local31
+            |s interpolation: t <= local32 ($k local t); t => local32
+            |f interpolation: t <= local33 ($k local t); t => local33
+            |raw interpolation: t <= local34 ($k local t); t => local34
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -9182,116 +7492,43 @@ class LocalSymbolsSuite extends FunSuite {
       "List(_, t @ _*)",
       "t.head",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local1
-              |default of a local method: t <= local2 ($k local t); t => local3
-              |default of a second parameter list: t <= local4 ($k local t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); t => local9
-              |default of a case class: t <= local10 ($k local t); t => local11
-              |default of an implicit class: t <= local12 ($k local t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); t => local15
-              |default of a nested class: t <= local16 ($k local t); t => local17
-              |default of a local class: t <= local18 ($k local t); t => local19
-              |default of a local case class: t <= local20 ($k local t); t => local21
-              |argument before a default: t <= local22 ($k local t); t => local22
-              |named argument: t <= local23 ($k local t); t => local23
-              |named by-name argument: t <= local24 ($k local t); t => local24
-              |named argument of a name in scope: t <= local25 ($k local t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k local t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k local t); t => local27
-              |argument of a parent: t <= local28 ($k local t); t => local28
-              |argument of a generic parent: t <= local29 ($k local t); t => local29
-              |argument of a parent annotation: t <= local30 ($k local t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k local t); t => local31
-              |multiple definitions in a template: t <= local32 ($k local t); t => local33
-              |multiple definitions in a block: t <= local34 ($k local t); t => local35
-              |guard of a partial function: t <= local36 ($k local t); t => local37
-              |guard of a function of cases: t <= local38 ($k local t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k local t); t => local39
-              |index of an update operator: t <= local40 ($k local t); t => local40
-              |array of an update operator: t <= local41 ($k local t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k local t); t => local42
-              |generator of a for: t <= local43 ($k local t); t => local43
-              |value definition of a for: t <= local44 ($k local t); t => local44
-              |guard of a for: t <= local45 ($k local t); t => local45
-              |yield of a for: t <= local46 ($k local t); t => local46
-              |s interpolation: t <= local47 ($k local t); t => local47
-              |f interpolation: t <= local48 ($k local t); t => local48
-              |raw interpolation: t <= local49 ($k local t); t => local49
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local33 ($k local t)
-              |no definition: local35 ($k local t)
-              |no definition: local37 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -9299,116 +7536,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Seq(t)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local1
-              |default of a local method: t <= local2 ($k local t); t => local3
-              |default of a second parameter list: t <= local4 ($k local t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); t => local9
-              |default of a case class: t <= local10 ($k local t); t => local11
-              |default of an implicit class: t <= local12 ($k local t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); t => local15
-              |default of a nested class: t <= local16 ($k local t); t => local17
-              |default of a local class: t <= local18 ($k local t); t => local19
-              |default of a local case class: t <= local20 ($k local t); t => local21
-              |argument before a default: t <= local22 ($k local t); t => local22
-              |named argument: t <= local23 ($k local t); t => local23
-              |named by-name argument: t <= local24 ($k local t); t => local24
-              |named argument of a name in scope: t <= local25 ($k local t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k local t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k local t); t => local27
-              |argument of a parent: t <= local28 ($k local t); t => local28
-              |argument of a generic parent: t <= local29 ($k local t); t => local29
-              |argument of a parent annotation: t <= local30 ($k local t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k local t); t => local31
-              |multiple definitions in a template: t <= local32 ($k local t); t => local33
-              |multiple definitions in a block: t <= local34 ($k local t); t => local35
-              |guard of a partial function: t <= local36 ($k local t); t => local37
-              |guard of a function of cases: t <= local38 ($k local t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k local t); t => local39
-              |index of an update operator: t <= local40 ($k local t); t => local40
-              |array of an update operator: t <= local41 ($k local t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k local t); t => local42
-              |generator of a for: t <= local43 ($k local t); t => local43
-              |value definition of a for: t <= local44 ($k local t); t => local44
-              |guard of a for: t <= local45 ($k local t); t => local45
-              |yield of a for: t <= local46 ($k local t); t => local46
-              |s interpolation: t <= local47 ($k local t); t => local47
-              |f interpolation: t <= local48 ($k local t); t => local48
-              |raw interpolation: t <= local49 ($k local t); t => local49
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local33 ($k local t)
-              |no definition: local35 ($k local t)
-              |no definition: local37 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -9416,116 +7580,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Array(t)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local1
-              |default of a local method: t <= local2 ($k local t); t => local3
-              |default of a second parameter list: t <= local4 ($k local t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); t => local9
-              |default of a case class: t <= local10 ($k local t); t => local11
-              |default of an implicit class: t <= local12 ($k local t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); t => local15
-              |default of a nested class: t <= local16 ($k local t); t => local17
-              |default of a local class: t <= local18 ($k local t); t => local19
-              |default of a local case class: t <= local20 ($k local t); t => local21
-              |argument before a default: t <= local22 ($k local t); t => local22
-              |named argument: t <= local23 ($k local t); t => local23
-              |named by-name argument: t <= local24 ($k local t); t => local24
-              |named argument of a name in scope: t <= local25 ($k local t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k local t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k local t); t => local27
-              |argument of a parent: t <= local28 ($k local t); t => local28
-              |argument of a generic parent: t <= local29 ($k local t); t => local29
-              |argument of a parent annotation: t <= local30 ($k local t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k local t); t => local31
-              |multiple definitions in a template: t <= local32 ($k local t); t => local33
-              |multiple definitions in a block: t <= local34 ($k local t); t => local35
-              |guard of a partial function: t <= local36 ($k local t); t => local37
-              |guard of a function of cases: t <= local38 ($k local t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k local t); t => local39
-              |index of an update operator: t <= local40 ($k local t); t => local40
-              |array of an update operator: t <= local41 ($k local t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k local t); t => local42
-              |generator of a for: t <= local43 ($k local t); t => local43
-              |value definition of a for: t <= local44 ($k local t); t => local44
-              |guard of a for: t <= local45 ($k local t); t => local45
-              |yield of a for: t <= local46 ($k local t); t => local46
-              |s interpolation: t <= local47 ($k local t); t => local47
-              |f interpolation: t <= local48 ($k local t); t => local48
-              |raw interpolation: t <= local49 ($k local t); t => local49
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local1 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local33 ($k local t)
-              |no definition: local35 ($k local t)
-              |no definition: local37 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("implicit val"),
@@ -9533,116 +7624,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t => local0
-              |default of a local method: t <= local1 ($k local t); t => local1
-              |default of a second parameter list: t <= local2 ($k local t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k local t); t => local4
-              |default of a case class: t <= local5 ($k local t); t => local5
-              |default of an implicit class: t <= local6 ($k local t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
-              |default of a nested class: t <= local8 ($k local t); t => local8
-              |default of a local class: t <= local9 ($k local t); t => local9
-              |default of a local case class: t <= local10 ($k local t); t => local10
-              |argument before a default: t <= local11 ($k local t); t => local11
-              |named argument: t <= local12 ($k local t); t => local12
-              |named by-name argument: t <= local13 ($k local t); t => local13
-              |named argument of a name in scope: t <= local14 ($k local t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k local t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k local t); t => local16
-              |argument of a parent: t <= local17 ($k local t); t => local17
-              |argument of a generic parent: t <= local18 ($k local t); t => local18
-              |argument of a parent annotation: t <= local19 ($k local t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k local t); t => local20
-              |multiple definitions in a template: t <= local21 ($k local t); t => local21
-              |multiple definitions in a block: t <= local22 ($k local t); t => local22
-              |guard of a partial function: t <= local23 ($k local t); t => local23
-              |guard of a function of cases: t <= local24 ($k local t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
-              |index of an update operator: t <= local26 ($k local t); t => local26
-              |array of an update operator: t <= local27 ($k local t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
-              |generator of a for: t <= local29 ($k local t); t => local29
-              |value definition of a for: t <= local30 ($k local t); t => local30
-              |guard of a for: t <= local31 ($k local t); t => local31
-              |yield of a for: t <= local32 ($k local t); t => local32
-              |s interpolation: t <= local33 ($k local t); t => local33
-              |f interpolation: t <= local34 ($k local t); t => local34
-              |raw interpolation: t <= local35 ($k local t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t => local1
-              |default of a local method: t <= local2 ($k local t); t => local3
-              |default of a second parameter list: t <= local4 ($k local t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); t => local9
-              |default of a case class: t <= local10 ($k local t); t => local11
-              |default of an implicit class: t <= local12 ($k local t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); t => local15
-              |default of a nested class: t <= local16 ($k local t); t => local17
-              |default of a local class: t <= local18 ($k local t); t => local19
-              |default of a local case class: t <= local20 ($k local t); t => local21
-              |argument before a default: t <= local22 ($k local t); t => local22
-              |named argument: t <= local23 ($k local t); t => local23
-              |named by-name argument: t <= local24 ($k local t); t => local24
-              |named argument of a name in scope: t <= local25 ($k local t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k local t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k local t); t => local27
-              |argument of a parent: t <= local28 ($k local t); t => local28
-              |argument of a generic parent: t <= local29 ($k local t); t => local29
-              |argument of a parent annotation: t <= local30 ($k local t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k local t); t => local31
-              |multiple definitions in a template: t <= local32 ($k local t); t => local33
-              |multiple definitions in a block: t <= local34 ($k local t); t => local35
-              |guard of a partial function: t <= local36 ($k local t); t => local37
-              |guard of a function of cases: t <= local38 ($k local t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k local t); t => local39
-              |index of an update operator: t <= local40 ($k local t); t => local40
-              |array of an update operator: t <= local41 ($k local t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k local t); t => local42
-              |generator of a for: t <= local43 ($k local t); t => local43
-              |value definition of a for: t <= local44 ($k local t); t => local44
-              |guard of a for: t <= local45 ($k local t); t => local45
-              |yield of a for: t <= local46 ($k local t); t => local46
-              |s interpolation: t <= local47 ($k local t); t => local47
-              |f interpolation: t <= local48 ($k local t); t => local48
-              |raw interpolation: t <= local49 ($k local t); t => local49
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: local1 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local17 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local33 ($k local t)
-              |no definition: local35 ($k local t)
-              |no definition: local37 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local9 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t => local0
+            |default of a local method: t <= local1 ($k local t); t => local1
+            |default of a second parameter list: t <= local2 ($k local t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k local t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k local t); t => local4
+            |default of a case class: t <= local5 ($k local t); t => local5
+            |default of an implicit class: t <= local6 ($k local t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k local t); t => local7
+            |default of a nested class: t <= local8 ($k local t); t => local8
+            |default of a local class: t <= local9 ($k local t); t => local9
+            |default of a local case class: t <= local10 ($k local t); t => local10
+            |argument before a default: t <= local11 ($k local t); t => local11
+            |named argument: t <= local12 ($k local t); t => local12
+            |named by-name argument: t <= local13 ($k local t); t => local13
+            |named argument of a name in scope: t <= local14 ($k local t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k local t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k local t); t => local16
+            |argument of a parent: t <= local17 ($k local t); t => local17
+            |argument of a generic parent: t <= local18 ($k local t); t => local18
+            |argument of a parent annotation: t <= local19 ($k local t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k local t); t => local20
+            |multiple definitions in a template: t <= local21 ($k local t); t => local21
+            |multiple definitions in a block: t <= local22 ($k local t); t => local22
+            |guard of a partial function: t <= local23 ($k local t); t => local23
+            |guard of a function of cases: t <= local24 ($k local t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k local t); t => local25
+            |index of an update operator: t <= local26 ($k local t); t => local26
+            |array of an update operator: t <= local27 ($k local t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k local t); t => local28
+            |generator of a for: t <= local29 ($k local t); t => local29
+            |value definition of a for: t <= local30 ($k local t); t => local30
+            |guard of a for: t <= local31 ($k local t); t => local31
+            |yield of a for: t <= local32 ($k local t); t => local32
+            |s interpolation: t <= local33 ($k local t); t => local33
+            |f interpolation: t <= local34 ($k local t); t => local34
+            |raw interpolation: t <= local35 ($k local t); t => local35
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -9650,149 +7668,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t), Some(u)",
       "t + u",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
-              |default of a local method: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
-              |default of a second parameter list: t <= local4 ($k local t); u <= local5 ($k local u); t => local4; u => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); u <= local7 ($k local u); t => local6; u => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); u <= local9 ($k local u); t => local8; u => local9
-              |default of a case class: t <= local10 ($k local t); u <= local11 ($k local u); t => local10; u => local11
-              |default of an implicit class: t <= local12 ($k local t); u <= local13 ($k local u); t => local12; u => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); u <= local15 ($k local u); t => local14; u => local15
-              |default of a nested class: t <= local16 ($k local t); u <= local17 ($k local u); t => local16; u => local17
-              |default of a local class: t <= local18 ($k local t); u <= local19 ($k local u); t => local18; u => local19
-              |default of a local case class: t <= local20 ($k local t); u <= local21 ($k local u); t => local20; u => local21
-              |argument before a default: t <= local22 ($k local t); u <= local23 ($k local u); t => local22; u => local23
-              |named argument: t <= local24 ($k local t); u <= local25 ($k local u); t => local24; u => local25
-              |named by-name argument: t <= local26 ($k local t); u <= local27 ($k local u); t => local26; u => local27
-              |named argument of a name in scope: t <= local28 ($k local t); u <= local29 ($k local u); t => local28; u => local29
-              |argument of an ambiguous view: t <= local30 ($k local t); u <= local31 ($k local u); t => local30; u => local31
-              |argument of an eta-expansion: t <= local32 ($k local t); u <= local33 ($k local u); t => local32; u => local33
-              |argument of a parent: t <= local34 ($k local t); u <= local35 ($k local u); t => local34; u => local35
-              |argument of a generic parent: t <= local36 ($k local t); u <= local37 ($k local u); t => local36; u => local37
-              |argument of a parent annotation: t <= local38 ($k local t); u <= local39 ($k local u); t => local38; u => local39
-              |argument of a self-constructor call: t <= local40 ($k local t); u <= local41 ($k local u); t => local40; u => local41
-              |multiple definitions in a template: t <= local42 ($k local t); u <= local43 ($k local u); t => local42; u => local43
-              |multiple definitions in a block: t <= local44 ($k local t); u <= local45 ($k local u); t => local44; u => local45
-              |guard of a partial function: t <= local46 ($k local t); u <= local47 ($k local u); t => local46; u => local47
-              |guard of a function of cases: t <= local48 ($k local t); u <= local49 ($k local u); t => local48; u => local49
-              |right-hand side of an assignment operator: t <= local50 ($k local t); u <= local51 ($k local u); t => local50; u => local51
-              |index of an update operator: t <= local52 ($k local t); u <= local53 ($k local u); t => local52; u => local53
-              |array of an update operator: t <= local54 ($k local t); u <= local55 ($k local u); t => local54; u => local55
-              |qualifier of an assignment operator: t <= local56 ($k local t); u <= local57 ($k local u); t => local56; u => local57
-              |generator of a for: t <= local58 ($k local t); u <= local59 ($k local u); t => local58; u => local59
-              |value definition of a for: t <= local60 ($k local t); u <= local61 ($k local u); t => local60; u => local61
-              |guard of a for: t <= local62 ($k local t); u <= local63 ($k local u); t => local62; u => local63
-              |yield of a for: t <= local64 ($k local t); u <= local65 ($k local u); t => local64; u => local65
-              |s interpolation: t <= local66 ($k local t); u <= local67 ($k local u); t => local66; u => local67
-              |f interpolation: t <= local68 ($k local t); u <= local69 ($k local u); t => local68; u => local69
-              |raw interpolation: t <= local70 ($k local t); u <= local71 ($k local u); t => local70; u => local71
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); u <= local1 ($k local u); t => local2; u => local3
-              |default of a local method: t <= local4 ($k local t); u <= local5 ($k local u); t => local6; u => local7
-              |default of a second parameter list: t <= local8 ($k local t); u <= local9 ($k local u); t => local10; u => local11
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local12 ($k local t); u <= local13 ($k local u); t => b/B.p4().(t); u => local14; t => b/B.p4().(t)
-              |default of a class: t <= local15 ($k local t); u <= local16 ($k local u); t => local17; u => local18
-              |default of a case class: t <= local19 ($k local t); u <= local20 ($k local u); t => local21; u => local22
-              |default of an implicit class: t <= local23 ($k local t); u <= local24 ($k local u); t => local25; u => local26
-              |default of an auxiliary constructor: t <= local27 ($k local t); u <= local28 ($k local u); t => local29; u => local30
-              |default of a nested class: t <= local31 ($k local t); u <= local32 ($k local u); t => local33; u => local34
-              |default of a local class: t <= local35 ($k local t); u <= local36 ($k local u); t => local37; u => local38
-              |default of a local case class: t <= local39 ($k local t); u <= local40 ($k local u); t => local41; u => local42
-              |argument before a default: t <= local43 ($k local t); u <= local44 ($k local u); t => local43; u => local44
-              |named argument: t <= local45 ($k local t); u <= local46 ($k local u); t => local45; u => local46
-              |named by-name argument: t <= local47 ($k local t); u <= local48 ($k local u); t => local47; u => local48
-              |named argument of a name in scope: t <= local49 ($k local t); u <= local50 ($k local u); t => local49; u => local50
-              |argument of an ambiguous view: t <= local51 ($k local t); u <= local52 ($k local u); t => local51; u => local52
-              |argument of an eta-expansion: t <= local53 ($k local t); u <= local54 ($k local u); t => local53; u => local54
-              |argument of a parent: t <= local55 ($k local t); u <= local56 ($k local u); t => local55; u => local56
-              |argument of a generic parent: t <= local57 ($k local t); u <= local58 ($k local u); t => local57; u => local58
-              |argument of a parent annotation: t <= local59 ($k local t); u <= local60 ($k local u); t => local59; u => local60
-              |argument of a self-constructor call: t <= local61 ($k local t); u <= local62 ($k local u); t => local61; u => local62
-              |multiple definitions in a template: t <= local63 ($k local t); u <= local64 ($k local u); t => local65; u => local66
-              |multiple definitions in a block: t <= local67 ($k local t); u <= local68 ($k local u); t => local69; u => local70
-              |guard of a partial function: t <= local71 ($k local t); u <= local72 ($k local u); t => local73; u => local74
-              |guard of a function of cases: t <= local75 ($k local t); u <= local76 ($k local u); t => local75; u => local76
-              |right-hand side of an assignment operator: t <= local77 ($k local t); u <= local78 ($k local u); t => local77; u => local78
-              |index of an update operator: t <= local79 ($k local t); u <= local80 ($k local u); t => local79; u => local80
-              |array of an update operator: t <= local81 ($k local t); u <= local82 ($k local u); t => local81; u => local82
-              |qualifier of an assignment operator: t <= local83 ($k local t); u <= local84 ($k local u); t => local83; u => local84
-              |generator of a for: t <= local85 ($k local t); u <= local86 ($k local u); t => local85; u => local86
-              |value definition of a for: t <= local87 ($k local t); u <= local88 ($k local u); t => local87; u => local88
-              |guard of a for: t <= local89 ($k local t); u <= local90 ($k local u); t => local89; u => local90
-              |yield of a for: t <= local91 ($k local t); u <= local92 ($k local u); t => local91; u => local92
-              |s interpolation: t <= local93 ($k local t); u <= local94 ($k local u); t => local93; u => local94
-              |f interpolation: t <= local95 ($k local t); u <= local96 ($k local u); t => local95; u => local96
-              |raw interpolation: t <= local97 ($k local t); u <= local98 ($k local u); t => local97; u => local98
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: local10 ($k local t)
-              |no definition: local11 ($k local u)
-              |no definition: local14 ($k local u)
-              |no definition: local17 ($k local t)
-              |no definition: local18 ($k local u)
-              |no definition: local2 ($k local t)
-              |no definition: local21 ($k local t)
-              |no definition: local22 ($k local u)
-              |no definition: local25 ($k local t)
-              |no definition: local26 ($k local u)
-              |no definition: local29 ($k local t)
-              |no definition: local3 ($k local u)
-              |no definition: local30 ($k local u)
-              |no definition: local33 ($k local t)
-              |no definition: local34 ($k local u)
-              |no definition: local37 ($k local t)
-              |no definition: local38 ($k local u)
-              |no definition: local41 ($k local t)
-              |no definition: local42 ($k local u)
-              |no definition: local6 ($k local t)
-              |no definition: local65 ($k local t)
-              |no definition: local66 ($k local u)
-              |no definition: local69 ($k local t)
-              |no definition: local7 ($k local u)
-              |no definition: local70 ($k local u)
-              |no definition: local73 ($k local t)
-              |no definition: local74 ($k local u)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
+            |default of a local method: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
+            |default of a second parameter list: t <= local4 ($k local t); u <= local5 ($k local u); t => local4; u => local5
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); u <= local7 ($k local u); t => local6; u => local7; t => b/B.p4().(t)
+            |default of a class: t <= local8 ($k local t); u <= local9 ($k local u); t => local8; u => local9
+            |default of a case class: t <= local10 ($k local t); u <= local11 ($k local u); t => local10; u => local11
+            |default of an implicit class: t <= local12 ($k local t); u <= local13 ($k local u); t => local12; u => local13
+            |default of an auxiliary constructor: t <= local14 ($k local t); u <= local15 ($k local u); t => local14; u => local15
+            |default of a nested class: t <= local16 ($k local t); u <= local17 ($k local u); t => local16; u => local17
+            |default of a local class: t <= local18 ($k local t); u <= local19 ($k local u); t => local18; u => local19
+            |default of a local case class: t <= local20 ($k local t); u <= local21 ($k local u); t => local20; u => local21
+            |argument before a default: t <= local22 ($k local t); u <= local23 ($k local u); t => local22; u => local23
+            |named argument: t <= local24 ($k local t); u <= local25 ($k local u); t => local24; u => local25
+            |named by-name argument: t <= local26 ($k local t); u <= local27 ($k local u); t => local26; u => local27
+            |named argument of a name in scope: t <= local28 ($k local t); u <= local29 ($k local u); t => local28; u => local29
+            |argument of an ambiguous view: t <= local30 ($k local t); u <= local31 ($k local u); t => local30; u => local31
+            |argument of an eta-expansion: t <= local32 ($k local t); u <= local33 ($k local u); t => local32; u => local33
+            |argument of a parent: t <= local34 ($k local t); u <= local35 ($k local u); t => local34; u => local35
+            |argument of a generic parent: t <= local36 ($k local t); u <= local37 ($k local u); t => local36; u => local37
+            |argument of a parent annotation: t <= local38 ($k local t); u <= local39 ($k local u); t => local38; u => local39
+            |argument of a self-constructor call: t <= local40 ($k local t); u <= local41 ($k local u); t => local40; u => local41
+            |multiple definitions in a template: t <= local42 ($k local t); u <= local43 ($k local u); t => local42; u => local43
+            |multiple definitions in a block: t <= local44 ($k local t); u <= local45 ($k local u); t => local44; u => local45
+            |guard of a partial function: t <= local46 ($k local t); u <= local47 ($k local u); t => local46; u => local47
+            |guard of a function of cases: t <= local48 ($k local t); u <= local49 ($k local u); t => local48; u => local49
+            |right-hand side of an assignment operator: t <= local50 ($k local t); u <= local51 ($k local u); t => local50; u => local51
+            |index of an update operator: t <= local52 ($k local t); u <= local53 ($k local u); t => local52; u => local53
+            |array of an update operator: t <= local54 ($k local t); u <= local55 ($k local u); t => local54; u => local55
+            |qualifier of an assignment operator: t <= local56 ($k local t); u <= local57 ($k local u); t => local56; u => local57
+            |generator of a for: t <= local58 ($k local t); u <= local59 ($k local u); t => local58; u => local59
+            |value definition of a for: t <= local60 ($k local t); u <= local61 ($k local u); t => local60; u => local61
+            |guard of a for: t <= local62 ($k local t); u <= local63 ($k local u); t => local62; u => local63
+            |yield of a for: t <= local64 ($k local t); u <= local65 ($k local u); t => local64; u => local65
+            |s interpolation: t <= local66 ($k local t); u <= local67 ($k local u); t => local66; u => local67
+            |f interpolation: t <= local68 ($k local t); u <= local69 ($k local u); t => local68; u => local69
+            |raw interpolation: t <= local70 ($k local t); u <= local71 ($k local u); t => local70; u => local71
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -9800,115 +7712,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t), u",
       "t + u.get",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
-              |default of a local method: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
-              |default of a second parameter list: t <= local4 ($k local t); u <= local5 ($k local u); t => local4; u => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); u <= local7 ($k local u); t => local6; u => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); u <= local9 ($k local u); t => local8; u => local9
-              |default of a case class: t <= local10 ($k local t); u <= local11 ($k local u); t => local10; u => local11
-              |default of an implicit class: t <= local12 ($k local t); u <= local13 ($k local u); t => local12; u => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); u <= local15 ($k local u); t => local14; u => local15
-              |default of a nested class: t <= local16 ($k local t); u <= local17 ($k local u); t => local16; u => local17
-              |default of a local class: t <= local18 ($k local t); u <= local19 ($k local u); t => local18; u => local19
-              |default of a local case class: t <= local20 ($k local t); u <= local21 ($k local u); t => local20; u => local21
-              |argument before a default: t <= local22 ($k local t); u <= local23 ($k local u); t => local22; u => local23
-              |named argument: t <= local24 ($k local t); u <= local25 ($k local u); t => local24; u => local25
-              |named by-name argument: t <= local26 ($k local t); u <= local27 ($k local u); t => local26; u => local27
-              |named argument of a name in scope: t <= local28 ($k local t); u <= local29 ($k local u); t => local28; u => local29
-              |argument of an ambiguous view: t <= local30 ($k local t); u <= local31 ($k local u); t => local30; u => local31
-              |argument of an eta-expansion: t <= local32 ($k local t); u <= local33 ($k local u); t => local32; u => local33
-              |argument of a parent: t <= local34 ($k local t); u <= local35 ($k local u); t => local34; u => local35
-              |argument of a generic parent: t <= local36 ($k local t); u <= local37 ($k local u); t => local36; u => local37
-              |argument of a parent annotation: t <= local38 ($k local t); u <= local39 ($k local u); t => local38; u => local39
-              |argument of a self-constructor call: t <= local40 ($k local t); u <= local41 ($k local u); t => local40; u => local41
-              |multiple definitions in a template: t <= local42 ($k local t); u <= local43 ($k local u); t => local42; u => local43
-              |multiple definitions in a block: t <= local44 ($k local t); u <= local45 ($k local u); t => local44; u => local45
-              |guard of a partial function: t <= local46 ($k local t); u <= local47 ($k local u); t => local46; u => local47
-              |guard of a function of cases: t <= local48 ($k local t); u <= local49 ($k local u); t => local48; u => local49
-              |right-hand side of an assignment operator: t <= local50 ($k local t); u <= local51 ($k local u); t => local50; u => local51
-              |index of an update operator: t <= local52 ($k local t); u <= local53 ($k local u); t => local52; u => local53
-              |array of an update operator: t <= local54 ($k local t); u <= local55 ($k local u); t => local54; u => local55
-              |qualifier of an assignment operator: t <= local56 ($k local t); u <= local57 ($k local u); t => local56; u => local57
-              |generator of a for: t <= local58 ($k local t); u <= local59 ($k local u); t => local58; u => local59
-              |value definition of a for: t <= local60 ($k local t); u <= local61 ($k local u); t => local60; u => local61
-              |guard of a for: t <= local62 ($k local t); u <= local63 ($k local u); t => local62; u => local63
-              |yield of a for: t <= local64 ($k local t); u <= local65 ($k local u); t => local64; u => local65
-              |s interpolation: t <= local66 ($k local t); u <= local67 ($k local u); t => local66; u => local67
-              |f interpolation: t <= local68 ($k local t); u <= local69 ($k local u); t => local68; u => local69
-              |raw interpolation: t <= local70 ($k local t); u <= local71 ($k local u); t => local70; u => local71
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); u <= local1 ($k local u); t => local2; u => local1
-              |default of a local method: t <= local3 ($k local t); u <= local4 ($k local u); t => local5; u => local4
-              |default of a second parameter list: t <= local6 ($k local t); u <= local7 ($k local u); t => local8; u => local7
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local9 ($k local t); u <= local10 ($k local u); t => b/B.p4().(t); u => local10; t => b/B.p4().(t)
-              |default of a class: t <= local11 ($k local t); u <= local12 ($k local u); t => local13; u => local12
-              |default of a case class: t <= local14 ($k local t); u <= local15 ($k local u); t => local16; u => local15
-              |default of an implicit class: t <= local17 ($k local t); u <= local18 ($k local u); t => local19; u => local18
-              |default of an auxiliary constructor: t <= local20 ($k local t); u <= local21 ($k local u); t => local22; u => local21
-              |default of a nested class: t <= local23 ($k local t); u <= local24 ($k local u); t => local25; u => local24
-              |default of a local class: t <= local26 ($k local t); u <= local27 ($k local u); t => local28; u => local27
-              |default of a local case class: t <= local29 ($k local t); u <= local30 ($k local u); t => local31; u => local30
-              |argument before a default: t <= local32 ($k local t); u <= local33 ($k local u); t => local32; u => local33
-              |named argument: t <= local34 ($k local t); u <= local35 ($k local u); t => local34; u => local35
-              |named by-name argument: t <= local36 ($k local t); u <= local37 ($k local u); t => local36; u => local37
-              |named argument of a name in scope: t <= local38 ($k local t); u <= local39 ($k local u); t => local38; u => local39
-              |argument of an ambiguous view: t <= local40 ($k local t); u <= local41 ($k local u); t => local40; u => local41
-              |argument of an eta-expansion: t <= local42 ($k local t); u <= local43 ($k local u); t => local42; u => local43
-              |argument of a parent: t <= local44 ($k local t); u <= local45 ($k local u); t => local44; u => local45
-              |argument of a generic parent: t <= local46 ($k local t); u <= local47 ($k local u); t => local46; u => local47
-              |argument of a parent annotation: t <= local48 ($k local t); u <= local49 ($k local u); t => local48; u => local49
-              |argument of a self-constructor call: t <= local50 ($k local t); u <= local51 ($k local u); t => local50; u => local51
-              |multiple definitions in a template: t <= local52 ($k local t); u <= local53 ($k local u); t => local54; u => local53
-              |multiple definitions in a block: t <= local55 ($k local t); u <= local56 ($k local u); t => local57; u => local56
-              |guard of a partial function: t <= local58 ($k local t); u <= local59 ($k local u); t => local60; u => local59
-              |guard of a function of cases: t <= local61 ($k local t); u <= local62 ($k local u); t => local61; u => local62
-              |right-hand side of an assignment operator: t <= local63 ($k local t); u <= local64 ($k local u); t => local63; u => local64
-              |index of an update operator: t <= local65 ($k local t); u <= local66 ($k local u); t => local65; u => local66
-              |array of an update operator: t <= local67 ($k local t); u <= local68 ($k local u); t => local67; u => local68
-              |qualifier of an assignment operator: t <= local69 ($k local t); u <= local70 ($k local u); t => local69; u => local70
-              |generator of a for: t <= local71 ($k local t); u <= local72 ($k local u); t => local71; u => local72
-              |value definition of a for: t <= local73 ($k local t); u <= local74 ($k local u); t => local73; u => local74
-              |guard of a for: t <= local75 ($k local t); u <= local76 ($k local u); t => local75; u => local76
-              |yield of a for: t <= local77 ($k local t); u <= local78 ($k local u); t => local77; u => local78
-              |s interpolation: t <= local79 ($k local t); u <= local80 ($k local u); t => local79; u => local80
-              |f interpolation: t <= local81 ($k local t); u <= local82 ($k local u); t => local81; u => local82
-              |raw interpolation: t <= local83 ($k local t); u <= local84 ($k local u); t => local83; u => local84
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local13 ($k local t)
-              |no definition: local16 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local2 ($k local t)
-              |no definition: local22 ($k local t)
-              |no definition: local25 ($k local t)
-              |no definition: local28 ($k local t)
-              |no definition: local31 ($k local t)
-              |no definition: local5 ($k local t)
-              |no definition: local54 ($k local t)
-              |no definition: local57 ($k local t)
-              |no definition: local60 ($k local t)
-              |no definition: local8 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; u => local1
+            |default of a local method: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; u => local3
+            |default of a second parameter list: t <= local4 ($k local t); u <= local5 ($k local u); t => local4; u => local5
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); u <= local7 ($k local u); t => local6; u => local7; t => b/B.p4().(t)
+            |default of a class: t <= local8 ($k local t); u <= local9 ($k local u); t => local8; u => local9
+            |default of a case class: t <= local10 ($k local t); u <= local11 ($k local u); t => local10; u => local11
+            |default of an implicit class: t <= local12 ($k local t); u <= local13 ($k local u); t => local12; u => local13
+            |default of an auxiliary constructor: t <= local14 ($k local t); u <= local15 ($k local u); t => local14; u => local15
+            |default of a nested class: t <= local16 ($k local t); u <= local17 ($k local u); t => local16; u => local17
+            |default of a local class: t <= local18 ($k local t); u <= local19 ($k local u); t => local18; u => local19
+            |default of a local case class: t <= local20 ($k local t); u <= local21 ($k local u); t => local20; u => local21
+            |argument before a default: t <= local22 ($k local t); u <= local23 ($k local u); t => local22; u => local23
+            |named argument: t <= local24 ($k local t); u <= local25 ($k local u); t => local24; u => local25
+            |named by-name argument: t <= local26 ($k local t); u <= local27 ($k local u); t => local26; u => local27
+            |named argument of a name in scope: t <= local28 ($k local t); u <= local29 ($k local u); t => local28; u => local29
+            |argument of an ambiguous view: t <= local30 ($k local t); u <= local31 ($k local u); t => local30; u => local31
+            |argument of an eta-expansion: t <= local32 ($k local t); u <= local33 ($k local u); t => local32; u => local33
+            |argument of a parent: t <= local34 ($k local t); u <= local35 ($k local u); t => local34; u => local35
+            |argument of a generic parent: t <= local36 ($k local t); u <= local37 ($k local u); t => local36; u => local37
+            |argument of a parent annotation: t <= local38 ($k local t); u <= local39 ($k local u); t => local38; u => local39
+            |argument of a self-constructor call: t <= local40 ($k local t); u <= local41 ($k local u); t => local40; u => local41
+            |multiple definitions in a template: t <= local42 ($k local t); u <= local43 ($k local u); t => local42; u => local43
+            |multiple definitions in a block: t <= local44 ($k local t); u <= local45 ($k local u); t => local44; u => local45
+            |guard of a partial function: t <= local46 ($k local t); u <= local47 ($k local u); t => local46; u => local47
+            |guard of a function of cases: t <= local48 ($k local t); u <= local49 ($k local u); t => local48; u => local49
+            |right-hand side of an assignment operator: t <= local50 ($k local t); u <= local51 ($k local u); t => local50; u => local51
+            |index of an update operator: t <= local52 ($k local t); u <= local53 ($k local u); t => local52; u => local53
+            |array of an update operator: t <= local54 ($k local t); u <= local55 ($k local u); t => local54; u => local55
+            |qualifier of an assignment operator: t <= local56 ($k local t); u <= local57 ($k local u); t => local56; u => local57
+            |generator of a for: t <= local58 ($k local t); u <= local59 ($k local u); t => local58; u => local59
+            |value definition of a for: t <= local60 ($k local t); u <= local61 ($k local u); t => local60; u => local61
+            |guard of a for: t <= local62 ($k local t); u <= local63 ($k local u); t => local62; u => local63
+            |yield of a for: t <= local64 ($k local t); u <= local65 ($k local u); t => local64; u => local65
+            |s interpolation: t <= local66 ($k local t); u <= local67 ($k local u); t => local66; u => local67
+            |f interpolation: t <= local68 ($k local t); u <= local69 ($k local u); t => local68; u => local69
+            |raw interpolation: t <= local70 ($k local t); u <= local71 ($k local u); t => local70; u => local71
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -10004,150 +7844,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t) = Option(1); val Some(u)",
       "t + u",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; t => local0; u => local1
-              |default of a local method: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; t => local2; u => local3
-              |default of a second parameter list: t <= local4 ($k local t); u <= local5 ($k local u); t => local4; t => local4; u => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); u <= local7 ($k local u); t => local6; t => local6; u => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); u <= local9 ($k local u); t => local8; t => local8; u => local9
-              |default of a case class: t <= local10 ($k local t); u <= local11 ($k local u); t => local10; t => local10; u => local11
-              |default of an implicit class: t <= local12 ($k local t); u <= local13 ($k local u); t => local12; t => local12; u => local13
-              |default of an auxiliary constructor: t <= local14 ($k local t); u <= local15 ($k local u); t => local14; t => local14; u => local15
-              |default of a nested class: t <= local16 ($k local t); u <= local17 ($k local u); t => local16; t => local16; u => local17
-              |default of a local class: t <= local18 ($k local t); u <= local19 ($k local u); t => local18; t => local18; u => local19
-              |default of a local case class: t <= local20 ($k local t); u <= local21 ($k local u); t => local20; t => local20; u => local21
-              |argument before a default: t <= local22 ($k local t); u <= local23 ($k local u); t => local22; t => local22; u => local23
-              |named argument: t <= local24 ($k local t); u <= local25 ($k local u); t => local24; t => local24; u => local25
-              |named by-name argument: t <= local26 ($k local t); u <= local27 ($k local u); t => local26; t => local26; u => local27
-              |named argument of a name in scope: t <= local28 ($k local t); u <= local29 ($k local u); t => local28; t => local28; u => local29
-              |argument of an ambiguous view: t <= local30 ($k local t); u <= local31 ($k local u); t => local30; t => local30; u => local31
-              |argument of an eta-expansion: t <= local32 ($k local t); u <= local33 ($k local u); t => local32; t => local32; u => local33
-              |argument of a parent: t <= local34 ($k local t); u <= local35 ($k local u); t => local34; t => local34; u => local35
-              |argument of a generic parent: t <= local36 ($k local t); u <= local37 ($k local u); t => local36; t => local36; u => local37
-              |argument of a parent annotation: t <= local38 ($k local t); u <= local39 ($k local u); t => local38; t => local38; u => local39
-              |argument of a self-constructor call: t <= local40 ($k local t); u <= local41 ($k local u); t => local40; t => local40; u => local41
-              |multiple definitions in a template: t <= local42 ($k local t); u <= local43 ($k local u); t => local42; t => local42; u => local43
-              |multiple definitions in a block: t <= local44 ($k local t); u <= local45 ($k local u); t => local44; t => local44; u => local45
-              |guard of a partial function: t <= local46 ($k local t); u <= local47 ($k local u); t => local46; t => local46; u => local47
-              |guard of a function of cases: t <= local48 ($k local t); u <= local49 ($k local u); t => local48; t => local48; u => local49
-              |right-hand side of an assignment operator: t <= local50 ($k local t); u <= local51 ($k local u); t => local50; t => local50; u => local51
-              |index of an update operator: t <= local52 ($k local t); u <= local53 ($k local u); t => local52; t => local52; u => local53
-              |array of an update operator: t <= local54 ($k local t); u <= local55 ($k local u); t => local54; t => local54; u => local55
-              |qualifier of an assignment operator: t <= local56 ($k local t); u <= local57 ($k local u); t => local56; t => local56; u => local57
-              |generator of a for: t <= local58 ($k local t); u <= local59 ($k local u); t => local58; t => local58; u => local59
-              |value definition of a for: t <= local60 ($k local t); u <= local61 ($k local u); t => local60; t => local60; u => local61
-              |guard of a for: t <= local62 ($k local t); u <= local63 ($k local u); t => local62; t => local62; u => local63
-              |yield of a for: t <= local64 ($k local t); u <= local65 ($k local u); t => local64; t => local64; u => local65
-              |s interpolation: t <= local66 ($k local t); u <= local67 ($k local u); t => local66; t => local66; u => local67
-              |f interpolation: t <= local68 ($k local t); u <= local69 ($k local u); t => local68; t => local68; u => local69
-              |raw interpolation: t <= local70 ($k local t); u <= local71 ($k local u); t => local70; t => local70; u => local71
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); u <= local1 ($k local u); t => local2; t => local2; u => local3
-              |default of a local method: t <= local4 ($k local t); u <= local5 ($k local u); t => local6; t => local6; u => local7
-              |default of a second parameter list: t <= local8 ($k local t); u <= local9 ($k local u); t => local10; t => local10; u => local11
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local12 ($k local t); u <= local13 ($k local u); t => local14; t => local14; u => local15; t => b/B.p4().(t)
-              |default of a class: t <= local16 ($k local t); u <= local17 ($k local u); t => local18; t => local18; u => local19
-              |default of a case class: t <= local20 ($k local t); u <= local21 ($k local u); t => local22; t => local22; u => local23
-              |default of an implicit class: t <= local24 ($k local t); u <= local25 ($k local u); t => local26; t => local26; u => local27
-              |default of an auxiliary constructor: t <= local28 ($k local t); u <= local29 ($k local u); t => local30; t => local30; u => local31
-              |default of a nested class: t <= local32 ($k local t); u <= local33 ($k local u); t => local34; t => local34; u => local35
-              |default of a local class: t <= local36 ($k local t); u <= local37 ($k local u); t => local38; t => local38; u => local39
-              |default of a local case class: t <= local40 ($k local t); u <= local41 ($k local u); t => local42; t => local42; u => local43
-              |argument before a default: t <= local44 ($k local t); u <= local45 ($k local u); t => local44; t => local44; u => local45
-              |named argument: t <= local46 ($k local t); u <= local47 ($k local u); t => local46; t => local46; u => local47
-              |named by-name argument: t <= local48 ($k local t); u <= local49 ($k local u); t => local48; t => local48; u => local49
-              |named argument of a name in scope: t <= local50 ($k local t); u <= local51 ($k local u); t => local50; t => local50; u => local51
-              |argument of an ambiguous view: t <= local52 ($k local t); u <= local53 ($k local u); t => local52; t => local52; u => local53
-              |argument of an eta-expansion: t <= local54 ($k local t); u <= local55 ($k local u); t => local54; t => local54; u => local55
-              |argument of a parent: t <= local56 ($k local t); u <= local57 ($k local u); t => local56; t => local56; u => local57
-              |argument of a generic parent: t <= local58 ($k local t); u <= local59 ($k local u); t => local58; t => local58; u => local59
-              |argument of a parent annotation: t <= local60 ($k local t); u <= local61 ($k local u); t => local60; t => local60; u => local61
-              |argument of a self-constructor call: t <= local62 ($k local t); u <= local63 ($k local u); t => local62; t => local62; u => local63
-              |multiple definitions in a template: t <= local64 ($k local t); u <= local65 ($k local u); t => local66; t => local66; u => local67
-              |multiple definitions in a block: t <= local68 ($k local t); u <= local69 ($k local u); t => local70; t => local70; u => local71
-              |guard of a partial function: t <= local72 ($k local t); u <= local73 ($k local u); t => local74; t => local74; u => local75
-              |guard of a function of cases: t <= local76 ($k local t); u <= local77 ($k local u); t => local76; t => local76; u => local77
-              |right-hand side of an assignment operator: t <= local78 ($k local t); u <= local79 ($k local u); t => local78; t => local78; u => local79
-              |index of an update operator: t <= local80 ($k local t); u <= local81 ($k local u); t => local80; t => local80; u => local81
-              |array of an update operator: t <= local82 ($k local t); u <= local83 ($k local u); t => local82; t => local82; u => local83
-              |qualifier of an assignment operator: t <= local84 ($k local t); u <= local85 ($k local u); t => local84; t => local84; u => local85
-              |generator of a for: t <= local86 ($k local t); u <= local87 ($k local u); t => local86; t => local86; u => local87
-              |value definition of a for: t <= local88 ($k local t); u <= local89 ($k local u); t => local88; t => local88; u => local89
-              |guard of a for: t <= local90 ($k local t); u <= local91 ($k local u); t => local90; t => local90; u => local91
-              |yield of a for: t <= local92 ($k local t); u <= local93 ($k local u); t => local92; t => local92; u => local93
-              |s interpolation: t <= local94 ($k local t); u <= local95 ($k local u); t => local94; t => local94; u => local95
-              |f interpolation: t <= local96 ($k local t); u <= local97 ($k local u); t => local96; t => local96; u => local97
-              |raw interpolation: t <= local98 ($k local t); u <= local99 ($k local u); t => local98; t => local98; u => local99
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: a local ($k local u)
-              |no definition: local10 ($k local t)
-              |no definition: local11 ($k local u)
-              |no definition: local14 ($k local t)
-              |no definition: local15 ($k local u)
-              |no definition: local18 ($k local t)
-              |no definition: local19 ($k local u)
-              |no definition: local2 ($k local t)
-              |no definition: local22 ($k local t)
-              |no definition: local23 ($k local u)
-              |no definition: local26 ($k local t)
-              |no definition: local27 ($k local u)
-              |no definition: local3 ($k local u)
-              |no definition: local30 ($k local t)
-              |no definition: local31 ($k local u)
-              |no definition: local34 ($k local t)
-              |no definition: local35 ($k local u)
-              |no definition: local38 ($k local t)
-              |no definition: local39 ($k local u)
-              |no definition: local42 ($k local t)
-              |no definition: local43 ($k local u)
-              |no definition: local6 ($k local t)
-              |no definition: local66 ($k local t)
-              |no definition: local67 ($k local u)
-              |no definition: local7 ($k local u)
-              |no definition: local70 ($k local t)
-              |no definition: local71 ($k local u)
-              |no definition: local74 ($k local t)
-              |no definition: local75 ($k local u)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); u <= local1 ($k local u); t => local0; t => local0; u => local1
+            |default of a local method: t <= local2 ($k local t); u <= local3 ($k local u); t => local2; t => local2; u => local3
+            |default of a second parameter list: t <= local4 ($k local t); u <= local5 ($k local u); t => local4; t => local4; u => local5
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); u <= local7 ($k local u); t => local6; t => local6; u => local7; t => b/B.p4().(t)
+            |default of a class: t <= local8 ($k local t); u <= local9 ($k local u); t => local8; t => local8; u => local9
+            |default of a case class: t <= local10 ($k local t); u <= local11 ($k local u); t => local10; t => local10; u => local11
+            |default of an implicit class: t <= local12 ($k local t); u <= local13 ($k local u); t => local12; t => local12; u => local13
+            |default of an auxiliary constructor: t <= local14 ($k local t); u <= local15 ($k local u); t => local14; t => local14; u => local15
+            |default of a nested class: t <= local16 ($k local t); u <= local17 ($k local u); t => local16; t => local16; u => local17
+            |default of a local class: t <= local18 ($k local t); u <= local19 ($k local u); t => local18; t => local18; u => local19
+            |default of a local case class: t <= local20 ($k local t); u <= local21 ($k local u); t => local20; t => local20; u => local21
+            |argument before a default: t <= local22 ($k local t); u <= local23 ($k local u); t => local22; t => local22; u => local23
+            |named argument: t <= local24 ($k local t); u <= local25 ($k local u); t => local24; t => local24; u => local25
+            |named by-name argument: t <= local26 ($k local t); u <= local27 ($k local u); t => local26; t => local26; u => local27
+            |named argument of a name in scope: t <= local28 ($k local t); u <= local29 ($k local u); t => local28; t => local28; u => local29
+            |argument of an ambiguous view: t <= local30 ($k local t); u <= local31 ($k local u); t => local30; t => local30; u => local31
+            |argument of an eta-expansion: t <= local32 ($k local t); u <= local33 ($k local u); t => local32; t => local32; u => local33
+            |argument of a parent: t <= local34 ($k local t); u <= local35 ($k local u); t => local34; t => local34; u => local35
+            |argument of a generic parent: t <= local36 ($k local t); u <= local37 ($k local u); t => local36; t => local36; u => local37
+            |argument of a parent annotation: t <= local38 ($k local t); u <= local39 ($k local u); t => local38; t => local38; u => local39
+            |argument of a self-constructor call: t <= local40 ($k local t); u <= local41 ($k local u); t => local40; t => local40; u => local41
+            |multiple definitions in a template: t <= local42 ($k local t); u <= local43 ($k local u); t => local42; t => local42; u => local43
+            |multiple definitions in a block: t <= local44 ($k local t); u <= local45 ($k local u); t => local44; t => local44; u => local45
+            |guard of a partial function: t <= local46 ($k local t); u <= local47 ($k local u); t => local46; t => local46; u => local47
+            |guard of a function of cases: t <= local48 ($k local t); u <= local49 ($k local u); t => local48; t => local48; u => local49
+            |right-hand side of an assignment operator: t <= local50 ($k local t); u <= local51 ($k local u); t => local50; t => local50; u => local51
+            |index of an update operator: t <= local52 ($k local t); u <= local53 ($k local u); t => local52; t => local52; u => local53
+            |array of an update operator: t <= local54 ($k local t); u <= local55 ($k local u); t => local54; t => local54; u => local55
+            |qualifier of an assignment operator: t <= local56 ($k local t); u <= local57 ($k local u); t => local56; t => local56; u => local57
+            |generator of a for: t <= local58 ($k local t); u <= local59 ($k local u); t => local58; t => local58; u => local59
+            |value definition of a for: t <= local60 ($k local t); u <= local61 ($k local u); t => local60; t => local60; u => local61
+            |guard of a for: t <= local62 ($k local t); u <= local63 ($k local u); t => local62; t => local62; u => local63
+            |yield of a for: t <= local64 ($k local t); u <= local65 ($k local u); t => local64; t => local64; u => local65
+            |s interpolation: t <= local66 ($k local t); u <= local67 ($k local u); t => local66; t => local66; u => local67
+            |f interpolation: t <= local68 ($k local t); u <= local69 ($k local u); t => local68; t => local68; u => local69
+            |raw interpolation: t <= local70 ($k local t); u <= local71 ($k local u); t => local70; t => local70; u => local71
+            |""".stripMargin,
     ),
     (
       List("val"),
@@ -10155,150 +7888,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t) = Option(1)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k local t); t <= local1 ($k local t); t => local1; t => local0
-              |default of a local method: t <= local2 ($k local t); t <= local3 ($k local t); t => local3; t => local2
-              |default of a second parameter list: t <= local4 ($k local t); t <= local5 ($k local t); t => local5; t => local4
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); t <= local7 ($k local t); t => local7; t => local6; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k local t); t <= local9 ($k local t); t => local9; t => local8
-              |default of a case class: t <= local10 ($k local t); t <= local11 ($k local t); t => local11; t => local10
-              |default of an implicit class: t <= local12 ($k local t); t <= local13 ($k local t); t => local13; t => local12
-              |default of an auxiliary constructor: t <= local14 ($k local t); t <= local15 ($k local t); t => local15; t => local14
-              |default of a nested class: t <= local16 ($k local t); t <= local17 ($k local t); t => local17; t => local16
-              |default of a local class: t <= local18 ($k local t); t <= local19 ($k local t); t => local19; t => local18
-              |default of a local case class: t <= local20 ($k local t); t <= local21 ($k local t); t => local21; t => local20
-              |argument before a default: t <= local22 ($k local t); t <= local23 ($k local t); t => local23; t => local22
-              |named argument: t <= local24 ($k local t); t <= local25 ($k local t); t => local25; t => local24
-              |named by-name argument: t <= local26 ($k local t); t <= local27 ($k local t); t => local27; t => local26
-              |named argument of a name in scope: t <= local28 ($k local t); t <= local29 ($k local t); t => local29; t => local28
-              |argument of an ambiguous view: t <= local30 ($k local t); t <= local31 ($k local t); t => local31; t => local30
-              |argument of an eta-expansion: t <= local32 ($k local t); t <= local33 ($k local t); t => local33; t => local32
-              |argument of a parent: t <= local34 ($k local t); t <= local35 ($k local t); t => local35; t => local34
-              |argument of a generic parent: t <= local36 ($k local t); t <= local37 ($k local t); t => local37; t => local36
-              |argument of a parent annotation: t <= local38 ($k local t); t <= local39 ($k local t); t => local39; t => local38
-              |argument of a self-constructor call: t <= local40 ($k local t); t <= local41 ($k local t); t => local41; t => local40
-              |multiple definitions in a template: t <= local42 ($k local t); t <= local43 ($k local t); t => local43; t => local42
-              |multiple definitions in a block: t <= local44 ($k local t); t <= local45 ($k local t); t => local45; t => local44
-              |guard of a partial function: t <= local46 ($k local t); t <= local47 ($k local t); t => local47; t => local46
-              |guard of a function of cases: t <= local48 ($k local t); t <= local49 ($k local t); t => local49; t => local48
-              |right-hand side of an assignment operator: t <= local50 ($k local t); t <= local51 ($k local t); t => local51; t => local50
-              |index of an update operator: t <= local52 ($k local t); t <= local53 ($k local t); t => local53; t => local52
-              |array of an update operator: t <= local54 ($k local t); t <= local55 ($k local t); t => local55; t => local54
-              |qualifier of an assignment operator: t <= local56 ($k local t); t <= local57 ($k local t); t => local57; t => local56
-              |generator of a for: t <= local58 ($k local t); t <= local59 ($k local t); t => local59; t => local58
-              |value definition of a for: t <= local60 ($k local t); t <= local61 ($k local t); t => local61; t => local60
-              |guard of a for: t <= local62 ($k local t); t <= local63 ($k local t); t => local63; t => local62
-              |yield of a for: t <= local64 ($k local t); t <= local65 ($k local t); t => local65; t => local64
-              |s interpolation: t <= local66 ($k local t); t <= local67 ($k local t); t => local67; t => local66
-              |f interpolation: t <= local68 ($k local t); t <= local69 ($k local t); t => local69; t => local68
-              |raw interpolation: t <= local70 ($k local t); t <= local71 ($k local t); t => local71; t => local70
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k local t); t <= local1 ($k local t); t => local2; t => local3
-              |default of a local method: t <= local4 ($k local t); t <= local5 ($k local t); t => local6; t => local7
-              |default of a second parameter list: t <= local8 ($k local t); t <= local9 ($k local t); t => local10; t => local11
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local12 ($k local t); t <= local13 ($k local t); t => local14; t => local15; t => b/B.p4().(t)
-              |default of a class: t <= local16 ($k local t); t <= local17 ($k local t); t => local18; t => local19
-              |default of a case class: t <= local20 ($k local t); t <= local21 ($k local t); t => local22; t => local23
-              |default of an implicit class: t <= local24 ($k local t); t <= local25 ($k local t); t => local26; t => local27
-              |default of an auxiliary constructor: t <= local28 ($k local t); t <= local29 ($k local t); t => local30; t => local31
-              |default of a nested class: t <= local32 ($k local t); t <= local33 ($k local t); t => local34; t => local35
-              |default of a local class: t <= local36 ($k local t); t <= local37 ($k local t); t => local38; t => local39
-              |default of a local case class: t <= local40 ($k local t); t <= local41 ($k local t); t => local42; t => local43
-              |argument before a default: t <= local44 ($k local t); t <= local45 ($k local t); t => local45; t => local44
-              |named argument: t <= local46 ($k local t); t <= local47 ($k local t); t => local47; t => local46
-              |named by-name argument: t <= local48 ($k local t); t <= local49 ($k local t); t => local49; t => local48
-              |named argument of a name in scope: t <= local50 ($k local t); t <= local51 ($k local t); t => local51; t => local50
-              |argument of an ambiguous view: t <= local52 ($k local t); t <= local53 ($k local t); t => local53; t => local52
-              |argument of an eta-expansion: t <= local54 ($k local t); t <= local55 ($k local t); t => local55; t => local54
-              |argument of a parent: t <= local56 ($k local t); t <= local57 ($k local t); t => local57; t => local56
-              |argument of a generic parent: t <= local58 ($k local t); t <= local59 ($k local t); t => local59; t => local58
-              |argument of a parent annotation: t <= local60 ($k local t); t <= local61 ($k local t); t => local61; t => local60
-              |argument of a self-constructor call: t <= local62 ($k local t); t <= local63 ($k local t); t => local63; t => local62
-              |multiple definitions in a template: t <= local64 ($k local t); t <= local65 ($k local t); t => local66; t => local67
-              |multiple definitions in a block: t <= local68 ($k local t); t <= local69 ($k local t); t => local70; t => local71
-              |guard of a partial function: t <= local72 ($k local t); t <= local73 ($k local t); t => local74; t => local75
-              |guard of a function of cases: t <= local76 ($k local t); t <= local77 ($k local t); t => local77; t => local76
-              |right-hand side of an assignment operator: t <= local78 ($k local t); t <= local79 ($k local t); t => local79; t => local78
-              |index of an update operator: t <= local80 ($k local t); t <= local81 ($k local t); t => local81; t => local80
-              |array of an update operator: t <= local82 ($k local t); t <= local83 ($k local t); t => local83; t => local82
-              |qualifier of an assignment operator: t <= local84 ($k local t); t <= local85 ($k local t); t => local85; t => local84
-              |generator of a for: t <= local86 ($k local t); t <= local87 ($k local t); t => local87; t => local86
-              |value definition of a for: t <= local88 ($k local t); t <= local89 ($k local t); t => local89; t => local88
-              |guard of a for: t <= local90 ($k local t); t <= local91 ($k local t); t => local91; t => local90
-              |yield of a for: t <= local92 ($k local t); t <= local93 ($k local t); t => local93; t => local92
-              |s interpolation: t <= local94 ($k local t); t <= local95 ($k local t); t => local95; t => local94
-              |f interpolation: t <= local96 ($k local t); t <= local97 ($k local t); t => local97; t => local96
-              |raw interpolation: t <= local98 ($k local t); t <= local99 ($k local t); t => local99; t => local98
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: local10 ($k local t)
-              |no definition: local11 ($k local t)
-              |no definition: local14 ($k local t)
-              |no definition: local15 ($k local t)
-              |no definition: local18 ($k local t)
-              |no definition: local19 ($k local t)
-              |no definition: local2 ($k local t)
-              |no definition: local22 ($k local t)
-              |no definition: local23 ($k local t)
-              |no definition: local26 ($k local t)
-              |no definition: local27 ($k local t)
-              |no definition: local3 ($k local t)
-              |no definition: local30 ($k local t)
-              |no definition: local31 ($k local t)
-              |no definition: local34 ($k local t)
-              |no definition: local35 ($k local t)
-              |no definition: local38 ($k local t)
-              |no definition: local39 ($k local t)
-              |no definition: local42 ($k local t)
-              |no definition: local43 ($k local t)
-              |no definition: local6 ($k local t)
-              |no definition: local66 ($k local t)
-              |no definition: local67 ($k local t)
-              |no definition: local7 ($k local t)
-              |no definition: local70 ($k local t)
-              |no definition: local71 ($k local t)
-              |no definition: local74 ($k local t)
-              |no definition: local75 ($k local t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k local t); t <= local1 ($k local t); t => local1; t => local0
+            |default of a local method: t <= local2 ($k local t); t <= local3 ($k local t); t => local3; t => local2
+            |default of a second parameter list: t <= local4 ($k local t); t <= local5 ($k local t); t => local5; t => local4
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k local t); t <= local7 ($k local t); t => local7; t => local6; t => b/B.p4().(t)
+            |default of a class: t <= local8 ($k local t); t <= local9 ($k local t); t => local9; t => local8
+            |default of a case class: t <= local10 ($k local t); t <= local11 ($k local t); t => local11; t => local10
+            |default of an implicit class: t <= local12 ($k local t); t <= local13 ($k local t); t => local13; t => local12
+            |default of an auxiliary constructor: t <= local14 ($k local t); t <= local15 ($k local t); t => local15; t => local14
+            |default of a nested class: t <= local16 ($k local t); t <= local17 ($k local t); t => local17; t => local16
+            |default of a local class: t <= local18 ($k local t); t <= local19 ($k local t); t => local19; t => local18
+            |default of a local case class: t <= local20 ($k local t); t <= local21 ($k local t); t => local21; t => local20
+            |argument before a default: t <= local22 ($k local t); t <= local23 ($k local t); t => local23; t => local22
+            |named argument: t <= local24 ($k local t); t <= local25 ($k local t); t => local25; t => local24
+            |named by-name argument: t <= local26 ($k local t); t <= local27 ($k local t); t => local27; t => local26
+            |named argument of a name in scope: t <= local28 ($k local t); t <= local29 ($k local t); t => local29; t => local28
+            |argument of an ambiguous view: t <= local30 ($k local t); t <= local31 ($k local t); t => local31; t => local30
+            |argument of an eta-expansion: t <= local32 ($k local t); t <= local33 ($k local t); t => local33; t => local32
+            |argument of a parent: t <= local34 ($k local t); t <= local35 ($k local t); t => local35; t => local34
+            |argument of a generic parent: t <= local36 ($k local t); t <= local37 ($k local t); t => local37; t => local36
+            |argument of a parent annotation: t <= local38 ($k local t); t <= local39 ($k local t); t => local39; t => local38
+            |argument of a self-constructor call: t <= local40 ($k local t); t <= local41 ($k local t); t => local41; t => local40
+            |multiple definitions in a template: t <= local42 ($k local t); t <= local43 ($k local t); t => local43; t => local42
+            |multiple definitions in a block: t <= local44 ($k local t); t <= local45 ($k local t); t => local45; t => local44
+            |guard of a partial function: t <= local46 ($k local t); t <= local47 ($k local t); t => local47; t => local46
+            |guard of a function of cases: t <= local48 ($k local t); t <= local49 ($k local t); t => local49; t => local48
+            |right-hand side of an assignment operator: t <= local50 ($k local t); t <= local51 ($k local t); t => local51; t => local50
+            |index of an update operator: t <= local52 ($k local t); t <= local53 ($k local t); t => local53; t => local52
+            |array of an update operator: t <= local54 ($k local t); t <= local55 ($k local t); t => local55; t => local54
+            |qualifier of an assignment operator: t <= local56 ($k local t); t <= local57 ($k local t); t => local57; t => local56
+            |generator of a for: t <= local58 ($k local t); t <= local59 ($k local t); t => local59; t => local58
+            |value definition of a for: t <= local60 ($k local t); t <= local61 ($k local t); t => local61; t => local60
+            |guard of a for: t <= local62 ($k local t); t <= local63 ($k local t); t => local63; t => local62
+            |yield of a for: t <= local64 ($k local t); t <= local65 ($k local t); t => local65; t => local64
+            |s interpolation: t <= local66 ($k local t); t <= local67 ($k local t); t => local67; t => local66
+            |f interpolation: t <= local68 ($k local t); t <= local69 ($k local t); t => local69; t => local68
+            |raw interpolation: t <= local70 ($k local t); t <= local71 ($k local t); t => local71; t => local70
+            |""".stripMargin,
     ),
   )
 
@@ -10412,19 +8038,10 @@ class LocalSymbolsSuite extends FunSuite {
       "(t: Int)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|body of a partial function: t <= local0 ($k method t); t => local0
-              |body of a function of cases: t <= local1 ($k method t); t => local1
-              |method block: t <= local2 ($k method t); t => local2
-              |""".stripMargin
-        else
-          s"""|body of a partial function: t => local0
-              |body of a function of cases: t => local1
-              |method block: t => local2
-              |no definition: local0 ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local2 ($k method t)
-              |""".stripMargin,
+        s"""|body of a partial function: t <= local0 ($k method t); t => local0
+            |body of a function of cases: t <= local1 ($k method t); t => local1
+            |method block: t <= local2 ($k method t); t => local2
+            |""".stripMargin,
     ),
     (
       "a local class",
@@ -10529,19 +8146,10 @@ class LocalSymbolsSuite extends FunSuite {
       "(t: Int)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|body of a partial function: t <= local0 ($k method t); t => local0
-              |body of a function of cases: t <= local1 ($k method t); t => local1
-              |method block: t <= local2 ($k method t); t => local2
-              |""".stripMargin
-        else
-          s"""|body of a partial function: t => local0
-              |body of a function of cases: t => local1
-              |method block: t => local2
-              |no definition: local0 ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local2 ($k method t)
-              |""".stripMargin,
+        s"""|body of a partial function: t <= local0 ($k method t); t => local0
+            |body of a function of cases: t <= local1 ($k method t); t => local1
+            |method block: t <= local2 ($k method t); t => local2
+            |""".stripMargin,
     ),
     (
       "an anonymous class",
@@ -10617,76 +8225,42 @@ class LocalSymbolsSuite extends FunSuite {
               |raw interpolation: t <= local35 ($k method t); t => local35
               |""".stripMargin
         else
-          s"""|default of a method: t <= local0 ($k method t); t => local1
-              |default of a local method: t <= local2 ($k method t); t => local3
-              |default of a second parameter list: t <= local4 ($k method t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k method t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k method t); t => local9
-              |default of a case class: t <= local10 ($k method t); t => local11
-              |default of an implicit class: t <= local12 ($k method t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k method t); t => local15
-              |default of a nested class: t <= local16 ($k method t); t => local17
-              |default of a local class: t <= local18 ($k method t); t => local19
-              |default of a local case class: t <= local20 ($k method t); t => local21
-              |argument before a default: t <= local22 ($k method t); t => local22
-              |named argument: t <= local23 ($k method t); t => local23
-              |named by-name argument: t <= local24 ($k method t); t => local24
-              |named argument of a name in scope: t <= local25 ($k method t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k method t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k method t); t => local27
-              |argument of a parent: t <= local28 ($k method t); t => local28
-              |argument of a generic parent: t <= local29 ($k method t); t => local29
-              |argument of a parent annotation: t <= local30 ($k method t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k method t); t => local31
-              |multiple definitions in a template: t <= local32 ($k method t); t => local33
-              |multiple definitions in a block: t <= local34 ($k method t); t => local35
-              |guard of a partial function: t <= local36 ($k method t); t => local37
-              |guard of a function of cases: t <= local38 ($k method t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k method t); t => local39
-              |index of an update operator: t <= local40 ($k method t); t => local40
-              |array of an update operator: t <= local41 ($k method t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k method t); t => local42
-              |generator of a for: t <= local43 ($k method t); t => local43
-              |value definition of a for: t <= local44 ($k method t); t => local44
-              |guard of a for: t <= local45 ($k method t); t => local45
-              |yield of a for: t <= local46 ($k method t); t => local46
-              |s interpolation: t <= local47 ($k method t); t => local47
-              |f interpolation: t <= local48 ($k method t); t => local48
-              |raw interpolation: t <= local49 ($k method t); t => local49
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local35 ($k method t)
-              |no definition: local37 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local9 ($k method t)
+          s"""|default of a method: t <= local0 ($k method t); t => local0
+              |default of a local method: t <= local1 ($k method t); t => local1
+              |default of a second parameter list: t <= local2 ($k method t); t => local2
+              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+              |default of a class: t <= local4 ($k method t); t => local4
+              |default of a case class: t <= local5 ($k method t); t => local5
+              |default of an implicit class: t <= local6 ($k method t); t => local6
+              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+              |default of a nested class: t <= local8 ($k method t); t => local8
+              |default of a local class: t <= local9 ($k method t); t => local9
+              |default of a local case class: t <= local10 ($k method t); t => local10
+              |argument before a default: t <= local11 ($k method t); t => local11
+              |named argument: t <= local12 ($k method t); t => local12
+              |named by-name argument: t <= local13 ($k method t); t => local13
+              |named argument of a name in scope: t <= local14 ($k method t); t => local14
+              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+              |argument of a parent: t <= local17 ($k method t); t => local17
+              |argument of a generic parent: t <= local18 ($k method t); t => local18
+              |argument of a parent annotation: t <= local19 ($k method t); t => local19
+              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+              |multiple definitions in a template: t <= local21 ($k method t); t => local21
+              |multiple definitions in a block: t <= local22 ($k method t); t => local22
+              |guard of a partial function: t <= local23 ($k method t); t => local23
+              |guard of a function of cases: t <= local24 ($k method t); t => local24
+              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+              |index of an update operator: t <= local26 ($k method t); t => local26
+              |array of an update operator: t <= local27 ($k method t); t => local27
+              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+              |generator of a for: t <= local29 ($k method t); t => local29
+              |value definition of a for: t <= local30 ($k method t); t => local30
+              |guard of a for: t <= local31 ($k method t); t => local31
+              |yield of a for: t <= local32 ($k method t); t => local32
+              |s interpolation: t <= local33 ($k method t); t => local33
+              |f interpolation: t <= local34 ($k method t); t => local34
+              |raw interpolation: t <= local35 ($k method t); t => local35
               |""".stripMargin,
     ),
     (
@@ -10696,116 +8270,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local1
-              |default of a local method: t <= local2 ($k method t); t => local3
-              |default of a second parameter list: t <= local4 ($k method t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k method t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k method t); t => local9
-              |default of a case class: t <= local10 ($k method t); t => local11
-              |default of an implicit class: t <= local12 ($k method t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k method t); t => local15
-              |default of a nested class: t <= local16 ($k method t); t => local17
-              |default of a local class: t <= local18 ($k method t); t => local19
-              |default of a local case class: t <= local20 ($k method t); t => local21
-              |argument before a default: t <= local22 ($k method t); t => local22
-              |named argument: t <= local23 ($k method t); t => local23
-              |named by-name argument: t <= local24 ($k method t); t => local24
-              |named argument of a name in scope: t <= local25 ($k method t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k method t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k method t); t => local27
-              |argument of a parent: t <= local28 ($k method t); t => local28
-              |argument of a generic parent: t <= local29 ($k method t); t => local29
-              |argument of a parent annotation: t <= local30 ($k method t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k method t); t => local31
-              |multiple definitions in a template: t <= local32 ($k method t); t => local33
-              |multiple definitions in a block: t <= local34 ($k method t); t => local35
-              |guard of a partial function: t <= local36 ($k method t); t => local37
-              |guard of a function of cases: t <= local38 ($k method t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k method t); t => local39
-              |index of an update operator: t <= local40 ($k method t); t => local40
-              |array of an update operator: t <= local41 ($k method t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k method t); t => local42
-              |generator of a for: t <= local43 ($k method t); t => local43
-              |value definition of a for: t <= local44 ($k method t); t => local44
-              |guard of a for: t <= local45 ($k method t); t => local45
-              |yield of a for: t <= local46 ($k method t); t => local46
-              |s interpolation: t <= local47 ($k method t); t => local47
-              |f interpolation: t <= local48 ($k method t); t => local48
-              |raw interpolation: t <= local49 ($k method t); t => local49
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local35 ($k method t)
-              |no definition: local37 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "a local class",
@@ -10814,116 +8315,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local1
-              |default of a local method: t <= local2 ($k method t); t => local3
-              |default of a second parameter list: t <= local4 ($k method t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k method t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k method t); t => local9
-              |default of a case class: t <= local10 ($k method t); t => local11
-              |default of an implicit class: t <= local12 ($k method t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k method t); t => local15
-              |default of a nested class: t <= local16 ($k method t); t => local17
-              |default of a local class: t <= local18 ($k method t); t => local19
-              |default of a local case class: t <= local20 ($k method t); t => local21
-              |argument before a default: t <= local22 ($k method t); t => local22
-              |named argument: t <= local23 ($k method t); t => local23
-              |named by-name argument: t <= local24 ($k method t); t => local24
-              |named argument of a name in scope: t <= local25 ($k method t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k method t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k method t); t => local27
-              |argument of a parent: t <= local28 ($k method t); t => local28
-              |argument of a generic parent: t <= local29 ($k method t); t => local29
-              |argument of a parent annotation: t <= local30 ($k method t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k method t); t => local31
-              |multiple definitions in a template: t <= local32 ($k method t); t => local33
-              |multiple definitions in a block: t <= local34 ($k method t); t => local35
-              |guard of a partial function: t <= local36 ($k method t); t => local37
-              |guard of a function of cases: t <= local38 ($k method t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k method t); t => local39
-              |index of an update operator: t <= local40 ($k method t); t => local40
-              |array of an update operator: t <= local41 ($k method t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k method t); t => local42
-              |generator of a for: t <= local43 ($k method t); t => local43
-              |value definition of a for: t <= local44 ($k method t); t => local44
-              |guard of a for: t <= local45 ($k method t); t => local45
-              |yield of a for: t <= local46 ($k method t); t => local46
-              |s interpolation: t <= local47 ($k method t); t => local47
-              |f interpolation: t <= local48 ($k method t); t => local48
-              |raw interpolation: t <= local49 ($k method t); t => local49
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: local1 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local35 ($k method t)
-              |no definition: local37 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "a local class",
@@ -10932,116 +8360,43 @@ class LocalSymbolsSuite extends FunSuite {
       "t :: Nil",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local22
-              |multiple definitions in a block: t <= local23 ($k method t); t => local24
-              |guard of a partial function: t <= local25 ($k method t); t => local25
-              |guard of a function of cases: t <= local26 ($k method t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k method t); t => local27
-              |index of an update operator: t <= local28 ($k method t); t => local28
-              |array of an update operator: t <= local29 ($k method t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k method t); t => local30
-              |generator of a for: t <= local31 ($k method t); t => local31
-              |value definition of a for: t <= local32 ($k method t); t => local32
-              |guard of a for: t <= local33 ($k method t); t => local33
-              |yield of a for: t <= local34 ($k method t); t => local34
-              |s interpolation: t <= local35 ($k method t); t => local35
-              |f interpolation: t <= local36 ($k method t); t => local36
-              |raw interpolation: t <= local37 ($k method t); t => local37
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local22 ($k method t)
-              |no definition: local24 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "a local class",
@@ -11050,116 +8405,43 @@ class LocalSymbolsSuite extends FunSuite {
       "t :: Nil",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local22
-              |multiple definitions in a block: t <= local23 ($k method t); t => local24
-              |guard of a partial function: t <= local25 ($k method t); t => local25
-              |guard of a function of cases: t <= local26 ($k method t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k method t); t => local27
-              |index of an update operator: t <= local28 ($k method t); t => local28
-              |array of an update operator: t <= local29 ($k method t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k method t); t => local30
-              |generator of a for: t <= local31 ($k method t); t => local31
-              |value definition of a for: t <= local32 ($k method t); t => local32
-              |guard of a for: t <= local33 ($k method t); t => local33
-              |yield of a for: t <= local34 ($k method t); t => local34
-              |s interpolation: t <= local35 ($k method t); t => local35
-              |f interpolation: t <= local36 ($k method t); t => local36
-              |raw interpolation: t <= local37 ($k method t); t => local37
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local22 ($k method t)
-              |no definition: local24 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "a local class",
@@ -11168,116 +8450,43 @@ class LocalSymbolsSuite extends FunSuite {
       "t :: Nil",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local22
-              |multiple definitions in a block: t <= local23 ($k method t); t => local24
-              |guard of a partial function: t <= local25 ($k method t); t => local25
-              |guard of a function of cases: t <= local26 ($k method t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k method t); t => local27
-              |index of an update operator: t <= local28 ($k method t); t => local28
-              |array of an update operator: t <= local29 ($k method t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k method t); t => local30
-              |generator of a for: t <= local31 ($k method t); t => local31
-              |value definition of a for: t <= local32 ($k method t); t => local32
-              |guard of a for: t <= local33 ($k method t); t => local33
-              |yield of a for: t <= local34 ($k method t); t => local34
-              |s interpolation: t <= local35 ($k method t); t => local35
-              |f interpolation: t <= local36 ($k method t); t => local36
-              |raw interpolation: t <= local37 ($k method t); t => local37
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: local22 ($k method t)
-              |no definition: local24 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "a local class",
@@ -11286,116 +8495,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Tuple2(t, _)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local22
-              |multiple definitions in a block: t <= local23 ($k method t); t => local24
-              |guard of a partial function: t <= local25 ($k method t); t => local25
-              |guard of a function of cases: t <= local26 ($k method t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k method t); t => local27
-              |index of an update operator: t <= local28 ($k method t); t => local28
-              |array of an update operator: t <= local29 ($k method t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k method t); t => local30
-              |generator of a for: t <= local31 ($k method t); t => local31
-              |value definition of a for: t <= local32 ($k method t); t => local32
-              |guard of a for: t <= local33 ($k method t); t => local33
-              |yield of a for: t <= local34 ($k method t); t => local34
-              |s interpolation: t <= local35 ($k method t); t => local35
-              |f interpolation: t <= local36 ($k method t); t => local36
-              |raw interpolation: t <= local37 ($k method t); t => local37
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local22 ($k method t)
-              |no definition: local24 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "a local class",
@@ -11404,116 +8540,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Tuple2(t, _)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local22
-              |multiple definitions in a block: t <= local23 ($k method t); t => local24
-              |guard of a partial function: t <= local25 ($k method t); t => local25
-              |guard of a function of cases: t <= local26 ($k method t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k method t); t => local27
-              |index of an update operator: t <= local28 ($k method t); t => local28
-              |array of an update operator: t <= local29 ($k method t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k method t); t => local30
-              |generator of a for: t <= local31 ($k method t); t => local31
-              |value definition of a for: t <= local32 ($k method t); t => local32
-              |guard of a for: t <= local33 ($k method t); t => local33
-              |yield of a for: t <= local34 ($k method t); t => local34
-              |s interpolation: t <= local35 ($k method t); t => local35
-              |f interpolation: t <= local36 ($k method t); t => local36
-              |raw interpolation: t <= local37 ($k method t); t => local37
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local22 ($k method t)
-              |no definition: local24 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "a local class",
@@ -11522,116 +8585,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Tuple2(t, _)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local22
-              |multiple definitions in a block: t <= local23 ($k method t); t => local24
-              |guard of a partial function: t <= local25 ($k method t); t => local25
-              |guard of a function of cases: t <= local26 ($k method t); t => local26
-              |right-hand side of an assignment operator: t <= local27 ($k method t); t => local27
-              |index of an update operator: t <= local28 ($k method t); t => local28
-              |array of an update operator: t <= local29 ($k method t); t => local29
-              |qualifier of an assignment operator: t <= local30 ($k method t); t => local30
-              |generator of a for: t <= local31 ($k method t); t => local31
-              |value definition of a for: t <= local32 ($k method t); t => local32
-              |guard of a for: t <= local33 ($k method t); t => local33
-              |yield of a for: t <= local34 ($k method t); t => local34
-              |s interpolation: t <= local35 ($k method t); t => local35
-              |f interpolation: t <= local36 ($k method t); t => local36
-              |raw interpolation: t <= local37 ($k method t); t => local37
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: local22 ($k method t)
-              |no definition: local24 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "a local class",
@@ -11640,135 +8630,42 @@ class LocalSymbolsSuite extends FunSuite {
       "(t: Int)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of a parent: t <= local16 ($k method t); t => local16
-              |argument of a generic parent: t <= local17 ($k method t); t => local17
-              |argument of a parent annotation: t <= local18 ($k method t); t => local18
-              |argument of a self-constructor call: t <= local19 ($k method t); t => local19
-              |multiple definitions in a template: t <= local20 ($k method t); t => local20
-              |multiple definitions in a block: t <= local21 ($k method t); t => local21
-              |guard of a partial function: t <= local22 ($k method t); t => local22
-              |guard of a function of cases: t <= local23 ($k method t); t => local23
-              |right-hand side of an assignment operator: t <= local24 ($k method t); t => local24
-              |index of an update operator: t <= local25 ($k method t); t => local25
-              |array of an update operator: t <= local26 ($k method t); t => local26
-              |qualifier of an assignment operator: t <= local27 ($k method t); t => local27
-              |generator of a for: t <= local28 ($k method t); t => local28
-              |value definition of a for: t <= local29 ($k method t); t => local29
-              |guard of a for: t <= local30 ($k method t); t => local30
-              |yield of a for: t <= local31 ($k method t); t => local31
-              |s interpolation: t <= local32 ($k method t); t => local32
-              |f interpolation: t <= local33 ($k method t); t => local33
-              |raw interpolation: t <= local34 ($k method t); t => local34
-              |""".stripMargin
-        else
-          s"""|default of a method: t => local0
-              |default of a local method: t => local1
-              |default of a second parameter list: t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t => local3; t => b/B.p4().(t)
-              |default of a class: t => local4
-              |default of a case class: t => local5
-              |default of an implicit class: t => local6
-              |default of an auxiliary constructor: t => local7
-              |default of a nested class: t => local8
-              |default of a local class: t => local9
-              |default of a local case class: t => local10
-              |argument before a default: t => local11
-              |named argument: t => local12
-              |named by-name argument: t => local13
-              |named argument of a name in scope: t => local14
-              |argument of an ambiguous view: t => local15
-              |argument of a parent: t => local16
-              |argument of a generic parent: t => local17
-              |argument of a parent annotation: t => local18
-              |argument of a self-constructor call: t => local19
-              |multiple definitions in a template: t => local20
-              |multiple definitions in a block: t => local21
-              |guard of a partial function: t => local22
-              |guard of a function of cases: t => local23
-              |right-hand side of an assignment operator: t => local24
-              |index of an update operator: t => local25
-              |array of an update operator: t => local26
-              |qualifier of an assignment operator: t => local27
-              |generator of a for: t => local28
-              |value definition of a for: t => local29
-              |guard of a for: t => local30
-              |yield of a for: t => local31
-              |s interpolation: t => local32
-              |f interpolation: t => local33
-              |raw interpolation: t => local34
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local0 ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local10 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local12 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local14 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local16 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local18 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local2 ($k method t)
-              |no definition: local20 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local22 ($k method t)
-              |no definition: local23 ($k method t)
-              |no definition: local24 ($k method t)
-              |no definition: local25 ($k method t)
-              |no definition: local26 ($k method t)
-              |no definition: local27 ($k method t)
-              |no definition: local28 ($k method t)
-              |no definition: local29 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local30 ($k method t)
-              |no definition: local31 ($k method t)
-              |no definition: local32 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local34 ($k method t)
-              |no definition: local4 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local6 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local8 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of a parent: t <= local16 ($k method t); t => local16
+            |argument of a generic parent: t <= local17 ($k method t); t => local17
+            |argument of a parent annotation: t <= local18 ($k method t); t => local18
+            |argument of a self-constructor call: t <= local19 ($k method t); t => local19
+            |multiple definitions in a template: t <= local20 ($k method t); t => local20
+            |multiple definitions in a block: t <= local21 ($k method t); t => local21
+            |guard of a partial function: t <= local22 ($k method t); t => local22
+            |guard of a function of cases: t <= local23 ($k method t); t => local23
+            |right-hand side of an assignment operator: t <= local24 ($k method t); t => local24
+            |index of an update operator: t <= local25 ($k method t); t => local25
+            |array of an update operator: t <= local26 ($k method t); t => local26
+            |qualifier of an assignment operator: t <= local27 ($k method t); t => local27
+            |generator of a for: t <= local28 ($k method t); t => local28
+            |value definition of a for: t <= local29 ($k method t); t => local29
+            |guard of a for: t <= local30 ($k method t); t => local30
+            |yield of a for: t <= local31 ($k method t); t => local31
+            |s interpolation: t <= local32 ($k method t); t => local32
+            |f interpolation: t <= local33 ($k method t); t => local33
+            |raw interpolation: t <= local34 ($k method t); t => local34
+            |""".stripMargin,
     ),
     (
       "a local class",
@@ -11777,135 +8674,42 @@ class LocalSymbolsSuite extends FunSuite {
       "(t: Int)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of a parent: t <= local16 ($k method t); t => local16
-              |argument of a generic parent: t <= local17 ($k method t); t => local17
-              |argument of a parent annotation: t <= local18 ($k method t); t => local18
-              |argument of a self-constructor call: t <= local19 ($k method t); t => local19
-              |multiple definitions in a template: t <= local20 ($k method t); t => local20
-              |multiple definitions in a block: t <= local21 ($k method t); t => local21
-              |guard of a partial function: t <= local22 ($k method t); t => local22
-              |guard of a function of cases: t <= local23 ($k method t); t => local23
-              |right-hand side of an assignment operator: t <= local24 ($k method t); t => local24
-              |index of an update operator: t <= local25 ($k method t); t => local25
-              |array of an update operator: t <= local26 ($k method t); t => local26
-              |qualifier of an assignment operator: t <= local27 ($k method t); t => local27
-              |generator of a for: t <= local28 ($k method t); t => local28
-              |value definition of a for: t <= local29 ($k method t); t => local29
-              |guard of a for: t <= local30 ($k method t); t => local30
-              |yield of a for: t <= local31 ($k method t); t => local31
-              |s interpolation: t <= local32 ($k method t); t => local32
-              |f interpolation: t <= local33 ($k method t); t => local33
-              |raw interpolation: t <= local34 ($k method t); t => local34
-              |""".stripMargin
-        else
-          s"""|default of a method: t => local0
-              |default of a local method: t => local1
-              |default of a second parameter list: t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t => local3; t => b/B.p4().(t)
-              |default of a class: t => local4
-              |default of a case class: t => local5
-              |default of an implicit class: t => local6
-              |default of an auxiliary constructor: t => local7
-              |default of a nested class: t => local8
-              |default of a local class: t => local9
-              |default of a local case class: t => local10
-              |argument before a default: t => local11
-              |named argument: t => local12
-              |named by-name argument: t => local13
-              |named argument of a name in scope: t => local14
-              |argument of an ambiguous view: t => local15
-              |argument of a parent: t => local16
-              |argument of a generic parent: t => local17
-              |argument of a parent annotation: t => local18
-              |argument of a self-constructor call: t => local19
-              |multiple definitions in a template: t => local20
-              |multiple definitions in a block: t => local21
-              |guard of a partial function: t => local22
-              |guard of a function of cases: t => local23
-              |right-hand side of an assignment operator: t => local24
-              |index of an update operator: t => local25
-              |array of an update operator: t => local26
-              |qualifier of an assignment operator: t => local27
-              |generator of a for: t => local28
-              |value definition of a for: t => local29
-              |guard of a for: t => local30
-              |yield of a for: t => local31
-              |s interpolation: t => local32
-              |f interpolation: t => local33
-              |raw interpolation: t => local34
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local0 ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local10 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local12 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local14 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local16 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local18 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local2 ($k method t)
-              |no definition: local20 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local22 ($k method t)
-              |no definition: local23 ($k method t)
-              |no definition: local24 ($k method t)
-              |no definition: local25 ($k method t)
-              |no definition: local26 ($k method t)
-              |no definition: local27 ($k method t)
-              |no definition: local28 ($k method t)
-              |no definition: local29 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local30 ($k method t)
-              |no definition: local31 ($k method t)
-              |no definition: local32 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local34 ($k method t)
-              |no definition: local4 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local6 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local8 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of a parent: t <= local16 ($k method t); t => local16
+            |argument of a generic parent: t <= local17 ($k method t); t => local17
+            |argument of a parent annotation: t <= local18 ($k method t); t => local18
+            |argument of a self-constructor call: t <= local19 ($k method t); t => local19
+            |multiple definitions in a template: t <= local20 ($k method t); t => local20
+            |multiple definitions in a block: t <= local21 ($k method t); t => local21
+            |guard of a partial function: t <= local22 ($k method t); t => local22
+            |guard of a function of cases: t <= local23 ($k method t); t => local23
+            |right-hand side of an assignment operator: t <= local24 ($k method t); t => local24
+            |index of an update operator: t <= local25 ($k method t); t => local25
+            |array of an update operator: t <= local26 ($k method t); t => local26
+            |qualifier of an assignment operator: t <= local27 ($k method t); t => local27
+            |generator of a for: t <= local28 ($k method t); t => local28
+            |value definition of a for: t <= local29 ($k method t); t => local29
+            |guard of a for: t <= local30 ($k method t); t => local30
+            |yield of a for: t <= local31 ($k method t); t => local31
+            |s interpolation: t <= local32 ($k method t); t => local32
+            |f interpolation: t <= local33 ($k method t); t => local33
+            |raw interpolation: t <= local34 ($k method t); t => local34
+            |""".stripMargin,
     ),
     (
       "a local class",
@@ -12004,132 +8808,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local1
-              |default of a local method: t <= local2 ($k method t); t => local3
-              |default of a second parameter list: t <= local4 ($k method t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k method t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k method t); t => local9
-              |default of a case class: t <= local10 ($k method t); t => local11
-              |default of an implicit class: t <= local12 ($k method t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k method t); t => local15
-              |default of a nested class: t <= local16 ($k method t); t => local17
-              |default of a local class: t <= local18 ($k method t); t => local19
-              |default of a local case class: t <= local20 ($k method t); t => local21
-              |argument before a default: t <= local22 ($k method t); t => local22
-              |named argument: t <= local23 ($k method t); t => local23
-              |named by-name argument: t <= local24 ($k method t); t => local24
-              |named argument of a name in scope: t <= local25 ($k method t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k method t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k method t); t => local27
-              |argument of a parent: t <= local28 ($k method t); t => local28
-              |argument of a generic parent: t <= local29 ($k method t); t => local29
-              |argument of a parent annotation: t <= local30 ($k method t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k method t); t => local31
-              |multiple definitions in a template: t <= local32 ($k method t); t => local33
-              |multiple definitions in a block: t <= local34 ($k method t); t => local35
-              |guard of a partial function: t <= local36 ($k method t); t => local37
-              |guard of a function of cases: t <= local38 ($k method t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k method t); t => local39
-              |index of an update operator: t <= local40 ($k method t); t => local40
-              |array of an update operator: t <= local41 ($k method t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k method t); t => local42
-              |generator of a for: t <= local43 ($k method t); t => local43
-              |value definition of a for: t <= local44 ($k method t); t => local44
-              |guard of a for: t <= local45 ($k method t); t => local45
-              |yield of a for: t <= local46 ($k method t); t => local46
-              |s interpolation: t <= local47 ($k method t); t => local47
-              |f interpolation: t <= local48 ($k method t); t => local48
-              |raw interpolation: t <= local49 ($k method t); t => local49
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local35 ($k method t)
-              |no definition: local37 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "an anonymous class",
@@ -12138,132 +8853,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local1
-              |default of a local method: t <= local2 ($k method t); t => local3
-              |default of a second parameter list: t <= local4 ($k method t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k method t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k method t); t => local9
-              |default of a case class: t <= local10 ($k method t); t => local11
-              |default of an implicit class: t <= local12 ($k method t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k method t); t => local15
-              |default of a nested class: t <= local16 ($k method t); t => local17
-              |default of a local class: t <= local18 ($k method t); t => local19
-              |default of a local case class: t <= local20 ($k method t); t => local21
-              |argument before a default: t <= local22 ($k method t); t => local22
-              |named argument: t <= local23 ($k method t); t => local23
-              |named by-name argument: t <= local24 ($k method t); t => local24
-              |named argument of a name in scope: t <= local25 ($k method t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k method t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k method t); t => local27
-              |argument of a parent: t <= local28 ($k method t); t => local28
-              |argument of a generic parent: t <= local29 ($k method t); t => local29
-              |argument of a parent annotation: t <= local30 ($k method t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k method t); t => local31
-              |multiple definitions in a template: t <= local32 ($k method t); t => local33
-              |multiple definitions in a block: t <= local34 ($k method t); t => local35
-              |guard of a partial function: t <= local36 ($k method t); t => local37
-              |guard of a function of cases: t <= local38 ($k method t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k method t); t => local39
-              |index of an update operator: t <= local40 ($k method t); t => local40
-              |array of an update operator: t <= local41 ($k method t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k method t); t => local42
-              |generator of a for: t <= local43 ($k method t); t => local43
-              |value definition of a for: t <= local44 ($k method t); t => local44
-              |guard of a for: t <= local45 ($k method t); t => local45
-              |yield of a for: t <= local46 ($k method t); t => local46
-              |s interpolation: t <= local47 ($k method t); t => local47
-              |f interpolation: t <= local48 ($k method t); t => local48
-              |raw interpolation: t <= local49 ($k method t); t => local49
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local35 ($k method t)
-              |no definition: local37 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "an anonymous class",
@@ -12272,132 +8898,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Some(t)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local1
-              |default of a local method: t <= local2 ($k method t); t => local3
-              |default of a second parameter list: t <= local4 ($k method t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k method t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k method t); t => local9
-              |default of a case class: t <= local10 ($k method t); t => local11
-              |default of an implicit class: t <= local12 ($k method t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k method t); t => local15
-              |default of a nested class: t <= local16 ($k method t); t => local17
-              |default of a local class: t <= local18 ($k method t); t => local19
-              |default of a local case class: t <= local20 ($k method t); t => local21
-              |argument before a default: t <= local22 ($k method t); t => local22
-              |named argument: t <= local23 ($k method t); t => local23
-              |named by-name argument: t <= local24 ($k method t); t => local24
-              |named argument of a name in scope: t <= local25 ($k method t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k method t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k method t); t => local27
-              |argument of a parent: t <= local28 ($k method t); t => local28
-              |argument of a generic parent: t <= local29 ($k method t); t => local29
-              |argument of a parent annotation: t <= local30 ($k method t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k method t); t => local31
-              |multiple definitions in a template: t <= local32 ($k method t); t => local33
-              |multiple definitions in a block: t <= local34 ($k method t); t => local35
-              |guard of a partial function: t <= local36 ($k method t); t => local37
-              |guard of a function of cases: t <= local38 ($k method t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k method t); t => local39
-              |index of an update operator: t <= local40 ($k method t); t => local40
-              |array of an update operator: t <= local41 ($k method t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k method t); t => local42
-              |generator of a for: t <= local43 ($k method t); t => local43
-              |value definition of a for: t <= local44 ($k method t); t => local44
-              |guard of a for: t <= local45 ($k method t); t => local45
-              |yield of a for: t <= local46 ($k method t); t => local46
-              |s interpolation: t <= local47 ($k method t); t => local47
-              |f interpolation: t <= local48 ($k method t); t => local48
-              |raw interpolation: t <= local49 ($k method t); t => local49
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: local1 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local35 ($k method t)
-              |no definition: local37 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "an anonymous class",
@@ -12406,132 +8943,43 @@ class LocalSymbolsSuite extends FunSuite {
       "t :: Nil",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local1
-              |default of a local method: t <= local2 ($k method t); t => local3
-              |default of a second parameter list: t <= local4 ($k method t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k method t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k method t); t => local9
-              |default of a case class: t <= local10 ($k method t); t => local11
-              |default of an implicit class: t <= local12 ($k method t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k method t); t => local15
-              |default of a nested class: t <= local16 ($k method t); t => local17
-              |default of a local class: t <= local18 ($k method t); t => local19
-              |default of a local case class: t <= local20 ($k method t); t => local21
-              |argument before a default: t <= local22 ($k method t); t => local22
-              |named argument: t <= local23 ($k method t); t => local23
-              |named by-name argument: t <= local24 ($k method t); t => local24
-              |named argument of a name in scope: t <= local25 ($k method t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k method t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k method t); t => local27
-              |argument of a parent: t <= local28 ($k method t); t => local28
-              |argument of a generic parent: t <= local29 ($k method t); t => local29
-              |argument of a parent annotation: t <= local30 ($k method t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k method t); t => local31
-              |multiple definitions in a template: t <= local32 ($k method t); t => local33
-              |multiple definitions in a block: t <= local34 ($k method t); t => local35
-              |guard of a partial function: t <= local36 ($k method t); t => local37
-              |guard of a function of cases: t <= local38 ($k method t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k method t); t => local39
-              |index of an update operator: t <= local40 ($k method t); t => local40
-              |array of an update operator: t <= local41 ($k method t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k method t); t => local42
-              |generator of a for: t <= local43 ($k method t); t => local43
-              |value definition of a for: t <= local44 ($k method t); t => local44
-              |guard of a for: t <= local45 ($k method t); t => local45
-              |yield of a for: t <= local46 ($k method t); t => local46
-              |s interpolation: t <= local47 ($k method t); t => local47
-              |f interpolation: t <= local48 ($k method t); t => local48
-              |raw interpolation: t <= local49 ($k method t); t => local49
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local35 ($k method t)
-              |no definition: local37 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "an anonymous class",
@@ -12540,132 +8988,43 @@ class LocalSymbolsSuite extends FunSuite {
       "t :: Nil",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local1
-              |default of a local method: t <= local2 ($k method t); t => local3
-              |default of a second parameter list: t <= local4 ($k method t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k method t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k method t); t => local9
-              |default of a case class: t <= local10 ($k method t); t => local11
-              |default of an implicit class: t <= local12 ($k method t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k method t); t => local15
-              |default of a nested class: t <= local16 ($k method t); t => local17
-              |default of a local class: t <= local18 ($k method t); t => local19
-              |default of a local case class: t <= local20 ($k method t); t => local21
-              |argument before a default: t <= local22 ($k method t); t => local22
-              |named argument: t <= local23 ($k method t); t => local23
-              |named by-name argument: t <= local24 ($k method t); t => local24
-              |named argument of a name in scope: t <= local25 ($k method t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k method t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k method t); t => local27
-              |argument of a parent: t <= local28 ($k method t); t => local28
-              |argument of a generic parent: t <= local29 ($k method t); t => local29
-              |argument of a parent annotation: t <= local30 ($k method t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k method t); t => local31
-              |multiple definitions in a template: t <= local32 ($k method t); t => local33
-              |multiple definitions in a block: t <= local34 ($k method t); t => local35
-              |guard of a partial function: t <= local36 ($k method t); t => local37
-              |guard of a function of cases: t <= local38 ($k method t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k method t); t => local39
-              |index of an update operator: t <= local40 ($k method t); t => local40
-              |array of an update operator: t <= local41 ($k method t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k method t); t => local42
-              |generator of a for: t <= local43 ($k method t); t => local43
-              |value definition of a for: t <= local44 ($k method t); t => local44
-              |guard of a for: t <= local45 ($k method t); t => local45
-              |yield of a for: t <= local46 ($k method t); t => local46
-              |s interpolation: t <= local47 ($k method t); t => local47
-              |f interpolation: t <= local48 ($k method t); t => local48
-              |raw interpolation: t <= local49 ($k method t); t => local49
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local35 ($k method t)
-              |no definition: local37 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "an anonymous class",
@@ -12674,132 +9033,43 @@ class LocalSymbolsSuite extends FunSuite {
       "t :: Nil",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local1
-              |default of a local method: t <= local2 ($k method t); t => local3
-              |default of a second parameter list: t <= local4 ($k method t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k method t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k method t); t => local9
-              |default of a case class: t <= local10 ($k method t); t => local11
-              |default of an implicit class: t <= local12 ($k method t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k method t); t => local15
-              |default of a nested class: t <= local16 ($k method t); t => local17
-              |default of a local class: t <= local18 ($k method t); t => local19
-              |default of a local case class: t <= local20 ($k method t); t => local21
-              |argument before a default: t <= local22 ($k method t); t => local22
-              |named argument: t <= local23 ($k method t); t => local23
-              |named by-name argument: t <= local24 ($k method t); t => local24
-              |named argument of a name in scope: t <= local25 ($k method t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k method t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k method t); t => local27
-              |argument of a parent: t <= local28 ($k method t); t => local28
-              |argument of a generic parent: t <= local29 ($k method t); t => local29
-              |argument of a parent annotation: t <= local30 ($k method t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k method t); t => local31
-              |multiple definitions in a template: t <= local32 ($k method t); t => local33
-              |multiple definitions in a block: t <= local34 ($k method t); t => local35
-              |guard of a partial function: t <= local36 ($k method t); t => local37
-              |guard of a function of cases: t <= local38 ($k method t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k method t); t => local39
-              |index of an update operator: t <= local40 ($k method t); t => local40
-              |array of an update operator: t <= local41 ($k method t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k method t); t => local42
-              |generator of a for: t <= local43 ($k method t); t => local43
-              |value definition of a for: t <= local44 ($k method t); t => local44
-              |guard of a for: t <= local45 ($k method t); t => local45
-              |yield of a for: t <= local46 ($k method t); t => local46
-              |s interpolation: t <= local47 ($k method t); t => local47
-              |f interpolation: t <= local48 ($k method t); t => local48
-              |raw interpolation: t <= local49 ($k method t); t => local49
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: local1 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local35 ($k method t)
-              |no definition: local37 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "an anonymous class",
@@ -12808,132 +9078,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Tuple2(t, _)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local1
-              |default of a local method: t <= local2 ($k method t); t => local3
-              |default of a second parameter list: t <= local4 ($k method t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k method t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k method t); t => local9
-              |default of a case class: t <= local10 ($k method t); t => local11
-              |default of an implicit class: t <= local12 ($k method t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k method t); t => local15
-              |default of a nested class: t <= local16 ($k method t); t => local17
-              |default of a local class: t <= local18 ($k method t); t => local19
-              |default of a local case class: t <= local20 ($k method t); t => local21
-              |argument before a default: t <= local22 ($k method t); t => local22
-              |named argument: t <= local23 ($k method t); t => local23
-              |named by-name argument: t <= local24 ($k method t); t => local24
-              |named argument of a name in scope: t <= local25 ($k method t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k method t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k method t); t => local27
-              |argument of a parent: t <= local28 ($k method t); t => local28
-              |argument of a generic parent: t <= local29 ($k method t); t => local29
-              |argument of a parent annotation: t <= local30 ($k method t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k method t); t => local31
-              |multiple definitions in a template: t <= local32 ($k method t); t => local33
-              |multiple definitions in a block: t <= local34 ($k method t); t => local35
-              |guard of a partial function: t <= local36 ($k method t); t => local37
-              |guard of a function of cases: t <= local38 ($k method t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k method t); t => local39
-              |index of an update operator: t <= local40 ($k method t); t => local40
-              |array of an update operator: t <= local41 ($k method t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k method t); t => local42
-              |generator of a for: t <= local43 ($k method t); t => local43
-              |value definition of a for: t <= local44 ($k method t); t => local44
-              |guard of a for: t <= local45 ($k method t); t => local45
-              |yield of a for: t <= local46 ($k method t); t => local46
-              |s interpolation: t <= local47 ($k method t); t => local47
-              |f interpolation: t <= local48 ($k method t); t => local48
-              |raw interpolation: t <= local49 ($k method t); t => local49
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local35 ($k method t)
-              |no definition: local37 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "an anonymous class",
@@ -12942,132 +9123,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Tuple2(t, _)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local1
-              |default of a local method: t <= local2 ($k method t); t => local3
-              |default of a second parameter list: t <= local4 ($k method t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k method t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k method t); t => local9
-              |default of a case class: t <= local10 ($k method t); t => local11
-              |default of an implicit class: t <= local12 ($k method t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k method t); t => local15
-              |default of a nested class: t <= local16 ($k method t); t => local17
-              |default of a local class: t <= local18 ($k method t); t => local19
-              |default of a local case class: t <= local20 ($k method t); t => local21
-              |argument before a default: t <= local22 ($k method t); t => local22
-              |named argument: t <= local23 ($k method t); t => local23
-              |named by-name argument: t <= local24 ($k method t); t => local24
-              |named argument of a name in scope: t <= local25 ($k method t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k method t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k method t); t => local27
-              |argument of a parent: t <= local28 ($k method t); t => local28
-              |argument of a generic parent: t <= local29 ($k method t); t => local29
-              |argument of a parent annotation: t <= local30 ($k method t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k method t); t => local31
-              |multiple definitions in a template: t <= local32 ($k method t); t => local33
-              |multiple definitions in a block: t <= local34 ($k method t); t => local35
-              |guard of a partial function: t <= local36 ($k method t); t => local37
-              |guard of a function of cases: t <= local38 ($k method t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k method t); t => local39
-              |index of an update operator: t <= local40 ($k method t); t => local40
-              |array of an update operator: t <= local41 ($k method t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k method t); t => local42
-              |generator of a for: t <= local43 ($k method t); t => local43
-              |value definition of a for: t <= local44 ($k method t); t => local44
-              |guard of a for: t <= local45 ($k method t); t => local45
-              |yield of a for: t <= local46 ($k method t); t => local46
-              |s interpolation: t <= local47 ($k method t); t => local47
-              |f interpolation: t <= local48 ($k method t); t => local48
-              |raw interpolation: t <= local49 ($k method t); t => local49
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local35 ($k method t)
-              |no definition: local37 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "an anonymous class",
@@ -13076,132 +9168,43 @@ class LocalSymbolsSuite extends FunSuite {
       "Tuple2(t, _)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of an eta-expansion: t <= local16 ($k method t); t => local16
-              |argument of a parent: t <= local17 ($k method t); t => local17
-              |argument of a generic parent: t <= local18 ($k method t); t => local18
-              |argument of a parent annotation: t <= local19 ($k method t); t => local19
-              |argument of a self-constructor call: t <= local20 ($k method t); t => local20
-              |multiple definitions in a template: t <= local21 ($k method t); t => local21
-              |multiple definitions in a block: t <= local22 ($k method t); t => local22
-              |guard of a partial function: t <= local23 ($k method t); t => local23
-              |guard of a function of cases: t <= local24 ($k method t); t => local24
-              |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
-              |index of an update operator: t <= local26 ($k method t); t => local26
-              |array of an update operator: t <= local27 ($k method t); t => local27
-              |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
-              |generator of a for: t <= local29 ($k method t); t => local29
-              |value definition of a for: t <= local30 ($k method t); t => local30
-              |guard of a for: t <= local31 ($k method t); t => local31
-              |yield of a for: t <= local32 ($k method t); t => local32
-              |s interpolation: t <= local33 ($k method t); t => local33
-              |f interpolation: t <= local34 ($k method t); t => local34
-              |raw interpolation: t <= local35 ($k method t); t => local35
-              |""".stripMargin
-        else
-          s"""|default of a method: t <= local0 ($k method t); t => local1
-              |default of a local method: t <= local2 ($k method t); t => local3
-              |default of a second parameter list: t <= local4 ($k method t); t => local5
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local6 ($k method t); t => local7; t => b/B.p4().(t)
-              |default of a class: t <= local8 ($k method t); t => local9
-              |default of a case class: t <= local10 ($k method t); t => local11
-              |default of an implicit class: t <= local12 ($k method t); t => local13
-              |default of an auxiliary constructor: t <= local14 ($k method t); t => local15
-              |default of a nested class: t <= local16 ($k method t); t => local17
-              |default of a local class: t <= local18 ($k method t); t => local19
-              |default of a local case class: t <= local20 ($k method t); t => local21
-              |argument before a default: t <= local22 ($k method t); t => local22
-              |named argument: t <= local23 ($k method t); t => local23
-              |named by-name argument: t <= local24 ($k method t); t => local24
-              |named argument of a name in scope: t <= local25 ($k method t); t => local25
-              |argument of an ambiguous view: t <= local26 ($k method t); t => local26
-              |argument of an eta-expansion: t <= local27 ($k method t); t => local27
-              |argument of a parent: t <= local28 ($k method t); t => local28
-              |argument of a generic parent: t <= local29 ($k method t); t => local29
-              |argument of a parent annotation: t <= local30 ($k method t); t => local30
-              |argument of a self-constructor call: t <= local31 ($k method t); t => local31
-              |multiple definitions in a template: t <= local32 ($k method t); t => local33
-              |multiple definitions in a block: t <= local34 ($k method t); t => local35
-              |guard of a partial function: t <= local36 ($k method t); t => local37
-              |guard of a function of cases: t <= local38 ($k method t); t => local38
-              |right-hand side of an assignment operator: t <= local39 ($k method t); t => local39
-              |index of an update operator: t <= local40 ($k method t); t => local40
-              |array of an update operator: t <= local41 ($k method t); t => local41
-              |qualifier of an assignment operator: t <= local42 ($k method t); t => local42
-              |generator of a for: t <= local43 ($k method t); t => local43
-              |value definition of a for: t <= local44 ($k method t); t => local44
-              |guard of a for: t <= local45 ($k method t); t => local45
-              |yield of a for: t <= local46 ($k method t); t => local46
-              |s interpolation: t <= local47 ($k method t); t => local47
-              |f interpolation: t <= local48 ($k method t); t => local48
-              |raw interpolation: t <= local49 ($k method t); t => local49
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: a local (val local t)
-              |no definition: local1 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local35 ($k method t)
-              |no definition: local37 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of an eta-expansion: t <= local16 ($k method t); t => local16
+            |argument of a parent: t <= local17 ($k method t); t => local17
+            |argument of a generic parent: t <= local18 ($k method t); t => local18
+            |argument of a parent annotation: t <= local19 ($k method t); t => local19
+            |argument of a self-constructor call: t <= local20 ($k method t); t => local20
+            |multiple definitions in a template: t <= local21 ($k method t); t => local21
+            |multiple definitions in a block: t <= local22 ($k method t); t => local22
+            |guard of a partial function: t <= local23 ($k method t); t => local23
+            |guard of a function of cases: t <= local24 ($k method t); t => local24
+            |right-hand side of an assignment operator: t <= local25 ($k method t); t => local25
+            |index of an update operator: t <= local26 ($k method t); t => local26
+            |array of an update operator: t <= local27 ($k method t); t => local27
+            |qualifier of an assignment operator: t <= local28 ($k method t); t => local28
+            |generator of a for: t <= local29 ($k method t); t => local29
+            |value definition of a for: t <= local30 ($k method t); t => local30
+            |guard of a for: t <= local31 ($k method t); t => local31
+            |yield of a for: t <= local32 ($k method t); t => local32
+            |s interpolation: t <= local33 ($k method t); t => local33
+            |f interpolation: t <= local34 ($k method t); t => local34
+            |raw interpolation: t <= local35 ($k method t); t => local35
+            |""".stripMargin,
     ),
     (
       "an anonymous class",
@@ -13210,151 +9213,42 @@ class LocalSymbolsSuite extends FunSuite {
       "(t: Int)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of a parent: t <= local16 ($k method t); t => local16
-              |argument of a generic parent: t <= local17 ($k method t); t => local17
-              |argument of a parent annotation: t <= local18 ($k method t); t => local18
-              |argument of a self-constructor call: t <= local19 ($k method t); t => local19
-              |multiple definitions in a template: t <= local20 ($k method t); t => local20
-              |multiple definitions in a block: t <= local21 ($k method t); t => local21
-              |guard of a partial function: t <= local22 ($k method t); t => local22
-              |guard of a function of cases: t <= local23 ($k method t); t => local23
-              |right-hand side of an assignment operator: t <= local24 ($k method t); t => local24
-              |index of an update operator: t <= local25 ($k method t); t => local25
-              |array of an update operator: t <= local26 ($k method t); t => local26
-              |qualifier of an assignment operator: t <= local27 ($k method t); t => local27
-              |generator of a for: t <= local28 ($k method t); t => local28
-              |value definition of a for: t <= local29 ($k method t); t => local29
-              |guard of a for: t <= local30 ($k method t); t => local30
-              |yield of a for: t <= local31 ($k method t); t => local31
-              |s interpolation: t <= local32 ($k method t); t => local32
-              |f interpolation: t <= local33 ($k method t); t => local33
-              |raw interpolation: t <= local34 ($k method t); t => local34
-              |""".stripMargin
-        else
-          s"""|default of a method: t => local0
-              |default of a local method: t => local1
-              |default of a second parameter list: t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t => local3; t => b/B.p4().(t)
-              |default of a class: t => local4
-              |default of a case class: t => local5
-              |default of an implicit class: t => local6
-              |default of an auxiliary constructor: t => local7
-              |default of a nested class: t => local8
-              |default of a local class: t => local9
-              |default of a local case class: t => local10
-              |argument before a default: t => local11
-              |named argument: t => local12
-              |named by-name argument: t => local13
-              |named argument of a name in scope: t => local14
-              |argument of an ambiguous view: t => local15
-              |argument of a parent: t => local16
-              |argument of a generic parent: t => local17
-              |argument of a parent annotation: t => local18
-              |argument of a self-constructor call: t => local19
-              |multiple definitions in a template: t => local20
-              |multiple definitions in a block: t => local21
-              |guard of a partial function: t => local22
-              |guard of a function of cases: t => local23
-              |right-hand side of an assignment operator: t => local24
-              |index of an update operator: t => local25
-              |array of an update operator: t => local26
-              |qualifier of an assignment operator: t => local27
-              |generator of a for: t => local28
-              |value definition of a for: t => local29
-              |guard of a for: t => local30
-              |yield of a for: t => local31
-              |s interpolation: t => local32
-              |f interpolation: t => local33
-              |raw interpolation: t => local34
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local0 ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local10 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local12 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local14 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local16 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local18 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local2 ($k method t)
-              |no definition: local20 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local22 ($k method t)
-              |no definition: local23 ($k method t)
-              |no definition: local24 ($k method t)
-              |no definition: local25 ($k method t)
-              |no definition: local26 ($k method t)
-              |no definition: local27 ($k method t)
-              |no definition: local28 ($k method t)
-              |no definition: local29 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local30 ($k method t)
-              |no definition: local31 ($k method t)
-              |no definition: local32 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local34 ($k method t)
-              |no definition: local4 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local6 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local8 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of a parent: t <= local16 ($k method t); t => local16
+            |argument of a generic parent: t <= local17 ($k method t); t => local17
+            |argument of a parent annotation: t <= local18 ($k method t); t => local18
+            |argument of a self-constructor call: t <= local19 ($k method t); t => local19
+            |multiple definitions in a template: t <= local20 ($k method t); t => local20
+            |multiple definitions in a block: t <= local21 ($k method t); t => local21
+            |guard of a partial function: t <= local22 ($k method t); t => local22
+            |guard of a function of cases: t <= local23 ($k method t); t => local23
+            |right-hand side of an assignment operator: t <= local24 ($k method t); t => local24
+            |index of an update operator: t <= local25 ($k method t); t => local25
+            |array of an update operator: t <= local26 ($k method t); t => local26
+            |qualifier of an assignment operator: t <= local27 ($k method t); t => local27
+            |generator of a for: t <= local28 ($k method t); t => local28
+            |value definition of a for: t <= local29 ($k method t); t => local29
+            |guard of a for: t <= local30 ($k method t); t => local30
+            |yield of a for: t <= local31 ($k method t); t => local31
+            |s interpolation: t <= local32 ($k method t); t => local32
+            |f interpolation: t <= local33 ($k method t); t => local33
+            |raw interpolation: t <= local34 ($k method t); t => local34
+            |""".stripMargin,
     ),
     (
       "an anonymous class",
@@ -13363,151 +9257,42 @@ class LocalSymbolsSuite extends FunSuite {
       "(t: Int)",
       "t",
       k =>
-        if (ScalaVersion.atLeast213_17)
-          s"""|default of a method: t <= local0 ($k method t); t => local0
-              |default of a local method: t <= local1 ($k method t); t => local1
-              |default of a second parameter list: t <= local2 ($k method t); t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
-              |default of a class: t <= local4 ($k method t); t => local4
-              |default of a case class: t <= local5 ($k method t); t => local5
-              |default of an implicit class: t <= local6 ($k method t); t => local6
-              |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
-              |default of a nested class: t <= local8 ($k method t); t => local8
-              |default of a local class: t <= local9 ($k method t); t => local9
-              |default of a local case class: t <= local10 ($k method t); t => local10
-              |argument before a default: t <= local11 ($k method t); t => local11
-              |named argument: t <= local12 ($k method t); t => local12
-              |named by-name argument: t <= local13 ($k method t); t => local13
-              |named argument of a name in scope: t <= local14 ($k method t); t => local14
-              |argument of an ambiguous view: t <= local15 ($k method t); t => local15
-              |argument of a parent: t <= local16 ($k method t); t => local16
-              |argument of a generic parent: t <= local17 ($k method t); t => local17
-              |argument of a parent annotation: t <= local18 ($k method t); t => local18
-              |argument of a self-constructor call: t <= local19 ($k method t); t => local19
-              |multiple definitions in a template: t <= local20 ($k method t); t => local20
-              |multiple definitions in a block: t <= local21 ($k method t); t => local21
-              |guard of a partial function: t <= local22 ($k method t); t => local22
-              |guard of a function of cases: t <= local23 ($k method t); t => local23
-              |right-hand side of an assignment operator: t <= local24 ($k method t); t => local24
-              |index of an update operator: t <= local25 ($k method t); t => local25
-              |array of an update operator: t <= local26 ($k method t); t => local26
-              |qualifier of an assignment operator: t <= local27 ($k method t); t => local27
-              |generator of a for: t <= local28 ($k method t); t => local28
-              |value definition of a for: t <= local29 ($k method t); t => local29
-              |guard of a for: t <= local30 ($k method t); t => local30
-              |yield of a for: t <= local31 ($k method t); t => local31
-              |s interpolation: t <= local32 ($k method t); t => local32
-              |f interpolation: t <= local33 ($k method t); t => local33
-              |raw interpolation: t <= local34 ($k method t); t => local34
-              |""".stripMargin
-        else
-          s"""|default of a method: t => local0
-              |default of a local method: t => local1
-              |default of a second parameter list: t => local2
-              |default of a parameter t: t <= b/B.p4().(t) (default param t); t => local3; t => b/B.p4().(t)
-              |default of a class: t => local4
-              |default of a case class: t => local5
-              |default of an implicit class: t => local6
-              |default of an auxiliary constructor: t => local7
-              |default of a nested class: t => local8
-              |default of a local class: t => local9
-              |default of a local case class: t => local10
-              |argument before a default: t => local11
-              |named argument: t => local12
-              |named by-name argument: t => local13
-              |named argument of a name in scope: t => local14
-              |argument of an ambiguous view: t => local15
-              |argument of a parent: t => local16
-              |argument of a generic parent: t => local17
-              |argument of a parent annotation: t => local18
-              |argument of a self-constructor call: t => local19
-              |multiple definitions in a template: t => local20
-              |multiple definitions in a block: t => local21
-              |guard of a partial function: t => local22
-              |guard of a function of cases: t => local23
-              |right-hand side of an assignment operator: t => local24
-              |index of an update operator: t => local25
-              |array of an update operator: t => local26
-              |qualifier of an assignment operator: t => local27
-              |generator of a for: t => local28
-              |value definition of a for: t => local29
-              |guard of a for: t => local30
-              |yield of a for: t => local31
-              |s interpolation: t => local32
-              |f interpolation: t => local33
-              |raw interpolation: t => local34
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: a local ($k method t)
-              |no definition: local0 ($k method t)
-              |no definition: local1 ($k method t)
-              |no definition: local10 ($k method t)
-              |no definition: local11 ($k method t)
-              |no definition: local12 ($k method t)
-              |no definition: local13 ($k method t)
-              |no definition: local14 ($k method t)
-              |no definition: local15 ($k method t)
-              |no definition: local16 ($k method t)
-              |no definition: local17 ($k method t)
-              |no definition: local18 ($k method t)
-              |no definition: local19 ($k method t)
-              |no definition: local2 ($k method t)
-              |no definition: local20 ($k method t)
-              |no definition: local21 ($k method t)
-              |no definition: local22 ($k method t)
-              |no definition: local23 ($k method t)
-              |no definition: local24 ($k method t)
-              |no definition: local25 ($k method t)
-              |no definition: local26 ($k method t)
-              |no definition: local27 ($k method t)
-              |no definition: local28 ($k method t)
-              |no definition: local29 ($k method t)
-              |no definition: local3 ($k method t)
-              |no definition: local30 ($k method t)
-              |no definition: local31 ($k method t)
-              |no definition: local32 ($k method t)
-              |no definition: local33 ($k method t)
-              |no definition: local34 ($k method t)
-              |no definition: local4 ($k method t)
-              |no definition: local5 ($k method t)
-              |no definition: local6 ($k method t)
-              |no definition: local7 ($k method t)
-              |no definition: local8 ($k method t)
-              |no definition: local9 ($k method t)
-              |""".stripMargin,
+        s"""|default of a method: t <= local0 ($k method t); t => local0
+            |default of a local method: t <= local1 ($k method t); t => local1
+            |default of a second parameter list: t <= local2 ($k method t); t => local2
+            |default of a parameter t: t <= b/B.p4().(t) (default param t); t <= local3 ($k method t); t => local3; t => b/B.p4().(t)
+            |default of a class: t <= local4 ($k method t); t => local4
+            |default of a case class: t <= local5 ($k method t); t => local5
+            |default of an implicit class: t <= local6 ($k method t); t => local6
+            |default of an auxiliary constructor: t <= local7 ($k method t); t => local7
+            |default of a nested class: t <= local8 ($k method t); t => local8
+            |default of a local class: t <= local9 ($k method t); t => local9
+            |default of a local case class: t <= local10 ($k method t); t => local10
+            |argument before a default: t <= local11 ($k method t); t => local11
+            |named argument: t <= local12 ($k method t); t => local12
+            |named by-name argument: t <= local13 ($k method t); t => local13
+            |named argument of a name in scope: t <= local14 ($k method t); t => local14
+            |argument of an ambiguous view: t <= local15 ($k method t); t => local15
+            |argument of a parent: t <= local16 ($k method t); t => local16
+            |argument of a generic parent: t <= local17 ($k method t); t => local17
+            |argument of a parent annotation: t <= local18 ($k method t); t => local18
+            |argument of a self-constructor call: t <= local19 ($k method t); t => local19
+            |multiple definitions in a template: t <= local20 ($k method t); t => local20
+            |multiple definitions in a block: t <= local21 ($k method t); t => local21
+            |guard of a partial function: t <= local22 ($k method t); t => local22
+            |guard of a function of cases: t <= local23 ($k method t); t => local23
+            |right-hand side of an assignment operator: t <= local24 ($k method t); t => local24
+            |index of an update operator: t <= local25 ($k method t); t => local25
+            |array of an update operator: t <= local26 ($k method t); t => local26
+            |qualifier of an assignment operator: t <= local27 ($k method t); t => local27
+            |generator of a for: t <= local28 ($k method t); t => local28
+            |value definition of a for: t <= local29 ($k method t); t => local29
+            |guard of a for: t <= local30 ($k method t); t => local30
+            |yield of a for: t <= local31 ($k method t); t => local31
+            |s interpolation: t <= local32 ($k method t); t => local32
+            |f interpolation: t <= local33 ($k method t); t => local33
+            |raw interpolation: t <= local34 ($k method t); t => local34
+            |""".stripMargin,
     ),
     (
       "an anonymous class",
