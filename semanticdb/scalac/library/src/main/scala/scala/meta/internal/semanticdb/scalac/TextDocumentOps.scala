@@ -493,6 +493,9 @@ trait TextDocumentOps {
             def tryMstart(pos: Int): Unit = success(mstarts.get(pos), gsym)
             def tryMend(pos: Int): Unit = success(mends.get(pos), gsym)
 
+            def singleValPat(sym: g.Symbol): Unit = msinglevalpats.get(gpoint)
+              .fold(success(mstarts.get(gpoint), sym))(addPatOccurrence(_, sym))
+
             gtree match {
               case _: g.TypeDef | _: g.Bind | _: g.ValOrDefDef =>
                 trySymbolDefinition(gsym)
@@ -555,11 +558,6 @@ trait TextDocumentOps {
               case _ =>
             }
 
-            def singleValPat(): Unit = msinglevalpats.get(gpoint) match {
-              case Some(mpos) => addPatOccurrence(mpos, gsym)
-              case _ => tryMstart(gpoint)
-            }
-
             gtree match {
               case _: g.ValDef if gsym.isSelfParameter => tryMstart(gstart)
               case _: g.MemberDef if gsym.hasFlag(Flags.SYNTHETIC | Flags.ARTIFACT) =>
@@ -570,7 +568,7 @@ trait TextDocumentOps {
                 // then its positions are completely mental, so we just hack around
                 tryMstart(gpoint + 7)
                 tryMstart(gpoint)
-              case _: g.DefDef if gsym.isGetter => singleValPat()
+              case _: g.DefDef if gsym.isGetter => singleValPat(gsym)
               case _: g.ValDef =>
                 if (gsym.isMethod || !gsym.owner.isClass || gsym.getterIn(gsym.owner) == g.NoSymbol) {
                   // FIXME: https://github.com/scalameta/scalameta/issues/1538
@@ -578,7 +576,7 @@ trait TextDocumentOps {
                   // This will make sure that val/var class parameters are consistently
                   // resolved to getter symbols both as definition and references.
                   tryMstart(gstart)
-                  singleValPat()
+                  singleValPat(gsym)
                 }
               // mctordefs found it above; its point can be on a parent's name
               case _: g.DefDef if gsym.isConstructor =>
