@@ -11,6 +11,7 @@ import scala.collection.mutable
 import scala.reflect.internal._
 import scala.reflect.internal.{Flags => gf, util => gu}
 import scala.runtime.IntRef
+import scala.tools.nsc.settings.ScalaVersion
 import scala.{meta => m}
 
 trait TextDocumentOps {
@@ -40,11 +41,7 @@ trait TextDocumentOps {
   type Occurrence = (String, Role)
   def emptyOccurrenceMap() = mutable.Map.empty[m.Position, Occurrence]
 
-  val isOldBehaviourOnPats = BuildInfo.scalaVersion.split("\\.") match {
-    case Array("2", "13", patch) if patch == "16" || patch == "15" || patch == "14" => true
-    case Array("2", "13", _) => false
-    case _ => true
-  }
+  val isOldBehaviourOnPats = ScalaVersion(BuildInfo.scalaVersion) < ScalaVersion("2.13.17")
 
   // walks each tree once, as a document does: its expandee, its original, itself, its children
   private[scalac] abstract class DocumentTraverser(source: gu.SourceFile) extends g.Traverser {
@@ -325,7 +322,7 @@ trait TextDocumentOps {
                 indexUnderscore(mtree)
               case mtree: m.Pat.Wildcard => if (isWholePat(mtree)) {
                   val mpos = indexUnderscore(mtree)
-                  // scalac 2.12 and 2.13.15 put the value of `val (_: Int) = 1` at the colon
+                  // scalac before 2.13.17 puts the value of `val (_: Int) = 1` at the colon
                   val colon = typedColon(mtree)
                   if (colon >= 0) munderscores(colon) = mpos
                 }
