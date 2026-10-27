@@ -5394,4 +5394,491 @@ class LocalSymbolsSuite extends FunSuite {
     )
   }
 
+  private val InfoOfT =
+    """local\d+ => (?:[\w\[\]]+ )*(?:val|var) (?:[\w\[\]]+ )*t(?:_=)?[:(\[ ].*""".r
+
+  // the occurrences and the information of `t` in the places where scalac types an expression twice
+  private def typedTwicePlaces(defn: String, use: String): String = {
+    val b =
+      s"""|object B {
+          |  def p1 = { val a = Array(0); a({ $defn; $use } * 0) += 1; a }
+          |  def p2 = { { $defn; Array($use) }.apply(0) += 1 }
+          |  def p3 = { class V { var v = 0 }; { $defn; if ($use > 0) new V else null }.v += 1 }
+          |  def p4 = new A().f({ $defn; $use })
+          |  class A { def f(s: String) = s }
+          |  implicit class C(a: A) { def f(i: Int) = i }
+          |}
+          |""".stripMargin
+    occurrencesAndInfosOfT(b)
+  }
+
+  // the occurrences and the information of `t` in a block, and in a block in a synthetic value
+  private def syntheticValuePlaces(defn: String, use: String): String = {
+    val b =
+      s"""|object B {
+          |  def s0 = { $defn; $use }
+          |  def s1 = g(b = { $defn; $use }, a = 0)
+          |  def s2 = h(b = { $defn; $use })
+          |  def s3 = { val (x, _) = ({ $defn; $use }, 0); x }
+          |  def g(a: Int, b: Int) = b
+          |  def h(a: Int = 0, b: Int = 0) = b
+          |}
+          |""".stripMargin
+    occurrencesAndInfosOfT(b)
+  }
+
+  private def occurrencesAndInfosOfT(b: String): String = {
+    val doc = document(compile(Map("B.scala" -> b)), "B.scala")
+    val occurrencesOfT = occurrences(doc).linesIterator.filter(_.contains("): t "))
+    val infosOfT = symbols(doc).linesIterator.filter(InfoOfT.pattern.matcher(_).matches)
+    (occurrencesOfT ++ infosOfT).mkString("\n")
+  }
+
+  for ((defn, use, expected) <- List(
+      (
+        "class L { val t = 1 }",
+        "new L().t",
+        """|[1:66..1:67): t => local3
+           |[2:52..2:53): t => local6
+           |[3:73..3:74): t => local14
+           |[4:54..4:55): t => local17
+           |local3 => val method t: Int
+           |local6 => val method t: Int
+           |local14 => val method t: Int
+           |local17 => val method t: Int
+           |""".stripMargin,
+      ),
+      (
+        "class L { var t = 1 }",
+        "new L().t",
+        """|[1:66..1:67): t => local3
+           |[2:52..2:53): t => local7
+           |[3:73..3:74): t => local16
+           |[4:54..4:55): t => local20
+           |local3 => var method t: Int
+           |local4 => var method t_=(x$1: Int): Unit
+           |local7 => var method t: Int
+           |local8 => var method t_=(x$1: Int): Unit
+           |local16 => var method t: Int
+           |local17 => var method t_=(x$1: Int): Unit
+           |local20 => var method t: Int
+           |local21 => var method t_=(x$1: Int): Unit
+           |""".stripMargin,
+      ),
+      (
+        "class L { lazy val t = 1 }",
+        "new L().t",
+        """|[1:54..1:55): t <= local3
+           |[1:71..1:72): t => local3
+           |[2:34..2:35): t <= local6
+           |[2:57..2:58): t => local6
+           |[3:57..3:58): t <= local14
+           |[3:78..3:79): t => local14
+           |[4:42..4:43): t <= local17
+           |[4:59..4:60): t => local17
+           |local3 => lazy val method t: Int
+           |local6 => lazy val method t: Int
+           |local14 => lazy val method t: Int
+           |local17 => lazy val method t: Int
+           |""".stripMargin,
+      ),
+      (
+        "class L { val (t: Int) = 1 }",
+        "new L().t",
+        """|[1:73..1:74): t => local3
+           |[2:59..2:60): t => local6
+           |[3:80..3:81): t => local14
+           |[4:61..4:62): t => local17
+           |local3 => val method t: Int
+           |local6 => val method t: Int
+           |local14 => val method t: Int
+           |local17 => val method t: Int
+           |""".stripMargin,
+      ),
+      (
+        "class L(val t: Int)",
+        "new L(1).t",
+        """|[1:47..1:48): t <= local2
+           |[1:65..1:66): t => local2
+           |[2:27..2:28): t <= local5
+           |[2:51..2:52): t => local5
+           |[3:50..3:51): t <= local13
+           |[3:72..3:73): t => local13
+           |[4:35..4:36): t <= local16
+           |[4:53..4:54): t => local16
+           |local2 => val param t: Int
+           |local5 => val param t: Int
+           |local13 => val param t: Int
+           |local16 => val param t: Int
+           |""".stripMargin,
+      ),
+      (
+        "class L(var t: Int); val l = new L(1); l.t = 2",
+        "l.t",
+        """|[1:47..1:48): t <= local2
+           |[1:76..1:77): t => local3
+           |[1:85..1:86): t => local2
+           |[2:27..2:28): t <= local7
+           |[2:56..2:57): t => local8
+           |[2:71..2:72): t => local7
+           |[3:50..3:51): t <= local17
+           |[3:79..3:80): t => local18
+           |[3:92..3:93): t => local17
+           |[4:35..4:36): t <= local22
+           |[4:64..4:65): t => local23
+           |[4:73..4:74): t => local22
+           |local2 => var param t: Int
+           |local3 => var method t_=(x$1: Int): Unit
+           |local7 => var param t: Int
+           |local8 => var method t_=(x$1: Int): Unit
+           |local17 => var param t: Int
+           |local18 => var method t_=(x$1: Int): Unit
+           |local22 => var param t: Int
+           |local23 => var method t_=(x$1: Int): Unit
+           |""".stripMargin,
+      ),
+      (
+        "val o = new { val t = 1 }",
+        "o.t",
+        """|[1:64..1:65): t => local4
+           |[2:50..2:51): t => local8
+           |[3:71..3:72): t => local17
+           |[4:52..4:53): t => local21
+           |local2 => val method t: Int
+           |local4 => val method t: Int
+           |local6 => val method t: Int
+           |local8 => val method t: Int
+           |local15 => val method t: Int
+           |local17 => val method t: Int
+           |local19 => val method t: Int
+           |local21 => val method t: Int
+           |""".stripMargin,
+      ),
+      (
+        "val o = new { var t = 1 }; o.t = 2",
+        "o.t",
+        """|[1:64..1:65): t => local6
+           |[1:73..1:74): t => local5
+           |[2:44..2:45): t => local13
+           |[2:59..2:60): t => local12
+           |[3:67..3:68): t => local25
+           |[3:80..3:81): t => local24
+           |[4:52..4:53): t => local32
+           |[4:61..4:62): t => local31
+           |local2 => var method t: Int
+           |local3 => var method t_=(x$1: Int): Unit
+           |local5 => var method t: Int
+           |local6 => var method t_=(x$1: Int): Unit
+           |local9 => var method t: Int
+           |local10 => var method t_=(x$1: Int): Unit
+           |local12 => var method t: Int
+           |local13 => var method t_=(x$1: Int): Unit
+           |local21 => var method t: Int
+           |local22 => var method t_=(x$1: Int): Unit
+           |local24 => var method t: Int
+           |local25 => var method t_=(x$1: Int): Unit
+           |local28 => var method t: Int
+           |local29 => var method t_=(x$1: Int): Unit
+           |local31 => var method t: Int
+           |local32 => var method t_=(x$1: Int): Unit
+           |""".stripMargin,
+      ),
+      (
+        "class L { var t = 1 }; val l = new L(); l.t = 2",
+        "l.t",
+        """|[1:77..1:78): t => local4
+           |[1:86..1:87): t => local3
+           |[2:57..2:58): t => local9
+           |[2:72..2:73): t => local8
+           |[3:80..3:81): t => local19
+           |[3:93..3:94): t => local18
+           |[4:65..4:66): t => local24
+           |[4:74..4:75): t => local23
+           |local3 => var method t: Int
+           |local4 => var method t_=(x$1: Int): Unit
+           |local8 => var method t: Int
+           |local9 => var method t_=(x$1: Int): Unit
+           |local18 => var method t: Int
+           |local19 => var method t_=(x$1: Int): Unit
+           |local23 => var method t: Int
+           |local24 => var method t_=(x$1: Int): Unit
+           |""".stripMargin,
+      ),
+      (
+        "object O { val t = 1 }",
+        "O.t",
+        """|[1:61..1:62): t => local2
+           |[2:47..2:48): t => local4
+           |[3:68..3:69): t => local11
+           |[4:49..4:50): t => local13
+           |local2 => val method t: Int
+           |local4 => val method t: Int
+           |local11 => val method t: Int
+           |local13 => val method t: Int
+           |""".stripMargin,
+      ),
+      (
+        "object O { var t = 1 }",
+        "O.t",
+        """|[1:61..1:62): t => local2
+           |[2:47..2:48): t => local5
+           |[3:68..3:69): t => local13
+           |[4:49..4:50): t => local16
+           |local2 => var method t: Int
+           |local3 => var method t_=(x$1: Int): Unit
+           |local5 => var method t: Int
+           |local6 => var method t_=(x$1: Int): Unit
+           |local13 => var method t: Int
+           |local14 => var method t_=(x$1: Int): Unit
+           |local16 => var method t: Int
+           |local17 => var method t_=(x$1: Int): Unit
+           |""".stripMargin,
+      ),
+      (
+        "class L { class M { val t = 1 } }; val l = new L()",
+        "new l.M().t",
+        """|[1:97..1:98): t => local5
+           |[2:83..2:84): t => local11
+           |[3:104..3:105): t => local22
+           |[4:85..4:86): t => local28
+           |local5 => val method t: Int
+           |local11 => val method t: Int
+           |local22 => val method t: Int
+           |local28 => val method t: Int
+           |""".stripMargin,
+      ),
+      (
+        "case class L(t: Int)",
+        "L(1).t",
+        if (ScalaVersion.is212)
+          """|[1:48..1:49): t <= local2
+             |[1:62..1:63): t => local2
+             |[2:28..2:29): t <= local16
+             |[2:48..2:49): t => local16
+             |[3:51..3:52): t <= local35
+             |[3:69..3:70): t => local35
+             |[4:36..4:37): t <= local49
+             |[4:50..4:51): t => local49
+             |local2 => val param t: Int
+             |local16 => val param t: Int
+             |local35 => val param t: Int
+             |local49 => val param t: Int
+             |""".stripMargin
+        else
+          """|[1:48..1:49): t <= local2
+             |[1:62..1:63): t => local2
+             |[2:28..2:29): t <= local17
+             |[2:48..2:49): t => local17
+             |[3:51..3:52): t <= local37
+             |[3:69..3:70): t => local37
+             |[4:36..4:37): t <= local52
+             |[4:50..4:51): t => local52
+             |local2 => val param t: Int
+             |local17 => val param t: Int
+             |local37 => val param t: Int
+             |local52 => val param t: Int
+             |""".stripMargin,
+      ),
+      (
+        "class L { private val t = 1; def u = t }",
+        "new L().u",
+        """|[1:72..1:73): t => local3
+           |[2:52..2:53): t => local7
+           |[3:75..3:76): t => local16
+           |[4:60..4:61): t => local20
+           |local3 => private val method t: Int
+           |local7 => private val method t: Int
+           |local16 => private val method t: Int
+           |local20 => private val method t: Int
+           |""".stripMargin,
+      ),
+      (
+        "trait T { val t = 1 }",
+        "new T {}.t",
+        """|[1:49..1:50): t <= local3
+           |[1:67..1:68): t => local3
+           |[2:29..2:30): t <= local7
+           |[2:53..2:54): t => local7
+           |[3:52..3:53): t <= local16
+           |[3:74..3:75): t => local16
+           |[4:37..4:38): t <= local20
+           |[4:55..4:56): t => local20
+           |local3 => val method t: Int
+           |local7 => val method t: Int
+           |local16 => val method t: Int
+           |local20 => val method t: Int
+           |""".stripMargin,
+      ),
+      (
+        "trait T { var t = 1 }",
+        "new T {}.t",
+        """|[1:49..1:50): t <= local3
+           |[1:67..1:68): t => local3
+           |[2:29..2:30): t <= local9
+           |[2:53..2:54): t => local9
+           |[3:52..3:53): t <= local20
+           |[3:74..3:75): t => local20
+           |[4:37..4:38): t <= local26
+           |[4:55..4:56): t => local26
+           |local3 => var method t: Int
+           |local4 => var method t_=(x$1: Int): Unit
+           |local9 => var method t: Int
+           |local10 => var method t_=(x$1: Int): Unit
+           |local20 => var method t: Int
+           |local21 => var method t_=(x$1: Int): Unit
+           |local26 => var method t: Int
+           |local27 => var method t_=(x$1: Int): Unit
+           |""".stripMargin,
+      ),
+      (
+        "class L extends { val t = 1 } with AnyRef",
+        "new L().t",
+        """|[1:57..1:58): t <= local4
+           |[1:86..1:87): t => local2
+           |[2:37..2:38): t <= local8
+           |[2:72..2:73): t => local6
+           |[3:60..3:61): t <= local17
+           |[3:93..3:94): t => local15
+           |[4:45..4:46): t <= local21
+           |[4:74..4:75): t => local19
+           |local2 => val method t: Int
+           |local4 => val local t: Int
+           |local6 => val method t: Int
+           |local8 => val local t: Int
+           |local15 => val method t: Int
+           |local17 => val local t: Int
+           |local19 => val method t: Int
+           |local21 => val local t: Int
+           |""".stripMargin,
+      ),
+      (
+        "class L { val Some(t) = Option(1) }",
+        "new L().t",
+        """|[1:54..1:55): t <= local3
+           |[1:80..1:81): t => local3
+           |[2:34..2:35): t <= local6
+           |[2:66..2:67): t => local6
+           |[3:57..3:58): t <= local14
+           |[3:87..3:88): t => local14
+           |[4:42..4:43): t <= local17
+           |[4:68..4:69): t => local17
+           |local3 => val method t: Int
+           |local6 => val method t: Int
+           |local14 => val method t: Int
+           |local17 => val method t: Int
+           |""".stripMargin,
+      ),
+      (
+        "class L { val t @ Some(_) = Option(1) }",
+        "new L().t.get",
+        """|[1:49..1:50): t <= local3
+           |[1:84..1:85): t => local3
+           |[2:29..2:30): t <= local6
+           |[2:70..2:71): t => local6
+           |[3:52..3:53): t <= local14
+           |[3:91..3:92): t => local14
+           |[4:37..4:38): t <= local17
+           |[4:72..4:73): t => local17
+           |local3 => val method t: Some[Int]
+           |local6 => val method t: Some[Int]
+           |local14 => val method t: Some[Int]
+           |local17 => val method t: Some[Int]
+           |""".stripMargin,
+      ),
+    )) test(s"$defn in a place that scalac types twice")(
+    assertNoDiff(typedTwicePlaces(defn, use), expected),
+  )
+
+  for ((defn, use, expected) <- List(
+      (
+        "class L(val t: Int)",
+        "new L(1).t",
+        """|[1:25..1:26): t <= local1
+           |[1:43..1:44): t => local1
+           |[2:31..2:32): t <= local4
+           |[2:49..2:50): t => local4
+           |[3:31..3:32): t <= local7
+           |[3:49..3:50): t => local7
+           |[4:41..4:42): t <= local10
+           |[4:59..4:60): t => local10
+           |local1 => val param t: Int
+           |local4 => val param t: Int
+           |local7 => val param t: Int
+           |local10 => val param t: Int
+           |""".stripMargin,
+      ),
+      (
+        "class L(var t: Int)",
+        "new L(1).t",
+        """|[1:25..1:26): t <= local1
+           |[1:43..1:44): t => local1
+           |[2:31..2:32): t <= local6
+           |[2:49..2:50): t => local6
+           |[3:31..3:32): t <= local11
+           |[3:49..3:50): t => local11
+           |[4:41..4:42): t <= local16
+           |[4:59..4:60): t => local16
+           |local1 => var param t: Int
+           |local2 => var method t_=(x$1: Int): Unit
+           |local6 => var param t: Int
+           |local7 => var method t_=(x$1: Int): Unit
+           |local11 => var param t: Int
+           |local12 => var method t_=(x$1: Int): Unit
+           |local16 => var param t: Int
+           |local17 => var method t_=(x$1: Int): Unit
+           |""".stripMargin,
+      ),
+      (
+        "case class L(t: Int)",
+        "L(1).t",
+        if (ScalaVersion.is212)
+          """|[1:26..1:27): t <= local1
+             |[1:40..1:41): t => local1
+             |[2:32..2:33): t <= local19
+             |[2:46..2:47): t => local19
+             |[3:32..3:33): t <= local37
+             |[3:46..3:47): t => local37
+             |[4:42..4:43): t <= local55
+             |[4:56..4:57): t => local55
+             |local1 => val param t: Int
+             |local19 => val param t: Int
+             |local37 => val param t: Int
+             |local55 => val param t: Int
+             |""".stripMargin
+        else
+          """|[1:26..1:27): t <= local1
+             |[1:40..1:41): t => local1
+             |[2:32..2:33): t <= local21
+             |[2:46..2:47): t => local21
+             |[3:32..3:33): t <= local41
+             |[3:46..3:47): t => local41
+             |[4:42..4:43): t <= local61
+             |[4:56..4:57): t => local61
+             |local1 => val param t: Int
+             |local21 => val param t: Int
+             |local41 => val param t: Int
+             |local61 => val param t: Int
+             |""".stripMargin,
+      ),
+      (
+        "class L extends { val t = 1 } with AnyRef",
+        "new L().t",
+        """|[1:35..1:36): t <= local1
+           |[1:64..1:65): t => local1
+           |[2:41..2:42): t <= local4
+           |[2:70..2:71): t => local4
+           |[3:41..3:42): t <= local7
+           |[3:70..3:71): t => local7
+           |[4:51..4:52): t <= local10
+           |[4:80..4:81): t => local10
+           |local1 => val local t: Int
+           |local4 => val local t: Int
+           |local7 => val local t: Int
+           |local10 => val local t: Int
+           |""".stripMargin,
+      ),
+    )) test(s"$defn in a block and in synthetic values")(
+    assertNoDiff(syntheticValuePlaces(defn, use), expected),
+  )
+
 }
