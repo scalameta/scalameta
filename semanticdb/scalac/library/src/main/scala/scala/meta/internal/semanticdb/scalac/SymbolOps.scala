@@ -508,17 +508,21 @@ trait SymbolOps {
 
   // the declaration of `sym` at its key, or NoSymbol
   private def declarationAt(sym: g.Symbol, decls: Declarations): g.Symbol = {
-    val rep = decls.representative
-    val symbols = decls.symbols
+    val owner = sym.owner
     // an added parameter is its own declaration, even if its method's info has a copy of it
-    if (sym.isAddedParameter) return symbols.find(_.owner eq sym.owner).getOrElse(g.NoSymbol)
+    if (sym.isAddedParameter)
+      return decls.addedParameterSymbols.find(_.owner eq owner).getOrElse(g.NoSymbol)
+
+    val symbols = decls.symbols
+    val rep = decls.representative
     if (symbols.contains(sym)) return if (rep ne null) rep else sym
 
     // a copy has the position and the name of its original
-    lazy val owner = ownerDeclaration(sym)
-    def isOriginal(decl: g.Symbol) = (decl.owner eq sym.owner) || (ownerDeclaration(decl) eq owner)
+    lazy val ownerDecl = ownerDeclaration(sym)
+    def isOriginal(decl: g.Symbol) = (decl.owner eq owner) || (ownerDeclaration(decl) eq ownerDecl)
     // a type operation copies a member of a refinement, or an existential, to another owner
-    def isTypeCopy = sym.owner.isRefinementClass || sym.hasFlag(gf.EXISTENTIAL)
+    def isTypeCopy = owner.isRefinementClass || sym.hasFlag(gf.EXISTENTIAL)
+
     if (rep ne null) return if (symbols.exists(isOriginal) || isTypeCopy) rep else g.NoSymbol
 
     val originals = symbols.iterator.filter(isOriginal)
@@ -527,7 +531,10 @@ trait SymbolOps {
       return if (originals.hasNext) g.NoSymbol else original
     }
 
-    if (isTypeCopy && symbols.lengthCompare(1) == 0) symbols.head else g.NoSymbol
+    symbols match {
+      case head :: Nil if isTypeCopy => head
+      case _ => g.NoSymbol
+    }
   }
 
   private case class DeclarationKey(point: Int, name: g.Name)
@@ -535,11 +542,24 @@ trait SymbolOps {
     def apply(sym: g.Symbol): DeclarationKey = DeclarationKey(sym.pos.point, sym.name)
   }
 
-  /* The declarations of one key in a unit. A desugaring copies a declaration with its position,
-   * and if its name is written at that position, the copies join the representative. */
+  /* The declarations at one position and name in a unit. scalac copies some definitions with
+   * their position and name. If the source writes the name there, we map each copy to the
+   * representative. */
   private final class Declarations {
-    var symbols: List[g.Symbol] = Nil
-    var representative: g.Symbol = _
+    var addedParameterSymbols: List[g.Symbol] = Nil // contains only added parameters
+    var symbols: List[g.Symbol] = Nil // contains all other symbols
+    var representative: g.Symbol = _ // contains a representative among `symbols`
+
+    // we prefer certain symbols (such as non-synthetic ones) as the representative
+    def add(sym: g.Symbol, preferAsRepresentative: Boolean): Unit =
+      if (sym.isAddedParameter) {
+        if (!addedParameterSymbols.contains(sym))
+          addedParameterSymbols = sym :: addedParameterSymbols
+      } else if (!symbols.contains(sym)) {
+        symbols = sym :: symbols
+        if (preferAsRepresentative || (representative eq null))
+          if (isNameWritten(sym, sym.pos)) representative = sym
+      }
   }
 
   // the local declarations in the trees of a unit that a document visits
@@ -547,19 +567,12 @@ trait SymbolOps {
     val declarations = new mutable.HashMap[DeclarationKey, Declarations]
     val existentials = new mutable.HashMap[DeclarationKey, g.Symbol]
 
-    /* the representative is the last declaration outside synthetic definitions, else the first,
-     * but never an added parameter; a binder that stands for a value is not a declaration */
-    private def add(sym: g.Symbol, inSynthetic: Boolean): Unit = {
+    // a binder that stands for a value is not a declaration
+    private def add(sym: g.Symbol, preferAsRepresentative: Boolean = false): Unit = {
       val pos = sym.pos
       if (pos.isDefined && (pos.source eq source) && sym.isSemanticdbLocal &&
-        !sym.patternValue.exists) {
-        val decls = declarations.getOrElseUpdate(DeclarationKey(sym), new Declarations)
-        if (!decls.symbols.contains(sym)) {
-          decls.symbols = sym :: decls.symbols
-          if ((!inSynthetic || (decls.representative eq null)) && !sym.isAddedParameter &&
-            isNameWritten(sym, pos)) decls.representative = sym
-        }
-      }
+        !sym.patternValue.exists) declarations.getOrElseUpdate(DeclarationKey(sym), new Declarations)
+        .add(sym, preferAsRepresentative = preferAsRepresentative)
     }
 
     new DocumentTraverser(source) {
@@ -570,7 +583,7 @@ trait SymbolOps {
         case t: g.DefTree if (t.symbol ne null) && t.symbol.exists =>
           val sym = t.symbol
           // the tree of a method has the skolems of the type parameters of its signature
-          add(sym.deSkolemize, syntheticDef ne null)
+          add(sym.deSkolemize, preferAsRepresentative = syntheticDef eq null)
           traverseAnnotations(t)
           if ((syntheticDef eq null) && t.isInstanceOf[g.MemberDef] && sym.isSynthetic)
             syntheticDef = t
