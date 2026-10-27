@@ -18,7 +18,7 @@ import scala.tools.nsc.{Global, Settings}
 import munit.FunSuite
 
 // https://github.com/scalameta/scalameta/issues/1672
-class Issue1672Suite extends FunSuite {
+class AnnotationArgumentsSuite extends FunSuite {
 
   // metac reads the semanticdb files of this compilation, metacp its classfiles
   private val classdir = {
