@@ -136,7 +136,7 @@ trait TextDocumentOps {
       val mpatoccurrences = emptyOccurrenceMap()
       val mvalpatstart = mutable.Set.empty[Int] // start pos for Pat.Var names inside val patterns
       // start pos for vals with single-element patterns -> their Pat.Var name
-      val msinglevalpats = mutable.Map.empty[Int, m.Position]
+      val msinglevalpats = mutable.Map.empty[Int, m.Name]
 
       def addOccurrenceFromSemantic(mpos: m.Position, ssym: String, role: Role): Unit =
         if (ssym != Symbols.None) occurrences.update(mpos, (ssym, role))
@@ -171,8 +171,6 @@ trait TextDocumentOps {
 
       def addPatOccurrenceFromSemantic(mpos: m.Position, ssym: String): Unit =
         if (ssym != Symbols.None) mpatoccurrences.update(mpos, (ssym, Role.DEFINITION))
-      def addPatOccurrence(mpos: m.Position, gsym: g.Symbol): Unit =
-        addPatOccurrenceFromSemantic(mpos, gsym.toSemantic)
 
       def saveSymbol(gs: g.Symbol): Unit = if (gs.isUsefulSymbolInformation) saveSymbolDo(gs)
       def saveSymbolDo(gs: g.Symbol): Unit = saveSymbolFromSemantic(gs, gs.toSemantic)
@@ -193,6 +191,7 @@ trait TextDocumentOps {
       locally {
         object traverser extends m.Traverser {
           private var mpatvar: m.Name = null // the last variable that indexPat found
+          private var mpatwithin: m.Name = null // the qualifier of the definition that we index
 
           private def indexName(mname: m.Name): Unit = {
             val mpos = mname.pos
@@ -224,11 +223,8 @@ trait TextDocumentOps {
                 }
               case mencl: m.Member => setWithins(mencl.name, mname)
               case t: m.Tree.WithPats => t.pats match {
-                  case p :: Nil => p.dfsIf({
-                      case t: m.Pat.Var => setWithins(t.name, mname)
-                      case _: m.Pat | _: m.Pat.ArgClause =>
-                    }: PartialFunction[m.Tree, Unit])
-                  case _ =>
+                  case (p: m.Pat.Var) :: Nil => setWithins(p.name, mname)
+                  case _ => // indexPat sets the withins of the other patterns
                 }
               case _ =>
             }
@@ -274,6 +270,7 @@ trait TextDocumentOps {
             case pat: m.Pat.Var =>
               mpatvar = pat.name
               mvalpatstart += pat.name.pos.start
+              if (mpatwithin ne null) setWithins(pat.name, mpatwithin)
               cnt.elem += 1
             case pat: m.Pat.Extract => indexPatsWithExtract(pat, cnt)
             case _: m.Pat | _: m.Pat.ArgClause => mtree.foreachChild(indexPat(_, cnt))
@@ -288,7 +285,7 @@ trait TextDocumentOps {
               val mpos = singleValPatPos(extract)
               val curcnt = cnt.elem
               indexPat(pat, cnt)
-              if (cnt.elem - curcnt == 1) msinglevalpats(mpos) = mpatvar.pos
+              if (cnt.elem - curcnt == 1) msinglevalpats(mpos) = mpatvar
             case pats => pats.foreach(indexPat(_, cnt))
           }
           // Most likely the difference coming from https://github.com/scalameta/scalameta/pull/4118
@@ -328,6 +325,11 @@ trait TextDocumentOps {
                   val colon = typedColon(mtree)
                   if (colon >= 0) munderscores(colon) = mpos
                 }
+              // scalac before 2.13.17 puts the value of `val (a: Int) = 1` at the colon
+              case mtree: m.Pat.Var => if (isWholePat(mtree)) {
+                  val colon = typedColon(mtree)
+                  if (colon >= 0) msinglevalpats(colon) = mtree.name
+                }
               case mtree: m.Name => indexName(mtree)
               case mtree @ (_: m.Term.FunctionLike | _: m.Term.AnonymousFunction) =>
                 val mpos = mtree.pos
@@ -338,7 +340,30 @@ trait TextDocumentOps {
                   case Nil | (_: m.Pat.Var) :: Nil =>
                   case pats =>
                     val cnt = IntRef.zero()
-                    pats.foreach(indexPat(_, cnt))
+                    mtree match {
+                      case t: m.Stat.WithMods =>
+                        mpatwithin = t.mods
+                          .collectFirst { case m.Mod.WithWithin(n: m.Name.Indeterminate) => n }
+                          .orNull
+                        pats.foreach { mpat =>
+                          cnt.elem = 0
+                          indexPat(mpat, cnt)
+                          if (cnt.elem == 1) {
+                            /* older scalac puts the value of `val a :: Nil = xs` at the operator,
+                             * and of `val Tuple2(a, _) = x` at the paren. Newer scalac puts it
+                             * at the start. */
+                            val mpos = mpat match {
+                              case x: m.Pat.ExtractInfix if isOldBehaviourOnPats => x.op.pos.start
+                              case x: m.Pat.Extract => singleValPatPos(x)
+                              case _ => mpat.pos.start
+                            }
+                            msinglevalpats(mpos) = mpatvar
+                          }
+                        }
+                      case _ =>
+                        mpatwithin = null
+                        pats.foreach(mpat => indexPat(mpat, cnt))
+                    }
                 }
               case _ =>
             }
@@ -500,7 +525,7 @@ trait TextDocumentOps {
             def tryMend(pos: Int): Unit = success(mends.get(pos), gsym)
 
             def singleValPat(sym: g.Symbol): Unit = msinglevalpats.get(gpoint)
-              .fold(success(mstarts.get(gpoint), sym))(addPatOccurrence(_, sym))
+              .fold(success(mstarts.get(gpoint), sym))(success(_, sym))
 
             gtree match {
               case _: g.TypeDef | _: g.Bind | _: g.ValOrDefDef =>
@@ -1075,6 +1100,13 @@ trait TextDocumentOps {
           private def traverseNoOriginal(gtree: g.Tree): Unit = gtree match {
             // skip an annotation that scalac added, like `@unchecked` on a desugared match
             case t: g.Annotated if !t.annot.pos.isOpaqueRange => isVisited += t.annot
+
+            /* skip a setter but for its annotations: only the setter has `@(a @setter)`.
+             * We find the name through the getter, which has the same position. */
+            case t: g.DefDef if t.symbol.isSetter =>
+              traverseAnnotations(t)
+              isVisited ++= t.vparamss.flatten
+              isVisited += t.rhs
 
             case t: g.Literal if t.tpe != null && t.tpe.typeSymbol == g.definitions.ClassClass =>
               val mpos = t.toMeta
