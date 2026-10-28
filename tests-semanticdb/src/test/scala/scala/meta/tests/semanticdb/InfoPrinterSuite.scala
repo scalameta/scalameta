@@ -68,6 +68,18 @@ class InfoPrinterSuite extends FunSuite {
   private def assertSignature(sig: s.Signature, expected: String): Unit =
     assertEquals(Print.signature(Format.Compact, sig, emptyPrinterSymtab), expected)
 
+  // `extension [T](t: A) def map[U](f: B)`
+  private val mapGroups = List(
+    s.ParamClauseGroup(
+      Some(scope(typeParam("_empty_/Functor#map().[T]", "T"))),
+      List(scope(param("_empty_/Functor#map().(t)", "t", ref("_empty_/A#")))),
+    ),
+    s.ParamClauseGroup(
+      Some(scope(typeParam("_empty_/Functor#map().[U]", "U"))),
+      List(scope(param("_empty_/Functor#map().(f)", "f", ref("_empty_/B#")))),
+    ),
+  )
+
   test("info printer declaration style renders SemanticDB modifier and kind words") {
     val p = s.SymbolInformation.Property
     val info = s.SymbolInformation(
@@ -317,6 +329,71 @@ class InfoPrinterSuite extends FunSuite {
       List(ref("_empty_/E#")),
     )
     assertSignature(sig, "[T](x: A)(y: B) throws E: C")
+  }
+
+  test("#2450: extension method with two groups") {
+    val sig = s.ExtendedMethodSignature(mapGroups, ref("_empty_/C#"))
+    assertSignature(sig, "[T](t: A)[U](f: B): C")
+  }
+
+  test("#2450: method with a type clause after a term clause") {
+    val m = "_empty_/DB#getOrElse()."
+    val v = typeParam(s"$m[V]", "V").withSignature(s.TypeSignature(lowerBound = ref("_empty_/L#")))
+    val groups = List(
+      s.ParamClauseGroup(None, List(scope(param(s"$m(k)", "k", ref("_empty_/K#"))))),
+      s.ParamClauseGroup(Some(scope(v)), List(scope(param(s"$m(default)", "default", ref(v.symbol))))),
+    )
+    val sig = s.ExtendedMethodSignature(groups, ref(v.symbol))
+    assertSignature(sig, "(k: K)[V >: L](default: V): V")
+  }
+
+  test("#2450: right-associative extension method") {
+    val m = "_empty_/ops.`+:`()."
+    val groups = List(
+      s.ParamClauseGroup(Some(scope(typeParam(s"$m[A]", "A")))),
+      s.ParamClauseGroup(
+        Some(scope(typeParam(s"$m[B]", "B"))),
+        List(
+          scope(param(s"$m(as)", "as", ref("scala/package.List#", ref(s"$m[B]")))),
+          scope(param(s"$m(a)", "a", ref(s"$m[A]"))),
+        ),
+      ),
+    )
+    val sig = s.ExtendedMethodSignature(groups, ref("_empty_/R#"))
+    assertSignature(sig, "[A][B](as: List[B])(a: A): R")
+  }
+
+  test("#2450: method with two groups and throws") {
+    val sig = s.ExtendedMethodSignature(mapGroups, ref("_empty_/C#"), List(ref("_empty_/E#")))
+    assertSignature(sig, "[T](t: A)[U](f: B) throws E: C")
+  }
+
+  test("#2450: extended method signature with one group") {
+    val groups = List(s.ParamClauseGroup(
+      Some(scope(typeParam("_empty_/f().[T]", "T"))),
+      List(scope(param("_empty_/f().(x)", "x", ref("_empty_/A#")))),
+    ))
+    val sig = s.ExtendedMethodSignature(groups, ref("_empty_/C#"))
+    assertSignature(sig, "[T](x: A): C")
+  }
+
+  test("#2450: extended method signature without groups") {
+    val sig = s.ExtendedMethodSignature(Nil, ref("scala/Nothing#"))
+    assertSignature(sig, ": Nothing")
+  }
+
+  test("#2450: info of an extension method with two groups") {
+    val info = s.SymbolInformation(
+      symbol = "_empty_/Functor#map().",
+      kind = s.SymbolInformation.Kind.METHOD,
+      properties = s.SymbolInformation.Property.EXTENSION.value,
+      displayName = "map",
+      signature = s.ExtendedMethodSignature(mapGroups, ref("_empty_/C#")),
+    )
+    assertEquals(
+      Print.info(Format.Compact, info, emptyPrinterSymtab),
+      "_empty_/Functor#map(). => extension method map[T](t: A)[U](f: B): C",
+    )
   }
 
 }

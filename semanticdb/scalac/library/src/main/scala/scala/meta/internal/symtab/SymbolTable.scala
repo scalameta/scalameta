@@ -237,6 +237,7 @@ trait SymbolTable {
       case Some(si) =>
         val clauses = si.signature match {
           case m: MethodSignature => m.parameterLists.iterator
+          case m: ExtendedMethodSignature => m.paramClauseGroups.iterator.flatMap(_.paramClauses)
           case _ => return None
         }
         val res = List.newBuilder[String]

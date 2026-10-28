@@ -230,6 +230,7 @@ message Signature {
     MethodSignature method_signature = 2;
     TypeSignature type_signature = 3;
     ValueSignature value_signature = 4;
+    ExtendedMethodSignature extended_method_signature = 5;
   }
 }
 
@@ -245,6 +246,17 @@ message MethodSignature {
   repeated Scope parameter_lists = 2;
   Type return_type = 3;
   repeated Type throws = 4;
+}
+
+message ParamClauseGroup {
+  Scope type_param_clause = 1;
+  repeated Scope param_clauses = 2;
+}
+
+message ExtendedMethodSignature {
+  repeated ParamClauseGroup param_clause_groups = 1;
+  Type return_type = 2;
+  repeated Type throws = 3;
 }
 
 message TypeSignature {

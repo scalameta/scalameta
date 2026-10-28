@@ -154,6 +154,7 @@ trait SymbolInformationOps {
           val ssig = sig.toSemanticSig(linkMode)
           if (sym.isConstructor) ssig match {
             case ssig: s.MethodSignature => ssig.copy(returnType = s.NoType)
+            case ssig: s.ExtendedMethodSignature => ssig.copy(returnType = s.NoType)
             case _ => ssig
           }
           else if (sym.isScalacField) ssig match {

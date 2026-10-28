@@ -101,4 +101,9 @@ class ScalacpSuite extends FunSuite with MetacpSnippets {
     assertEquals(setterParamSig(sig), s.ValueSignature(ScalaInt))
   }
 
+  test("#2450: setter of a getter with an extended method signature") {
+    val sig = s.ExtendedMethodSignature(List(s.ParamClauseGroup(Some(s.Scope()))), ScalaInt)
+    assertEquals(setterParamSig(sig), s.ValueSignature(ScalaInt))
+  }
+
 }
