@@ -21,10 +21,12 @@ trait SymbolInformationOps {
       else if (gsym0.isModuleClass) gsym0.asClass.module
       else if (gsym0.isTypeSkolem) gsym0.deSkolemize
       else gsym0
+    // scalac copies the method of a Java SAM into a SAM class, with its JAVA flag
+    private val isJava = gsym.hasFlag(gf.JAVA) && !gsym.owner.isSamClass
 
     private def language: s.Language =
       if (gsym.hasPackageFlag) l.SCALA
-      else if (gsym.hasFlag(gf.JAVA)) l.JAVA
+      else if (isJava) l.JAVA
       else if (gsym.isParameter && gsym.owner.hasFlag(gf.JAVA)) l.JAVA
       else l.SCALA
 
@@ -68,7 +70,7 @@ trait SymbolInformationOps {
         !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred && !kind.isLocal
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
-      if (gsym.hasFlag(gf.JAVA)) {
+      if (isJava) {
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
           flip(p.ABSTRACT)
           flip(p.OVERRIDE)

@@ -2641,8 +2641,8 @@ class LocalSymbolsSuite extends FunSuite {
          |local0 => synthetic class $anon extends Object with S { +1 decls }
          |  Object => java/lang/Object#
          |  S => a/O.S#
-         |local1 => synthetic method f(a: Int): Int <: a/O.S#f().
-         |  a => a/O.S#f().(a)
+         |local1 => synthetic method f(x$1: Int): Int <: a/O.S#f().
+         |  x$1 => local2
          |  Int => scala/Int#
          |local2 => synthetic param x$1: Int
          |  Int => scala/Int#
