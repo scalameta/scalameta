@@ -4,8 +4,6 @@ import scala.meta.inputs._
 import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.semanticdb._
 
-import scala.collection.mutable
-
 trait RangePrinter extends BasePrinter {
   def pprint(range: Range): Unit = {
     out.print("[")
@@ -19,13 +17,11 @@ trait RangePrinter extends BasePrinter {
     out.print(")")
   }
 
-  private val inputCache = new mutable.HashMap[TextDocument, Input]
-  implicit class DocumentOps(doc: TextDocument) {
-    def substring(range: Option[Range]): Option[String] = range match {
-      case Some(range) if doc.text.nonEmpty =>
-        val pos = range.toPosition(inputCache.getOrElseUpdate(doc, Input.String(doc.text)))
-        Some(if (pos.isEmpty) "" else pos.text)
-      case _ => None
-    }
+  private val input = Input.String(doc.text)
+  def substring(range: Option[Range]): Option[String] = range match {
+    case Some(range) if doc.text.nonEmpty =>
+      val pos = range.toPosition(input)
+      Some(if (pos.isEmpty) "" else doc.text.substring(pos.start, pos.end))
+    case _ => None
   }
 }

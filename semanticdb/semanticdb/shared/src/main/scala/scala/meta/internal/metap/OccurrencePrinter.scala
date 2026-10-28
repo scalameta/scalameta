@@ -7,7 +7,7 @@ import scala.meta.internal.semanticdb._
 trait OccurrencePrinter extends BasePrinter with RangePrinter {
   def pprint(occ: SymbolOccurrence): Unit = {
     opt(occ.range)(pprint)
-    opt(": ", doc.substring(occ.range))(out.print)
+    opt(": ", substring(occ.range))(out.print)
     pprint(occ.role)
     out.println(occ.symbol)
   }
