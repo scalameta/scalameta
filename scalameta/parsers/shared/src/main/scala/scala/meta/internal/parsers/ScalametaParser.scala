@@ -161,6 +161,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     case _ => false
   }
 
+  // at a colon followed by a fewer-braces lambda with a body on the same line (SIP-75)
+  private def atSingleLineLambdaColon: Boolean = in.currRegions match {
+    case RegionSingleLineLambda :: _ => true
+    case _ => false
+  }
+
+  // at the newline which ends a single-line lambda
+  private def atEndOfSingleLineLambda: Boolean = in.currRegions match {
+    case RegionSingleLineLambdaEnd :: _ => true
+    case _ => false
+  }
+
+  private def singleLineLambdaBody[A](body: A): A = {
+    if (atEndOfSingleLineLambda) next()
+    body
+  }
+
   def next() = {
     in.next()
     currToken match {
@@ -2376,6 +2393,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         case _: KwThrow =>
           next()
           Term.Throw(expr())
+        case _: KwCase if dialect.allowFewerBraces && isCaseIntroOnKwCase() =>
+          next()
+          Term.PartialFunction(caseClause(forceSingleExpr = true) :: Nil)
         case _: KwImplicit =>
           next()
           implicitClosure(location)
@@ -2762,90 +2782,93 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
     // so we really have to track them separately.
     @tailrec
-    def loop(rhsK: Typ): Typ = {
-      val rhsEndK = prevIndex
+    def loop(rhsK: Typ): Typ =
+      if (atEndOfSingleLineLambda) rhsK
+      else {
+        val rhsEndK = prevIndex
 
-      def getPrevLhs(op: Term.Name): Term = reduceStack(base, rhsK, rhsEndK, op)
+        def getPrevLhs(op: Term.Name): Term = reduceStack(base, rhsK, rhsEndK, op)
 
-      def getNextRhs(targs: => Type.ArgClause)(op: Term.Name) =
-        getNextRhsWith(op, targs, argumentExprsOrPrefixExpr(PostfixStat))
+        def getNextRhs(targs: => Type.ArgClause)(op: Term.Name) =
+          getNextRhsWith(op, targs, argumentExprsOrPrefixExpr(PostfixStat))
 
-      def getNextRhsWith(op: Term.Name, targs: Type.ArgClause, rhs: Term) = {
-        val lhs = getPrevLhs(op)
-        val wrap = (lhs eq rhs0) && lhs.begIndex != startPos
-        val lhsExt = if (wrap) atPosWithBody(startPos, Term.Tuple(lhs :: Nil), rhsEndK) else lhs
-        push(UnfinishedInfixTerm(lhsExt, op, targs))
-        Right(rhs)
-      }
+        def getNextRhsWith(op: Term.Name, targs: Type.ArgClause, rhs: Term) = {
+          val lhs = getPrevLhs(op)
+          val wrap = (lhs eq rhs0) && lhs.begIndex != startPos
+          val lhsExt = if (wrap) atPosWithBody(startPos, Term.Tuple(lhs :: Nil), rhsEndK) else lhs
+          push(UnfinishedInfixTerm(lhsExt, op, targs))
+          Right(rhs)
+        }
 
-      def getPostfix(op: Term.Name, targs: Type.ArgClause) = {
-        // Infix chain has ended with a postfix expression.
-        // This never happens in the running example.
-        if (targs.nonEmpty)
-          syntaxError("type application is not allowed for postfix operators", at = targs)
-        val finQual = getPrevLhs(op)
-        val term: Term = atPos(getLhsStartPos(finQual), op)(Term.SelectPostfix(finQual, op))
-        Left(term)
-      }
+        def getPostfix(op: Term.Name, targs: Type.ArgClause) = {
+          // Infix chain has ended with a postfix expression.
+          // This never happens in the running example.
+          if (targs.nonEmpty)
+            syntaxError("type application is not allowed for postfix operators", at = targs)
+          val finQual = getPrevLhs(op)
+          val term: Term = atPos(getLhsStartPos(finQual), op)(Term.SelectPostfix(finQual, op))
+          Left(term)
+        }
 
-      def emptyTypeArgs = atCurPosEmpty(Type.ArgClause(Nil))
+        def emptyTypeArgs = atCurPosEmpty(Type.ArgClause(Nil))
 
-      def getPostfixOrNextRhs(op: Term.Name): Either[Term, Term] = {
-        // Infix chain continues.
-        // In the running example, we're at `a [+] b`.
-        val hasTypeArgs = at[LeftBracket] ||
-          isIndentingOrEOL(nonOptBracesOK = true) && tryAhead[LeftBracket]
-        val targs = if (hasTypeArgs) exprTypeArgs() else emptyTypeArgs
+        def getPostfixOrNextRhs(op: Term.Name): Either[Term, Term] = {
+          // Infix chain continues.
+          // In the running example, we're at `a [+] b`.
+          val hasTypeArgs = at[LeftBracket] ||
+            isIndentingOrEOL(nonOptBracesOK = true) && tryAhead[LeftBracket]
+          val targs = if (hasTypeArgs) exprTypeArgs() else emptyTypeArgs
 
-        // Check whether we're still infix or already postfix by testing the current token.
-        // In the running example, we're at `a + [b]` (infix).
-        // If we were parsing `val c = a b`, then we'd be at `val c = a b[]` (postfix).
-        if (if (at[EOL]) nextIf(isExprIntro(peekToken, peekIndex)) else isIdentOrExprIntro(currToken))
-          // Infix chain continues, so we need to reduce the stack.
-          // In the running example, base = List(), rhsK = [a].
-          getNextRhs(targs)(op) // [a]
-        // afterwards, stack = List([a +])
-        else {
-          val argPos = currIndex
-          (currToken match {
-            case _: Colon => getFewerBracesArgOnColon()
-            case _ => null
-          }) match {
-            case null => getPostfix(op, targs)
-            case x => getNextRhsWith(op, targs, autoEndPos(argPos)(Term.Tuple(x :: Nil)))
+          // Check whether we're still infix or already postfix by testing the current token.
+          // In the running example, we're at `a + [b]` (infix).
+          // If we were parsing `val c = a b`, then we'd be at `val c = a b[]` (postfix).
+          if (if (at[EOL]) nextIf(isExprIntro(peekToken, peekIndex))
+            else isIdentOrExprIntro(currToken))
+            // Infix chain continues, so we need to reduce the stack.
+            // In the running example, base = List(), rhsK = [a].
+            getNextRhs(targs)(op) // [a]
+          // afterwards, stack = List([a +])
+          else {
+            val argPos = currIndex
+            (currToken match {
+              case _: Colon => getFewerBracesArgOnColon()
+              case _ => null
+            }) match {
+              case null => getPostfix(op, targs)
+              case x => getNextRhsWith(op, targs, autoEndPos(argPos)(Term.Tuple(x :: Nil)))
+            }
           }
         }
-      }
 
-      val resOpt = currToken match {
-        case lf: InfixLF => getLeadingInfix[Term.Name, Either[Term, Term]](lf)(Term.Name.apply)(
-            getNextRhs(emptyTypeArgs),
-          )
-        case _: KwMatch if dialect.allowMatchAsOperator =>
-          val op = termName("match")
-          val lhs = getPrevLhs(op)
-          Right(matchClause(lhs, getLhsStartPos(lhs)))
-        case _ if prev[Indentation.Outdent] && !inRegionParen => null
-        case t: Unquote =>
-          val op = unquote[Term.Name](t)
-          getPostfixOrNextRhs(op)
-        case t: Ident if !(allowRepeated && soft.StarSplice(t) && peek[RightParen, Comma]) =>
-          val op = termName(t)
-          getPostfixOrNextRhs(op)
-        case _ => null
+        val resOpt = currToken match {
+          case lf: InfixLF => getLeadingInfix[Term.Name, Either[Term, Term]](lf)(Term.Name.apply)(
+              getNextRhs(emptyTypeArgs),
+            )
+          case _: KwMatch if dialect.allowMatchAsOperator =>
+            val op = termName("match")
+            val lhs = getPrevLhs(op)
+            Right(matchClause(lhs, getLhsStartPos(lhs)))
+          case _ if prev[Indentation.Outdent] && !inRegionParen => null
+          case t: Unquote =>
+            val op = unquote[Term.Name](t)
+            getPostfixOrNextRhs(op)
+          case t: Ident if !(allowRepeated && soft.StarSplice(t) && peek[RightParen, Comma]) =>
+            val op = termName(t)
+            getPostfixOrNextRhs(op)
+          case _ => null
+        }
+        resOpt match {
+          case Left(x) => x
+          case Right(x) =>
+            // Try to continue the infix chain.
+            loop(x)
+          case null =>
+            // Infix chain has ended.
+            // In the running example, we're at `a + b[]`
+            // with base = List([a +]), rhsK = List([b]).
+            rhsK
+        }
       }
-      resOpt match {
-        case Left(x) => x
-        case Right(x) =>
-          // Try to continue the infix chain.
-          loop(x)
-        case null =>
-          // Infix chain has ended.
-          // In the running example, we're at `a + b[]`
-          // with base = List([a +]), rhsK = List([b]).
-          rhsK
-      }
-    }
 
     // Iteratively read the infix chain via `loop`.
     // rhs0 is now [a]
@@ -2932,7 +2955,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def simpleExprRest(t: Term, canApply: Boolean, startPos: Int): Term = {
     @inline
     def addPos(body: Term): Term = autoEndPos(startPos)(body)
-    currToken match {
+    if (atEndOfSingleLineLambda) t
+    else currToken match {
       case _: AtEOL if (peekToken match {
             case _: Dot => true
             case t: OpenDelim if canApply => isIndentingOrEOL(t.is[LeftBrace])
@@ -2965,7 +2989,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         val arguments = addPos(Term.Apply(t, argClause))
         simpleExprRest(arguments, canApply = true, startPos = startPos)
       case _: Colon if canApply =>
-        val res = getFewerBracesApplyOnColon(t, startPos, okSingleLineLambda = true)
+        val res = getFewerBracesApplyOnColon(t, startPos)
         if (res ne null) res else t
       case _: Underscore if canApply =>
         next()
@@ -2974,13 +2998,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
-  private def getFewerBracesArgOnColon(okSingleLineLambda: Boolean = false): Term =
+  private def getFewerBracesArgOnColon(): Term =
     if (!dialect.allowFewerBraces) null
     else {
       val colonPos = currIndex
+      val singleLine = atSingleLineLambdaColon
       def addPos(term: Term) = autoEndPos(colonPos)(term)
       def tryGetArgAsLambdaBlock(postCheck: => Boolean) = {
-        val arg = tryGetArgAsLambda(okSingleLineLambda)
+        val arg = tryGetArgAsLambda(singleLine)
         if ((arg ne null) && postCheck) addPos(toBlockRaw(arg :: Nil)) else null
       }
       peekToken match {
@@ -2995,6 +3020,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           val argOpt = tryGetArgAsLambdaBlock(true)
           if (argOpt eq null) syntaxError("expected fewer-braces method body", colon)
           argOpt
+        case _: KwCase =>
+          if (!singleLine) tryAhead(tryGetArgAsLambdaBlock(true))
+          else {
+            nextTwice()
+            addPos(Term.PartialFunction(caseClause(forceSingleExpr = true, singleLine = true) :: Nil))
+          }
         case _ => tryAhead(tryGetArgAsLambdaBlock(true))
       }
     }
@@ -3005,8 +3036,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       def impl(f: (Term.ParamClause, Term) => Term.FunctionTerm) = {
         val bodyOpt =
           if (nextIfIndentAhead()) blockExprOnIndent()
-          else if (!okSingleLine || inRegionParen) null
-          else next(expr())
+          else if (!okSingleLine) null
+          else next(singleLineLambdaBody(expr()))
         if (bodyOpt eq null) null else autoEndPos(paramPos)(f(params, bodyOpt))
       }
       currToken match {
@@ -3016,9 +3047,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       }
     }
     def getPolyFunction(params: Type.ParamClause): Term.PolyFunction =
-      if (at[RightArrow] && nextIfIndentAhead())
-        autoEndPos(paramPos)(Term.PolyFunction(params, blockExprOnIndent()))
-      else null
+      if (!at[RightArrow]) null
+      else {
+        val bodyOpt =
+          if (nextIfIndentAhead()) blockExprOnIndent()
+          else if (!okSingleLine) null
+          else next(singleLineLambdaBody(expr()))
+        if (bodyOpt eq null) null else autoEndPos(paramPos)(Term.PolyFunction(params, bodyOpt))
+      }
 
     /**
      * We need to handle param and then open indented region, otherwise only the block will be
@@ -3074,13 +3110,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }.getOrElse(null)
 
-  private def getFewerBracesApplyOnColon(
-      fun: Term,
-      startPos: Int,
-      okSingleLineLambda: Boolean = false,
-  ): Term = {
+  private def getFewerBracesApplyOnColon(fun: Term, startPos: Int): Term = {
     val colonPos = currIndex
-    val arg = getFewerBracesArgOnColon(okSingleLineLambda)
+    val arg = getFewerBracesArgOnColon()
     if (arg eq null) null
     else {
       val endPos = AutoPos.endIndex
@@ -3212,12 +3244,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
-  def caseClause(forceSingleExpr: Boolean = false): Case = {
+  def caseClause(forceSingleExpr: Boolean = false, singleLine: Boolean = false): Case = {
     expectNot[KwCase]
     autoEndPos(prevIndex) {
       def caseBody() = {
         accept[RightArrow]
         if (at[Indentation.Indent]) blockExprOnIndent()
+        else if (singleLine) singleLineLambdaBody(expr(location = BlockStat, allowRepeated = false))
         else if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false)
         else blockOnOther()
       }
