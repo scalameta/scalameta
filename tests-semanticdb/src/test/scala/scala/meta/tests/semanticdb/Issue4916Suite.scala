@@ -697,8 +697,9 @@ class Issue4916Suite extends SemanticdbSuite {
        |  Object => java/lang/Object#
        |  IntFunction => java/util/function/IntFunction#
        |  Any => scala/Any#
-       |local1 => method apply(unknown x$1): Any <: java/util/function/IntFunction#apply().
-       |  x$1 => java/util/function/IntFunction#apply().(x$1)
+       |local1 => synthetic method apply(x: Int): Any <: java/util/function/IntFunction#apply().
+       |  x => local2
+       |  Int => scala/Int#
        |  Any => scala/Any#
        |local2 => param x: Int
        |  Int => scala/Int#

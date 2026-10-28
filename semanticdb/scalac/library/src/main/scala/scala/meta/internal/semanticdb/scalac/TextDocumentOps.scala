@@ -129,6 +129,7 @@ trait TextDocumentOps {
       val mannottees = mutable.Map.empty[Int, m.Member] // start offset of an annotation's init
       val mexpansions = mutable.Map.empty[Int, m.Member] // the same, for a macro annotation
       val munderscores = mutable.Map.empty[Int, m.Position] // start offset -> an underscore
+      val mfors = mutable.ArrayBuffer.empty[m.Term.ForClause] // outer first
 
       // Occurrences for names in val patterns, like `val (a, b) =`. Unlike the `occurrences` map, val pattern
       // occurrences uses "last occurrence wins" instead of "first occurrences wins" when disambiguating between
@@ -143,31 +144,107 @@ trait TextDocumentOps {
       def addOccurrence(mpos: m.Position, gsym: g.Symbol, role: Role): Unit =
         addOccurrenceFromSemantic(mpos, gsym.toSemantic, role)
 
-      def addSamOccurrence(gt: g.Function) = gt.attachments.get[global.SAMFunction]
-        .foreach { samf =>
-          val sam = samf.synthCls
-          def atPos(mpos: m.Position): Unit = {
-            def set(gsym: g.Symbol, map: mutable.Map[m.Position, Occurrence]): Boolean = {
-              val ssym = gsym.toSemantic
-              val ok = ssym ne Symbols.None
-              if (ok) {
-                map.update(mpos, (ssym, Role.DEFINITION))
-                saveSymbolFromSemantic(gsym, ssym)
-              }
-              ok
-            }
-            set(sam, samoccurrences) && set(sam.info.decls.elems.sym, sammethodoccurrences)
-          }
-          val gsym = gt.symbol
-          val gpos = gt.pos
-          if (gpos.isDefined && (gsym ne null) && !config.symbols.isNone) {
-            val gstart = gpos.start
-            mfuncs.get(gstart).fold(mstarts.get(gstart).foreach { name =>
-              val mpos = name.pos
-              if (mpos.end == gpos.end) atPos(mpos)
-            })(atPos)
+      // the method's name in a method value, like `g` in `K.g`
+      @tailrec
+      def methodName(gtree: g.Tree): Option[m.Name] = gtree match {
+        case t: g.Function => methodName(t.body)
+        case t: g.Apply => methodName(t.fun)
+        case t: g.TypeApply => methodName(t.fun)
+        case t: g.RefTree if t.pos.isDefined => mstarts.get(t.pos.point)
+        case _ => None
+      }
+
+      def setSamOccurrence(
+          gsym: g.Symbol,
+          mdef: m.Position,
+          map: mutable.Map[m.Position, Occurrence],
+      ) = {
+        val ssym = gsym.toSemantic
+        if (ssym == Symbols.None) null
+        else {
+          // keep the definition of each nested lambda that starts at this position
+          val sdef = map.get(mdef).fold(ssym)(o => Symbols.Multi(o._1.asMulti :+ ssym))
+          map.update(mdef, (sdef, Role.DEFINITION))
+          saveSymbolFromSemantic(gsym, ssym)
+        }
+      }
+
+      /* Find the enumerator of a closure that scalac makes for a `for`. The point of the closure is
+       * in its generator. Its end is in its guard or in the body of the `for`.
+       */
+      def forEnumerator(gpos: gu.Position): Option[m.Position] = {
+        val gpoint = gpos.point
+        val gend = gpos.end
+        mfors.reverseIterator.find { mfor =>
+          val mpos = mfor.pos
+          mpos.start <= gpoint && gend <= mpos.end
+        }.flatMap { mfor =>
+          val menums = mfor.enums
+          menums.find { menum =>
+            val mpos = menum.pos
+            mpos.start < gend && gend <= mpos.end
+          } match {
+            case Some(menum: m.Enumerator.Guard) => Some(menum.pos)
+            // a value is not a function in the source
+            case Some(_: m.Enumerator.Val) => None
+            case _ => menums.find { menum =>
+                val mpos = menum.pos
+                mpos.start <= gpoint && gpoint < mpos.end
+              }.map(_.pos)
           }
         }
+      }
+
+      def addSamOccurrence(gt: g.Function, isFor: Boolean): Unit = {
+        val sam = gt.attachments.get[global.SAMFunction].orNull
+        if (sam eq null) return
+        // the source does not have the check that scalac adds for a pattern that can fail
+        if (gt.vparams.exists(_.name.startsWith(g.nme.CHECK_IF_REFUTABLE_STRING))) return
+        val samSym = sam.synthCls
+        def atPos(mpos: m.Position): Unit = {
+          val entry = samSym.info.decls.elems
+          if (entry eq null) return
+          if (setSamOccurrence(samSym, mpos, samoccurrences) eq null) return
+
+          val gmethod = entry.sym
+          val info = setSamOccurrence(gmethod, mpos, sammethodoccurrences)
+          if (info eq null) return
+
+          // the method takes the lambda's parameters, also in its result type
+          val gparams = gt.vparams.map(_.symbol)
+          val gtpe = gmethod.info
+          val gsig = g.MethodType(gparams, gtpe.resultType.substSym(gtpe.params, gparams))
+            .toSemanticSig(SymlinkChildren)
+          // for an existential type, like `G[_]`, scalac does not find the overridden method
+          val overrides =
+            if (config.overrides.isOn) {
+              val samOverrides = (sam.sam :: sam.sam.allOverriddenSymbols).map(_.toSemantic)
+              (info.overriddenSymbols ++ samOverrides).distinct
+            } else info.overriddenSymbols
+          symbols(info.symbol) = info.copy(signature = gsig, overriddenSymbols = overrides)
+        }
+        val gsym = gt.symbol
+        val gpos = gt.pos
+        if (gpos.isDefined && (gsym ne null) && !config.symbols.isNone) {
+          val gbeg = gpos.start
+          val gend = gpos.end
+          // the largest tree from `mtree` within the function, like `K.g` or `g[Int]`
+          @tailrec
+          def outermost(mtree: m.Tree): m.Tree = mtree.parent match {
+            case Some(p) if p.pos.start >= gbeg && p.pos.end <= gend => outermost(p)
+            case _ => mtree
+          }
+          if (isFor) forEnumerator(gpos).foreach(atPos)
+          else mfuncs.get(gbeg) match {
+            // scalac sets a transparent position on a method value, even inside a placeholder
+            case Some(mpos) if !gpos.isTransparent => atPos(mpos)
+            case _ => methodName(gt.body).foreach { name =>
+                val mpos = outermost(name).pos
+                if (mpos.start == gbeg && mpos.end == gend) atPos(mpos)
+              }
+          }
+        }
+      }
 
       def addPatOccurrenceFromSemantic(mpos: m.Position, ssym: String): Unit =
         if (ssym != Symbols.None) mpatoccurrences.update(mpos, (ssym, Role.DEFINITION))
@@ -331,7 +408,8 @@ trait TextDocumentOps {
                   if (colon >= 0) msinglevalpats(colon) = mtree.name
                 }
               case mtree: m.Name => indexName(mtree)
-              case mtree @ (_: m.Term.FunctionLike | _: m.Term.AnonymousFunction) =>
+              case _: m.Term.FunctionLike | _: m.Term.AnonymousFunction |
+                  _: m.Term.PartialFunction =>
                 val mpos = mtree.pos
                 mfuncs.update(mpos.start, mpos)
               // index only the outermost patterns: they include the nested ones
@@ -365,6 +443,7 @@ trait TextDocumentOps {
                         pats.foreach(mpat => indexPat(mpat, cnt))
                     }
                 }
+              case mtree: m.Term.ForClause => mfors += mtree
               case _ =>
             }
             super.apply(mtree)
@@ -1097,6 +1176,14 @@ trait TextDocumentOps {
             pos.trunc(i)
           }
 
+          // the `map`, `flatMap`, `foreach` or `withFilter` that scalac calls for a `for`, or null
+          @tailrec
+          private def forMethod(gfun: g.Tree): g.Select = gfun match {
+            case t: g.Select => if (t.hasAttachment[g.ForAttachment.type]) t else null
+            case t: g.TypeApply => forMethod(t.fun)
+            case _ => null
+          }
+
           private def traverseNoOriginal(gtree: g.Tree): Unit = gtree match {
             // skip an annotation that scalac added, like `@unchecked` on a desugared match
             case t: g.Annotated if !t.annot.pos.isOpaqueRange => isVisited += t.annot
@@ -1118,13 +1205,13 @@ trait TextDocumentOps {
               } else tryFindMtree(t)
 
             case t: g.Function =>
-              addSamOccurrence(t)
-              // the parameter of a guard repeats that of its generator, which defines the `_`
-              val isGuard = genclosing match {
-                case _ :: g.Apply(gfun: g.Select, _) :: _ => gfun.name == g.nme.withFilter &&
-                  gfun.hasAttachment[g.ForAttachment.type]
-                case _ => false
+              val gfor = genclosing match {
+                case _ :: (gapply: g.Apply) :: _ => forMethod(gapply.fun)
+                case _ => null
               }
+              addSamOccurrence(t, gfor ne null)
+              // the parameter of a guard repeats that of its generator, which defines the `_`
+              val isGuard = (gfor ne null) && gfor.name == g.nme.withFilter
               // a for matches the parameter of its closure on the pattern
               val gpat = t.body match {
                 case g.Match(_, g.CaseDef(gpat, _, _) :: Nil) => gpat

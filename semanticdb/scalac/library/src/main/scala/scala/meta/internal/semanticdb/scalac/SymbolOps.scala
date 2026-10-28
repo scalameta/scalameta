@@ -239,6 +239,7 @@ trait SymbolOps {
     def isSyntheticCaseAccessor: Boolean = sym.isCaseAccessor && sym.decodedName.contains("$")
     def isSyntheticJavaModule: Boolean = isJavaNonPackage && sym.isModule
     def isAnonymousClassConstructor: Boolean = sym.isConstructor && sym.owner.isAnonymousClass
+    def isSamClass: Boolean = sym.hasAllFlags(gf.SYNTHETIC | gf.ARTIFACT) && sym.isAnonymousClass
     def isSyntheticAbstractType: Boolean = sym.isSynthetic && sym.isAbstractType // these are hardlinked to TypeOps
     // scalac names a parameter `_` like `x$1`, and a user can write such a name too
     def hasFreshName: Boolean = {
