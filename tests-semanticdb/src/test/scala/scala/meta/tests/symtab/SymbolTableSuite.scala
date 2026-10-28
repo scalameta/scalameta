@@ -465,6 +465,61 @@ class SymbolTableSuite extends FunSuite {
     List("_empty_/Sub#foo().", "_empty_/Base#foo()."),
   ))
 
+  private def param(sym: String, tpe: String) = s.SymbolInformation(
+    symbol = sym,
+    kind = s.SymbolInformation.Kind.PARAMETER,
+    signature = s.ValueSignature(s.TypeRef(symbol = tpe)),
+  )
+
+  private def scope(infos: s.SymbolInformation*) = s.Scope(hardlinks = infos.toList)
+
+  // the clauses `(t: A)[U](f: fParam)` of the method `sym`
+  private def grouped(fParam: String)(sym: String): s.Signature = {
+    val u = s.SymbolInformation(symbol = s"$sym[U]", kind = s.SymbolInformation.Kind.TYPE_PARAMETER)
+    s.ExtendedMethodSignature(
+      List(
+        s.ParamClauseGroup(None, List(scope(param(s"$sym(t)", "_empty_/A#")))),
+        s.ParamClauseGroup(Some(scope(u)), List(scope(param(s"$sym(f)", fParam)))),
+      ),
+      s.NoType,
+    )
+  }
+
+  // `class Base { def <name> }; class Sub extends Base { def <name> }`, each with its signature
+  private def baseAndSub(name: String, base: String => s.Signature, sub: String => s.Signature) = {
+    def method(owner: String, sig: String => s.Signature) = {
+      val sym = s"$owner$name()."
+      s.SymbolInformation(sym, kind = s.SymbolInformation.Kind.METHOD, signature = sig(sym))
+    }
+    LocalSymbolTable(List(
+      synthClass("_empty_/Base#", Nil, List(s"_empty_/Base#$name().")),
+      method("_empty_/Base#", base),
+      synthClass("_empty_/Sub#", List("_empty_/Base#"), List(s"_empty_/Sub#$name().")),
+      method("_empty_/Sub#", sub),
+    )).overloads("_empty_/Sub#", name)
+  }
+
+  test("#2450: a grouped override")(assertEquals(
+    baseAndSub("map", grouped("_empty_/B#"), grouped("_empty_/B#")),
+    List("_empty_/Sub#map()."),
+  ))
+
+  test("#2450: grouped overloads")(assertEquals(
+    baseAndSub("map", grouped("_empty_/D#"), grouped("_empty_/B#")),
+    List("_empty_/Sub#map().", "_empty_/Base#map()."),
+  ))
+
+  test("#2450: a one-group override") {
+    def sub(sym: String) = s.ExtendedMethodSignature(
+      List(s.ParamClauseGroup(None, List(scope(param(s"$sym(x)", "_empty_/A#"))))),
+      s.NoType,
+    )
+    assertEquals(
+      baseAndSub("m", synthMethod(_, "_empty_/A#").signature, sub),
+      List("_empty_/Sub#m()."),
+    )
+  }
+
   test("resolveOverloads: a hierarchy without a missing parent")(assertEquals(
     LocalSymbolTable(diamond(List("_empty_/C#", "_empty_/B#"))).resolveOverloads("_empty_/D#", "g"),
     SymbolTable.Overloads(List("_empty_/B#g()."), Nil),

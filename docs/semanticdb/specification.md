@@ -577,6 +577,7 @@ message Signature {
     MethodSignature method_signature = 2;
     TypeSignature type_signature = 3;
     ValueSignature value_signature = 4;
+    ExtendedMethodSignature extended_method_signature = 5;
   }
 }
 ```
@@ -616,6 +617,35 @@ setters), constructors and macros. It features `type_parameters`,
 `parameter_lists`, a `return_type` and zero or more `throws`. Both type parameters and parameters are
 modelled by [Scopes](#scope). Moreover, in order to support multiple parameter
 lists in Scala methods, `parameter_lists` is a list of lists.
+Every type parameter precedes every parameter list. A method whose parameter
+clauses form more than one group needs an `ExtendedMethodSignature` instead,
+which can also represent any other method. Writers before
+`ExtendedMethodSignature` merged the clauses of such a method into a
+`MethodSignature`.
+
+```protobuf
+message ParamClauseGroup {
+  Scope type_param_clause = 1;
+  repeated Scope param_clauses = 2;
+}
+
+message ExtendedMethodSignature {
+  repeated ParamClauseGroup param_clause_groups = 1;
+  Type return_type = 2;
+  repeated Type throws = 3;
+}
+```
+
+`ExtendedMethodSignature` represents signatures of methods as groups of
+parameter clauses. A group is a `ParamClauseGroup`: a type parameter clause,
+`type_param_clause`, and the term parameter clauses that follow it up to the
+next type parameter clause, `param_clauses`. `param_clause_groups` can have any
+number of groups: a method without clauses, such as `def foo = ???`, has none,
+and a method with a type parameter clause after a term parameter clause has
+more than one. Every group after the first must have a non-empty
+`type_param_clause`. All scopes of one signature must use the same kind of
+links: all symlinks or all hardlinks. `return_type` and `throws` mean the same
+as in `MethodSignature`.
 
 ```protobuf
 message TypeSignature {
@@ -2273,6 +2303,17 @@ Notes:
   the disambiguator tag for the method symbols `m3().`, `m3(+1).` and `m4().`
   because `OBJECT` and (exceptionally) `VAL METHOD` symbols do not require a
   disambiguator.
+- In Scala 3, a type parameter clause may follow a term parameter clause
+  [\[105\]][105], and an extension [\[106\]][106] adds its clauses to each
+  of its methods. If the clauses of a method form more than one group, the
+  method needs an `ExtendedMethodSignature`:
+
+  ```scala
+  trait Functor[F[_]]:
+    extension [T](t: F[T]) def map[U](f: T => U): F[U]
+  trait DB:
+    def getOrElse(k: Key)[V >: k.Value](default: V): V
+  ```
 
 **Macro definitions** [\[51\]][51] are represented with `MACRO` symbols
 similarly to function definitions (see above).
@@ -4910,3 +4951,6 @@ We may improve on this in the future.
   https://www.scala-lang.org/files/archive/spec/2.12/06-expressions.html#anonymous-functions
 [103]: https://docs.scala-lang.org/scala3/reference/new-types/match-types.html
 [104]: https://docs.scala-lang.org/scala3/reference/new-types/type-lambdas.html
+[105]:
+  https://docs.scala-lang.org/scala3/reference/other-new-features/generalized-method-syntax.html
+[106]: https://docs.scala-lang.org/scala3/reference/contextual/extension-methods.html

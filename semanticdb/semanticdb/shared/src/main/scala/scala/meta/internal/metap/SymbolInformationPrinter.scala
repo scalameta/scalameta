@@ -132,6 +132,10 @@ trait SymbolInformationPrinter extends BasePrinter {
         pprintClauses(sig.typeParameters, sig.parameterLists)
         rep(" throws ", sig.throws, ", ", "")(pprint)
         opt(": ", sig.returnType)(pprint)
+      case sig: ExtendedMethodSignature =>
+        sig.paramClauseGroups.foreach(x => pprintClauses(x.typeParamClause, x.paramClauses))
+        rep(" throws ", sig.throws, ", ", "")(pprint)
+        opt(": ", sig.returnType)(pprint)
       case sig: TypeSignature =>
         rep("[", sig.typeParameters.infos, ", ", "]")(pprintDefn)
         if (sig.lowerBound == sig.upperBound) opt(" = ", sig.lowerBound)(pprint)

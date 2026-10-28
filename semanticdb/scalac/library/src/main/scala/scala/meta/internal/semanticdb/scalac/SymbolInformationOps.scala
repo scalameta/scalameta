@@ -150,12 +150,17 @@ trait SymbolInformationOps {
         val ssig = gsig.toSemanticSig(linkMode, gsym)
         if (gsym.isConstructor) ssig match {
           case m: s.MethodSignature => m.copy(returnType = s.NoType)
+          case m: s.ExtendedMethodSignature => m.copy(returnType = s.NoType)
           case m => m
         }
         // A local is a value, even a lazy getter or a private[this] pattern temporary
         else if (kind.isLocal) ssig match {
           case ssig: s.MethodSignature =>
             val ok = ssig.parameterLists.isEmpty && ssig.typeParameters.forall(_.symlinks.isEmpty)
+            if (ok) s.ValueSignature(ssig.returnType) else ssig
+          case ssig: s.ExtendedMethodSignature =>
+            val ok = ssig.paramClauseGroups
+              .forall(x => x.paramClauses.isEmpty && x.typeParamClause.forall(_.symlinks.isEmpty))
             if (ok) s.ValueSignature(ssig.returnType) else ssig
           case _ => ssig
         }
