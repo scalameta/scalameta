@@ -1,7 +1,6 @@
 package scala.meta.tests.semanticdb
 
-// https://github.com/scalameta/scalameta/issues/4135
-class Issue4135Suite extends SemanticdbSuite {
+class ForSyntheticsSuite extends SemanticdbSuite {
 
   // for comprehensions (#4135)
   synthetics(
