@@ -224,16 +224,21 @@ object ManifestMetacp extends ExpectHelpers {
 object MetacpUndefined extends ExpectHelpers {
   def filename: String = "metacp.undefined"
   def loadObtained: String = {
-    val classpath = Classpath(AbsolutePath(metacp(classDirectory)))
-    val undefined = MetacpOps.collectReferencedToUndefinedSymbols(classpath)
-    val interesting = undefined.filterNot(symbol =>
+    val root = metacp(classDirectory)
+    val classpath = Classpath(AbsolutePath(root))
+    val interesting = MetacpOps.collectReferencedToUndefinedSymbols(classpath)(x =>
       // We are only interested in references to symbols in semanticdb/integration
       // that have no SymbolInformation. It's expected that references to the packages
       // scala/ and java/ package have no SymbolInformation because we only process
       // databaseClasspath, scala-library and the JDK are only --dependency-classpath.
-      symbol.startsWith("scala/") || symbol.startsWith("java/") || symbol == "local_wildcard",
+      !x.startsWith("scala/") && !x.startsWith("java/") && x != "local_wildcard",
     )
-    interesting.toSeq.sorted.mkString("", "\n", "\n")
+    val sb = new StringBuilder()
+    interesting.sortBy(_._1).foreach { case (path, errors) =>
+      sb.append("---\n").append(root.relativize(path)).append("\n---\n")
+      errors.toSeq.sorted.foreach(error => sb.append(error).append("\n"))
+    }
+    sb.toString()
   }
 }
 
