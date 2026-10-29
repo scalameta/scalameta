@@ -378,6 +378,8 @@ message Type {
     UniversalType universal_type = 10;
     ByNameType by_name_type = 13;
     RepeatedType repeated_type = 14;
+    MatchType match_type = 25;
+    LambdaType lambda_type = 26;
   }
 }
 ```
@@ -527,6 +529,30 @@ message RepeatedType {
 ```
 
 `RepeatedType` represents a signature of a repeated parameter.
+
+```protobuf
+message MatchType {
+  message CaseType {
+    Type key = 1;
+    Type body = 2;
+  }
+  Type scrutinee = 1;
+  repeated CaseType cases = 2;
+}
+```
+
+`MatchType` represents a match type on `scrutinee`. Each of its `cases` maps
+the pattern `key` to the type `body`.
+
+```protobuf
+message LambdaType {
+  Scope parameters = 1;
+  Type return_type = 2;
+}
+```
+
+`LambdaType` represents a type lambda that takes `parameters` and returns
+`return_type`. Parameters are modelled by a [Scope](#scope).
 
 ### Signature
 
@@ -1364,26 +1390,6 @@ wrapped in backticks per the rule above.
 
 ### Type
 
-```protobuf
-  reserved 1, 3, 4, 5, 6, 11, 12, 15, 16;
-  oneof sealed_value {
-    TypeRef typeRef = 2;
-    SingleType singleType = 20;
-    ThisType thisType = 21;
-    SuperType superType = 22;
-    ConstantType constantType = 23;
-    IntersectionType intersectionType = 17;
-    UnionType unionType = 18;
-    WithType withType = 19;
-    StructuralType structuralType = 7;
-    AnnotatedType annotatedType = 8;
-    ExistentialType existentialType = 9;
-    UniversalType universalType = 10;
-    ByNameType byNameType = 13;
-    RepeatedType repeatedType = 14;
-  }
-```
-
 In Scala, [Type](#type) represents value types [\[18\]][18]. Non-value types
 [\[18\]][18] are modelled with a separate data structure called
 [Signature](#signature) (see [below](#scala-signature) for examples).
@@ -1503,6 +1509,22 @@ In the examples below:
     <td>
       <ul>
         <li><code>T forSome { M1; ...; Mm }</code> ~ <code>ExistentialType(List(&lt;M1&gt;, ..., &lt;Mm&gt;), List(&lt;T&gt;))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Match types <a href="https://docs.scala-lang.org/scala3/reference/new-types/match-types.html">[103]</a></td>
+    <td>
+      <ul>
+        <li><code>T match { case P1 =&gt; T1 ... case Pn =&gt; Tn }</code> ~ <code>MatchType(&lt;T&gt;, List(CaseType(&lt;P1&gt;, &lt;T1&gt;), ..., CaseType(&lt;Pn&gt;, &lt;Tn&gt;)))</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">Type lambdas <a href="https://docs.scala-lang.org/scala3/reference/new-types/type-lambdas.html">[104]</a></td>
+    <td>
+      <ul>
+        <li><code>[t1, ..., tn] =&gt;&gt; T</code> ~ <code>LambdaType(List(&lt;t1&gt;, ..., &lt;tn&gt;), &lt;T&gt;)</code>.</li>
       </ul>
     </td>
   </tr>
@@ -3883,26 +3905,6 @@ must be modelled:
 
 ### Type
 
-```protobuf
-  reserved 1, 3, 4, 5, 6, 11, 12, 15, 16;
-  oneof sealed_value {
-    TypeRef typeRef = 2;
-    SingleType singleType = 20;
-    ThisType thisType = 21;
-    SuperType superType = 22;
-    ConstantType constantType = 23;
-    IntersectionType intersectionType = 17;
-    UnionType unionType = 18;
-    WithType withType = 19;
-    StructuralType structuralType = 7;
-    AnnotatedType annotatedType = 8;
-    ExistentialType existentialType = 9;
-    UniversalType universalType = 10;
-    ByNameType byNameType = 13;
-    RepeatedType repeatedType = 14;
-  }
-```
-
 In Java, [Type](#type) represents types [\[74\]][74].
 
 In the examples below:
@@ -4874,3 +4876,5 @@ We may improve on this in the future.
   https://www.scala-lang.org/files/archive/spec/2.12/06-expressions.html#this-and-super
 [102]:
   https://www.scala-lang.org/files/archive/spec/2.12/06-expressions.html#anonymous-functions
+[103]: https://docs.scala-lang.org/scala3/reference/new-types/match-types.html
+[104]: https://docs.scala-lang.org/scala3/reference/new-types/type-lambdas.html
