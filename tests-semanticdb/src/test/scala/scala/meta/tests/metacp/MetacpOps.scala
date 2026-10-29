@@ -36,32 +36,32 @@ object MetacpOps {
       isHardlink --= toEnter
     }
     def visitType(tpe: s.Type): Unit = tpe match {
-      case s.TypeRef(prefix, symbol, typeArguments) =>
-        visitType(prefix)
-        visitSymbol(symbol)
-        typeArguments.foreach(visitType)
-      case s.SingleType(prefix, symbol) =>
-        visitType(prefix)
-        visitSymbol(symbol)
-      case s.ThisType(symbol) => visitSymbol(symbol)
-      case s.SuperType(prefix, symbol) =>
-        visitType(prefix)
-        visitSymbol(symbol)
-      case s.ConstantType(_) => ()
-      case s.IntersectionType(types) => types.foreach(visitType)
-      case s.UnionType(types) => types.foreach(visitType)
-      case s.WithType(types) => types.foreach(visitType)
-      case s.StructuralType(tpe, declarations) => visitScope(declarations)(visitType(tpe))
-      case s.AnnotatedType(annotations, tpe) =>
-        annotations.foreach(annot => visitType(annot.tpe))
-        visitType(tpe)
-      case s.ExistentialType(tpe, declarations) => visitScope(declarations)(visitType(tpe))
-      case s.UniversalType(typeParameters, tpe) => visitScope(typeParameters)(visitType(tpe))
-      case s.ByNameType(tpe) => visitType(tpe)
-      case s.RepeatedType(tpe) => visitType(tpe)
-      case s.MatchType(scrutinee, cases) =>
-        visitType(scrutinee)
-        cases.foreach { kase =>
+      case x: s.TypeRef =>
+        visitType(x.prefix)
+        visitSymbol(x.symbol)
+        x.typeArguments.foreach(visitType)
+      case x: s.SingleType =>
+        visitType(x.prefix)
+        visitSymbol(x.symbol)
+      case x: s.ThisType => visitSymbol(x.symbol)
+      case x: s.SuperType =>
+        visitType(x.prefix)
+        visitSymbol(x.symbol)
+      case _: s.ConstantType => ()
+      case x: s.IntersectionType => x.types.foreach(visitType)
+      case x: s.UnionType => x.types.foreach(visitType)
+      case x: s.WithType => x.types.foreach(visitType)
+      case x: s.StructuralType => visitScope(x.declarations)(visitType(x.tpe))
+      case x: s.AnnotatedType =>
+        x.annotations.foreach(annot => visitType(annot.tpe))
+        visitType(x.tpe)
+      case x: s.ExistentialType => visitScope(x.declarations)(visitType(x.tpe))
+      case x: s.UniversalType => visitScope(x.typeParameters)(visitType(x.tpe))
+      case x: s.ByNameType => visitType(x.tpe)
+      case x: s.RepeatedType => visitType(x.tpe)
+      case x: s.MatchType =>
+        visitType(x.scrutinee)
+        x.cases.foreach { kase =>
           visitType(kase.key)
           visitType(kase.body)
         }
@@ -69,19 +69,18 @@ object MetacpOps {
       case s.NoType =>
     }
     def visitSignature(signature: s.Signature): Unit = signature match {
-      case s.ClassSignature(typeParameters, parents, self, declarations) =>
-        visitScope(typeParameters)(visitScope(declarations) {
-          parents.foreach(visitType)
-          visitType(self)
+      case x: s.ClassSignature => visitScope(x.typeParameters)(visitScope(x.declarations) {
+          x.parents.foreach(visitType)
+          visitType(x.self)
         })
       case sig: s.MethodSignature =>
         sig.parameterLists.foreach(s => visitScope(Some(s))(()))
         visitScope(sig.typeParameters)(visitType(sig.returnType))
-      case s.TypeSignature(typeParameters, lowerBound, upperBound) => visitScope(typeParameters) {
-          visitType(lowerBound)
-          visitType(upperBound)
+      case x: s.TypeSignature => visitScope(x.typeParameters) {
+          visitType(x.lowerBound)
+          visitType(x.upperBound)
         }
-      case s.ValueSignature(tpe) => visitType(tpe)
+      case x: s.ValueSignature => visitType(x.tpe)
       case s.NoSignature => ()
     }
     visitSignature(info.signature)
