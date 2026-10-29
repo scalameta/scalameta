@@ -2891,6 +2891,15 @@ class LocalSymbolsSuite extends FunSuite {
     def locals(name: String): List[String] = unit.body
       .collect { case t: pc.ValDef if t.name.toString == name => t.symbol.toSemantic }
     def document: s.TextDocument = unit.toTextDocument
+    // the document of the body that `rewrite` returns; the index reads that body
+    def document(rewrite: pc.Tree => pc.Tree): s.TextDocument = {
+      unit.body = rewrite(unit.body)
+      unit.toTextDocument
+    }
+    def assertSymbols(
+        rewrite: pc.Tree => pc.Tree,
+    )(expected: String)(implicit loc: munit.Location, diffOptions: munit.diff.DiffOptions): Unit =
+      LocalSymbolsSuite.this.assertSymbols(document(rewrite))(expected)
     // the existential types in the types of the trees
     def existentials: List[String] = {
       val syms = mutable.LinkedHashSet.empty[pc.Symbol]
@@ -2922,6 +2931,301 @@ class LocalSymbolsSuite extends FunSuite {
          |""".stripMargin
     }
     assertEquals(before ++ typed.locals("x"), List("local0", "local1"))
+  }
+
+  // rewrites each tree of a typed body with `f`, after its children
+  private def rewrite(f: PartialFunction[typer.Tree, typer.Tree]): typer.Tree => typer.Tree =
+    new typer.Transformer {
+      override def transform(t: typer.Tree): typer.Tree = f
+        .applyOrElse(super.transform(t), identity[typer.Tree])
+    }.transform(_)
+
+  private val localClassParam = "object O { def f = { class C(val a: Int); new C(1).a } }"
+
+  test("a local class parameter, the constructor before the accessors") {
+    val ctorFirst = rewrite {
+      case t: typer.Template if t.symbol.owner.isLocalToBlock =>
+        val (ctor, rest) = t.body.partition(_.symbol.isConstructor)
+        typer.Template(t.parents, t.self, ctor ++ rest).copyAttrs(t)
+    }
+    new Typed(localClassParam).assertSymbols(ctorFirst) {
+      """|_empty_/O. => final object O extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/O.f(). => method f: Int
+         |  Int => scala/Int#
+         |local0 => class C extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |local1 => val method a: Int
+         |  Int => scala/Int#
+         |local2 => primary ctor <init>(val def a: Int)
+         |  a => local1
+         |  Int => scala/Int#
+         |""".stripMargin
+    }
+  }
+
+  test("a local class parameter, in the tree's order") {
+    assertSymbols(new Typed(localClassParam)) {
+      """|_empty_/O. => final object O extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/O.f(). => method f: Int
+         |  Int => scala/Int#
+         |local0 => class C extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |local1 => val param a: Int
+         |  Int => scala/Int#
+         |local2 => primary ctor <init>(val a: Int)
+         |  a => local1
+         |  Int => scala/Int#
+         |""".stripMargin
+    }
+  }
+
+  // an offset copy of a local `var`, without `MUTABLE`, after the `var` or before it
+  private def varCopy(after: Boolean) = rewrite {
+    case b @ typer.Block((v: typer.ValDef) :: Nil, _) if v.symbol.isMutable =>
+      val sym = v.symbol.cloneSymbol.resetFlag(scala.reflect.internal.Flags.MUTABLE)
+      val copy = typer.ValDef(sym.setPos(v.symbol.pos.focus), v.rhs.duplicate).setPos(v.pos.focus)
+      typer.Block(if (after) List(v, copy) else List(copy, v), b.expr).copyAttrs(b)
+  }
+
+  private val localVar = "object O { def f = { var v = 1; v } }"
+
+  test("an offset copy of a local var, after the var") {
+    new Typed(localVar).assertSymbols(varCopy(after = true))(
+      """|_empty_/O. => final object O extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/O.f(). => method f: Int
+         |  Int => scala/Int#
+         |local0 => val local v: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+    )
+  }
+
+  test("an offset copy of a local var, before the var") {
+    new Typed(localVar).assertSymbols(varCopy(after = false))(
+      """|_empty_/O. => final object O extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/O.f(). => method f: Int
+         |  Int => scala/Int#
+         |local0 => var local v: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+    )
+  }
+
+  // the default getters of a local method before the method
+  private val defaultsFirst = rewrite { case b: typer.Block =>
+    val (getters, rest) = b.stats.partition(t => (t.symbol ne null) && t.symbol.isDefaultGetter)
+    typer.Block(getters ++ rest, b.expr).copyAttrs(b)
+  }
+
+  private val defaultInBlock =
+    """|object O {
+       |  def f = {
+       |    def g(a: Int)(b: Int = { val x = a; x }) = b
+       |    g(1)()
+       |  }
+       |}
+       |""".stripMargin
+
+  test("a default getter before its local method") {
+    new Typed(defaultInBlock).assertSymbols(defaultsFirst) {
+      """|_empty_/O. => final object O extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/O.f(). => method f: Int
+         |  Int => scala/Int#
+         |local0 => param a: Int
+         |  Int => scala/Int#
+         |local1 => val local x: Int
+         |  Int => scala/Int#
+         |local2 => method g(a: Int)(b: Int): Int
+         |  a => local0
+         |  Int => scala/Int#
+         |  b => local3
+         |local3 => default param b: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    }
+  }
+
+  test("a default getter after its local method") {
+    assertSymbols(new Typed(defaultInBlock)) {
+      """|_empty_/O. => final object O extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/O.f(). => method f: Int
+         |  Int => scala/Int#
+         |local0 => method g(a: Int)(b: Int): Int
+         |  a => local1
+         |  Int => scala/Int#
+         |  b => local2
+         |local1 => param a: Int
+         |  Int => scala/Int#
+         |local2 => default param b: Int
+         |  Int => scala/Int#
+         |local3 => val local x: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    }
+  }
+
+  private val patternsInDefault =
+    """|object O {
+       |  def f = {
+       |    def g(a: Int)(
+       |        b: Int = { val Some(x) = Option(a); x },
+       |        c: Option[Int] = for (y <- Option(a); z = y) yield z,
+       |    ) = b
+       |    g(1)()
+       |  }
+       |}
+       |""".stripMargin
+
+  test("a default getter with a pattern value and a for binder, before its local method") {
+    new Typed(patternsInDefault).assertSymbols(defaultsFirst) {
+      """|_empty_/O. => final object O extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/O.f(). => method f: Int
+         |  Int => scala/Int#
+         |local0 => param a: Int
+         |  Int => scala/Int#
+         |local1 => val local x: Int
+         |  Int => scala/Int#
+         |local2 => val local y: Int
+         |  Int => scala/Int#
+         |local3 => val local z: Int
+         |  Int => scala/Int#
+         |local4 => method g(a: Int)(b: Int, c: Option[Int]): Int
+         |  a => local0
+         |  Int => scala/Int#
+         |  b => local5
+         |  c => local6
+         |  Option => scala/Option#
+         |local5 => default param b: Int
+         |  Int => scala/Int#
+         |local6 => default param c: Option[Int]
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |""".stripMargin
+    }
+  }
+
+  test("a default getter with a pattern value and a for binder, after its local method") {
+    assertSymbols(new Typed(patternsInDefault)) {
+      """|_empty_/O. => final object O extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/O.f(). => method f: Int
+         |  Int => scala/Int#
+         |local0 => method g(a: Int)(b: Int, c: Option[Int]): Int
+         |  a => local1
+         |  Int => scala/Int#
+         |  b => local2
+         |  c => local3
+         |  Option => scala/Option#
+         |local1 => param a: Int
+         |  Int => scala/Int#
+         |local2 => default param b: Int
+         |  Int => scala/Int#
+         |local3 => default param c: Option[Int]
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |local4 => val local x: Int
+         |  Int => scala/Int#
+         |local5 => val local y: Int
+         |  Int => scala/Int#
+         |local6 => val local z: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    }
+  }
+
+  /* a default of a local method in a place that scalac wraps in a synthetic definition: the copy
+   * in the default getter has one more synthetic definition around it than the original */
+  private def nestedDefault(place: String => String) = new Typed(
+    s"object O { def f = { ${place("{ def l(x: Int = { var (t, u) = (1, 2); t + u }) = x; l() }")} } }",
+  ).document
+
+  test("a default of a local method in an argument of an eta-expansion") {
+    assertSymbols(nestedDefault(e => s"def g(a: Int)(b: Int) = a + b; g($e) _")) {
+      """|_empty_/O. => final object O extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/O.f(). => method f: Function1[Int, Int]
+         |  Function1 => scala/Function1#
+         |  Int => scala/Int#
+         |local0 => method g(a: Int)(b: Int): Int
+         |  a => local1
+         |  Int => scala/Int#
+         |  b => local2
+         |local1 => param a: Int
+         |  Int => scala/Int#
+         |local2 => param b: Int
+         |  Int => scala/Int#
+         |local3 => method l(x: Int): Int
+         |  x => local4
+         |  Int => scala/Int#
+         |local4 => default param x: Int
+         |  Int => scala/Int#
+         |local5 => val local t: Int
+         |  Int => scala/Int#
+         |local6 => val local u: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    }
+  }
+
+  test("a default of a local method in an index of an update operator") {
+    assertSymbols(nestedDefault(e => s"val a = Array(0); a($e * 0) += 1; a")) {
+      """|_empty_/O. => final object O
+         |_empty_/O.f(). => method f: Array[Int]
+         |  Array => scala/Array#
+         |  Int => scala/Int#
+         |local0 => val local a: Array[Int]
+         |  Array => scala/Array#
+         |  Int => scala/Int#
+         |local1 => method l(x: Int): Int
+         |  x => local2
+         |  Int => scala/Int#
+         |local2 => default param x: Int
+         |  Int => scala/Int#
+         |local3 => var local t: Int
+         |  Int => scala/Int#
+         |local4 => var local u: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    }
+  }
+  // scalac before 2.13.17 puts the value of `val (a: Int) = 1` at the colon, apart from its binder
+  test("a typed pattern value in a default of a local method") {
+    val code = "object O { def f = { def l(x: Int = { val (a: Int) = 1; a }) = x; l() } }"
+    assertSummary(new Typed(code).document) {
+      """|_empty_/O. => final object O extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/O.f(). => method f: Int
+         |  Int => scala/Int#
+         |local0 => method l(x: Int): Int
+         |  x => local1
+         |  Int => scala/Int#
+         |local1 => default param x: Int
+         |  Int => scala/Int#
+         |local2 => val local a: Int
+         |  Int => scala/Int#
+         |----
+         |[0:7..0:8) <= _empty_/O.
+         |[0:15..0:16) <= _empty_/O.f().
+         |[0:25..0:26) <= local0
+         |[0:27..0:28) <= local1
+         |[0:30..0:33) => scala/Int#
+         |[0:43..0:44) <= local2
+         |[0:46..0:49) => scala/Int#
+         |[0:56..0:57) => local2
+         |[0:63..0:64) => local1
+         |[0:66..0:67) => local0
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
   }
 
   // the presentation compiler leaves a function untyped if its application fails
