@@ -200,7 +200,7 @@ class InfoPrinterSuite extends FunSuite {
   test("#1565: type application with an annotated constructor") {
     val ann = s.AnnotationTree(ref("_empty_/ann#"))
     val tpe = applied(s.AnnotatedType(List(ann), ref("scala/package.List#")), ref("scala/Int#"))
-    assertType(tpe, "<?>")
+    assertType(tpe, "(List @ann)[Int]")
   }
 
   test("#1565: type application with a type lambda constructor and a wildcard argument") {
@@ -212,85 +212,85 @@ class InfoPrinterSuite extends FunSuite {
     )
     val tpe = s
       .ExistentialType(applied(mapLambda, ref("local1")), Some(s.Scope(hardlinks = List(wildcard))))
-    assertType(tpe, "forSome { type _ }")
+    assertType(tpe, "([X] =>> Map[X, X])[_] forSome { type _ }")
   }
 
   test("#1565: type application with an intersection constructor") {
     val tpe =
       applied(s.IntersectionType(List(ref("_empty_/F#"), ref("_empty_/G#"))), ref("_empty_/A#"))
-    assertType(tpe, "<?>")
+    assertType(tpe, "(F & G)[A]")
   }
 
   test("#1565: type application with a union constructor") {
     val tpe = applied(s.UnionType(List(ref("_empty_/F#"), ref("_empty_/G#"))), ref("_empty_/A#"))
-    assertType(tpe, "<?>")
+    assertType(tpe, "(F | G)[A]")
   }
 
   test("#1565: type application with an applied constructor")(
-    assertType(applied(ref("_empty_/F#", ref("_empty_/A#")), ref("_empty_/B#")), "<?>"),
+    assertType(applied(ref("_empty_/F#", ref("_empty_/A#")), ref("_empty_/B#")), "F[A][B]"),
   )
 
   test("#1565: type application with a singleton constructor")(
-    assertType(applied(s.SingleType(s.NoType, "_empty_/x."), ref("_empty_/A#")), "<?>"),
+    assertType(applied(s.SingleType(s.NoType, "_empty_/x."), ref("_empty_/A#")), "x.type[A]"),
   )
 
   test("#1565: type application with a this constructor")(
-    assertType(applied(s.ThisType("_empty_/C#"), ref("_empty_/A#")), "<?>"),
+    assertType(applied(s.ThisType("_empty_/C#"), ref("_empty_/A#")), "C.this.type[A]"),
   )
 
   test("#1565: type application with a super constructor")(
-    assertType(applied(s.SuperType(s.NoType, "_empty_/C#"), ref("_empty_/A#")), "<?>"),
+    assertType(applied(s.SuperType(s.NoType, "_empty_/C#"), ref("_empty_/A#")), "super[C].type[A]"),
   )
 
   test("#1565: type application with a constant constructor")(
-    assertType(applied(s.ConstantType(s.IntConstant(1)), ref("_empty_/A#")), "<?>"),
+    assertType(applied(s.ConstantType(s.IntConstant(1)), ref("_empty_/A#")), "1[A]"),
   )
 
   test("#1565: type application with a nested type application constructor") {
     val tpe =
       applied(applied(ref("_empty_/F#", ref("_empty_/A#")), ref("_empty_/B#")), ref("_empty_/C#"))
-    assertType(tpe, "<?>")
+    assertType(tpe, "F[A][B][C]")
   }
 
   test("#1565: type application of a curried application, three levels") {
     val fab = applied(ref("_empty_/F#", ref("_empty_/A#")), ref("_empty_/B#"))
-    assertType(applied(applied(fab, ref("_empty_/C#")), ref("_empty_/D#")), "<?>")
+    assertType(applied(applied(fab, ref("_empty_/C#")), ref("_empty_/D#")), "F[A][B][C][D]")
   }
 
   test("#1565: type application of an applied annotated constructor") {
     val ann = s.AnnotationTree(ref("_empty_/ann#"))
     val inner = applied(s.AnnotatedType(List(ann), ref("_empty_/F#")), ref("_empty_/A#"))
-    assertType(applied(inner, ref("_empty_/B#")), "<?>")
+    assertType(applied(inner, ref("_empty_/B#")), "(F @ann)[A][B]")
   }
 
   test("#1565: type application of an applied type lambda") {
     val tpe = applied(applied(mapLambda, ref("_empty_/A#")), ref("_empty_/B#"))
-    assertType(tpe, "<?>")
+    assertType(tpe, "([X] =>> Map[X, X])[A][B]")
   }
 
   test("#1565: type application of an intersection with an application") {
     val ann = s.AnnotationTree(ref("_empty_/ann#"))
     val inner = applied(s.AnnotatedType(List(ann), ref("_empty_/F#")), ref("_empty_/A#"))
     val tpe = applied(s.IntersectionType(List(inner, ref("_empty_/G#"))), ref("_empty_/B#"))
-    assertType(tpe, "<?>")
+    assertType(tpe, "((F @ann)[A] & G)[B]")
   }
 
   test("#1565: type application of a singleton, two levels") {
     val inner = applied(s.SingleType(s.NoType, "_empty_/x."), ref("_empty_/A#"))
-    assertType(applied(inner, ref("_empty_/B#")), "<?>")
+    assertType(applied(inner, ref("_empty_/B#")), "x.type[A][B]")
   }
 
   test("#1565: type application as a type argument") {
     val arg =
       applied(s.IntersectionType(List(ref("_empty_/G#"), ref("_empty_/H#"))), ref("_empty_/A#"))
-    assertType(ref("_empty_/F#", arg), "F[<?>]")
+    assertType(ref("_empty_/F#", arg), "F[(G & H)[A]]")
   }
 
   test("#1565: annotated type application") {
     val ann = s.AnnotationTree(ref("_empty_/ann#"))
     val inner =
       applied(s.IntersectionType(List(ref("_empty_/F#"), ref("_empty_/G#"))), ref("_empty_/A#"))
-    assertType(s.AnnotatedType(List(ann), inner), "@ann")
+    assertType(s.AnnotatedType(List(ann), inner), "(F & G)[A] @ann")
   }
 
 }

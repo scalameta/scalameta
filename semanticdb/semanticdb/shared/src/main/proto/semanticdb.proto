@@ -75,12 +75,18 @@ message Type {
     RepeatedType repeated_type = 14;
     MatchType match_type = 25;
     LambdaType lambda_type = 26;
+    AppliedType applied_type = 27;
   }
 }
 
 message LambdaType {
   Scope parameters = 1;
   Type return_type = 2;
+}
+
+message AppliedType {
+  Type tpe = 1;
+  repeated Type type_arguments = 2;
 }
 
 message TypeRef {

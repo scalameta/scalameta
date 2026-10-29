@@ -380,6 +380,7 @@ message Type {
     RepeatedType repeated_type = 14;
     MatchType match_type = 25;
     LambdaType lambda_type = 26;
+    AppliedType applied_type = 27;
   }
 }
 ```
@@ -553,6 +554,19 @@ message LambdaType {
 
 `LambdaType` represents a type lambda that takes `parameters` and returns
 `return_type`. Parameters are modelled by a [Scope](#scope).
+
+```protobuf
+message AppliedType {
+  Type tpe = 1;
+  repeated Type type_arguments = 2;
+}
+```
+
+`AppliedType` represents the application of the type constructor `tpe` to
+`type_arguments`, if `tpe` is not a symbol alone: for example an annotated
+type, a type lambda, an intersection or another application. An application of
+a symbol is a `TypeRef` with `type_arguments`, so `tpe` is never a `TypeRef`
+without arguments.
 
 ### Signature
 
@@ -1456,6 +1470,9 @@ In the examples below:
         <li><code>List[Int]</code> ~ <code>TypeRef(None, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
         <li><code>scala/List[Int]</code> ~ <code>TypeRef(None, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
         <li><code>p.C[T1, ..., Tn]</code> ~ <code>TypeRef(&lt;p.type&gt;, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+        <li><code>(T @ann)[T1, ..., Tn]</code> ~ <code>AppliedType(AnnotatedType(List(&lt;ann&gt;), &lt;T&gt;), List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
+        <li><code>([t] =&gt;&gt; T)[T1]</code> ~ <code>AppliedType(LambdaType(List(&lt;t&gt;), &lt;T&gt;), List(&lt;T1&gt;))</code>.</li>
+        <li><code>T[T1][T2]</code> ~ <code>AppliedType(TypeRef(None, &lt;T&gt;, List(&lt;T1&gt;)), List(&lt;T2&gt;))</code>.</li>
       </ul>
     </td>
   </tr>
