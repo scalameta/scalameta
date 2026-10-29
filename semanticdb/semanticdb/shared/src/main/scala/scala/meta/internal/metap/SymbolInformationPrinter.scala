@@ -219,6 +219,17 @@ trait SymbolInformationPrinter extends BasePrinter {
         notes.discover(tpe.parameters.infos)
         rep("[", tpe.parameters.infos, ", ", "] =>> ")(pprintDefn)
         opt(tpe.returnType)(pprint)
+      case tpe: AppliedType =>
+        // keep the parentheses unless arguments after the constructor can only apply to all of it
+        val inParens = tpe.tpe match {
+          case _: TypeRef | _: AppliedType | _: SingleType | _: ThisType | _: SuperType |
+              _: ConstantType => false
+          case _ => true
+        }
+        if (inParens) str("(")
+        pprint(tpe.tpe)
+        if (inParens) str(")")
+        rep("[", tpe.typeArguments, ", ", "]")(pprint)
       case NoType => str("<?>")
     }
 

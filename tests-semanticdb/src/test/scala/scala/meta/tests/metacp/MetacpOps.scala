@@ -67,6 +67,9 @@ object MetacpOps {
           visitType(kase.body)
         }
       case x: s.LambdaType => visitScope(x.parameters)(visitType(x.returnType))
+      case x: s.AppliedType =>
+        visitType(x.tpe)
+        x.typeArguments.foreach(visitType)
       case s.NoType =>
     }
     def visitSignature(signature: s.Signature): Unit = signature match {
