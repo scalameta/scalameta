@@ -28,7 +28,7 @@ class LocalSymbolsSuite extends FunSuite {
     val settings = new Settings(msg => fail(msg))
     settings.classpath.value = sys.props("sbt.paths.tests.test.classes")
     settings.processArgumentString("-Yrangepos -Ystop-after:typer")
-    new Global(settings, new StoreReporter())
+    new Global(settings, new StoreReporter(settings))
   }
 
   private val defs =
@@ -193,8 +193,13 @@ class LocalSymbolsSuite extends FunSuite {
     .document(Format.Detailed, doc).linesIterator.dropWhile(_ != name + ":").drop(1)
     .takeWhile(_.nonEmpty).mkString("\n")
   private def symbols(doc: s.TextDocument): String = section(doc, "Symbols")
+  private def symbols(doc: s.TextDocument, f: String => Boolean): String = symbols(doc)
+    .linesIterator.filter(f).mkString("\n")
+
   // the printer reads the signatures of symbols, which a collision can make cyclic
   private def occurrences(doc: s.TextDocument): String = section(doc.withSymbols(Nil), "Occurrences")
+  private def occurrences(doc: s.TextDocument, f: String => Boolean): String = occurrences(doc)
+    .linesIterator.filter(f).mkString("\n")
 
   private val Info =
     """symbol: "(local\d+)"\s+kind: \w+\s+(?:properties: \d+\s+)?display_name: "([^"]*)"""".r
@@ -218,9 +223,36 @@ class LocalSymbolsSuite extends FunSuite {
   private lazy val joint = inOneRun(Map("A.scala" -> a), Map("B.scala" -> b), "B.scala")
   private lazy val classfile = fromClassfile(Map("A.scala" -> a), Map("B.scala" -> b), "B.scala")
 
+  private def summary(doc: s.TextDocument): String = s"""|${symbols(doc)}
+                                                         |----
+                                                         |${occurrences(doc)}
+                                                         |----
+                                                         |collisions ${collisions(doc)}
+                                                         |dangling ${dangling(doc)}
+                                                         |""".stripMargin
+
+  private def assertSummary(
+      doc: s.TextDocument,
+  )(expected: String)(implicit loc: munit.Location, diffOptions: munit.diff.DiffOptions): Unit =
+    assertNoDiff(summary(doc), expected)
+
+  private def assertSymbols(
+      doc: s.TextDocument,
+  )(expected: String)(implicit loc: munit.Location, diffOptions: munit.diff.DiffOptions): Unit =
+    assertNoDiff(symbols(doc), expected)
+
+  private def assertSymbols(
+      doc: Typed,
+  )(expected: String)(implicit loc: munit.Location, diffOptions: munit.diff.DiffOptions): Unit =
+    assertSymbols(doc.document)(expected)
+
+  private def assertOccurrences(
+      doc: s.TextDocument,
+  )(expected: String)(implicit loc: munit.Location, diffOptions: munit.diff.DiffOptions): Unit =
+    assertNoDiff(occurrences(doc), expected)
+
   test("#1591: A in the same file: symbols") {
-    assertNoDiff(
-      symbols(sameFile),
+    assertSymbols(sameFile) {
       """|c/Defs. => final object Defs extends AnyRef { +9 decls }
          |  AnyRef => scala/AnyRef#
          |c/Defs.C# => class C extends AnyRef { +1 decls }
@@ -351,13 +383,13 @@ class LocalSymbolsSuite extends FunSuite {
          |  AnyRef => scala/AnyRef#
          |  age => local1
          |  Int => scala/Int#
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
+
   }
 
   test("#1591: A in the same file: occurrences") {
-    assertNoDiff(
-      occurrences(sameFile),
+    assertOccurrences(sameFile) {
       """|[0:8..0:9): c <= c/
          |[1:7..1:11): Defs => c/Defs.
          |[2:7..2:11): Defs <= c/Defs.
@@ -456,14 +488,12 @@ class LocalSymbolsSuite extends FunSuite {
          |[28:18..28:19): e => c/Defs.e.
          |[29:6..29:12): takeFn <= c/Use.takeFn.
          |[29:15..29:19): take => c/Defs.take().
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: A in another file of the run: symbols") {
-    def printed = symbols(joint)
-    assertNoDiff(
-      printed,
+    assertSymbols(joint) {
       """|b/Use. => final object Use extends AnyRef { +16 decls }
          |  AnyRef => scala/AnyRef#
          |b/Use.age. => val method age: Int
@@ -544,13 +574,12 @@ class LocalSymbolsSuite extends FunSuite {
          |local9 => typeparam T
          |local11 => abstract method id: Int
          |  Int => scala/Int#
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: A in another file of the run: occurrences") {
-    assertNoDiff(
-      occurrences(joint),
+    assertOccurrences(joint) {
       """|[0:8..0:9): b <= b/
          |[1:7..1:8): a => a/
          |[1:9..1:13): Defs => a/Defs.
@@ -607,13 +636,12 @@ class LocalSymbolsSuite extends FunSuite {
          |[17:18..17:19): e => a/Defs.e.
          |[18:6..18:12): takeFn <= b/Use.takeFn.
          |[18:15..18:19): take => a/Defs.take().
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: A from a classfile: symbols") {
-    assertNoDiff(
-      symbols(classfile),
+    assertSymbols(classfile) {
       """|b/Use. => final object Use extends AnyRef { +16 decls }
          |  AnyRef => scala/AnyRef#
          |b/Use.age. => val method age: Int
@@ -698,13 +726,12 @@ class LocalSymbolsSuite extends FunSuite {
          |local11 => typeparam T
          |local13 => abstract method id: Int
          |  Int => scala/Int#
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: A from a classfile: occurrences") {
-    assertNoDiff(
-      occurrences(classfile),
+    assertOccurrences(classfile) {
       """|[0:8..0:9): b <= b/
          |[1:7..1:8): a => a/
          |[1:9..1:13): Defs => a/Defs.
@@ -761,8 +788,8 @@ class LocalSymbolsSuite extends FunSuite {
          |[17:18..17:19): e => a/Defs.e.
          |[18:6..18:12): takeFn <= b/Use.takeFn.
          |[18:15..18:19): take => a/Defs.take().
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: A in another file of the run, and A from a classfile")(
@@ -771,8 +798,7 @@ class LocalSymbolsSuite extends FunSuite {
 
   test("#1591: A in another file of the run, with a local of B at the offset of a member of A") {
     val doc = inOneRun(Map("A.scala" -> offsetA), Map("B.scala" -> offsetB), "B.scala")
-    assertNoDiff(
-      symbols(doc),
+    assertSymbols(doc) {
       """|b/Use. => final object Use extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/Use.inferredR. => val method inferredR: C { def y: Int }
@@ -785,8 +811,8 @@ class LocalSymbolsSuite extends FunSuite {
          |  Int => scala/Int#
          |local1 => abstract method y: Int
          |  Int => scala/Int#
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: local names") {
@@ -804,8 +830,7 @@ class LocalSymbolsSuite extends FunSuite {
   test("#1591: two refinements with one member name under one owner, from a classfile: symbols") {
     val doc =
       fromClassfile(Map("Twins.scala" -> twinsA), Map("UseTwins.scala" -> twinsB), "UseTwins.scala")
-    assertNoDiff(
-      symbols(doc),
+    assertSymbols(doc) {
       """|b/UseTwins. => final object UseTwins extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseTwins.pair. => val method pair: Tuple2[AnyRef { def x: Int }, AnyRef { def x: Int }]
@@ -828,15 +853,14 @@ class LocalSymbolsSuite extends FunSuite {
          |  Int => scala/Int#
          |local3 => abstract method x: Int
          |  Int => scala/Int#
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: two refinements with one member name under one owner, in another file of the run: symbols") {
     val doc =
       inOneRun(Map("Twins.scala" -> twinsA), Map("UseTwins.scala" -> twinsB), "UseTwins.scala")
-    assertNoDiff(
-      symbols(doc),
+    assertSymbols(doc) {
       """|b/UseTwins. => final object UseTwins extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseTwins.pair. => val method pair: Tuple2[AnyRef { def x: Int }, AnyRef { def x: Int }]
@@ -859,16 +883,15 @@ class LocalSymbolsSuite extends FunSuite {
          |  Int => scala/Int#
          |local3 => abstract method x: Int
          |  Int => scala/Int#
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   private lazy val mixedClassfile =
     fromClassfile(Map("Mixed.scala" -> mixedA), Map("UseMixed.scala" -> mixedB), "UseMixed.scala")
 
   test("#1591: refinements with one member name under one owner, from a classfile: symbols") {
-    assertNoDiff(
-      symbols(mixedClassfile),
+    assertSymbols(mixedClassfile) {
       """|b/UseMixed. => final object UseMixed extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseMixed.copies. => val method copies: Tuple2[C { def x: Int }, C { def x: Int }]
@@ -896,13 +919,12 @@ class LocalSymbolsSuite extends FunSuite {
          |  Int => scala/Int#
          |local4 => abstract method x: Int
          |  Int => scala/Int#
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: refinements with one member name under one owner, from a classfile: occurrences") {
-    assertNoDiff(
-      occurrences(mixedClassfile),
+    assertOccurrences(mixedClassfile) {
       """|[0:8..0:9): b <= b/
          |[1:7..1:15): UseMixed <= b/UseMixed.
          |[2:6..2:11): types <= b/UseMixed.types.
@@ -919,8 +941,8 @@ class LocalSymbolsSuite extends FunSuite {
          |[4:18..4:24): copies => a/Mixed.copies.
          |[4:25..4:27): _2 => scala/Tuple2#_2.
          |[4:28..4:29): x => local4
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test(
@@ -928,8 +950,7 @@ class LocalSymbolsSuite extends FunSuite {
   ) {
     val doc =
       inOneRun(Map("Mixed.scala" -> mixedA), Map("UseMixed.scala" -> mixedB), "UseMixed.scala")
-    assertNoDiff(
-      symbols(doc),
+    assertSymbols(doc) {
       """|b/UseMixed. => final object UseMixed extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseMixed.copies. => val method copies: Tuple2[C { def x: Int }, C { def x: Int }]
@@ -955,12 +976,9 @@ class LocalSymbolsSuite extends FunSuite {
          |  Int => scala/Int#
          |local3 => abstract method x: Int
          |  Int => scala/Int#
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
-
-  private def summary(doc: s.TextDocument): String = symbols(doc) + "\n----\n" + occurrences(doc) +
-    "\n----\ncollisions " + collisions(doc) + "\ndangling " + dangling(doc)
 
   private val overloadsA = Map(
     "Ov.scala" ->
@@ -982,8 +1000,7 @@ class LocalSymbolsSuite extends FunSuite {
   )
 
   test("#1591: overloads in one refinement, from a classfile") {
-    assertNoDiff(
-      summary(fromClassfile(overloadsA, overloadsB, "UseOv.scala")),
+    assertSummary(fromClassfile(overloadsA, overloadsB, "UseOv.scala")) {
       """|b/UseOv. => final object UseOv extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseOv.i. => val method i: Int
@@ -1019,13 +1036,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: overloads in one refinement, in another file of the run") {
-    assertNoDiff(
-      summary(inOneRun(overloadsA, overloadsB, "UseOv.scala")),
+    assertSummary(inOneRun(overloadsA, overloadsB, "UseOv.scala")) {
       """|b/UseOv. => final object UseOv extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseOv.i. => val method i: Int
@@ -1061,8 +1077,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // `early` is complete only if another file of the run uses it
@@ -1098,8 +1114,7 @@ class LocalSymbolsSuite extends FunSuite {
   )
 
   test("#1591: refinements with one member name, from a classfile, alone") {
-    assertNoDiff(
-      summary(fromClassfile(batchA, batchB, "UseM.scala")),
+    assertSummary(fromClassfile(batchA, batchB, "UseM.scala")) {
       """|b/UseM. => final object UseM extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseM.t. => val method t: Int
@@ -1126,13 +1141,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: refinements with one member name, from a classfile, with a file that uses `early`") {
-    assertNoDiff(
-      summary(fromClassfile(batchA, batchB ++ batchC, "UseM.scala")),
+    assertSummary(fromClassfile(batchA, batchB ++ batchC, "UseM.scala")) {
       """|b/UseM. => final object UseM extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseM.t. => val method t: Int
@@ -1159,8 +1173,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   private val shapesA = Map {
@@ -1203,8 +1217,7 @@ class LocalSymbolsSuite extends FunSuite {
   }
 
   test("#1591: refinements of every shape, from a classfile") {
-    assertNoDiff(
-      summary(fromClassfile(shapesA, shapesB, "UseN.scala")),
+    assertSummary(fromClassfile(shapesA, shapesB, "UseN.scala")) {
       """|b/UseN. => final object UseN extends AnyRef { +11 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseN.alx. => val method alx: Int
@@ -1331,13 +1344,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: refinements of every shape, in another file of the run") {
-    assertNoDiff(
-      summary(inOneRun(shapesA, shapesB, "UseN.scala")),
+    assertSummary(inOneRun(shapesA, shapesB, "UseN.scala")) {
       """|b/UseN. => final object UseN extends AnyRef { +11 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseN.alx. => val method alx: Int
@@ -1462,8 +1474,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // the parent of a nested object holds a copy-prone refinement of the outer object
@@ -1492,7 +1504,7 @@ class LocalSymbolsSuite extends FunSuite {
   test("#1591: a refinement in the parent of a nested object, from a classfile") {
     val doc = fromClassfile(nestedObjectA, nestedObjectB, "UseQ.scala")
     assertNoDiff(
-      occurrences(doc).linesIterator.filter(_.contains(" x ")).mkString("\n"),
+      occurrences(doc, _.contains(" x ")),
       """|[2:25..2:26): x => local0
          |[3:17..3:18): x => local1
          |""".stripMargin,
@@ -1525,8 +1537,7 @@ class LocalSymbolsSuite extends FunSuite {
   )
 
   test("#1591: a self type selected through, in the same file") {
-    assertNoDiff(
-      summary(document(compile(selfA), "S.scala")),
+    assertSummary(document(compile(selfA), "S.scala")) {
       """|a/S# => trait S extends AnyRef { self: AnyRef { def x: Int } => +2 decls }
          |  AnyRef => scala/AnyRef#
          |  x => local0
@@ -1552,13 +1563,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: a self type selected through, from a classfile") {
-    assertNoDiff(
-      summary(fromClassfile(selfA, selfB, "T.scala")),
+    assertSummary(fromClassfile(selfA, selfB, "T.scala")) {
       """|b/T# => trait T extends AnyRef with S { self: AnyRef { def x: Int } => +2 decls }
          |  AnyRef => scala/AnyRef#
          |  S => a/S#
@@ -1589,13 +1599,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: a self type selected through, in another file of the run") {
-    assertNoDiff(
-      summary(inOneRun(selfA, selfB, "T.scala")),
+    assertSummary(inOneRun(selfA, selfB, "T.scala")) {
       """|b/T# => trait T extends AnyRef with S { self: AnyRef { def x: Int } => +2 decls }
          |  AnyRef => scala/AnyRef#
          |  S => a/S#
@@ -1626,8 +1635,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   private val boxA = Map(
@@ -1650,8 +1659,7 @@ class LocalSymbolsSuite extends FunSuite {
 
   test("#1591: a refinement in a generic class at two type arguments, in the same file") {
     val code = boxA("Box.scala") + boxB("UseBox.scala").replace("package b\n", "")
-    assertNoDiff(
-      summary(document(compile(Map("Box.scala" -> code)), "Box.scala")),
+    assertSummary(document(compile(Map("Box.scala" -> code)), "Box.scala")) {
       """|a/Box# => class Box[T] extends AnyRef { +2 decls }
          |  T => a/Box#[T]
          |  AnyRef => scala/AnyRef#
@@ -1699,8 +1707,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: a refinement in a generic class at two type arguments, in the same file, after a use") {
@@ -1713,8 +1721,7 @@ class LocalSymbolsSuite extends FunSuite {
          |}
          |class Box[T] { val v: { def get: T } = ??? }
          |""".stripMargin
-    assertNoDiff(
-      summary(document(compile(Map("Box.scala" -> code)), "Box.scala")),
+    assertSummary(document(compile(Map("Box.scala" -> code)), "Box.scala")) {
       """|a/Box# => class Box[T] extends AnyRef { +2 decls }
          |  T => a/Box#[T]
          |  AnyRef => scala/AnyRef#
@@ -1760,13 +1767,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: a refinement in a generic class at two type arguments, from a classfile") {
-    assertNoDiff(
-      summary(fromClassfile(boxA, boxB, "UseBox.scala")),
+    assertSummary(fromClassfile(boxA, boxB, "UseBox.scala")) {
       """|b/UseBox. => final object UseBox extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseBox.i. => val method i: Int
@@ -1800,13 +1806,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: a refinement in a generic class at two type arguments, in another file of the run") {
-    assertNoDiff(
-      summary(inOneRun(boxA, boxB, "UseBox.scala")),
+    assertSummary(inOneRun(boxA, boxB, "UseBox.scala")) {
       """|b/UseBox. => final object UseBox extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseBox.i. => val method i: Int
@@ -1838,8 +1843,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // subclasses narrow the refinement to classes of their own
@@ -1868,8 +1873,7 @@ class LocalSymbolsSuite extends FunSuite {
   }
 
   test("#1591: a refinement in a generic trait, and classes in its subclasses, from a classfile") {
-    assertNoDiff(
-      summary(fromClassfile(getterA, getterB, "UseF.scala")),
+    assertSummary(fromClassfile(getterA, getterB, "UseF.scala")) {
       """|b/UseF. => final object UseF extends AnyRef { +4 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseF.fi. => val method fi: Int
@@ -1923,13 +1927,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: a refinement in a generic trait, and classes in its subclasses, in another file of the run") {
-    assertNoDiff(
-      summary(inOneRun(getterA, getterB, "UseF.scala")),
+    assertSummary(inOneRun(getterA, getterB, "UseF.scala")) {
       """|b/UseF. => final object UseF extends AnyRef { +4 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseF.fi. => val method fi: Int
@@ -1981,8 +1984,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // a pattern skolemizes an existential of A at the position of the existential
@@ -2072,8 +2075,7 @@ class LocalSymbolsSuite extends FunSuite {
   )
 
   test("an existential of another file of the run, in a pattern") {
-    assertNoDiff(
-      summary(inOneRun(existentialA, patternB, "UseE.scala")),
+    assertSummary(inOneRun(existentialA, patternB, "UseE.scala")) {
       """|b/UseE. => final object UseE extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseE.m(). => method m: Any
@@ -2100,13 +2102,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an existential of another file of the run, in a type, then in a pattern") {
-    assertNoDiff(
-      summary(inOneRun(existentialA, typeThenPatternB, "UseE.scala")),
+    assertSummary(inOneRun(existentialA, typeThenPatternB, "UseE.scala")) {
       """|b/UseE. => final object UseE extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseE.m(). => method m: Any
@@ -2141,13 +2142,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an existential of another file of the run, in a pattern, then in a type") {
-    assertNoDiff(
-      summary(inOneRun(existentialA, patternThenTypeB, "UseE.scala")),
+    assertSummary(inOneRun(existentialA, patternThenTypeB, "UseE.scala")) {
       """|b/UseE. => final object UseE extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseE.m(). => method m: Any
@@ -2182,13 +2182,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an existential of another file of the run, in two patterns") {
-    assertNoDiff(
-      summary(inOneRun(existentialA, twoPatternsB, "UseE.scala")),
+    assertSummary(inOneRun(existentialA, twoPatternsB, "UseE.scala")) {
       """|b/UseE. => final object UseE extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseE.m(). => method m: Any
@@ -2232,13 +2231,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an existential of the same file, in a type, then in a pattern") {
-    assertNoDiff(
-      summary(document(compile(typeThenPatternE), "E.scala")),
+    assertSummary(document(compile(typeThenPatternE), "E.scala")) {
       """|a/E. => final object E extends AnyRef { +4 decls }
          |  AnyRef => scala/AnyRef#
          |a/E.W# => class W[T] extends AnyRef { +3 decls }
@@ -2297,13 +2295,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an existential of the same file, in a pattern, then in a type") {
-    assertNoDiff(
-      summary(document(compile(patternThenTypeE), "E.scala")),
+    assertSummary(document(compile(patternThenTypeE), "E.scala")) {
       """|a/E. => final object E extends AnyRef { +4 decls }
          |  AnyRef => scala/AnyRef#
          |a/E.W# => class W[T] extends AnyRef { +3 decls }
@@ -2362,13 +2359,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an existential of the same file, in two patterns") {
-    assertNoDiff(
-      summary(document(compile(twoPatternsE), "E.scala")),
+    assertSummary(document(compile(twoPatternsE), "E.scala")) {
       """|a/E. => final object E extends AnyRef { +4 decls }
          |  AnyRef => scala/AnyRef#
          |a/E.W# => class W[T] extends AnyRef { +3 decls }
@@ -2434,13 +2430,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an existential from a classfile, in a pattern") {
-    assertNoDiff(
-      summary(fromClassfile(existentialA, patternB, "UseE.scala")),
+    assertSummary(fromClassfile(existentialA, patternB, "UseE.scala")) {
       """|b/UseE. => final object UseE extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseE.m(). => method m: Any
@@ -2467,13 +2462,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an existential from a classfile, in a type, then in a pattern") {
-    assertNoDiff(
-      summary(fromClassfile(existentialA, typeThenPatternB, "UseE.scala")),
+    assertSummary(fromClassfile(existentialA, typeThenPatternB, "UseE.scala")) {
       """|b/UseE. => final object UseE extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseE.m(). => method m: Any
@@ -2508,13 +2502,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List(local0)
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an existential from a classfile, in a pattern, then in a type") {
-    assertNoDiff(
-      summary(fromClassfile(existentialA, patternThenTypeB, "UseE.scala")),
+    assertSummary(fromClassfile(existentialA, patternThenTypeB, "UseE.scala")) {
       """|b/UseE. => final object UseE extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseE.m(). => method m: Any
@@ -2549,13 +2542,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List(local3)
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an existential from a classfile, in two patterns") {
-    assertNoDiff(
-      summary(fromClassfile(existentialA, twoPatternsB, "UseE.scala")),
+    assertSummary(fromClassfile(existentialA, twoPatternsB, "UseE.scala")) {
       """|b/UseE. => final object UseE extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseE.m(). => method m: Any
@@ -2600,8 +2592,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("a SAM lambda, in the same file") {
@@ -2621,8 +2613,7 @@ class LocalSymbolsSuite extends FunSuite {
       case _ => Nil
     }
     assertEquals(decls, List("local1"))
-    assertNoDiff(
-      summary(doc),
+    assertSummary(doc) {
       """|a/O. => final object O extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |a/O.S# => trait S extends AnyRef { +1 decls }
@@ -2667,8 +2658,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // the trees of a macro expansion have the position of its call
@@ -2700,8 +2691,7 @@ class LocalSymbolsSuite extends FunSuite {
   )
 
   test("#1591: two refinements of one macro expansion") {
-    assertNoDiff(
-      summary(fromClassfile(macroA, macroB, "U.scala")),
+    assertSummary(fromClassfile(macroA, macroB, "U.scala")) {
       """|b/U. => final object U extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
          |b/U.i. => val method i: Int
@@ -2749,8 +2739,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   private val macroOneA = Map {
@@ -2779,8 +2769,7 @@ class LocalSymbolsSuite extends FunSuite {
            |}
            |""".stripMargin,
     )
-    assertNoDiff(
-      summary(fromClassfile(macroOneA, b, "U.scala")),
+    assertSummary(fromClassfile(macroOneA, b, "U.scala")) {
       """|b/U. => final object U extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/U.i. => val method i: Int
@@ -2810,8 +2799,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: two refinements of one macro expansion, in another file of the run") {
@@ -2831,8 +2820,7 @@ class LocalSymbolsSuite extends FunSuite {
            |}
            |""".stripMargin,
     )
-    assertNoDiff(
-      summary(fromClassfile(macroA, b, "U.scala")),
+    assertSummary(fromClassfile(macroA, b, "U.scala")) {
       """|b/U. => final object U extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/U.i. => val method i: Int
@@ -2862,8 +2850,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("a local outside a document") {
@@ -2922,10 +2910,7 @@ class LocalSymbolsSuite extends FunSuite {
     val code = "object O { def f = { val y = 0; val x = 1; x + y } }"
     val typed = new Typed(code)
     val before = typed.locals("x")
-    val doc = typed.document
-    assertEquals(before ++ typed.locals("x"), List("local0", "local1"))
-    assertNoDiff(
-      symbols(doc),
+    assertSymbols(typed) {
       """|_empty_/O. => final object O extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
          |_empty_/O.f(). => method f: Int
@@ -2934,8 +2919,9 @@ class LocalSymbolsSuite extends FunSuite {
          |  Int => scala/Int#
          |local1 => val local x: Int
          |  Int => scala/Int#
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
+    assertEquals(before ++ typed.locals("x"), List("local0", "local1"))
   }
 
   // the presentation compiler leaves a function untyped if its application fails
@@ -3011,8 +2997,7 @@ class LocalSymbolsSuite extends FunSuite {
   }
 
   test("#1591: a refinement that refers to a local class of its method, in another file of the run") {
-    assertNoDiff(
-      summary(inOneRun(escapeA, escapeB, "UseEsc.scala")),
+    assertSummary(inOneRun(escapeA, escapeB, "UseEsc.scala")) {
       """|b/UseEsc. => final object UseEsc extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseEsc.x. => val method x: Int
@@ -3053,13 +3038,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: a refinement that refers to a local class of its method, from a classfile") {
-    assertNoDiff(
-      summary(fromClassfile(escapeA, escapeB, "UseEsc.scala")),
+    assertSummary(fromClassfile(escapeA, escapeB, "UseEsc.scala")) {
       """|b/UseEsc. => final object UseEsc extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseEsc.x. => val method x: Int
@@ -3097,8 +3081,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // a refinement in the parameter of a generic case class, which scalac copies into `apply`
@@ -3131,8 +3115,7 @@ class LocalSymbolsSuite extends FunSuite {
   }
 
   test("#1591: a refinement in the parameter of a generic case class, in another file of the run") {
-    assertNoDiff(
-      summary(inOneRun(caseA, caseB, "UseK.scala")),
+    assertSummary(inOneRun(caseA, caseB, "UseK.scala")) {
       """|b/UseK. => final object UseK extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseK.f. => val method f: Function1[AnyRef { def get: T }, K[Int]]
@@ -3166,13 +3149,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: a refinement in the parameter of a generic case class, from a classfile") {
-    assertNoDiff(
-      summary(fromClassfile(caseA, caseB, "UseK.scala")),
+    assertSummary(fromClassfile(caseA, caseB, "UseK.scala")) {
       """|b/UseK. => final object UseK extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseK.f. => val method f: Function1[AnyRef { def get: Int }, K[Int]]
@@ -3207,8 +3189,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // refinements in parameters that scalac copies into synthetic methods at the same position
@@ -3264,8 +3246,7 @@ class LocalSymbolsSuite extends FunSuite {
   }
 
   test("#1591: refinements in parameters that scalac copies, in another file of the run") {
-    assertNoDiff(
-      summary(inOneRun(copiesA, copiesB, "UseM.scala")),
+    assertSummary(inOneRun(copiesA, copiesB, "UseM.scala")) {
       """|b/UseM. => final object UseM extends AnyRef { +5 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseM.d. => val method d: Int
@@ -3333,13 +3314,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("#1591: refinements in parameters that scalac copies, from a classfile") {
-    assertNoDiff(
-      summary(fromClassfile(copiesA, copiesB, "UseM.scala")),
+    assertSummary(fromClassfile(copiesA, copiesB, "UseM.scala")) {
       """|b/UseM. => final object UseM extends AnyRef { +5 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseM.d. => val method d: Int
@@ -3407,8 +3387,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // an existential in the parameter of a case class, which scalac copies into `apply`
@@ -3449,8 +3429,7 @@ class LocalSymbolsSuite extends FunSuite {
   }
 
   test("an existential in the parameter of a case class, in another file of the run") {
-    assertNoDiff(
-      summary(inOneRun(caseExistentialA, caseExistentialB, "UseX.scala")),
+    assertSummary(inOneRun(caseExistentialA, caseExistentialB, "UseX.scala")) {
       """|b/UseX. => final object UseX extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseX.g. => val method g: Int
@@ -3485,13 +3464,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an existential in the parameter of a case class, from a classfile") {
-    assertNoDiff(
-      summary(fromClassfile(caseExistentialA, caseExistentialB, "UseX.scala")),
+    assertSummary(fromClassfile(caseExistentialA, caseExistentialB, "UseX.scala")) {
       """|b/UseX. => final object UseX extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |b/UseX.g. => val method g: Int
@@ -3528,8 +3506,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // the type parameters of local classes, which scalac copies into synthetic methods
@@ -3936,7 +3914,7 @@ class LocalSymbolsSuite extends FunSuite {
 
   test("references to a val parameter of a local class and to binders of a for comprehension") {
     assertNoDiff(
-      occurrences(localCopiesDoc).linesIterator.filter(_.contains("local")).mkString("\n"),
+      occurrences(localCopiesDoc, _.contains("local")),
       """|[2:18..2:20): kp <= local0
          |[2:20..2:20):  <= local2
          |[2:25..2:26): a <= local1
@@ -3969,8 +3947,7 @@ class LocalSymbolsSuite extends FunSuite {
        |""".stripMargin
 
   test("binders of for comprehensions") {
-    assertNoDiff(
-      summary(document(compile(Map("F.scala" -> forBinders)), "F.scala")),
+    assertSummary(document(compile(Map("F.scala" -> forBinders)), "F.scala")) {
       """|a/F. => final object F extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
          |a/F.f(). => method f: Unit
@@ -4018,8 +3995,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // a local case class that escapes its method in a refinement
@@ -4082,7 +4059,7 @@ class LocalSymbolsSuite extends FunSuite {
 
   test("references to the binder of a partial function literal") {
     assertNoDiff(
-      occurrences(localDefinitionsDoc).linesIterator.filter(_.contains("local")).mkString("\n"),
+      occurrences(localDefinitionsDoc, _.contains("local")),
       """|[3:18..3:20): kb <= local0
          |[3:21..3:21):  <= local1
          |[3:41..3:42): x <= local2
@@ -4105,7 +4082,7 @@ class LocalSymbolsSuite extends FunSuite {
     val doc = document(compile(Map("L.scala" -> localClasses)), "L.scala")
     // number the locals in the order they appear, as `infos` does
     val numbers = new mutable.HashMap[String, Int]
-    val lines = occurrences(doc).linesIterator.filter(_.contains("local")).mkString("\n")
+    val lines = occurrences(doc, _.contains("local"))
     assertNoDiff(
       Local.replaceAllIn(lines, m => "local" + numbers.getOrElseUpdate(m.matched, numbers.size)),
       """|[3:15..3:16): k <= local0
@@ -4160,8 +4137,7 @@ class LocalSymbolsSuite extends FunSuite {
        |""".stripMargin
 
   test("a local method with a default argument and a type parameter") {
-    assertNoDiff(
-      summary(document(compile(Map("DA.scala" -> localDefault)), "DA.scala")),
+    assertSummary(document(compile(Map("DA.scala" -> localDefault)), "DA.scala")) {
       """|a/DA. => final object DA extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
          |a/DA.f(). => method f: Int
@@ -4193,8 +4169,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // a refinement in the bound of a type parameter of a method
@@ -4209,8 +4185,7 @@ class LocalSymbolsSuite extends FunSuite {
   )
 
   test("#1591: a refinement in the bound of a type parameter, in the same file") {
-    assertNoDiff(
-      summary(document(compile(boundA), "TB.scala")),
+    assertSummary(document(compile(boundA), "TB.scala")) {
       """|a/TB. => final object TB extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |a/TB.f(). => method f[A <: AnyRef { def x: Int }](a: A): Int
@@ -4268,8 +4243,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // a macro that expands its argument twice
@@ -4297,8 +4272,7 @@ class LocalSymbolsSuite extends FunSuite {
            |}
            |""".stripMargin,
     )
-    assertNoDiff(
-      summary(fromClassfile(twiceA, b, "U.scala")),
+    assertSummary(fromClassfile(twiceA, b, "U.scala")) {
       """|b/U. => final object U extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
          |b/U.t. => val method t: Tuple2[Int, Int]
@@ -4318,8 +4292,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   // the errors of a run that compiles `sources`, with the plugin
@@ -4393,8 +4367,7 @@ class LocalSymbolsSuite extends FunSuite {
          |  }
          |}
          |""".stripMargin
-    assertNoDiff(
-      summary(document(compile(Map("P.scala" -> code)), "P.scala")),
+    assertSummary(document(compile(Map("P.scala" -> code)), "P.scala")) {
       """|local0 => abstract method get: T
          |  T => p/O.F#[T]
          |local1 => abstract method get: T
@@ -4551,8 +4524,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   private val escapingClassA =
@@ -4657,8 +4630,7 @@ class LocalSymbolsSuite extends FunSuite {
        |""".stripMargin
 
   test("an escaping local class with a val parameter, in the same file") {
-    assertNoDiff(
-      summary(document(compile(Map("A.scala" -> escapingClassSame)), "A.scala")),
+    assertSummary(document(compile(Map("A.scala" -> escapingClassSame)), "A.scala")) {
       """|a/A. => final object A extends AnyRef { +4 decls }
          |  AnyRef => scala/AnyRef#
          |a/A.p(). => method p: AnyRef { val a: Int; def m: Int }
@@ -4710,13 +4682,14 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an escaping local class with a val parameter, in another file of the run") {
-    assertNoDiff(
-      summary(inOneRun(Map("A.scala" -> escapingClassA), Map("B.scala" -> escapingClassB), "B.scala")),
+    assertSummary(
+      inOneRun(Map("A.scala" -> escapingClassA), Map("B.scala" -> escapingClassB), "B.scala"),
+    ) {
       """|b/B. => final object B extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
          |b/B.v. => val method v: AnyRef { val a: Int; def m: Int }
@@ -4751,15 +4724,14 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("an escaping local class with a val parameter, from a classfile") {
-    assertNoDiff(
-      summary(
-        fromClassfile(Map("A.scala" -> escapingClassA), Map("B.scala" -> escapingClassB), "B.scala"),
-      ),
+    assertSummary(
+      fromClassfile(Map("A.scala" -> escapingClassA), Map("B.scala" -> escapingClassB), "B.scala"),
+    ) {
       """|b/B. => final object B extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
          |b/B.v. => val method v: AnyRef { val def a: Int; def m: Int }
@@ -4794,13 +4766,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("default arguments of refinement members, in the same file") {
-    assertNoDiff(
-      summary(document(compile(Map("A.scala" -> refinementDefaultsSame)), "A.scala")),
+    assertSummary(document(compile(Map("A.scala" -> refinementDefaultsSame)), "A.scala")) {
       """|a/A. => final object A extends AnyRef { +4 decls }
          |  AnyRef => scala/AnyRef#
          |a/A.m. => val method m: AnyRef { def g(j: Int): Int; def g$default$1: Int @uncheckedVariance; def k[T](t: T, u: Int): T; def k$default$2[T]: Int @uncheckedVariance }
@@ -4885,17 +4856,16 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("default arguments of refinement members, in another file of the run") {
-    assertNoDiff(
-      summary(inOneRun(
-        Map("A.scala" -> refinementDefaultsA),
-        Map("B.scala" -> refinementDefaultsB),
-        "B.scala",
-      )),
+    assertSummary(inOneRun(
+      Map("A.scala" -> refinementDefaultsA),
+      Map("B.scala" -> refinementDefaultsB),
+      "B.scala",
+    )) {
       """|b/B. => final object B extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
          |b/B.m. => val method m: AnyRef { def g(j: Int): Int; def g$default$1: Int @uncheckedVariance; def k[T](t: T, u: Int): T; def k$default$2[T]: Int @uncheckedVariance }
@@ -4955,17 +4925,16 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("default arguments of refinement members, from a classfile") {
-    assertNoDiff(
-      summary(fromClassfile(
-        Map("A.scala" -> refinementDefaultsA),
-        Map("B.scala" -> refinementDefaultsB),
-        "B.scala",
-      )),
+    assertSummary(fromClassfile(
+      Map("A.scala" -> refinementDefaultsA),
+      Map("B.scala" -> refinementDefaultsB),
+      "B.scala",
+    )) {
       """|b/B. => final object B extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
          |b/B.m. => val method m: AnyRef { def g(j: Int): Int; def g$default$1: Int; def k[T](t: T, u: Int): T; def k$default$2[T]: Int }
@@ -5024,13 +4993,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("refinements with a type member, in the same file") {
-    assertNoDiff(
-      summary(document(compile(Map("A.scala" -> typeMemberSame)), "A.scala")),
+    assertSummary(document(compile(Map("A.scala" -> typeMemberSame)), "A.scala")) {
       """|a/A. => final object A extends AnyRef { +5 decls }
          |  AnyRef => scala/AnyRef#
          |a/A.g. => val method g: r.T
@@ -5097,13 +5065,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("refinements with a type member, in another file of the run") {
-    assertNoDiff(
-      summary(inOneRun(Map("A.scala" -> typeMemberA), Map("B.scala" -> typeMemberB), "B.scala")),
+    assertSummary(inOneRun(Map("A.scala" -> typeMemberA), Map("B.scala" -> typeMemberB), "B.scala")) {
       """|b/B. => final object B extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
          |b/B.g. => val method g: r.T
@@ -5151,13 +5118,14 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("refinements with a type member, from a classfile") {
-    assertNoDiff(
-      summary(fromClassfile(Map("A.scala" -> typeMemberA), Map("B.scala" -> typeMemberB), "B.scala")),
+    assertSummary(
+      fromClassfile(Map("A.scala" -> typeMemberA), Map("B.scala" -> typeMemberB), "B.scala"),
+    ) {
       """|b/B. => final object B extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
          |b/B.g. => val method g: r.T
@@ -5205,13 +5173,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("a local method with named and default arguments") {
-    assertNoDiff(
-      summary(document(compile(Map("A.scala" -> namedArguments)), "A.scala")),
+    assertSummary(document(compile(Map("A.scala" -> namedArguments)), "A.scala")) {
       """|a/A. => final object A extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |a/A.f(). => method f: Int
@@ -5251,13 +5218,12 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("local pattern values and a lazy val") {
-    assertNoDiff(
-      summary(document(compile(Map("A.scala" -> localPatterns)), "A.scala")),
+    assertSummary(document(compile(Map("A.scala" -> localPatterns)), "A.scala")) {
       """|a/A. => final object A extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
          |a/A.f(). => method f: Int
@@ -5288,8 +5254,8 @@ class LocalSymbolsSuite extends FunSuite {
          |----
          |collisions List()
          |dangling List()
-         |""".stripMargin,
-    )
+         |""".stripMargin
+    }
   }
 
   test("binders of a for comprehension and of a partial function, outside a document and in it") {
@@ -5301,13 +5267,7 @@ class LocalSymbolsSuite extends FunSuite {
          |""".stripMargin
     val typed = new Typed(code)
     val before = typed.locals("x") ++ typed.locals("x1")
-    val doc = typed.document
-    assertEquals(
-      before ++ typed.locals("x") ++ typed.locals("x1"),
-      List("local0", "local0", "local1", "local2", "local0", "local0", "local4", "local9"),
-    )
-    assertNoDiff(
-      symbols(doc),
+    assertSymbols(typed) {
       if (ScalaVersion.is212)
         """|_empty_/O. => final object O extends AnyRef { +2 decls }
            |  AnyRef => scala/AnyRef#
@@ -5391,7 +5351,11 @@ class LocalSymbolsSuite extends FunSuite {
            |  Int => scala/Int#
            |local9 => synthetic param x1: Int
            |  Int => scala/Int#
-           |""".stripMargin,
+           |""".stripMargin
+    }
+    assertEquals(
+      before ++ typed.locals("x") ++ typed.locals("x1"),
+      List("local0", "local0", "local1", "local2", "local0", "local0", "local4", "local9"),
     )
   }
 
@@ -5430,9 +5394,9 @@ class LocalSymbolsSuite extends FunSuite {
 
   private def occurrencesAndInfosOfT(b: String): String = {
     val doc = document(compile(Map("B.scala" -> b)), "B.scala")
-    val occurrencesOfT = occurrences(doc).linesIterator.filter(_.contains("): t "))
-    val infosOfT = symbols(doc).linesIterator.filter(InfoOfT.pattern.matcher(_).matches)
-    (occurrencesOfT ++ infosOfT).mkString("\n")
+    val occurrencesOfT = occurrences(doc, _.contains("): t "))
+    val infosOfT = symbols(doc, InfoOfT.pattern.matcher(_).matches)
+    Seq(occurrencesOfT, infosOfT).mkString("\n")
   }
 
   for ((defn, use, expected) <- List(
