@@ -2955,9 +2955,9 @@ class LocalSymbolsSuite extends FunSuite {
          |  Int => scala/Int#
          |local0 => class C extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
-         |local1 => val method a: Int
+         |local1 => val param a: Int
          |  Int => scala/Int#
-         |local2 => primary ctor <init>(val def a: Int)
+         |local2 => primary ctor <init>(val a: Int)
          |  a => local1
          |  Int => scala/Int#
          |""".stripMargin
@@ -2997,7 +2997,7 @@ class LocalSymbolsSuite extends FunSuite {
          |  AnyRef => scala/AnyRef#
          |_empty_/O.f(). => method f: Int
          |  Int => scala/Int#
-         |local0 => val local v: Int
+         |local0 => var local v: Int
          |  Int => scala/Int#
          |""".stripMargin,
     )
@@ -3166,9 +3166,9 @@ class LocalSymbolsSuite extends FunSuite {
          |  Int => scala/Int#
          |local4 => default param x: Int
          |  Int => scala/Int#
-         |local5 => val local t: Int
+         |local5 => var local t: Int
          |  Int => scala/Int#
-         |local6 => val local u: Int
+         |local6 => var local u: Int
          |  Int => scala/Int#
          |""".stripMargin
     }
@@ -7293,19 +7293,19 @@ class LocalSymbolsSuite extends FunSuite {
             |named by-name argument: t <= local26 ($k local t); u <= local27 ($k local u); t => local26; u => local27
             |named argument of a name in scope: t <= local28 ($k local t); u <= local29 ($k local u); t => local28; u => local29
             |argument of an ambiguous view: t <= local30 ($k local t); u <= local31 ($k local u); t => local30; u => local31
-            |argument of an eta-expansion: t <= local32 (val local t); u <= local33 (val local u); t => local32; u => local33
+            |argument of an eta-expansion: t <= local32 ($k local t); u <= local33 ($k local u); t => local32; u => local33
             |argument of a parent: t <= local34 ($k local t); u <= local35 ($k local u); t => local34; u => local35
             |argument of a generic parent: t <= local36 ($k local t); u <= local37 ($k local u); t => local36; u => local37
             |argument of a parent annotation: t <= local38 ($k local t); u <= local39 ($k local u); t => local38; u => local39
             |argument of a self-constructor call: t <= local40 ($k local t); u <= local41 ($k local u); t => local40; u => local41
             |multiple definitions in a template: t <= local42 ($k local t); u <= local43 ($k local u); t => local42; u => local43
             |multiple definitions in a block: t <= local44 ($k local t); u <= local45 ($k local u); t => local44; u => local45
-            |guard of a partial function: t <= local46 (val local t); u <= local47 (val local u); t => local46; u => local47
+            |guard of a partial function: t <= local46 ($k local t); u <= local47 ($k local u); t => local46; u => local47
             |guard of a function of cases: t <= local48 ($k local t); u <= local49 ($k local u); t => local48; u => local49
             |right-hand side of an assignment operator: t <= local50 ($k local t); u <= local51 ($k local u); t => local50; u => local51
-            |index of an update operator: t <= local52 (val local t); u <= local53 (val local u); t => local52; u => local53
-            |array of an update operator: t <= local54 (val local t); u <= local55 (val local u); t => local54; u => local55
-            |qualifier of an assignment operator: t <= local56 (val local t); u <= local57 (val local u); t => local56; u => local57
+            |index of an update operator: t <= local52 ($k local t); u <= local53 ($k local u); t => local52; u => local53
+            |array of an update operator: t <= local54 ($k local t); u <= local55 ($k local u); t => local54; u => local55
+            |qualifier of an assignment operator: t <= local56 ($k local t); u <= local57 ($k local u); t => local56; u => local57
             |generator of a for: t <= local58 ($k local t); u <= local59 ($k local u); t => local58; u => local59
             |value definition of a for: t <= local60 ($k local t); u <= local61 ($k local u); t => local60; u => local61
             |guard of a for: t <= local62 ($k local t); u <= local63 ($k local u); t => local62; u => local63
@@ -7337,19 +7337,19 @@ class LocalSymbolsSuite extends FunSuite {
             |named by-name argument: t <= local26 ($k local t); u <= local27 ($k local u); t => local26; u => local27
             |named argument of a name in scope: t <= local28 ($k local t); u <= local29 ($k local u); t => local28; u => local29
             |argument of an ambiguous view: t <= local30 ($k local t); u <= local31 ($k local u); t => local30; u => local31
-            |argument of an eta-expansion: t <= local32 (val local t); u <= local33 (val local u); t => local32; u => local33
+            |argument of an eta-expansion: t <= local32 ($k local t); u <= local33 ($k local u); t => local32; u => local33
             |argument of a parent: t <= local34 ($k local t); u <= local35 ($k local u); t => local34; u => local35
             |argument of a generic parent: t <= local36 ($k local t); u <= local37 ($k local u); t => local36; u => local37
             |argument of a parent annotation: t <= local38 ($k local t); u <= local39 ($k local u); t => local38; u => local39
             |argument of a self-constructor call: t <= local40 ($k local t); u <= local41 ($k local u); t => local40; u => local41
             |multiple definitions in a template: t <= local42 ($k local t); u <= local43 ($k local u); t => local42; u => local43
             |multiple definitions in a block: t <= local44 ($k local t); u <= local45 ($k local u); t => local44; u => local45
-            |guard of a partial function: t <= local46 (val local t); u <= local47 (val local u); t => local46; u => local47
+            |guard of a partial function: t <= local46 ($k local t); u <= local47 ($k local u); t => local46; u => local47
             |guard of a function of cases: t <= local48 ($k local t); u <= local49 ($k local u); t => local48; u => local49
             |right-hand side of an assignment operator: t <= local50 ($k local t); u <= local51 ($k local u); t => local50; u => local51
-            |index of an update operator: t <= local52 (val local t); u <= local53 (val local u); t => local52; u => local53
-            |array of an update operator: t <= local54 (val local t); u <= local55 (val local u); t => local54; u => local55
-            |qualifier of an assignment operator: t <= local56 (val local t); u <= local57 (val local u); t => local56; u => local57
+            |index of an update operator: t <= local52 ($k local t); u <= local53 ($k local u); t => local52; u => local53
+            |array of an update operator: t <= local54 ($k local t); u <= local55 ($k local u); t => local54; u => local55
+            |qualifier of an assignment operator: t <= local56 ($k local t); u <= local57 ($k local u); t => local56; u => local57
             |generator of a for: t <= local58 ($k local t); u <= local59 ($k local u); t => local58; u => local59
             |value definition of a for: t <= local60 ($k local t); u <= local61 ($k local u); t => local60; u => local61
             |guard of a for: t <= local62 ($k local t); u <= local63 ($k local u); t => local62; u => local63
@@ -7381,19 +7381,19 @@ class LocalSymbolsSuite extends FunSuite {
             |named by-name argument: t <= local26 ($k local t); u <= local27 ($k local u); t => local26; u => local27
             |named argument of a name in scope: t <= local28 ($k local t); u <= local29 ($k local u); t => local28; u => local29
             |argument of an ambiguous view: t <= local30 ($k local t); u <= local31 ($k local u); t => local30; u => local31
-            |argument of an eta-expansion: t <= local32 (val local t); u <= local33 (val local u); t => local32; u => local33
+            |argument of an eta-expansion: t <= local32 ($k local t); u <= local33 ($k local u); t => local32; u => local33
             |argument of a parent: t <= local34 ($k local t); u <= local35 ($k local u); t => local34; u => local35
             |argument of a generic parent: t <= local36 ($k local t); u <= local37 ($k local u); t => local36; u => local37
             |argument of a parent annotation: t <= local38 ($k local t); u <= local39 ($k local u); t => local38; u => local39
             |argument of a self-constructor call: t <= local40 ($k local t); u <= local41 ($k local u); t => local40; u => local41
             |multiple definitions in a template: t <= local42 ($k local t); u <= local43 ($k local u); t => local42; u => local43
             |multiple definitions in a block: t <= local44 ($k local t); u <= local45 ($k local u); t => local44; u => local45
-            |guard of a partial function: t <= local46 (val local t); u <= local47 (val local u); t => local46; u => local47
+            |guard of a partial function: t <= local46 ($k local t); u <= local47 ($k local u); t => local46; u => local47
             |guard of a function of cases: t <= local48 ($k local t); u <= local49 ($k local u); t => local48; u => local49
             |right-hand side of an assignment operator: t <= local50 ($k local t); u <= local51 ($k local u); t => local50; u => local51
-            |index of an update operator: t <= local52 (val local t); u <= local53 (val local u); t => local52; u => local53
-            |array of an update operator: t <= local54 (val local t); u <= local55 (val local u); t => local54; u => local55
-            |qualifier of an assignment operator: t <= local56 (val local t); u <= local57 (val local u); t => local56; u => local57
+            |index of an update operator: t <= local52 ($k local t); u <= local53 ($k local u); t => local52; u => local53
+            |array of an update operator: t <= local54 ($k local t); u <= local55 ($k local u); t => local54; u => local55
+            |qualifier of an assignment operator: t <= local56 ($k local t); u <= local57 ($k local u); t => local56; u => local57
             |generator of a for: t <= local58 ($k local t); u <= local59 ($k local u); t => local58; u => local59
             |value definition of a for: t <= local60 ($k local t); u <= local61 ($k local u); t => local60; u => local61
             |guard of a for: t <= local62 ($k local t); u <= local63 ($k local u); t => local62; u => local63

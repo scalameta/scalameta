@@ -563,19 +563,27 @@ trait SymbolOps {
     var addedParameterSymbols: List[g.Symbol] = Nil // contains only added parameters
     var symbols: List[g.Symbol] = Nil // contains all other symbols
     var representative: g.Symbol = _ // contains a representative among `symbols`
+    private var representativeRank = Int.MaxValue // the rank of `representative`, lower is better
 
-    // we prefer certain symbols (such as non-synthetic ones) as the representative
-    def add(sym: g.Symbol, preferAsRepresentative: Boolean, isPatternValue: Boolean): Unit = {
+    /* The representative is the eligible symbol of the lowest rank, then of the lowest id, so the
+     * order of the offers does not change it. `syntheticDepth` counts the generated code around
+     * `sym`. */
+    def add(sym: g.Symbol, syntheticDepth: Int, isPatternValue: Boolean): Unit = {
       if (sym.isAddedParameter) {
         if (!addedParameterSymbols.contains(sym))
           addedParameterSymbols = sym :: addedParameterSymbols
         return
       }
-      if (!symbols.contains(sym)) symbols = sym :: symbols else if (!isPatternValue) return
+      if (!symbols.contains(sym)) symbols = sym :: symbols
+      // rank a constructor parameter above its accessor, and an original above its focused copies
+      val symRank = syntheticDepth << 2 | (if (sym.isParamAccessor) 2 else 0) |
+        (if (isPatternValue || sym.pos.isOpaqueRange) 0 else 1)
+      if (symRank > representativeRank) return
       val rep = representative
-      if ((rep ne null) && !preferAsRepresentative) return
+      if ((rep ne null) && symRank == representativeRank && sym.id >= rep.id) return
       if (!isPatternValue && !isNameWritten(sym) && !isTypedPatternValue(sym)) return
       representative = sym
+      representativeRank = symRank
     }
   }
 
@@ -597,16 +605,19 @@ trait SymbolOps {
       .getOrElseUpdate(DeclarationKey(sym), new Declarations)
 
     new DocumentTraverser(source) {
-      private var syntheticDef: g.Tree = null
-      // a field's accessor without a tree never takes a key from a symbol that has one
-      private def addGetter(sym: g.Symbol): Unit = {
-        val decls = declarationsOf(sym)
-        if (decls ne null) decls.add(sym, preferAsRepresentative = false, isPatternValue = false)
-      }
+      /* the synthetic definitions and the `for` combinations around the tree: scalac puts each copy
+       * in more of them than its original */
+      private var syntheticDepth = 0
+      // `qual.map(f)` of a `for` has `ForAttachment` on `qual.map`; scalac 2.13 marks tuples too
+      private def hasFor(tree: g.Tree) = tree.hasAttachment[g.ForAttachment.type]
       // a binder that stands for a value, or an early definition's copy, is not a declaration
       private def add(sym: g.Symbol): Unit = add(declarationsOf(sym), sym, isPatternValue = false)
       private def add(decls: Declarations, sym: g.Symbol, isPatternValue: Boolean): Unit =
-        if (decls ne null) decls.add(sym, syntheticDef eq null, isPatternValue)
+        if (decls ne null) decls.add(sym, syntheticDepth, isPatternValue)
+      override protected def enter(tree: g.Tree): Unit = tree match {
+        case t: g.Select if hasFor(t) => syntheticDepth += 1
+        case _ =>
+      }
       override protected def leave(tree: g.Tree): Unit = tree match {
         // scalac may not keep the trees of a field's accessors, as in `a(e) += 1`
         case t: g.Template if t.symbol.owner.isSemanticdbLocal =>
@@ -615,12 +626,14 @@ trait SymbolOps {
               val sym = v.symbol
               val getter = if (sym.exists) sym.getterForValDef else g.NoSymbol
               if (getter.exists) {
-                addGetter(getter)
-                if (sym.isMutable) addGetter(getter.setterIn(sym.owner))
+                add(getter)
+                if (sym.isMutable) add(getter.setterIn(sym.owner))
               }
             case _ =>
           }
-        case t => if (t eq syntheticDef) syntheticDef = null
+        case t: g.MemberDef if t.symbol.isSynthetic => syntheticDepth -= 1
+        case t: g.Select if hasFor(t) => syntheticDepth -= 1
+        case _ =>
       }
       override protected def visit(tree: g.Tree, hasOriginal: Boolean): Unit = tree match {
         case t: g.DefTree if t.symbol.exists =>
@@ -628,8 +641,7 @@ trait SymbolOps {
           // the tree of a method has the skolems of the type parameters of its signature
           add(sym.deSkolemize)
           traverseAnnotations(t)
-          if ((syntheticDef eq null) && t.isInstanceOf[g.MemberDef] && sym.isSynthetic)
-            syntheticDef = t
+          if (t.isInstanceOf[g.MemberDef] && sym.isSynthetic) syntheticDepth += 1
         // scalac desugars `val Some(a) = x` into `x match { case Some(a) => a }`, the pattern first
         case t: g.Match => t.cases match {
             case c :: Nil => c.body match {
@@ -645,9 +657,7 @@ trait SymbolOps {
                     val decls = declarationsOf(value)
                     if (decls ne null) {
                       add(decls, value, isPatternValue = true)
-                      val bdecls = declarationsOfImpl(bsym)
-                      if ((syntheticDef eq null) || (bdecls.representative eq null))
-                        bdecls.representative = value
+                      add(declarationsOfImpl(bsym), value, isPatternValue = true)
                     }
                   }
                 case _ =>
