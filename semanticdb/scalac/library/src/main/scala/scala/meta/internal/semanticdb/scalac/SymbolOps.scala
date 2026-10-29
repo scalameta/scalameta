@@ -565,17 +565,18 @@ trait SymbolOps {
     var representative: g.Symbol = _ // contains a representative among `symbols`
 
     // we prefer certain symbols (such as non-synthetic ones) as the representative
-    def add(sym: g.Symbol, preferAsRepresentative: Boolean): Unit =
+    def add(sym: g.Symbol, preferAsRepresentative: Boolean, isPatternValue: Boolean): Unit = {
       if (sym.isAddedParameter) {
         if (!addedParameterSymbols.contains(sym))
           addedParameterSymbols = sym :: addedParameterSymbols
-      } else if (!symbols.contains(sym)) {
-        symbols = sym :: symbols
-        if (preferAsRepresentative || (representative eq null)) {
-          val pos = sym.pos
-          if (isNameWritten(sym, pos) || isTypedPatternValue(sym, pos)) representative = sym
-        }
+        return
       }
+      if (!symbols.contains(sym)) symbols = sym :: symbols else if (!isPatternValue) return
+      val rep = representative
+      if ((rep ne null) && !preferAsRepresentative) return
+      if (!isPatternValue && !isNameWritten(sym) && !isTypedPatternValue(sym)) return
+      representative = sym
+    }
   }
 
   // the local declarations in the trees of a unit that a document visits
@@ -590,53 +591,42 @@ trait SymbolOps {
       val pos = sym.pos
       val isDeclaration = pos.isDefined && (pos.source eq source) && sym.isSemanticdbLocal &&
         !sym.standsForValue(this)
-      if (isDeclaration) declarations.getOrElseUpdate(DeclarationKey(sym), new Declarations)
-      else null
+      if (isDeclaration) declarationsOfImpl(sym) else null
     }
-
-    // a binder that stands for a value, or an early definition's copy, is not a declaration
-    private def add(sym: g.Symbol, preferAsRepresentative: Boolean = false): Unit = {
-      val decls = declarationsOf(sym)
-      if (decls ne null) decls.add(sym, preferAsRepresentative = preferAsRepresentative)
-    }
-
-    /* the value that a sole variable stands for counts as written at the variable, where scalac
-     * puts the copies of its binder. We may visit the value before the match or after it, so we
-     * list the value once, and it becomes the representative of both keys. */
-    private def addPatternValue(binder: g.Symbol, preferAsRepresentative: Boolean): Unit = {
-      val value = binder.patternValue(this)
-      val decls = declarationsOf(value)
-      if (decls ne null) {
-        if (!decls.symbols.contains(value)) decls.symbols = value :: decls.symbols
-        def represent(decls: Declarations): Unit =
-          if (preferAsRepresentative || (decls.representative eq null)) decls.representative = value
-        represent(decls)
-        represent(declarations.getOrElseUpdate(DeclarationKey(binder), new Declarations))
-      }
-    }
+    private def declarationsOfImpl(sym: g.Symbol): Declarations = declarations
+      .getOrElseUpdate(DeclarationKey(sym), new Declarations)
 
     new DocumentTraverser(source) {
       private var syntheticDef: g.Tree = null
+      // a field's accessor without a tree never takes a key from a symbol that has one
+      private def addGetter(sym: g.Symbol): Unit = {
+        val decls = declarationsOf(sym)
+        if (decls ne null) decls.add(sym, preferAsRepresentative = false, isPatternValue = false)
+      }
+      // a binder that stands for a value, or an early definition's copy, is not a declaration
+      private def add(sym: g.Symbol): Unit = add(declarationsOf(sym), sym, isPatternValue = false)
+      private def add(decls: Declarations, sym: g.Symbol, isPatternValue: Boolean): Unit =
+        if (decls ne null) decls.add(sym, syntheticDef eq null, isPatternValue)
       override protected def leave(tree: g.Tree): Unit = tree match {
         // scalac may not keep the trees of a field's accessors, as in `a(e) += 1`
         case t: g.Template if t.symbol.owner.isSemanticdbLocal =>
           t.body.foreach {
             case v: g.ValDef =>
               val sym = v.symbol
-              val getter = if ((sym ne null) && sym.exists) sym.getterForValDef else g.NoSymbol
+              val getter = if (sym.exists) sym.getterForValDef else g.NoSymbol
               if (getter.exists) {
-                add(getter)
-                if (sym.isMutable) add(getter.setterIn(sym.owner))
+                addGetter(getter)
+                if (sym.isMutable) addGetter(getter.setterIn(sym.owner))
               }
             case _ =>
           }
         case t => if (t eq syntheticDef) syntheticDef = null
       }
       override protected def visit(tree: g.Tree, hasOriginal: Boolean): Unit = tree match {
-        case t: g.DefTree if (t.symbol ne null) && t.symbol.exists =>
+        case t: g.DefTree if t.symbol.exists =>
           val sym = t.symbol
           // the tree of a method has the skolems of the type parameters of its signature
-          add(sym.deSkolemize, preferAsRepresentative = syntheticDef eq null)
+          add(sym.deSkolemize)
           traverseAnnotations(t)
           if ((syntheticDef eq null) && t.isInstanceOf[g.MemberDef] && sym.isSynthetic)
             syntheticDef = t
@@ -644,11 +634,21 @@ trait SymbolOps {
         case t: g.Match => t.cases match {
             case c :: Nil => c.body match {
                 case body: g.Ident =>
-                  val bpos = body.symbol.pos
+                  val bsym = body.symbol
+                  val bpos = bsym.pos
                   val spos = t.selector.pos
                   if (c.pat.pos.includes(bpos) && spos.isDefined && bpos.start < spos.start) {
-                    soleVariables += body.symbol
-                    addPatternValue(body.symbol, preferAsRepresentative = syntheticDef eq null)
+                    soleVariables += bsym
+                    /* the value that a sole variable stands for counts as written at the variable, where scalac
+                     * puts the copies of its binder. We offer the value to both keys. */
+                    val value = bsym.patternValue(SourceIndex.this)
+                    val decls = declarationsOf(value)
+                    if (decls ne null) {
+                      add(decls, value, isPatternValue = true)
+                      val bdecls = declarationsOfImpl(bsym)
+                      if ((syntheticDef eq null) || (bdecls.representative eq null))
+                        bdecls.representative = value
+                    }
                   }
                 case _ =>
               }
@@ -659,7 +659,8 @@ trait SymbolOps {
     }.traverse(body)
   }
 
-  private def isNameWritten(sym: g.Symbol, pos: g.Position): Boolean = {
+  private def isNameWritten(sym: g.Symbol): Boolean = {
+    val pos = sym.pos
     val text = pos.source.content
     // an existential value `v` has the name `v.type`, and the setter of a `var v` the name `v_=`
     val decoded = sym.decodedName.stripSuffix(g.nme.LOCAL_SUFFIX_STRING).stripSuffix(".type")
@@ -672,7 +673,8 @@ trait SymbolOps {
 
   // scalac before 2.13.17 puts the value of `val (a: Int) = 1` at the colon
   // scalac 2.12 also puts the evidence of a context bound there, both the parameter and the field
-  private def isTypedPatternValue(sym: g.Symbol, pos: g.Position): Boolean = {
+  private def isTypedPatternValue(sym: g.Symbol): Boolean = {
+    val pos = sym.pos
     val text = pos.source.content
     pos.point < text.length && text(pos.point) == ':' && !sym.isParameter && !sym.isParamAccessor
   }
