@@ -61,8 +61,8 @@ object SymbolInformationPrinter {
 trait SymbolInformationPrinter extends BasePrinter {
 
   def pprint(info: SymbolInformation): Unit = {
-    out.print(info.symbol)
-    out.print(" => ")
+    str(info.symbol)
+    str(" => ")
 
     val infoNotes = new InfoNotes
     val infoPrinter = new InfoPrinter(infoNotes)
@@ -74,9 +74,9 @@ trait SymbolInformationPrinter extends BasePrinter {
       infoNotes.visited.tail.foreach(info =>
         if (!printed(info.symbol)) {
           printed += info.symbol
-          out.print("  ")
-          out.print(info.displayName)
-          out.print(" => ")
+          str("  ")
+          str(info.displayName)
+          str(" => ")
           out.println(info.symbol)
         },
       )
@@ -89,143 +89,137 @@ trait SymbolInformationPrinter extends BasePrinter {
       notes.visit(info)
       printInfo(info, Declaration)
       info.overriddenSymbols match {
-        case Nil => ()
-        case all => out.print(" <: " + all.mkString(", "))
+        case Nil =>
+        case all => str(all.mkString(" <: ", ", ", ""))
       }
     }
 
     private def pprint(ann: AnnotationTree): Unit = {
-      out.print("@")
-      ann.tpe match {
-        case NoType => out.print("<?>")
-        case tpe => pprint(tpe)
-      }
+      str("@")
+      pprint(ann.tpe)
     }
 
     private def pprint(acc: Access): Unit = acc match {
-      case PrivateAccess() => out.print("private ")
-      case PrivateThisAccess() => out.print("private[this] ")
-      case PrivateWithinAccess(sym) =>
-        out.print("private[")
-        pprint(sym, Reference)
-        out.print("] ")
-      case ProtectedAccess() => out.print("protected ")
-      case ProtectedThisAccess() => out.print("protected[this] ")
-      case ProtectedWithinAccess(sym) =>
-        out.print("protected[")
-        pprint(sym, Reference)
-        out.print("] ")
-      case NoAccess | _: PublicAccess => out.print("")
+      case _: PrivateAccess => str("private ")
+      case _: PrivateThisAccess => str("private[this] ")
+      case acc: PrivateWithinAccess =>
+        str("private[")
+        pprint(acc.symbol, Reference)
+        str("] ")
+      case _: ProtectedAccess => str("protected ")
+      case _: ProtectedThisAccess => str("protected[this] ")
+      case acc: ProtectedWithinAccess =>
+        str("protected[")
+        pprint(acc.symbol, Reference)
+        str("] ")
+      case NoAccess | _: PublicAccess => str("")
     }
 
     def pprint(sig: Signature): Unit = sig match {
-      case ClassSignature(tparams, parents, self, decls) =>
-        rep("[", tparams.infos, ", ", "]")(pprintDefn)
-        rep(" extends ", parents, " with ")(pprint)
-        if (self.nonEmpty || decls.infos.nonEmpty) out.print(" { ")
-        if (self.nonEmpty) {
-          out.print("self: ")
-          pprint(self)
-          out.print(" => ")
+      case sig: ClassSignature =>
+        rep("[", sig.typeParameters.infos, ", ", "]")(pprintDefn)
+        rep(" extends ", sig.parents, " with ")(pprint)
+        val inBraces = sig.self.nonEmpty || sig.declarations.infos.nonEmpty
+        if (inBraces) str(" { ")
+        if (sig.self.nonEmpty) {
+          str("self: ")
+          pprint(sig.self)
+          str(" => ")
         }
-        if (decls.infos.nonEmpty) out.print(s"+${decls.infos.length} decls")
-        if (self.nonEmpty || decls.infos.nonEmpty) out.print(" }")
+        if (sig.declarations.infos.nonEmpty) str(s"+${sig.declarations.infos.length} decls")
+        if (inBraces) str(" }")
       case sig: MethodSignature =>
         rep("[", sig.typeParameters.infos, ", ", "]")(pprintDefn)
         rep("(", sig.parameterLists, ")(", ")")(params => rep(params.infos, ", ")(pprintDefn))
         rep(" throws ", sig.throws, ", ", "")(pprint)
         opt(": ", sig.returnType)(pprint)
-      case TypeSignature(tparams, lo, hi) =>
-        rep("[", tparams.infos, ", ", "]")(pprintDefn)
-        if (lo != hi) {
-          lo match {
+      case sig: TypeSignature =>
+        rep("[", sig.typeParameters.infos, ", ", "]")(pprintDefn)
+        if (sig.lowerBound == sig.upperBound) opt(" = ", sig.lowerBound)(pprint)
+        else {
+          sig.lowerBound match {
             case TypeRef(NoType, "scala/Nothing#", Nil) => ()
             case lo => opt(" >: ", lo)(pprint)
           }
-          hi match {
+          sig.upperBound match {
             case TypeRef(NoType, "scala/Any#", Nil) => ()
             case TypeRef(NoType, "java/lang/Object#", Nil) => ()
             case hi => opt(" <: ", hi)(pprint)
           }
-        } else {
-          val alias = lo
-          opt(" = ", alias)(pprint)
         }
-      case ValueSignature(tpe) => pprint(tpe)
-      case NoSignature => out.print("<?>")
+      case sig: ValueSignature => pprint(sig.tpe)
+      case NoSignature => str("<?>")
     }
 
-    def pprint(tpe: Type): Unit = {
-      def prefix(tpe: Type): Unit = tpe match {
-        case TypeRef(pre, sym, args) =>
-          pre match {
-            case _: SingleType | _: ThisType | _: SuperType =>
-              prefix(pre)
-              out.print(".")
-            case NoType => ()
-            case _ =>
-              prefix(pre)
-              out.print("#")
-          }
-          pprintRef(sym)
-          rep("[", args, ", ", "]")(normal)
-        case SingleType(pre, sym) =>
-          opt(pre, ".")(prefix)
-          pprintRef(sym)
-        case ThisType(sym) =>
-          opt(sym, ".")(pprintRef)
-          out.print("this")
-        case SuperType(pre, sym) =>
-          opt(pre, ".")(prefix)
-          out.print("super")
-          opt("[", sym, "]")(pprintRef)
-        case ConstantType(const) => pprint(const)
-        case IntersectionType(types) => rep(types, " & ")(normal)
-        case UnionType(types) => rep(types, " | ")(normal)
-        case WithType(types) => rep(types, " with ")(normal)
-        case StructuralType(utpe, decls) =>
-          decls.infos.foreach(notes.discover)
-          opt(utpe)(normal)
-          if (decls.infos.nonEmpty) rep(" { ", decls.infos, "; ", " }")(pprintDefn)
-          else out.print(" {}")
-        case AnnotatedType(anns, utpe) =>
-          opt(utpe)(normal)
-          out.print(" ")
-          rep(anns, " ", "")(pprint)
-        case ExistentialType(utpe, decls) =>
-          decls.infos.foreach(notes.discover)
-          opt(utpe)(normal)
-          rep(" forSome { ", decls.infos, "; ", " }")(pprintDefn)
-        case UniversalType(tparams, utpe) =>
-          tparams.infos.foreach(notes.discover)
-          rep("[", tparams.infos, ", ", "] => ")(pprintDefn)
-          opt(utpe)(normal)
-        case ByNameType(utpe) =>
-          out.print("=> ")
-          opt(utpe)(normal)
-        case RepeatedType(utpe) =>
-          opt(utpe)(normal)
-          out.print("*")
-        case MatchType(scrutinee, cases) =>
-          opt(scrutinee)(normal)
-          rep(" match { ", cases, ", ", " }") { kase =>
-            opt(kase.key)(normal)
-            out.print(" => ")
-            opt(kase.body)(normal)
-          }
-        case LambdaType(parameters, returnType) =>
-          parameters.infos.foreach(notes.discover)
-          rep("[", parameters.infos, ", ", "] =>> ")(pprintDefn)
-          opt(returnType)(normal)
-        case NoType => out.print("<?>")
-      }
-      def normal(tpe: Type): Unit = tpe match {
-        case _: SingleType | _: ThisType | _: SuperType =>
-          prefix(tpe)
-          out.print(".type")
-        case _ => prefix(tpe)
-      }
-      normal(tpe)
+    def pprint(tpe: Type): Unit = pprintTpe(tpe, outer = true)
+
+    private def pprintInnerTpe(tpe: Type): Unit = pprintTpe(tpe, outer = false)
+
+    private def pprintTpe(tpe: Type, outer: Boolean): Unit = tpe match {
+      case tpe: TypeRef =>
+        tpe.prefix match {
+          case pre @ (_: SingleType | _: ThisType | _: SuperType) =>
+            pprintInnerTpe(pre)
+            str(".")
+          case NoType => ()
+          case pre =>
+            pprintInnerTpe(pre)
+            str("#")
+        }
+        pprintRef(tpe.symbol)
+        rep("[", tpe.typeArguments, ", ", "]")(pprint)
+      case tpe: SingleType =>
+        opt(tpe.prefix, ".")(pprintInnerTpe)
+        pprintRef(tpe.symbol)
+        if (outer) str(".type")
+      case tpe: ThisType =>
+        opt(tpe.symbol, ".")(pprintRef)
+        str("this")
+        if (outer) str(".type")
+      case tpe: SuperType =>
+        opt(tpe.prefix, ".")(pprintInnerTpe)
+        str("super")
+        opt("[", tpe.symbol, "]")(pprintRef)
+        if (outer) str(".type")
+      case tpe: ConstantType => pprint(tpe.constant)
+      case tpe: IntersectionType => rep(tpe.types, " & ")(pprint)
+      case tpe: UnionType => rep(tpe.types, " | ")(pprint)
+      case tpe: WithType => rep(tpe.types, " with ")(pprint)
+      case tpe: StructuralType =>
+        notes.discover(tpe.declarations.infos)
+        opt(tpe.tpe)(pprint)
+        if (tpe.declarations.infos.isEmpty) str(" {}")
+        else rep(" { ", tpe.declarations.infos, "; ", " }")(pprintDefn)
+      case tpe: AnnotatedType =>
+        opt(tpe.tpe)(pprint)
+        str(" ")
+        rep(tpe.annotations, " ")(pprint)
+      case tpe: ExistentialType =>
+        notes.discover(tpe.declarations.infos)
+        opt(tpe.tpe)(pprint)
+        rep(" forSome { ", tpe.declarations.infos, "; ", " }")(pprintDefn)
+      case tpe: UniversalType =>
+        notes.discover(tpe.typeParameters.infos)
+        rep("[", tpe.typeParameters.infos, ", ", "] => ")(pprintDefn)
+        opt(tpe.tpe)(pprint)
+      case tpe: ByNameType =>
+        str("=> ")
+        opt(tpe.tpe)(pprint)
+      case tpe: RepeatedType =>
+        opt(tpe.tpe)(pprint)
+        str("*")
+      case tpe: MatchType =>
+        opt(tpe.scrutinee)(pprint)
+        rep(" match { ", tpe.cases, ", ", " }") { kase =>
+          opt(kase.key)(pprint)
+          str(" => ")
+          opt(kase.body)(pprint)
+        }
+      case tpe: LambdaType =>
+        notes.discover(tpe.parameters.infos)
+        rep("[", tpe.parameters.infos, ", ", "] =>> ")(pprintDefn)
+        opt(tpe.returnType)(pprint)
+      case NoType => str("<?>")
     }
 
     private def pprintRef(sym: String): Unit = pprint(sym, Reference)
@@ -247,7 +241,7 @@ trait SymbolInformationPrinter extends BasePrinter {
     protected def pprint(sym: String, style: SymbolStyle): Unit = {
       val info = notes.visit(sym)
       style match {
-        case Reference => pprint(info.displayName)
+        case Reference => pprintName(info.displayName)
         case style: InfoStyle => printInfo(info, style)
       }
     }
@@ -257,7 +251,7 @@ trait SymbolInformationPrinter extends BasePrinter {
       pprint(info.access)
       printModifiers(info, style)
       printKind(info, style)
-      pprint(info.displayName)
+      pprintName(info.displayName)
       printSignature(info)
     }
 
@@ -267,14 +261,11 @@ trait SymbolInformationPrinter extends BasePrinter {
     private def printModifiers(info: SymbolInformation, style: InfoStyle): Unit = {
       val props = info.properties
       SymbolInformationPrinter.modifiers.foreach(m =>
-        if ((props & m.prop.value) != 0) {
-          val word = style match {
-            case Declaration => m.word
-            case Definition if m.defnOK(info) => if (m.defn ne null) m.defn else m.word
-            case _ => ""
-          }
-          if (word.nonEmpty) out.print(word)
-        },
+        if ((props & m.prop.value) != 0) str(style match {
+          case Declaration => m.word
+          case Definition if m.defnOK(info) => if (m.defn ne null) m.defn else m.word
+          case _ => ""
+        }),
       )
     }
 
@@ -282,8 +273,8 @@ trait SymbolInformationPrinter extends BasePrinter {
     // the closest Scala keyword: `def` for both methods and constructors, and no keyword at
     // all for locals, fields, params and type params. Only those deltas are style-specific;
     // every other kind renders identically, so it is spelled out once below.
-    private def printKind(info: SymbolInformation, style: InfoStyle): Unit = {
-      val word = info.kind match {
+    private def printKind(info: SymbolInformation, style: InfoStyle): Unit = str {
+      info.kind match {
         case METHOD | CONSTRUCTOR if style == Definition => "def "
         case LOCAL | FIELD | PARAMETER | SELF_PARAMETER | TYPE_PARAMETER if style == Definition =>
           ""
@@ -295,7 +286,6 @@ trait SymbolInformationPrinter extends BasePrinter {
         case UNKNOWN_KIND | _: Kind.Unrecognized => "unknown "
         case _ => s"${info.kind.name.toLowerCase} "
       }
-      if (word.nonEmpty) out.print(word)
     }
 
     private def printSignature(info: SymbolInformation): Unit = info.signature match {
@@ -303,21 +293,21 @@ trait SymbolInformationPrinter extends BasePrinter {
       case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
     }
 
-    private def pprint(name: String): Unit = if (name.nonEmpty) out.print(name) else out.print("<?>")
+    private def pprintName(name: String): Unit = str(if (name.nonEmpty) name else "<?>")
 
     def pprint(const: Constant): Unit = const match {
-      case NoConstant => out.print("<?>")
-      case _: UnitConstant => out.print("()")
+      case NoConstant => str("<?>")
+      case _: UnitConstant => str("()")
       case x: BooleanConstant => out.print(x.value)
       case x: ByteConstant => out.print(x.value.toByte)
       case x: ShortConstant => out.print(x.value.toShort)
-      case x: CharConstant => out.print("'" + x.value.toChar + "'")
+      case x: CharConstant => str("'" + x.value.toChar + "'")
       case x: IntConstant => out.print(x.value)
-      case x: LongConstant => out.print(s"${x.value}L")
-      case x: FloatConstant => out.print(s"${x.value}f")
+      case x: LongConstant => str(s"${x.value}L")
+      case x: FloatConstant => str(s"${x.value}f")
       case x: DoubleConstant => out.print(x.value)
-      case x: StringConstant => out.print("\"" + x.value + "\"")
-      case _: NullConstant => out.print("null")
+      case x: StringConstant => str("\"" + x.value + "\"")
+      case _: NullConstant => str("null")
     }
 
     private implicit class InfoOps(info: SymbolInformation) {
@@ -340,18 +330,16 @@ trait SymbolInformationPrinter extends BasePrinter {
       if (symtab.info(info.symbol).isEmpty && info.kind != UNKNOWN_KIND)
         noteSymtab(info.symbol) = info
 
+    def discover(infos: Iterable[SymbolInformation]): Unit = infos.foreach(discover)
+
     def visit(sym: String): SymbolInformation = {
       val symtabInfo = noteSymtab.get(sym).orElse(symtab.info(sym))
-      val info = symtabInfo.getOrElse {
-        val displayName = if (sym.isGlobal) sym.desc.value else sym
-        SymbolInformation(
-          symbol = sym,
-          displayName = displayName,
-          annotations = Nil,
-          overriddenSymbols = Nil,
-        )
-      }
-      visit(info)
+      visit(symtabInfo.getOrElse(SymbolInformation(
+        symbol = sym,
+        displayName = if (sym.isGlobal) sym.desc.value else sym,
+        annotations = Nil,
+        overriddenSymbols = Nil,
+      )))
     }
 
     def visit(info: SymbolInformation): SymbolInformation = {
