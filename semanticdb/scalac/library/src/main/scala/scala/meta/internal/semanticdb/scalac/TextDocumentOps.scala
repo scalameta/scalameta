@@ -130,6 +130,7 @@ trait TextDocumentOps {
       val mexpansions = mutable.Map.empty[Int, m.Member] // the same, for a macro annotation
       val munderscores = mutable.Map.empty[Int, m.Position] // start offset -> an underscore
       val mfors = mutable.ArrayBuffer.empty[m.Term.ForClause] // outer first
+      val mforEnds = mutable.Map.empty[Int, Int] // start offset of a `for` -> its end offset
 
       // Occurrences for names in val patterns, like `val (a, b) =`. Unlike the `occurrences` map, val pattern
       // occurrences uses "last occurrence wins" instead of "first occurrences wins" when disambiguating between
@@ -443,7 +444,9 @@ trait TextDocumentOps {
                         pats.foreach(mpat => indexPat(mpat, cnt))
                     }
                 }
-              case mtree: m.Term.ForClause => mfors += mtree
+              case mtree: m.Term.ForClause =>
+                mfors += mtree
+                mforEnds(mtree.pos.start) = mtree.pos.end
               case _ =>
             }
             super.apply(mtree)
@@ -1470,7 +1473,10 @@ trait TextDocumentOps {
           }
         }
 
-        private def getApplyImplicitView(gt: g.ApplyImplicitView, range: s.Range) = {
+        private def getApplyImplicitView(gt: g.ApplyImplicitView, range: s.Range): s.ApplyTree =
+          getApplyImplicitView(gt, range.toSemanticOriginal)
+
+        private def getApplyImplicitView(gt: g.ApplyImplicitView, arg: s.Tree): s.ApplyTree = {
           val fun = gt.fun match {
             // a method of a value, like `f.apply`, does not identify the conversion by itself
             case f: g.Select
@@ -1478,7 +1484,7 @@ trait TextDocumentOps {
                   !f.qualifier.symbol.hasPackageFlag => f.toSemanticQualifierTree
             case f => f.toSemanticTree
           }
-          s.ApplyTree(fun, List(range.toSemanticOriginal))
+          s.ApplyTree(fun, List(arg))
         }
 
         private def getApplyToImplicitArgs(gt: g.ApplyToImplicitArgs, fun: s.Tree): s.ApplyTree = s
@@ -1492,20 +1498,51 @@ trait TextDocumentOps {
           getApplyToImplicitArgs(gt, fun)
         }
 
+        /* A call that a `for` adds shows in the synthetic, with its view and implicit arguments.
+         * Quote a source expression as `orig`, so its synthetics stay ranged as in written code. */
         private def cachedForOrOrig(gt: g.Tree): s.Tree = gt match {
           case t: g.ApplyToImplicitArgs => cachedForImplicitArgsOrOrig(t)
-          case t: g.Apply => cachedForApplyOrOrig(t)
+          case t: g.ApplyImplicitView => cachedForImplicitViewOrOrig(t)
+          case t: g.Apply if isForFun(t.fun) && (!isSourceFor(t.pos) || isRefutabilityCheck(t)) =>
+            cachedForApplyOrOrig(t)
           case _ => uncachedOrig(gt) // uncached: the traverser builds its own synthetic
         }
         private def cachedForApplyOrOrig(gt: g.Apply): s.Tree =
           cachedOrOrig(gt)(forApply(gt, usePos = false))
+        // build a view of a desugared call inside, and leave any other view ranged
+        private def cachedForImplicitViewOrOrig(gt: g.ApplyImplicitView): s.Tree = gt.args match {
+          case arg :: Nil =>
+            val res = cachedForOrOrig(arg)
+            if (isForCall(arg)) cachedOrOrig(gt)(syn(getApplyImplicitView(gt, res))) else res
+          case _ => uncachedOrig(gt) // uncached, as above
+        }
         private def cachedForImplicitArgsOrOrig(gt: g.ApplyToImplicitArgs): s.Tree = gt.fun match {
+          case f: g.ApplyImplicitView =>
+            val res = cachedForImplicitViewOrOrig(f)
+            if (isForCall(f)) cachedOrOrig(gt)(syn(getApplyToImplicitArgs(gt, res))) else res
           // hide the implicit arguments of the check too
           case f: g.Apply if isRefutabilityCheck(f) =>
             cachedOrOrig(gt)(cached(f)(forRefutabilityCheckFun(f.fun)))
-          case _: g.Apply => cachedOrOrig(gt)(syn(getApplyToImplicitArgs(gt)))
+          case f: g.Apply if isForFun(f.fun) && !isSourceFor(f.pos) =>
+            cachedOrOrig(gt)(syn(getApplyToImplicitArgs(gt)))
           case _ => uncachedOrig(gt) // uncached, as above
         }
+
+        // a call that a `for` adds, except the check and a source `for`, or a view of such a call
+        @tailrec
+        private def isForCall(gt: g.Tree): Boolean = gt match {
+          case t: g.ApplyImplicitView => t.args match {
+              case arg :: Nil => isForCall(arg)
+              case _ => false
+            }
+          case t: g.ApplyToImplicitArgs => isForCall(t.fun)
+          case t: g.Apply => isForFun(t.fun) && !isSourceFor(t.pos) && !isRefutabilityCheck(t)
+          case _ => false
+        }
+
+        // the outermost call of a `for` has the range of the `for`
+        private def isSourceFor(gpos: gu.Position): Boolean = gpos.isRange &&
+          mforEnds.get(gpos.start).contains(gpos.end)
 
         // use it when we don't want to output the original in `synthetics`
         private def uncachedOrig(gt: g.Tree): s.Tree = gt.toSemanticOriginal
@@ -1542,7 +1579,7 @@ trait TextDocumentOps {
 
         private def forApply(gt: g.Apply, usePos: Boolean = true): Option[s.Synthetic] =
           gt.args match {
-            case (f: g.Function) :: Nil =>
+            case (f: g.Function) :: Nil if isForFun(gt.fun) =>
               if (isRefutabilityCheck(f)) forRefutabilityCheckFun(gt.fun)
               else forSingleFuncArgApply(gt, f, usePos)
             case _ => None
@@ -1613,6 +1650,13 @@ trait TextDocumentOps {
 
   private def isSyntheticName(gt: g.Select): Boolean = gt.pos == gt.qualifier.pos &&
     syntheticName(gt.name)(true)(true)(false)
+
+  @tailrec
+  private def isForFun(gt: g.Tree): Boolean = gt match {
+    case t: g.TypeApply => isForFun(t.fun)
+    case t: g.Select => t.pos == t.qualifier.pos && syntheticName(t.name)(true)(false)(false)
+    case _ => false
+  }
 
   // the check that scalac adds for a generator whose pattern can fail
   private def isRefutabilityCheck(gt: g.Function): Boolean = gt.vparams
