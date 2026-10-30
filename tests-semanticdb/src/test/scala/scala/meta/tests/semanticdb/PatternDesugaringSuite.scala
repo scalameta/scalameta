@@ -459,29 +459,29 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |[5:85..5:88): Int => scala/Int#
        |[5:96..5:97): e => local20
        |[6:7..6:11): Some => scala/Some.
-       |[6:12..6:13): f <= local26
+       |[6:12..6:13): f <= local25
        |[6:15..6:21): AnyRef => scala/AnyRef#
-       |[6:28..6:29): x <= local27
+       |[6:28..6:29): x <= local26
        |[6:31..6:34): Int => scala/Int#
        |[6:41..6:47): Option => scala/Option.
        |[6:48..6:54): Option => scala/Option.
-       |[6:59..6:59):  <= local25
+       |[6:59..6:59):  <= local24
        |[6:59..6:65): AnyRef => scala/AnyRef#
        |[6:65..6:65):  => java/lang/Object#`<init>`().
-       |[6:72..6:73): x <= local23
-       |[6:89..6:90): f => local26
+       |[6:72..6:73): x <= local22
+       |[6:89..6:90): f => local25
        |[7:6..7:7): m <= _empty_/rg.m().
        |[7:16..7:20): Some => scala/Some.
-       |[7:21..7:22): g <= local31
+       |[7:21..7:22): g <= local30
        |[7:24..7:30): AnyRef => scala/AnyRef#
-       |[7:37..7:38): x <= local28
+       |[7:37..7:38): x <= local27
        |[7:40..7:43): Int => scala/Int#
        |[7:49..7:53): Some => scala/Some.
-       |[7:58..7:58):  <= local30
+       |[7:58..7:58):  <= local29
        |[7:58..7:64): AnyRef => scala/AnyRef#
        |[7:64..7:64):  => java/lang/Object#`<init>`().
-       |[7:71..7:72): x <= local29
-       |[7:81..7:82): g => local31
+       |[7:71..7:72): x <= local28
+       |[7:81..7:82): g => local30
        |""".stripMargin,
   )
 
@@ -631,16 +631,16 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |}
        |""".stripMargin,
     """|[0:7..0:10): tp4 <= _empty_/tp4.
-       |[1:8..1:9): x <= local1
+       |[1:8..1:9): x <= local0
        |[1:11..1:14): Int => scala/Int#
        |[1:19..1:25): Option => scala/Option.
-       |[1:31..1:32): y <= local3
+       |[1:31..1:32): y <= local2
        |[1:34..1:37): Int => scala/Int#
-       |[1:41..1:42): x => local1
-       |[1:50..1:51): y => local3
-       |[2:18..2:19): z <= local4
+       |[1:41..1:42): x => local0
+       |[1:50..1:51): y => local2
+       |[2:18..2:19): z <= local3
        |[2:21..2:24): Int => scala/Int#
-       |[2:29..2:30): z => local4
+       |[2:29..2:30): z => local3
        |""".stripMargin,
   )
 
@@ -2354,45 +2354,45 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |[1:27..1:28): r <= _empty_/cf.`~`#r.
        |[1:30..1:31): B => _empty_/cf.`~`#[B]
        |[2:7..2:11): Some => scala/Some.
-       |[2:12..2:13): a <= local2
+       |[2:12..2:13): a <= local1
        |[2:14..2:15): ~ => _empty_/cf.`~`.
        |[2:22..2:28): Option => scala/Option.
        |[2:29..2:35): Option => scala/Option.
        |[2:40..2:41): ~ => _empty_/cf.`~`#
        |[2:41..2:41):  => _empty_/cf.`~`#`<init>`().
-       |[2:57..2:58): a => local2
-       |[3:8..3:9): x <= local3
+       |[2:57..2:58): a => local1
+       |[3:8..3:9): x <= local2
        |[3:13..3:19): Option => scala/Option.
-       |[3:25..3:26): b <= local5
+       |[3:25..3:26): b <= local4
        |[3:27..3:28): ~ => _empty_/cf.`~`.
-       |[3:32..3:33): c <= local6
+       |[3:32..3:33): c <= local5
        |[3:42..3:43): ~ => _empty_/cf.`~`#
        |[3:43..3:43):  => _empty_/cf.`~`#`<init>`().
-       |[3:44..3:45): x => local3
-       |[3:51..3:52): x => local3
-       |[3:56..3:57): d <= local7
+       |[3:44..3:45): x => local2
+       |[3:51..3:52): x => local2
+       |[3:56..3:57): d <= local6
        |[3:59..3:62): Int => scala/Int#
-       |[3:66..3:67): c => local6
-       |[3:76..3:77): b => local5
+       |[3:66..3:67): c => local5
+       |[3:76..3:77): b => local4
        |[3:78..3:79): + => scala/Int#`+`(+4).
-       |[3:80..3:81): c => local6
+       |[3:80..3:81): c => local5
        |[3:82..3:83): + => scala/Int#`+`(+4).
-       |[3:84..3:85): d => local7
+       |[3:84..3:85): d => local6
        |[4:7..4:8): ~ => _empty_/cf.`~`#
        |[4:8..4:8):  => _empty_/cf.`~`#`<init>`().
        |[4:16..4:19): Any => scala/Any#
-       |[5:10..5:11): e <= local8
+       |[5:10..5:11): e <= local7
        |[5:13..5:16): Int => scala/Int#
        |[5:18..5:19): ~ => _empty_/cf.`~`.
-       |[5:25..5:26): e => local8
+       |[5:25..5:26): e => local7
        |[6:9..6:13): Some => scala/Some.
-       |[6:14..6:15): f <= local9
+       |[6:14..6:15): f <= local8
        |[6:16..6:17): ~ => _empty_/cf.`~`.
-       |[6:24..6:25): f => local9
-       |[7:10..7:11): g <= local10
+       |[6:24..6:25): f => local8
+       |[7:10..7:11): g <= local9
        |[7:12..7:13): ~ => _empty_/cf.`~`.
-       |[7:17..7:18): h <= local11
-       |[7:23..7:24): h => local11
+       |[7:17..7:18): h <= local10
+       |[7:23..7:24): h => local10
        |""".stripMargin,
   )
 
@@ -2450,44 +2450,44 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |[6:14..6:20): Option => scala/Option.
        |[6:21..6:22): E => _empty_/an.E.
        |[6:27..6:31): Some => scala/Some.
-       |[6:33..6:34): d <= local4
+       |[6:33..6:34): d <= local2
        |[6:36..6:39): Int => scala/Int#
        |[6:41..6:42): ~ => _empty_/an.`~`.
        |[6:49..6:55): Option => scala/Option.
        |[6:56..6:60): Some => scala/Some.
        |[6:65..6:66): ~ => _empty_/an.`~`#
        |[6:66..6:66):  => _empty_/an.`~`#`<init>`().
-       |[6:82..6:83): d => local4
-       |[7:8..7:9): x <= local5
+       |[6:82..6:83): d => local2
+       |[7:8..7:9): x <= local3
        |[7:13..7:19): Option => scala/Option.
        |[7:25..7:29): Some => scala/Some.
-       |[7:30..7:31): e <= local7
+       |[7:30..7:31): e <= local5
        |[7:32..7:33): ~ => _empty_/an.`~`.
-       |[7:38..7:39): f <= local8
+       |[7:38..7:39): f <= local6
        |[7:44..7:48): Some => scala/Some.
        |[7:53..7:54): ~ => _empty_/an.`~`#
        |[7:54..7:54):  => _empty_/an.`~`#`<init>`().
-       |[7:55..7:56): x => local5
-       |[7:63..7:64): x => local5
-       |[7:74..7:75): e => local7
+       |[7:55..7:56): x => local3
+       |[7:63..7:64): x => local3
+       |[7:74..7:75): e => local5
        |[7:76..7:77): + => scala/Int#`+`(+4).
-       |[7:78..7:79): f => local8
+       |[7:78..7:79): f => local6
        |[8:7..8:8): ~ => _empty_/an.`~`#
        |[8:8..8:8):  => _empty_/an.`~`#`<init>`().
        |[8:16..8:19): Any => scala/Any#
        |[9:9..9:10): E => _empty_/an.E.
        |[10:9..10:13): Some => scala/Some.
        |[10:14..10:18): Some => scala/Some.
-       |[10:20..10:21): g <= local9
+       |[10:20..10:21): g <= local7
        |[10:23..10:26): Int => scala/Int#
        |[10:28..10:29): ~ => _empty_/an.`~`.
-       |[10:37..10:38): g => local9
+       |[10:37..10:38): g => local7
        |[11:10..11:14): Some => scala/Some.
-       |[11:15..11:16): h <= local10
+       |[11:15..11:16): h <= local8
        |[11:17..11:18): ~ => _empty_/an.`~`.
-       |[11:24..11:25): i <= local11
+       |[11:24..11:25): i <= local9
        |[11:27..11:31): Some => scala/Some.
-       |[11:40..11:41): i => local11
+       |[11:40..11:41): i => local9
        |""".stripMargin,
   )
 
@@ -5849,50 +5849,45 @@ class PatternDesugaringSuite extends SemanticdbSuite {
   )(
     if (ScalaVersion.is212)
       """|[0:7..0:9): g7 <= _empty_/g7.
-         |[1:8..1:9): a <= local3
-         |[1:11..1:12): b <= local4
+         |[1:8..1:9): a <= local2
+         |[1:11..1:12): b <= local3
          |[1:17..1:21): List => scala/collection/immutable/List.
-         |[1:33..1:34): a => local3
+         |[1:33..1:34): a => local2
          |[1:35..1:36): > => scala/Int#`>`(+3).
-         |[1:37..1:38): b => local4
-         |[1:46..1:47): a => local3
+         |[1:37..1:38): b => local3
+         |[1:46..1:47): a => local2
          |""".stripMargin
     else
       """|[0:7..0:9): g7 <= _empty_/g7.
-         |[1:8..1:9): a <= local3
-         |[1:11..1:12): b <= local4
+         |[1:8..1:9): a <= local2
+         |[1:11..1:12): b <= local3
          |[1:17..1:21): List => scala/package.List.
-         |[1:33..1:34): a => local3
+         |[1:33..1:34): a => local2
          |[1:35..1:36): > => scala/Int#`>`(+3).
-         |[1:37..1:38): b => local4
-         |[1:46..1:47): a => local3
+         |[1:37..1:38): b => local3
+         |[1:46..1:47): a => local2
          |""".stripMargin,
     """|_empty_/g7. => final object g7 extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |local0 => synthetic param check$ifrefutable$1: Tuple2[Int, Int]
+       |local0 => synthetic param x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Tuple2[Int, Int]
+       |local1 => synthetic param x$2: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local2 => synthetic param x$2: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
+       |local2 => val local a: Int
        |  Int => scala/Int#
-       |local3 => val local a: Int
-       |  Int => scala/Int#
-       |local4 => val local b: Int
+       |local3 => val local b: Int
        |  Int => scala/Int#
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[1:2..1:47): for ((a, b) <- List((1, 2)) if a > b) yield a => orig(List((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).withFilter({(x$1) => orig(a > b)}).map[Int, List[Int]]({(x$2) => orig(a)})(List.canBuildFrom[Int])
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:47): for ((a, b) <- List((1, 2)) if a > b) yield a => orig(List((1, 2))).withFilter({(x$1) => orig(a > b)}).map[Int, List[Int]]({(x$2) => orig(a)})(List.canBuildFrom[Int])
          |  withFilter => scala/collection/generic/FilterMonadic#withFilter().
-         |  x$1 => local1
+         |  x$1 => local0
          |  map => scala/collection/generic/FilterMonadic#map().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  x$2 => local2
+         |  x$2 => local1
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[1:17..1:21): List => *.apply[Tuple2[Int, Int]]
@@ -5901,14 +5896,12 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:47): for ((a, b) <- List((1, 2)) if a > b) yield a => orig(List((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).withFilter({(x$1) => orig(a > b)}).map[Int]({(x$2) => orig(a)})
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:47): for ((a, b) <- List((1, 2)) if a > b) yield a => orig(List((1, 2))).withFilter({(x$1) => orig(a > b)}).map[Int]({(x$2) => orig(a)})
          |  withFilter => scala/collection/WithFilter#withFilter().
-         |  x$1 => local1
+         |  x$1 => local0
          |  map => scala/collection/WithFilter#map().
          |  Int => scala/Int#
-         |  x$2 => local2
+         |  x$2 => local1
          |[1:17..1:21): List => *.apply[Tuple2[Int, Int]]
          |  apply => scala/collection/IterableFactory#apply().
          |  Tuple2 => scala/Tuple2#
@@ -6023,13 +6016,10 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |_empty_/y.r. => val method r: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local0 => synthetic param check$ifrefutable$1: Option[Int]
+       |local0 => synthetic param x$1: Option[Int]
        |  Option => scala/Option#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Option[Int]
-       |  Option => scala/Option#
-       |  Int => scala/Int#
-       |local2 => val local s: Int
+       |local1 => val local s: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -6046,19 +6036,19 @@ class PatternDesugaringSuite extends SemanticdbSuite {
       """|[0:7..0:8): y <= _empty_/y.
          |[1:6..1:7): r <= _empty_/y.r.
          |[2:4..2:8): Some => scala/Some.
-         |[2:9..2:10): s <= local2
+         |[2:9..2:10): s <= local1
          |[2:15..2:19): List => scala/collection/immutable/List.
          |[2:20..2:26): Option => scala/Option.
-         |[3:10..3:11): s => local2
+         |[3:10..3:11): s => local1
          |""".stripMargin
     else
       """|[0:7..0:8): y <= _empty_/y.
          |[1:6..1:7): r <= _empty_/y.r.
          |[2:4..2:8): Some => scala/Some.
-         |[2:9..2:10): s <= local2
+         |[2:9..2:10): s <= local1
          |[2:15..2:19): List => scala/package.List.
          |[2:20..2:26): Option => scala/Option.
-         |[3:10..3:11): s => local2
+         |[3:10..3:11): s => local1
          |""".stripMargin,
   )
 
@@ -6071,44 +6061,39 @@ class PatternDesugaringSuite extends SemanticdbSuite {
   )(
     if (ScalaVersion.is212)
       """|[0:7..0:9): g1 <= _empty_/g1.
-         |[1:7..1:8): a <= local2
+         |[1:7..1:8): a <= local1
          |[1:9..1:11): :: => scala/package.`::`.
-         |[1:12..1:13): y <= local3
+         |[1:12..1:13): y <= local2
          |[1:17..1:21): List => scala/collection/immutable/List.
          |[1:22..1:26): List => scala/collection/immutable/List.
-         |[1:38..1:39): y => local3
+         |[1:38..1:39): y => local2
          |""".stripMargin
     else
       """|[0:7..0:9): g1 <= _empty_/g1.
-         |[1:7..1:8): a <= local2
+         |[1:7..1:8): a <= local1
          |[1:9..1:11): :: => scala/package.`::`.
-         |[1:12..1:13): y <= local3
+         |[1:12..1:13): y <= local2
          |[1:17..1:21): List => scala/package.List.
          |[1:22..1:26): List => scala/package.List.
-         |[1:38..1:39): y => local3
+         |[1:38..1:39): y => local2
          |""".stripMargin,
     """|_empty_/g1. => final object g1 extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |local0 => synthetic param check$ifrefutable$1: List[Int]
+       |local0 => synthetic param x$1: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: List[Int]
-       |  List => scala/collection/immutable/List#
+       |local1 => val local a: Int
        |  Int => scala/Int#
-       |local2 => val local a: Int
-       |  Int => scala/Int#
-       |local3 => val local y: List[Int]
+       |local2 => val local y: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[1:2..1:39): for (a :: y <- List(List(1))) yield y => orig(List(List(1))).withFilter({(check$ifrefutable$1) => orig()}).map[List[Int], List[List[Int]]]({(x$1) => orig(y)})(List.canBuildFrom[List[Int]])
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:39): for (a :: y <- List(List(1))) yield y => orig(List(List(1))).map[List[Int], List[List[Int]]]({(x$1) => orig(y)})(List.canBuildFrom[List[Int]])
          |  map => scala/collection/generic/FilterMonadic#map().
          |  List => scala/collection/immutable/List#
          |  Int => scala/Int#
-         |  x$1 => local1
+         |  x$1 => local0
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[1:17..1:21): List => *.apply[List[Int]]
@@ -6120,13 +6105,11 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:39): for (a :: y <- List(List(1))) yield y => orig(List(List(1))).withFilter({(check$ifrefutable$1) => orig()}).map[List[Int]]({(x$1) => orig(y)})
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:39): for (a :: y <- List(List(1))) yield y => orig(List(List(1))).map[List[Int]]({(x$1) => orig(y)})
          |  map => scala/collection/WithFilter#map().
          |  List => scala/collection/immutable/List#
          |  Int => scala/Int#
-         |  x$1 => local1
+         |  x$1 => local0
          |[1:17..1:21): List => *.apply[List[Int]]
          |  apply => scala/collection/IterableFactory#apply().
          |  List => scala/collection/immutable/List#
@@ -6157,13 +6140,13 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:54..1:57): Int => scala/Int#
          |[1:62..1:66): Some => scala/Some.
          |[1:67..1:68): p => _empty_/g2.`~`.unapply().(p)
-         |[2:7..2:8): a <= local2
+         |[2:7..2:8): a <= local1
          |[2:9..2:10): ~ => _empty_/g2.`~`.
-         |[2:11..2:12): b <= local3
+         |[2:11..2:12): b <= local2
          |[2:16..2:20): List => scala/collection/immutable/List.
-         |[2:36..2:37): a => local2
+         |[2:36..2:37): a => local1
          |[2:38..2:39): + => scala/Int#`+`(+4).
-         |[2:40..2:41): b => local3
+         |[2:40..2:41): b => local2
          |""".stripMargin
     else
       """|[0:7..0:9): g2 <= _empty_/g2.
@@ -6177,13 +6160,13 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:54..1:57): Int => scala/Int#
          |[1:62..1:66): Some => scala/Some.
          |[1:67..1:68): p => _empty_/g2.`~`.unapply().(p)
-         |[2:7..2:8): a <= local2
+         |[2:7..2:8): a <= local1
          |[2:9..2:10): ~ => _empty_/g2.`~`.
-         |[2:11..2:12): b <= local3
+         |[2:11..2:12): b <= local2
          |[2:16..2:20): List => scala/package.List.
-         |[2:36..2:37): a => local2
+         |[2:36..2:37): a => local1
          |[2:38..2:39): + => scala/Int#`+`(+4).
-         |[2:40..2:41): b => local3
+         |[2:40..2:41): b => local2
          |""".stripMargin,
     """|_empty_/g2. => final object g2 extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
@@ -6197,15 +6180,12 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |_empty_/g2.`~`.unapply().(p) => param p: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local0 => synthetic param check$ifrefutable$1: Tuple2[Int, Int]
+       |local0 => synthetic param x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
+       |local1 => val local a: Int
        |  Int => scala/Int#
-       |local2 => val local a: Int
-       |  Int => scala/Int#
-       |local3 => val local b: Int
+       |local2 => val local b: Int
        |  Int => scala/Int#
        |""".stripMargin,
     if (ScalaVersion.is212)
@@ -6213,13 +6193,11 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |  apply => scala/Some.apply().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
-         |[2:2..2:41): for (a ~ b <- List((1, 2))) yield a + b => orig(List((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).map[Int, List[Int]]({(x$1) => orig(a + b)})(List.canBuildFrom[Int])
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local0
+         |[2:2..2:41): for (a ~ b <- List((1, 2))) yield a + b => orig(List((1, 2))).map[Int, List[Int]]({(x$1) => orig(a + b)})(List.canBuildFrom[Int])
          |  map => scala/collection/generic/FilterMonadic#map().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  x$1 => local1
+         |  x$1 => local0
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[2:16..2:20): List => *.apply[Tuple2[Int, Int]]
@@ -6232,12 +6210,10 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |  apply => scala/Some.apply().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
-         |[2:2..2:41): for (a ~ b <- List((1, 2))) yield a + b => orig(List((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(a + b)})
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$1 => local0
+         |[2:2..2:41): for (a ~ b <- List((1, 2))) yield a + b => orig(List((1, 2))).map[Int]({(x$1) => orig(a + b)})
          |  map => scala/collection/WithFilter#map().
          |  Int => scala/Int#
-         |  x$1 => local1
+         |  x$1 => local0
          |[2:16..2:20): List => *.apply[Tuple2[Int, Int]]
          |  apply => scala/collection/IterableFactory#apply().
          |  Tuple2 => scala/Tuple2#
@@ -6255,38 +6231,33 @@ class PatternDesugaringSuite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|[0:7..0:9): g3 <= _empty_/g3.
          |[1:7..1:11): Some => scala/Some.
-         |[1:12..1:13): a <= local2
+         |[1:12..1:13): a <= local1
          |[1:18..1:22): List => scala/collection/immutable/List.
          |[1:23..1:29): Option => scala/Option.
-         |[1:41..1:42): a => local2
+         |[1:41..1:42): a => local1
          |""".stripMargin
     else
       """|[0:7..0:9): g3 <= _empty_/g3.
          |[1:7..1:11): Some => scala/Some.
-         |[1:12..1:13): a <= local2
+         |[1:12..1:13): a <= local1
          |[1:18..1:22): List => scala/package.List.
          |[1:23..1:29): Option => scala/Option.
-         |[1:41..1:42): a => local2
+         |[1:41..1:42): a => local1
          |""".stripMargin,
     """|_empty_/g3. => final object g3 extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |local0 => synthetic param check$ifrefutable$1: Option[Int]
+       |local0 => synthetic param x$1: Option[Int]
        |  Option => scala/Option#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Option[Int]
-       |  Option => scala/Option#
-       |  Int => scala/Int#
-       |local2 => val local a: Int
+       |local1 => val local a: Int
        |  Int => scala/Int#
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[1:2..1:42): for (Some(a) <- List(Option(1))) yield a => orig(List(Option(1))).withFilter({(check$ifrefutable$1) => orig()}).map[Int, List[Int]]({(x$1) => orig(a)})(List.canBuildFrom[Int])
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:42): for (Some(a) <- List(Option(1))) yield a => orig(List(Option(1))).map[Int, List[Int]]({(x$1) => orig(a)})(List.canBuildFrom[Int])
          |  map => scala/collection/generic/FilterMonadic#map().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  x$1 => local1
+         |  x$1 => local0
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[1:18..1:22): List => *.apply[Option[Int]]
@@ -6298,12 +6269,10 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:42): for (Some(a) <- List(Option(1))) yield a => orig(List(Option(1))).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(a)})
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:42): for (Some(a) <- List(Option(1))) yield a => orig(List(Option(1))).map[Int]({(x$1) => orig(a)})
          |  map => scala/collection/WithFilter#map().
          |  Int => scala/Int#
-         |  x$1 => local1
+         |  x$1 => local0
          |[1:18..1:22): List => *.apply[Option[Int]]
          |  apply => scala/collection/IterableFactory#apply().
          |  Option => scala/Option#
@@ -6323,43 +6292,38 @@ class PatternDesugaringSuite extends SemanticdbSuite {
   )(
     if (ScalaVersion.is212)
       """|[0:7..0:9): g4 <= _empty_/g4.
-         |[1:8..1:9): a <= local2
-         |[1:11..1:12): b <= local3
+         |[1:8..1:9): a <= local1
+         |[1:11..1:12): b <= local2
          |[1:17..1:21): List => scala/collection/immutable/List.
-         |[1:37..1:38): a => local2
+         |[1:37..1:38): a => local1
          |[1:39..1:40): + => scala/Int#`+`(+4).
-         |[1:41..1:42): b => local3
+         |[1:41..1:42): b => local2
          |""".stripMargin
     else
       """|[0:7..0:9): g4 <= _empty_/g4.
-         |[1:8..1:9): a <= local2
-         |[1:11..1:12): b <= local3
+         |[1:8..1:9): a <= local1
+         |[1:11..1:12): b <= local2
          |[1:17..1:21): List => scala/package.List.
-         |[1:37..1:38): a => local2
+         |[1:37..1:38): a => local1
          |[1:39..1:40): + => scala/Int#`+`(+4).
-         |[1:41..1:42): b => local3
+         |[1:41..1:42): b => local2
          |""".stripMargin,
     """|_empty_/g4. => final object g4 extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |local0 => synthetic param check$ifrefutable$1: Tuple2[Int, Int]
+       |local0 => synthetic param x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
+       |local1 => val local a: Int
        |  Int => scala/Int#
-       |local2 => val local a: Int
-       |  Int => scala/Int#
-       |local3 => val local b: Int
+       |local2 => val local b: Int
        |  Int => scala/Int#
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[1:2..1:42): for ((a, b) <- List((1, 2))) yield a + b => orig(List((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).map[Int, List[Int]]({(x$1) => orig(a + b)})(List.canBuildFrom[Int])
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:42): for ((a, b) <- List((1, 2))) yield a + b => orig(List((1, 2))).map[Int, List[Int]]({(x$1) => orig(a + b)})(List.canBuildFrom[Int])
          |  map => scala/collection/generic/FilterMonadic#map().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  x$1 => local1
+         |  x$1 => local0
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[1:17..1:21): List => *.apply[Tuple2[Int, Int]]
@@ -6368,12 +6332,10 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:42): for ((a, b) <- List((1, 2))) yield a + b => orig(List((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(a + b)})
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:42): for ((a, b) <- List((1, 2))) yield a + b => orig(List((1, 2))).map[Int]({(x$1) => orig(a + b)})
          |  map => scala/collection/WithFilter#map().
          |  Int => scala/Int#
-         |  x$1 => local1
+         |  x$1 => local0
          |[1:17..1:21): List => *.apply[Tuple2[Int, Int]]
          |  apply => scala/collection/IterableFactory#apply().
          |  Tuple2 => scala/Tuple2#
@@ -6391,49 +6353,43 @@ class PatternDesugaringSuite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|[0:7..0:9): g5 <= _empty_/g5.
          |[1:7..1:11): Some => scala/Some.
-         |[1:12..1:13): a <= local2
+         |[1:12..1:13): a <= local1
          |[1:14..1:16): :: => scala/package.`::`.
-         |[1:17..1:18): y <= local3
+         |[1:17..1:18): y <= local2
          |[1:23..1:27): List => scala/collection/immutable/List.
          |[1:28..1:34): Option => scala/Option.
          |[1:35..1:39): List => scala/collection/immutable/List.
-         |[1:52..1:53): y => local3
+         |[1:52..1:53): y => local2
          |""".stripMargin
     else
       """|[0:7..0:9): g5 <= _empty_/g5.
          |[1:7..1:11): Some => scala/Some.
-         |[1:12..1:13): a <= local2
+         |[1:12..1:13): a <= local1
          |[1:14..1:16): :: => scala/package.`::`.
-         |[1:17..1:18): y <= local3
+         |[1:17..1:18): y <= local2
          |[1:23..1:27): List => scala/package.List.
          |[1:28..1:34): Option => scala/Option.
          |[1:35..1:39): List => scala/package.List.
-         |[1:52..1:53): y => local3
+         |[1:52..1:53): y => local2
          |""".stripMargin,
     """|_empty_/g5. => final object g5 extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |local0 => synthetic param check$ifrefutable$1: Option[List[Int]]
+       |local0 => synthetic param x$1: Option[List[Int]]
        |  Option => scala/Option#
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Option[List[Int]]
-       |  Option => scala/Option#
-       |  List => scala/collection/immutable/List#
+       |local1 => val local a: Int
        |  Int => scala/Int#
-       |local2 => val local a: Int
-       |  Int => scala/Int#
-       |local3 => val local y: List[Int]
+       |local2 => val local y: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[1:2..1:53): for (Some(a :: y) <- List(Option(List(1)))) yield y => orig(List(Option(List(1)))).withFilter({(check$ifrefutable$1) => orig()}).map[List[Int], List[List[Int]]]({(x$1) => orig(y)})(List.canBuildFrom[List[Int]])
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:53): for (Some(a :: y) <- List(Option(List(1)))) yield y => orig(List(Option(List(1)))).map[List[Int], List[List[Int]]]({(x$1) => orig(y)})(List.canBuildFrom[List[Int]])
          |  map => scala/collection/generic/FilterMonadic#map().
          |  List => scala/collection/immutable/List#
          |  Int => scala/Int#
-         |  x$1 => local1
+         |  x$1 => local0
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[1:23..1:27): List => *.apply[Option[List[Int]]]
@@ -6450,13 +6406,11 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:53): for (Some(a :: y) <- List(Option(List(1)))) yield y => orig(List(Option(List(1)))).withFilter({(check$ifrefutable$1) => orig()}).map[List[Int]]({(x$1) => orig(y)})
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:53): for (Some(a :: y) <- List(Option(List(1)))) yield y => orig(List(Option(List(1)))).map[List[Int]]({(x$1) => orig(y)})
          |  map => scala/collection/WithFilter#map().
          |  List => scala/collection/immutable/List#
          |  Int => scala/Int#
-         |  x$1 => local1
+         |  x$1 => local0
          |[1:23..1:27): List => *.apply[Option[List[Int]]]
          |  apply => scala/collection/IterableFactory#apply().
          |  Option => scala/Option#
@@ -6481,50 +6435,45 @@ class PatternDesugaringSuite extends SemanticdbSuite {
   )(
     if (ScalaVersion.is212)
       """|[0:7..0:9): g6 <= _empty_/g6.
-         |[1:7..1:8): z <= local2
-         |[1:12..1:13): a <= local3
+         |[1:7..1:8): z <= local1
+         |[1:12..1:13): a <= local2
          |[1:14..1:16): :: => scala/package.`::`.
-         |[1:17..1:18): y <= local4
+         |[1:17..1:18): y <= local3
          |[1:23..1:27): List => scala/collection/immutable/List.
          |[1:28..1:32): List => scala/collection/immutable/List.
-         |[1:44..1:45): z => local2
+         |[1:44..1:45): z => local1
          |""".stripMargin
     else
       """|[0:7..0:9): g6 <= _empty_/g6.
-         |[1:7..1:8): z <= local2
-         |[1:12..1:13): a <= local3
+         |[1:7..1:8): z <= local1
+         |[1:12..1:13): a <= local2
          |[1:14..1:16): :: => scala/package.`::`.
-         |[1:17..1:18): y <= local4
+         |[1:17..1:18): y <= local3
          |[1:23..1:27): List => scala/package.List.
          |[1:28..1:32): List => scala/package.List.
-         |[1:44..1:45): z => local2
+         |[1:44..1:45): z => local1
          |""".stripMargin,
     """|_empty_/g6. => final object g6 extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |local0 => synthetic param check$ifrefutable$1: List[Int]
+       |local0 => synthetic param x$1: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: List[Int]
-       |  List => scala/collection/immutable/List#
-       |  Int => scala/Int#
-       |local2 => val local z: ::[Int]
+       |local1 => val local z: ::[Int]
        |  :: => scala/collection/immutable/`::`#
        |  Int => scala/Int#
-       |local3 => val local a: Int
+       |local2 => val local a: Int
        |  Int => scala/Int#
-       |local4 => val local y: List[Int]
+       |local3 => val local y: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[1:2..1:45): for (z @ (a :: y) <- List(List(1))) yield z => orig(List(List(1))).withFilter({(check$ifrefutable$1) => orig()}).map[::[Int], List[::[Int]]]({(x$1) => orig(z)})(List.canBuildFrom[::[Int]])
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:45): for (z @ (a :: y) <- List(List(1))) yield z => orig(List(List(1))).map[::[Int], List[::[Int]]]({(x$1) => orig(z)})(List.canBuildFrom[::[Int]])
          |  map => scala/collection/generic/FilterMonadic#map().
          |  :: => scala/collection/immutable/`::`#
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  x$1 => local1
+         |  x$1 => local0
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[1:23..1:27): List => *.apply[List[Int]]
@@ -6536,13 +6485,11 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:45): for (z @ (a :: y) <- List(List(1))) yield z => orig(List(List(1))).withFilter({(check$ifrefutable$1) => orig()}).map[::[Int]]({(x$1) => orig(z)})
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:45): for (z @ (a :: y) <- List(List(1))) yield z => orig(List(List(1))).map[::[Int]]({(x$1) => orig(z)})
          |  map => scala/collection/WithFilter#map().
          |  :: => scala/collection/immutable/`::`#
          |  Int => scala/Int#
-         |  x$1 => local1
+         |  x$1 => local0
          |[1:23..1:27): List => *.apply[List[Int]]
          |  apply => scala/collection/IterableFactory#apply().
          |  List => scala/collection/immutable/List#
@@ -6562,56 +6509,49 @@ class PatternDesugaringSuite extends SemanticdbSuite {
   )(
     if (ScalaVersion.is212)
       """|[0:7..0:9): g8 <= _empty_/g8.
-         |[1:8..1:9): a <= local2
-         |[1:11..1:12): b <= local3
+         |[1:8..1:9): a <= local1
+         |[1:11..1:12): b <= local2
          |[1:17..1:21): List => scala/collection/immutable/List.
          |[1:31..1:38): println => scala/Predef.println(+1).
-         |[1:39..1:40): a => local2
+         |[1:39..1:40): a => local1
          |[1:41..1:42): + => scala/Int#`+`(+4).
-         |[1:43..1:44): b => local3
+         |[1:43..1:44): b => local2
          |""".stripMargin
     else
       """|[0:7..0:9): g8 <= _empty_/g8.
-         |[1:8..1:9): a <= local2
-         |[1:11..1:12): b <= local3
+         |[1:8..1:9): a <= local1
+         |[1:11..1:12): b <= local2
          |[1:17..1:21): List => scala/package.List.
          |[1:31..1:38): println => scala/Predef.println(+1).
-         |[1:39..1:40): a => local2
+         |[1:39..1:40): a => local1
          |[1:41..1:42): + => scala/Int#`+`(+4).
-         |[1:43..1:44): b => local3
+         |[1:43..1:44): b => local2
          |""".stripMargin,
     """|_empty_/g8. => final object g8 extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |local0 => synthetic param check$ifrefutable$1: Tuple2[Int, Int]
+       |local0 => synthetic param x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
+       |local1 => val local a: Int
        |  Int => scala/Int#
-       |local2 => val local a: Int
-       |  Int => scala/Int#
-       |local3 => val local b: Int
+       |local2 => val local b: Int
        |  Int => scala/Int#
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[1:2..1:45): for ((a, b) <- List((1, 2))) println(a + b) => orig(List((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).foreach[Unit]({(x$1) => orig(println(a + b))})
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:45): for ((a, b) <- List((1, 2))) println(a + b) => orig(List((1, 2))).foreach[Unit]({(x$1) => orig(println(a + b))})
          |  foreach => scala/collection/generic/FilterMonadic#foreach().
          |  Unit => scala/Unit#
-         |  x$1 => local1
+         |  x$1 => local0
          |[1:17..1:21): List => *.apply[Tuple2[Int, Int]]
          |  apply => scala/collection/immutable/List.apply().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:45): for ((a, b) <- List((1, 2))) println(a + b) => orig(List((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).foreach[Unit]({(x$1) => orig(println(a + b))})
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:45): for ((a, b) <- List((1, 2))) println(a + b) => orig(List((1, 2))).foreach[Unit]({(x$1) => orig(println(a + b))})
          |  foreach => scala/collection/WithFilter#foreach().
          |  Unit => scala/Unit#
-         |  x$1 => local1
+         |  x$1 => local0
          |[1:17..1:21): List => *.apply[Tuple2[Int, Int]]
          |  apply => scala/collection/IterableFactory#apply().
          |  Tuple2 => scala/Tuple2#
@@ -6676,48 +6616,40 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |""".stripMargin,
   )(
     """|[0:7..0:10): g11 <= _empty_/g11.
-       |[1:7..1:8): x <= local1
+       |[1:7..1:8): x <= local0
        |[1:10..1:13): Int => scala/Int#
        |[1:17..1:23): Option => scala/Option.
-       |[1:34..1:35): x => local1
-       |[2:7..2:8): x <= local3
+       |[1:34..1:35): x => local0
+       |[2:7..2:8): x <= local1
        |[2:10..2:13): Int => scala/Int#
        |[2:17..2:23): Option => scala/Option.
        |[2:28..2:35): println => scala/Predef.println(+1).
-       |[2:36..2:37): x => local3
+       |[2:36..2:37): x => local1
        |[3:2..3:8): Option => scala/Option.
        |[3:12..3:22): withFilter => scala/Option#withFilter().
-       |[3:30..3:31): x <= local4
+       |[3:30..3:31): x <= local2
        |[3:33..3:36): Int => scala/Int#
        |""".stripMargin,
     """|_empty_/g11. => final object g11 extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |local0 => synthetic param check$ifrefutable$1: Int
+       |local0 => param x: Int
        |  Int => scala/Int#
        |local1 => param x: Int
        |  Int => scala/Int#
-       |local2 => synthetic param check$ifrefutable$2: Int
-       |  Int => scala/Int#
-       |local3 => param x: Int
-       |  Int => scala/Int#
-       |local4 => val local x: Int
+       |local2 => val local x: Int
        |  Int => scala/Int#
        |""".stripMargin,
-    """|[1:2..1:35): for (x: Int <- Option(1)) yield x => orig(Option(1)).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x) => orig(x)})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$1 => local0
+    """|[1:2..1:35): for (x: Int <- Option(1)) yield x => orig(Option(1)).map[Int]({(x) => orig(x)})
        |  map => scala/Option#WithFilter#map().
        |  Int => scala/Int#
-       |  x => local1
+       |  x => local0
        |[1:17..1:23): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[2:2..2:38): for (x: Int <- Option(1)) println(x) => orig(Option(1)).withFilter({(check$ifrefutable$2) => orig()}).foreach[Unit]({(x) => orig(println(x))})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$2 => local2
+       |[2:2..2:38): for (x: Int <- Option(1)) println(x) => orig(Option(1)).foreach[Unit]({(x) => orig(println(x))})
        |  foreach => scala/Option#WithFilter#foreach().
        |  Unit => scala/Unit#
-       |  x => local3
+       |  x => local1
        |[2:17..2:23): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#

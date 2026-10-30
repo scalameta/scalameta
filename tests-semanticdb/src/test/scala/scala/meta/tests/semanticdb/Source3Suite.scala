@@ -102,41 +102,36 @@ class Source3Suite extends FunSuite {
        |Uri => interactive.scala
        |Text => non-empty
        |Language => Scala
-       |Symbols => 5 entries
+       |Symbols => 4 entries
        |Occurrences => 8 entries
        |Synthetics => 2 entries
        |
        |Symbols:
        |b/a. => final object a extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |local0 => synthetic param check$ifrefutable$1: Tuple2[Int, Int]
+       |local0 => synthetic param x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
+       |local1 => val local x: Int
        |  Int => scala/Int#
-       |local2 => val local x: Int
-       |  Int => scala/Int#
-       |local3 => val local y: Int
+       |local2 => val local y: Int
        |  Int => scala/Int#
        |
        |Occurrences:
        |[0:8..0:9): b <= b/
        |[1:7..1:8): a <= b/a.
-       |[2:9..2:10): x <= local2
-       |[2:12..2:13): y <= local3
+       |[2:9..2:10): x <= local1
+       |[2:12..2:13): y <= local2
        |[2:18..2:24): Option => scala/Option.
-       |[2:41..2:42): x => local2
+       |[2:41..2:42): x => local1
        |[2:43..2:44): + => scala/Int#`+`(+4).
-       |[2:45..2:46): y => local3
+       |[2:45..2:46): y => local2
        |
        |Synthetics:
-       |[2:2..2:46): for { (x, y) <- Option((1, 2)) } yield x + y => orig(Option((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(x + y)})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$1 => local0
+       |[2:2..2:46): for { (x, y) <- Option((1, 2)) } yield x + y => orig(Option((1, 2))).map[Int]({(x$1) => orig(x + y)})
        |  map => scala/Option#WithFilter#map().
        |  Int => scala/Int#
-       |  x$1 => local1
+       |  x$1 => local0
        |[2:18..2:24): Option => *.apply[Tuple2[Int, Int]]
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
@@ -158,64 +153,54 @@ class Source3Suite extends FunSuite {
        |Uri => interactive.scala
        |Text => non-empty
        |Language => Scala
-       |Symbols => 8 entries
+       |Symbols => 6 entries
        |Occurrences => 13 entries
        |Synthetics => 5 entries
        |
        |Symbols:
        |b/c. => final object c extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |local0 => synthetic param check$ifrefutable$1: Tuple2[Int, Int]
+       |local0 => synthetic param x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
+       |local1 => val local x: Int
        |  Int => scala/Int#
-       |local2 => val local x: Int
+       |local2 => val local y: Int
        |  Int => scala/Int#
-       |local3 => val local y: Int
-       |  Int => scala/Int#
-       |local4 => synthetic param check$ifrefutable$2: Option[Int]
+       |local3 => synthetic param x$2: Option[Int]
        |  Option => scala/Option#
        |  Int => scala/Int#
-       |local5 => synthetic param x$2: Option[Int]
-       |  Option => scala/Option#
-       |  Int => scala/Int#
-       |local6 => val local x: Int
+       |local4 => val local x: Int
        |  Int => scala/Int#
        |
        |Occurrences:
        |[0:8..0:9): b <= b/
        |[1:7..1:8): c <= b/c.
-       |[2:14..2:15): x <= local2
-       |[2:17..2:18): y <= local3
+       |[2:14..2:15): x <= local1
+       |[2:17..2:18): y <= local2
        |[2:23..2:29): Option => scala/Option.
-       |[2:46..2:47): x => local2
+       |[2:46..2:47): x => local1
        |[2:48..2:49): + => scala/Int#`+`(+4).
-       |[2:50..2:51): y => local3
+       |[2:50..2:51): y => local2
        |[3:13..3:17): Some => scala/Some.
-       |[3:18..3:19): x <= local6
+       |[3:18..3:19): x <= local4
        |[3:24..3:30): Option => scala/Option.
        |[3:31..3:37): Option => scala/Option.
-       |[3:50..3:51): x => local6
+       |[3:50..3:51): x => local4
        |
        |Synthetics:
-       |[2:2..2:51): for { case (x, y) <- Option((1, 2)) } yield x + y => orig(Option((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(x + y)})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$1 => local0
+       |[2:2..2:51): for { case (x, y) <- Option((1, 2)) } yield x + y => orig(Option((1, 2))).map[Int]({(x$1) => orig(x + y)})
        |  map => scala/Option#WithFilter#map().
        |  Int => scala/Int#
-       |  x$1 => local1
+       |  x$1 => local0
        |[2:23..2:29): Option => *.apply[Tuple2[Int, Int]]
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |[3:2..3:51): for { case Some(x) <- Option(Option(1)) } yield x => orig(Option(Option(1))).withFilter({(check$ifrefutable$2) => orig()}).map[Int]({(x$2) => orig(x)})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$2 => local4
+       |[3:2..3:51): for { case Some(x) <- Option(Option(1)) } yield x => orig(Option(Option(1))).map[Int]({(x$2) => orig(x)})
        |  map => scala/Option#WithFilter#map().
        |  Int => scala/Int#
-       |  x$2 => local5
+       |  x$2 => local3
        |[3:24..3:30): Option => *.apply[Option[Int]]
        |  apply => scala/Option.apply().
        |  Option => scala/Option#
