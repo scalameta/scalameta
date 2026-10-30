@@ -78,7 +78,7 @@ class Issue4916Suite extends SemanticdbSuite {
       links.map { link =>
         val where =
           if (link.symbol.isEmpty) "no symbol"
-          else if (inSymbols(link.symbol)) "in Symbols"
+          else if (inSymbols.contains(link.symbol)) "in Symbols"
           else "hardlink only"
         s"${info.displayName} => ${link.displayName}: $where"
       }

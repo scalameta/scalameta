@@ -208,7 +208,7 @@ class LocalSymbolsSuite extends FunSuite {
   // locals that the document refers to, without SymbolInformation in Symbols
   private def dangling(doc: s.TextDocument): List[String] = {
     val saved = doc.symbols.map(_.symbol).toSet
-    Ref.findAllMatchIn(doc.toProtoString).map(_.group(1)).filterNot(saved).toList.distinct
+    Ref.findAllMatchIn(doc.toProtoString).map(_.group(1)).filterNot(saved.contains).toList.distinct
       .sortBy(_.stripPrefix("local").toInt)
   }
 
@@ -6494,7 +6494,7 @@ class LocalSymbolsSuite extends FunSuite {
       .replaceAllIn(out.result(), m => "local" + numbers.getOrElseUpdate(m.matched, numbers.size))
     // a local that no occurrence refers to has no stable number
     val orphans = doc.symbols.collect {
-      case i if !defined(i.symbol) && (i.displayName == "t" || i.displayName == "u") =>
+      case i if !defined.contains(i.symbol) && (i.displayName == "t" || i.displayName == "u") =>
         val sym =
           if (i.symbol.isGlobal) i.symbol else numbers.get(i.symbol).fold("a local")("local" + _)
         s"no definition: $sym (${heads(i.symbol)})\n"

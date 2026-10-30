@@ -750,7 +750,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         // the parenthesis of a condition: the comments before it lead the condition
         case _: LeftParen =>
           val kw = prevNonTriviaAt(idx)
-          noTreeBeg(kw) || tokens(kw).isAny[KwIf, KwWhile]
+          noTreeBeg.contains(kw) || tokens(kw).isAny[KwIf, KwWhile]
         // the bracket of an access qualifier: the comments before it lead the qualifier
         case _: LeftBracket => prevNonTrivia(idx).isAny[KwPrivate, KwProtected]
         // after a newline or a delimiter, a token that continues the tree lets the comments through
@@ -826,7 +826,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private val noTreeBeg = new collection.mutable.BitSet
   private def markNoTreeBeg(idx: Int): Unit = if (options.captureComments) noTreeBeg += idx
 
-  private def continuesTree(t: Token, idx: Int): Boolean = t.is[KwThen] || noTreeBeg(idx) ||
+  private def continuesTree(t: Token, idx: Int): Boolean = t.is[KwThen] || noTreeBeg
+    .contains(idx) ||
     !mightStartStat(t, closeDelimOK = true)
 
   // check if `idx` follows a detached comment that is not indented deeper
@@ -850,10 +851,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def endsTree(idx: Int, arrowEnds: Boolean): Boolean = tokens.getOrNull(idx) match {
     case null => false
     case _: Comma | _: Semicolon => idx > 0 && endsTree(prevNonTriviaAt(idx), arrowEnds)
-    case _: RightArrow => arrowEnds || selfArrows(idx) // a case without a body, or a self
+    case _: RightArrow => arrowEnds || selfArrows.contains(idx) // a case without a body, or a self
     // a modifier before a clause, unless its qualifier follows
     case _: ModifierKeyword => !nextNonTrivia(idx).is[LeftBracket]
-    case t => if (canEndStat(t)) !noTreeEnd(idx) else treeEnd(idx)
+    case t => if (canEndStat(t)) !noTreeEnd.contains(idx) else treeEnd.contains(idx)
   }
   private def endsTree(idx: Int, body: Tree): Boolean = endsTree(idx, arrowEnds = body.is[Case])
 
@@ -909,7 +910,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             pastBlank || newlines < 2
           } else {
             // the region that opens here owns them, unless a self opens it
-            if (isIndentAt(idx) && end > from && !selfArrows(beforeFrom)) {
+            if (isIndentAt(idx) && end > from && !selfArrows.contains(beforeFrom)) {
               if (buf ne null) buf.remove(size, buf.length - size)
               end = from
             }

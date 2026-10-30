@@ -33,7 +33,7 @@ trait TypeOps {
       }
       def referenced(gsym: g.Symbol): String = {
         val ssym = gsym.ssym
-        if (gsym.hasFlag(gf.EXISTENTIAL) && !boundExistentials(gsym.deSkolemize))
+        if (gsym.hasFlag(gf.EXISTENTIAL) && !boundExistentials.contains(gsym.deSkolemize))
           freeExistentials += ssym
         ssym
       }
