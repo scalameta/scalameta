@@ -727,7 +727,7 @@ trait TextDocumentOps {
                 // NOTE: List() gets desugared into mkAttributedRef(NilModule)
                 tryMstart(gstart)
                 // the type arguments of `List[T]()` remain only in the type of `Nil`
-                if (gtree.tpe ne null) mstarts.get(gstart).flatMap(_.parent).foreach {
+                if (gtree.tpe ne null) mstarts.get(gstart).parent.foreach {
                   case p: m.Term.ApplyType => tryFindTypes(p.targClause.values, gtree.tpe.typeArgs)
                   case _ =>
                 }
@@ -1033,17 +1033,17 @@ trait TextDocumentOps {
                     val mtparams = mgroup.tparamClause.values
                     tryFindTypeParams(mtparams, gsym.typeParams)
                     // scalac adds a synthetic parameter for each view and context bound
-                    val gevidence = new mutable.ListBuffer[g.Type]
+                    val gevidence = new mutable.ListBuffer[g.Symbol]
                     val gparams = gsym.paramss.iterator.flatten.filter { gp =>
                       val synthetic = gp.isSynthetic
-                      if (synthetic) gevidence += gp.info
+                      if (synthetic) gevidence += gp
                       !synthetic
                     }
                     mgroup.paramClauses.iterator.flatMap(_.values).zip(gparams).foreach {
                       case (mp, gp) => mp.decltpe.foreach(tryFindTermDecl(mp.name, _, gp))
                     }
                     while (gparams.hasNext) gparams.next() // drain
-                    tryFindEvidence(mtparams, gevidence.iterator)
+                    tryFindEvidence(mtparams, gevidence)
                   }
                 }
               case _ =>
@@ -1057,15 +1057,22 @@ trait TextDocumentOps {
             case _ =>
           }
           // scalac types `A <% B` as `A => B` and `A: B` as `B[A]`, in the order of the bounds
-          private def tryFindEvidence(mtparams: List[m.Type.Param], gtpes: Iterator[g.Type]): Unit =
-            mtparams.foreach { mtparam =>
-              mtparam.bounds.view.iterator.zip(gtpes).foreach { case (mtpe, gtpe) =>
-                gtpe.typeArgs.lastOption.foreach(tryFindType(mtpe, _))
+          private def tryFindEvidence(
+              mtparams: Iterable[m.Type.Param],
+              gparams: Iterable[g.Symbol],
+          ): Unit = {
+            val gps = gparams.iterator
+            val mtps = mtparams.iterator
+            while (mtps.hasNext && gps.hasNext) {
+              val mbounds = mtps.next().bounds
+              mbounds.view.iterator.zip(gps).foreach { case (mtpe, gp) =>
+                gp.info.typeArgs.lastOption.foreach(tryFindType(mtpe, _))
               }
-              mtparam.bounds.context.iterator.zip(gtpes).foreach { case (mtpe, gtpe) =>
-                tryFindType(mtpe, gtpe)
+              mbounds.context.iterator.zip(gps).foreach { case (mtpe, gp) =>
+                tryFindType(mtpe, gp.info)
               }
             }
+          }
           private def tryFindTermDecl(mname: m.Name, mtpe: m.Type, gsym: g.Symbol): Unit = {
             success(mname, gsym)
             trySymbolDefinition(gsym)
