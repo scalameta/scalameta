@@ -644,6 +644,13 @@ trait TextDocumentOps {
               case _ =>
             }
 
+            gtree match {
+              case _: g.ClassDef => defineEvidence(gsym.primaryConstructor, gpoint)
+              case _: g.DefDef if !gsym.isSynthetic && !gsym.isConstructor =>
+                defineEvidence(gsym, gpoint)
+              case _ =>
+            }
+
             tryNamedArg(gsym, gstart, gpoint)
 
             (gtree match {
@@ -1043,7 +1050,7 @@ trait TextDocumentOps {
                       case (mp, gp) => mp.decltpe.foreach(tryFindTermDecl(mp.name, _, gp))
                     }
                     while (gparams.hasNext) gparams.next() // drain
-                    tryFindEvidence(mtparams, gevidence)
+                    defineEvidence(mtparams, gevidence, findTypes = true)
                   }
                 }
               case _ =>
@@ -1056,22 +1063,62 @@ trait TextDocumentOps {
             case x: m.Pat.Var => findByName(gsyms, x.name).foreach(tryFindTermDecl(x.name, mtpe, _))
             case _ =>
           }
+          // the evidence comes first in the last parameter list of `gmethod`, defined at `mpoint`
+          private def defineEvidence(gmethod: g.Symbol, mpoint: Int): Unit = mstarts.get(mpoint)
+            .parent.foreach { mdef =>
+              val mtparams = mdef match {
+                case t: m.Tree.WithParamClauseGroups => t.paramClauseGroups
+                    .flatMap(_.tparamClause.values)
+                case t: m.Tree.WithParamClauseGroup => t.paramClauseGroup
+                    .fold(List.empty[m.Type.Param])(_.tparamClause.values)
+                case t: m.Tree.WithTParamClause => t.tparamClause.values
+                case _ => Nil
+              }
+              if (mtparams.nonEmpty) gmethod.paramss.lastOption
+                .foreach(defineEvidence(mtparams, _, findTypes = false))
+            }
           // scalac types `A <% B` as `A => B` and `A: B` as `B[A]`, in the order of the bounds
-          private def tryFindEvidence(
+          private def defineEvidence(
               mtparams: Iterable[m.Type.Param],
               gparams: Iterable[g.Symbol],
+              findTypes: Boolean,
           ): Unit = {
+            /* stop at a parameter that scalac did not add for a bound
+             * (NB: the parameters of a constructor lose their `SYNTHETIC`) */
             val gps = gparams.iterator
+              .takeWhile(x => x.isImplicit && (x.isSynthetic || x.owner.isConstructor))
             val mtps = mtparams.iterator
             while (mtps.hasNext && gps.hasNext) {
               val mbounds = mtps.next().bounds
               mbounds.view.iterator.zip(gps).foreach { case (mtpe, gp) =>
-                gp.info.typeArgs.lastOption.foreach(tryFindType(mtpe, _))
+                if (findTypes) gp.info.typeArgs.lastOption.foreach(tryFindType(mtpe, _))
+                defineEvidence(mtpe, gp)
               }
               mbounds.context.iterator.zip(gps).foreach { case (mtpe, gp) =>
-                tryFindType(mtpe, gp.info)
+                if (findTypes) tryFindType(mtpe, gp.info)
+                defineEvidence(mtpe, gp)
               }
             }
+          }
+          // the source writes no name for the evidence, so define it at the start of its bound
+          private def defineEvidence(mtpe: m.Type, gparam: g.Symbol): Unit = {
+            val ssym = gparam.toSemantic
+            if (ssym == Symbols.None) return
+            // the field of a class parameter shares its definition, as in `withCtorParam`
+            val fields = gparam.owner match {
+              case gpo if gpo.isPrimaryConstructor =>
+                val res = List.newBuilder[String]
+                gpo.owner.info.decl(gparam.name).alternatives.foreach(x =>
+                  if (x.isParamAccessor && !x.isMethod && !x.isUselessOccurrence) {
+                    val field = x.toSemantic
+                    if (field != Symbols.None && field != ssym) res += field
+                  },
+                )
+                res.result()
+              case _ => Nil
+            }
+            val sdef = if (fields.isEmpty) ssym else Symbols.Multi(ssym :: fields)
+            addOccurrenceFromSemantic(mtpe.pos.trunc(0), sdef, Role.DEFINITION)
           }
           private def tryFindTermDecl(mname: m.Name, mtpe: m.Type, gsym: g.Symbol): Unit = {
             success(mname, gsym)
