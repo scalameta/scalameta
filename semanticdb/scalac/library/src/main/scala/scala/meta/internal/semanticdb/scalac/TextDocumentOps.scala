@@ -199,7 +199,7 @@ trait TextDocumentOps {
         val sam = gt.attachments.get[global.SAMFunction].orNull
         if (sam eq null) return
         // the source does not have the check that scalac adds for a pattern that can fail
-        if (gt.vparams.exists(_.name.startsWith(g.nme.CHECK_IF_REFUTABLE_STRING))) return
+        if (isRefutabilityCheck(gt)) return
         val samSym = sam.synthCls
         def atPos(mpos: m.Position): Unit = {
           val entry = samSym.info.decls.elems
@@ -1486,34 +1486,45 @@ trait TextDocumentOps {
 
         private def getApplyToImplicitArgs(gt: g.ApplyToImplicitArgs): s.ApplyTree = {
           val fun = gt.fun match {
-            case f: g.Apply => cachedOrOrig(f)(forApply(f, usePos = false))
-            case f => f.toSemanticOriginal
+            case f: g.Apply => cachedForApplyOrOrig(f)
+            case f => uncachedOrig(f)
           }
           getApplyToImplicitArgs(gt, fun)
         }
 
-        private def cachedForOrOrig(gt: g.Tree) = cachedOrOrig(gt)(gt match {
-          case t: g.ApplyToImplicitArgs => syn(getApplyToImplicitArgs(t))
-          case t: g.Apply => forApply(t, usePos = false)
-          case _ => None
-        })
+        private def cachedForOrOrig(gt: g.Tree): s.Tree = gt match {
+          case t: g.ApplyToImplicitArgs => cachedForImplicitArgsOrOrig(t)
+          case t: g.Apply => cachedForApplyOrOrig(t)
+          case _ => cachedOrOrig(gt)(None)
+        }
+        private def cachedForApplyOrOrig(gt: g.Apply): s.Tree =
+          cachedOrOrig(gt)(forApply(gt, usePos = false))
+        private def cachedForImplicitArgsOrOrig(gt: g.ApplyToImplicitArgs): s.Tree =
+          cachedOrOrig(gt)(syn(getApplyToImplicitArgs(gt)))
 
+        // use it when we don't want to output the original in `synthetics`
+        private def uncachedOrig(gt: g.Tree): s.Tree = gt.toSemanticOriginal
         private def cachedOrOrig(gt: g.Tree)(res: => Option[s.Synthetic]) = cached(gt)(res)
-          .fold[s.Tree](gt.toSemanticOriginal)(_.tree)
+          .fold(uncachedOrig(gt))(_.tree)
+
+        private def forSingleFuncArgApply(
+            gt: g.Apply,
+            farg: g.Function,
+            usePos: Boolean,
+        ): Option[s.Synthetic] = cachedForApplyFun(gt.fun).filter(_.range.isEmpty).flatMap { x =>
+          // a pattern binds through a match on the parameter; its range spans the generator
+          val body = farg.body match {
+            case g.Match(g.Typed(sel, _), cd :: Nil)
+                if farg.vparams.exists(_.symbol == sel.symbol) => cd.body
+            case body => body
+          }
+          val arg = s.FunctionTree(farg.vparams.map(toParamId), cachedForOrOrig(body))
+          syn(gt.toRange, s.ApplyTree(x.tree, List(arg)), usePos)
+        }
 
         private def forApply(gt: g.Apply, usePos: Boolean = true): Option[s.Synthetic] =
           gt.args match {
-            case (f: g.Function) :: Nil => cachedForApplyFun(gt.fun).filter(_.range.isEmpty)
-                .flatMap { x =>
-                  // a pattern binds through a match on the parameter; its range spans the generator
-                  val body = f.body match {
-                    case g.Match(g.Typed(sel, _), cd :: Nil)
-                        if f.vparams.exists(_.symbol == sel.symbol) => cd.body
-                    case body => body
-                  }
-                  val arg = s.FunctionTree(f.vparams.map(toParamId), cachedForOrOrig(body))
-                  syn(gt.toRange, s.ApplyTree(x.tree, List(arg)), usePos)
-                }
+            case (f: g.Function) :: Nil => forSingleFuncArgApply(gt, f, usePos)
             case _ => None
           }
 
@@ -1582,6 +1593,10 @@ trait TextDocumentOps {
 
   private def isSyntheticName(gt: g.Select): Boolean = gt.pos == gt.qualifier.pos &&
     syntheticName(gt.name)(true)(true)(false)
+
+  // the check that scalac adds for a generator whose pattern can fail
+  private def isRefutabilityCheck(gt: g.Function): Boolean = gt.vparams
+    .exists(_.name.startsWith(g.nme.CHECK_IF_REFUTABLE_STRING))
 
   private def syntaxAndPos(mtree: m.Tree): String = s"`$mtree`[${mtree.pos.syntax}]"
 
