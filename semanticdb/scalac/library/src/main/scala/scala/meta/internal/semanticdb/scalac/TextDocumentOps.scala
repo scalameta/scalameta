@@ -140,7 +140,7 @@ trait TextDocumentOps {
       val msinglevalpats = mutable.Map.empty[Int, m.Name]
 
       def addOccurrenceFromSemantic(mpos: m.Position, ssym: String, role: Role): Unit =
-        if (ssym != Symbols.None) occurrences.update(mpos, (ssym, role))
+        if (ssym != Symbols.None) occurrences(mpos) = (ssym, role)
       def addOccurrence(mpos: m.Position, gsym: g.Symbol, role: Role): Unit =
         addOccurrenceFromSemantic(mpos, gsym.toSemantic, role)
 
@@ -164,7 +164,7 @@ trait TextDocumentOps {
         else {
           // keep the definition of each nested lambda that starts at this position
           val sdef = map.get(mdef).fold(ssym)(o => Symbols.Multi(o._1.asMulti :+ ssym))
-          map.update(mdef, (sdef, Role.DEFINITION))
+          map(mdef) = (sdef, Role.DEFINITION)
           saveSymbolFromSemantic(gsym, ssym)
         }
       }
@@ -247,7 +247,7 @@ trait TextDocumentOps {
       }
 
       def addPatOccurrenceFromSemantic(mpos: m.Position, ssym: String): Unit =
-        if (ssym != Symbols.None) mpatoccurrences.update(mpos, (ssym, Role.DEFINITION))
+        if (ssym != Symbols.None) mpatoccurrences(mpos) = (ssym, Role.DEFINITION)
 
       def saveSymbol(gs: g.Symbol): Unit = if (gs.isUsefulSymbolInformation) saveSymbolDo(gs)
       def saveSymbolDo(gs: g.Symbol): Unit = saveSymbolFromSemantic(gs, gs.toSemantic)
@@ -285,7 +285,7 @@ trait TextDocumentOps {
             })
             names.result() match {
               case Nil =>
-              case names => pos.foreach(margnames.update(_, names))
+              case names => pos.foreach(margnames(_) = names)
             }
           }
           private def setWithins(mencl: m.Tree, mname: m.Name): Unit = mwithins.put(mencl, mname)
@@ -376,7 +376,7 @@ trait TextDocumentOps {
               case mtree: m.Importee.Rename =>
                 indexName(mtree.name)
                 return
-              case mtree: m.Term.Super => msupers.update(mtree.pos.end, mtree)
+              case mtree: m.Term.Super => msupers(mtree.pos.end) = mtree
               case mtree: m.Self => mtree.decltpe.foreach(t => mselftypes(t.pos.start) = t)
               case m.Term.ApplyType(m.Term.Name(Symbols.ClassOfLabel), mtpe :: Nil) =>
                 mclassofs(mtree.pos.start) = mtpe
@@ -411,7 +411,7 @@ trait TextDocumentOps {
               case _: m.Term.FunctionLike | _: m.Term.AnonymousFunction |
                   _: m.Term.PartialFunction =>
                 val mpos = mtree.pos
-                mfuncs.update(mpos.start, mpos)
+                mfuncs(mpos.start) = mpos
               // index only the outermost patterns: they include the nested ones
               case mtree: m.Tree.WithPats if !isNestedPat(mtree) =>
                 mtree.pats match {

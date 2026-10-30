@@ -961,11 +961,11 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
       // We want the range of the xml literal part which starts at lastFrom
       // and ends at pos.from.
       val to = pos.from - 1
-      upcomingXmlLiteralParts.update(lastFrom, (to, false))
+      upcomingXmlLiteralParts(lastFrom) = (to, false)
       pos.to + 1
     }
     // The final xml literal part is not followed by any embedded scala expr.
-    upcomingXmlLiteralParts.update(lastFrom, (result, true))
+    upcomingXmlLiteralParts(lastFrom) = (result, true)
 
     // 3. Return only the first xml part.
     fetchXmlPart()
