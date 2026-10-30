@@ -3031,6 +3031,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |[1:50..1:56): AnyRef => scala/AnyRef#
        |[1:63..1:64): f <= local1
        |[1:65..1:66): A <= local3
+       |[1:68..1:68):  <= local4
        |[1:68..1:76): Ordering => scala/package.Ordering#
        |[1:78..1:79): b <= local2
        |[1:81..1:82): A => local3
@@ -3039,6 +3040,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |[1:102..1:103): A => local3
        |[1:109..1:110): g <= local6
        |[1:111..1:112): B <= local8
+       |[1:116..1:116):  <= local9
        |[1:116..1:119): Int => scala/Int#
        |[1:121..1:122): d <= local7
        |[1:124..1:125): B => local8
@@ -3152,17 +3154,21 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |[1:50..1:56): AnyRef => scala/AnyRef#
        |[1:63..1:64): f <= local1
        |[1:65..1:66): A <= local3
+       |[1:68..1:68):  <= local4
        |[1:68..1:76): Ordering => scala/package.Ordering#
        |[1:78..1:79): b <= local2
        |[1:81..1:82): A => local3
        |[1:85..1:86): A => local3
        |[1:92..1:93): g <= local5
        |[1:94..1:95): B <= local7
+       |[1:97..1:97):  <= local6
        |[1:97..1:105): Ordering => scala/package.Ordering#
        |[1:108..1:109): B => local7
        |[1:115..1:116): h <= local8
        |[1:117..1:118): C <= local10
+       |[1:122..1:122):  <= local12
        |[1:122..1:125): Int => scala/Int#
+       |[1:127..1:127):  <= local13
        |[1:127..1:135): Ordering => scala/package.Ordering#
        |[1:137..1:138): c <= local9
        |[1:140..1:141): C => local10

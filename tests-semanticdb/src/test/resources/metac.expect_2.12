@@ -3681,7 +3681,7 @@ Uri => semanticdb/integration/src/main/scala/example/Methods.scala
 Text => non-empty
 Language => Scala
 Symbols => 78 entries
-Occurrences => 149 entries
+Occurrences => 151 entries
 
 Symbols:
 example/Methods# => class Methods[T] extends AnyRef { +35 decls }
@@ -3976,6 +3976,7 @@ Occurrences:
 [16:29..16:32): ??? => scala/Predef.`???`().
 [17:6..17:9): m7a <= example/Methods#m7a().
 [17:10..17:11): U <= example/Methods#m7a().[U]
+[17:13..17:13):  <= example/Methods#m7a().(evidence$1)
 [17:13..17:21): Ordering => scala/math/Ordering#
 [17:23..17:24): c <= example/Methods#m7a().(c)
 [17:26..17:33): Methods => example/Methods#
@@ -3986,6 +3987,7 @@ Occurrences:
 [17:52..17:55): ??? => scala/Predef.`???`().
 [18:6..18:9): m7b <= example/Methods#m7b().
 [18:10..18:11): U <= example/Methods#m7b().[U]
+[18:15..18:15):  <= example/Methods#m7b().(evidence$2)
 [18:15..18:16): T => example/Methods#[T]
 [18:18..18:19): l <= example/Methods#m7b().(l)
 [18:21..18:25): List => example/Methods#List#
@@ -4941,7 +4943,7 @@ Uri => semanticdb/integration/src/main/scala/example/Synthetic.scala
 Text => non-empty
 Language => Scala
 Symbols => 50 entries
-Occurrences => 116 entries
+Occurrences => 118 entries
 Synthetics => 44 entries
 
 Symbols:
@@ -5135,6 +5137,8 @@ Occurrences:
 [26:29..26:32): Int => scala/Int#
 [29:8..29:9): J <= example/Synthetic#J#
 [29:10..29:11): T <= example/Synthetic#J#[T]
+[29:13..29:13):  <= example/Synthetic#J#`<init>`().(evidence$1)
+[29:13..29:13):  <= example/Synthetic#J#evidence$1.
 [29:13..29:21): Manifest => scala/Predef.Manifest#
 [29:29..29:32): arr <= example/Synthetic#J#arr.
 [29:35..29:40): Array => scala/Array.
