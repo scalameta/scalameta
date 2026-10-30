@@ -24,7 +24,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
     if (settings.format.isDetailed) {
       val printed = mutable.Set[String]()
       infoNotes.visited.foreach(info =>
-        if (!printed(info.symbol)) {
+        if (!printed.contains(info.symbol)) {
           printed += info.symbol
           out.print("  ")
           out.print(info.displayName)

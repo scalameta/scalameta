@@ -168,7 +168,7 @@ class Main(settings: Settings, reporter: Reporter) {
               val result = ClassfileInfos.fromClassNode(node, classpathIndex, settings, reporter)
               result.foreach(infos => infos.save(out))
             } catch {
-              case e @ MissingSymbolException(symbol) => if (!missingSymbols(symbol)) {
+              case e @ MissingSymbolException(symbol) => if (!missingSymbols.contains(symbol)) {
                   missingSymbols += symbol
                   reporter.err.println(s"${e.getMessage} in $arg")
                   success = false

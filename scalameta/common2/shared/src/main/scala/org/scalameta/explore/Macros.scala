@@ -75,7 +75,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
 
     def loop(parent: Symbol): Unit = {
       def mark(sym: Symbol): Boolean = {
-        val interesting = sym.isRelevant && !visited(sym)
+        val interesting = sym.isRelevant && !visited.contains(sym)
         if (interesting) visited += sym
         interesting
       }

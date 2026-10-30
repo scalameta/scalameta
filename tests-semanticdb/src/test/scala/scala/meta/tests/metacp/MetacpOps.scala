@@ -25,7 +25,7 @@ object MetacpOps {
   /** Calls `f` with each symbol that the signature of `info` refers to */
   def collectAllSymbolReferences(info: s.SymbolInformation)(f: String => Unit): Unit = {
     val isHardlink = mutable.Set.empty[String]
-    def visitSymbol(symbol: String): Unit = if (!isHardlink(symbol)) f(symbol)
+    def visitSymbol(symbol: String): Unit = if (!isHardlink.contains(symbol)) f(symbol)
     def visitScope(scope: Option[s.Scope])(thunk: => Unit): Unit = {
       var toEnter: Seq[String] = Nil
       scope.foreach { s =>
@@ -104,7 +104,7 @@ object MetacpOps {
       docs().documents.foreach(doc =>
         doc.symbols.foreach(sym =>
           collectAllSymbolReferences(sym)(x =>
-            if (!isPersistedGlobalSymbol(x) && f(x)) pathErrors += x,
+            if (!isPersistedGlobalSymbol.contains(x) && f(x)) pathErrors += x,
           ),
         ),
       )

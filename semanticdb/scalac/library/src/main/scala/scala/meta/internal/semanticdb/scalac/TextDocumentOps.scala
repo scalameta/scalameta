@@ -1543,7 +1543,7 @@ trait TextDocumentOps {
           free = freeExistentials.size
           foreachDocumentLocal((ssym, gdecl) =>
             if (!symbols.contains(ssym) && !gdecl.isUseless && !gdecl.isError &&
-              (!gdecl.hasFlag(gf.EXISTENTIAL) || freeExistentials(ssym)))
+              (!gdecl.hasFlag(gf.EXISTENTIAL) || freeExistentials.contains(ssym)))
               saveSymbolFromSemantic(gdecl, ssym),
           )
         }
