@@ -49,7 +49,7 @@ class SurfaceSuite extends FunSuite {
     }
   }
   private lazy val trees = wildcardImportStatics
-    .filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
+    .filter(s => s != "scala.meta.Tree" && reflectedTrees.contains(s.stripSuffix(".Api")))
   private lazy val tokenRoot = symbolOf[scala.meta.tokens.Token].asRoot
   private lazy val tokens = filterFullNames(tokenRoot.allLeafs, isPublic).sorted
   private lazy val core = explore.allStatics("scala.meta").filterNot(lsp4s).diff(trees).diff(tokens)

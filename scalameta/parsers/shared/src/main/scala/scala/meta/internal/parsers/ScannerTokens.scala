@@ -224,8 +224,8 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
   // the newlines at which an indentation region opened, and those at which one closed
   private val indentAt = new scala.collection.mutable.BitSet
   private val outdentAt = new scala.collection.mutable.BitSet
-  def isIndentAt(idx: Int): Boolean = indentAt(idx)
-  def isOutdentAt(idx: Int): Boolean = outdentAt(idx)
+  def isIndentAt(idx: Int): Boolean = indentAt.contains(idx)
+  def isOutdentAt(idx: Int): Boolean = outdentAt.contains(idx)
 
   // the last token, EOF, stops the search
   def nextAt(idx: Int, f: Token => Boolean): Int = {
@@ -249,7 +249,7 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
 
   // the last token of a statement before a newline
   private val statEolAfter = new scala.collection.mutable.BitSet(tokens.length)
-  def isStatEolAfter(idx: Int): Boolean = statEolAfter(idx)
+  def isStatEolAfter(idx: Int): Boolean = statEolAfter.contains(idx)
   def unmarkStatEolAfter(idx: Int): Unit = statEolAfter -= idx
 
   def mkIndentToken(pointPos: Int): Token = {

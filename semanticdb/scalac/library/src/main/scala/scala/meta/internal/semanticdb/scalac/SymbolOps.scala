@@ -311,7 +311,7 @@ trait SymbolOps {
           val parent = owner.owner
           if (owner.name.dropLocal == sym.name && {
               val index = sourceIndex
-              (index ne null) && index.soleVariables(sym)
+              (index ne null) && index.soleVariables.contains(sym)
             }) return if (parent.isClass) owner.getterIn(parent).orElse(owner) else owner
           if (owner.isArtifact && parent.isClass)
             return parent.info.decl(sym.name).filter(_.pos.samePointAs(sym.pos))

@@ -8563,7 +8563,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
       val decls = classes.sortBy(_.symbol.stripPrefix("local").toInt).map { i =>
         val sig = i.signature.asInstanceOf[s.ClassSignature]
         val members = sig.declarations.toList.flatMap(_.symlinks).map { d =>
-          val info = if (infos(d)) "with" else "without"
+          val info = if (infos.contains(d)) "with" else "without"
           s"$d $info information at ${definitions(d).mkString(", ")}"
         }
         s"${i.symbol} at ${definitions(i.symbol).mkString(", ")} declares ${members.mkString(", ")}"

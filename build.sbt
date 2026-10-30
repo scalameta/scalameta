@@ -694,7 +694,7 @@ lazy val mergeSettings = Def.settings(
   // scalac loads the plugin under a classloader that has the compiler and its dependencies
   assembly / assemblyExcludedJars := {
     val compilerJars = scalaInstance.value.allJars.map(_.getName).toSet
-    (assembly / fullClasspath).value.filter(x => compilerJars(x.data.name))
+    (assembly / fullClasspath).value.filter(x => compilerJars.contains(x.data.name))
   },
   // Relocate the plugin's internal implementation classes into a per-version
   // package, so two different semanticdb-scalac versions can coexist on one
@@ -726,9 +726,10 @@ lazy val mergeSettings = Def.settings(
     val excludedJars = options.excludedJars.map(_.data).toSet
     val rules = (assembly / externalDependencyClasspath).value.flatMap { cp =>
       val data = cp.data
-      if (excludedJars(data)) Nil else jarClasses(toFile(data))
+      if (excludedJars.contains(data)) Nil else jarClasses(toFile(data))
     }.groupBy(packageOf).toList.flatMap { case (pkg, classes) =>
-      if (pkg.isEmpty || compilerPackages(pkg)) classes.distinct.map(x => x -> s"$shaded.$x")
+      if (pkg.isEmpty || compilerPackages.contains(pkg)) classes.distinct
+        .map(x => x -> s"$shaded.$x")
       else List(s"$pkg.*" -> s"$shaded.$pkg.@1")
     }
     options.withShadeRules(options.shadeRules :+ ShadeRule.rename(rules.sorted: _*).inAll)

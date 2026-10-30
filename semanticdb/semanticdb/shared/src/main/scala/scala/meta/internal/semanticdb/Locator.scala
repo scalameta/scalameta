@@ -40,7 +40,7 @@ class Locator(private val fn: Locator.Visitor) extends AnyVal {
             classPath.split(" ").foreach(cp =>
               if (cp.nonEmpty) {
                 val resolved = parent.resolve(cp).normalize
-                if (!ancestors(resolved)) apply(resolved, ancestors)
+                if (!ancestors.contains(resolved)) apply(resolved, ancestors)
               },
             )
           }

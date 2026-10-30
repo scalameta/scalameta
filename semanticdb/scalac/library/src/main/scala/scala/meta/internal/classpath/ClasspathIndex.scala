@@ -105,7 +105,7 @@ object ClasspathIndex {
         element
     }
 
-    private def expandJarEntry(jarpath: AbsolutePath): Unit = if (!doneJars(jarpath))
+    private def expandJarEntry(jarpath: AbsolutePath): Unit = if (!doneJars.contains(jarpath))
       // not yet indexed via another Class-Path
       if (seenJars.add(jarpath)) // try loading it now
         try expandJarEntryImpl(jarpath)
