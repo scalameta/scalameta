@@ -12,7 +12,7 @@ class JSFacadeSuite extends FunSuite {
 
   private[this] def d(pairs: (String, Any)*): js.Dictionary[Any] = {
     val obj = js.Dictionary[Any]()
-    pairs.foreach { case (k, v) => obj.update(k, v) }
+    pairs.foreach { case (k, v) => obj(k) = v }
     obj
   }
   private[this] def a[A](xs: A*): js.Array[A] = js.Array(xs: _*)
