@@ -3198,8 +3198,8 @@ Notes:
   symbol of the class member that it gives rise to - the value symbol for
   plain and `val` parameters and the getter symbol for `var` parameters. The
   associated constructor parameter symbol, e.g.
-  <code>_empty_/C#`&lt;init&gt;`().(x)</code>, does not produce an
-  occurrence.
+  <code>_empty_/C#`&lt;init&gt;`().(x)</code>, produces a second
+  occurrence at the same range if the member has a symbol of its own.
 - Parent constructor invocations in extends clauses also produce empty-range
   references right after the name of the parent type. For example,
   `class D extends C(1)` produces a reference to
