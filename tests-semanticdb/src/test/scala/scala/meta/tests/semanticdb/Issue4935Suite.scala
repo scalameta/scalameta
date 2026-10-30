@@ -213,21 +213,18 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Tuple3 => scala/Tuple3#
        |  Int => scala/Int#
        |  Tuple2 => scala/Tuple2#
-       |local2 => synthetic param check$ifrefutable$1: Tuple2[Int, Int]
+       |local2 => synthetic param x$3: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local3 => synthetic param x$3: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
+       |local3 => val local y: Int
        |  Int => scala/Int#
-       |local4 => val local y: Int
+       |local4 => val local p: Int
        |  Int => scala/Int#
-       |local5 => val local p: Int
+       |local5 => val local q: Int
        |  Int => scala/Int#
-       |local6 => val local q: Int
+       |local6 => val local u: Int
        |  Int => scala/Int#
-       |local7 => val local u: Int
-       |  Int => scala/Int#
-       |local8 => val local v: Int
+       |local7 => val local v: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )

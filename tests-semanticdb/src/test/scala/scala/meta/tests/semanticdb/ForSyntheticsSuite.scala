@@ -26,24 +26,20 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |[2:29..2:35): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[3:2..3:46): for { (a, b) <- Option((1, 2)) } yield a + b => orig(Option((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$2) => orig(a + b)})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$1 => local4
+       |[3:2..3:46): for { (a, b) <- Option((1, 2)) } yield a + b => orig(Option((1, 2))).map[Int]({(x$2) => orig(a + b)})
        |  map => scala/Option#WithFilter#map().
        |  Int => scala/Int#
-       |  x$2 => local5
+       |  x$2 => local4
        |[3:18..3:24): Option => *.apply[Tuple2[Int, Int]]
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |[4:2..4:62): for { a <- Option(1); (b, c) <- Option((a, a)) } yield b + c => orig(Option(1)).flatMap[Int]({(a) => orig(Option((a, a))).withFilter({(check$ifrefutable$2) => orig()}).map[Int]({(x$3) => orig(b + c)})})
+       |[4:2..4:62): for { a <- Option(1); (b, c) <- Option((a, a)) } yield b + c => orig(Option(1)).flatMap[Int]({(a) => orig(Option((a, a))).map[Int]({(x$3) => orig(b + c)})})
        |  flatMap => scala/Option#flatMap().
        |  Int => scala/Int#
-       |  a => local8
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$2 => local9
+       |  a => local7
        |  map => scala/Option#WithFilter#map().
-       |  x$3 => local10
+       |  x$3 => local8
        |[4:13..4:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
@@ -59,14 +55,12 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  for { (a, b) <- Option((1, 2)) if a > 0 } yield b
        |}
        |""".stripMargin,
-    """|[1:2..1:51): for { (a, b) <- Option((1, 2)) if a > 0 } yield b => orig(Option((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).withFilter({(x$1) => orig(a > 0)}).map[Int]({(x$2) => orig(b)})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$1 => local0
+    """|[1:2..1:51): for { (a, b) <- Option((1, 2)) if a > 0 } yield b => orig(Option((1, 2))).withFilter({(x$1) => orig(a > 0)}).map[Int]({(x$2) => orig(b)})
        |  withFilter => scala/Option#WithFilter#withFilter().
-       |  x$1 => local1
+       |  x$1 => local0
        |  map => scala/Option#WithFilter#map().
        |  Int => scala/Int#
-       |  x$2 => local2
+       |  x$2 => local1
        |[1:18..1:24): Option => *.apply[Tuple2[Int, Int]]
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
@@ -80,24 +74,20 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |}
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[1:2..1:47): for { (a, b) <- List((1, 2)) } println(a + b) => orig(List((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).foreach[Unit]({(x$1) => orig(println(a + b))})
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:47): for { (a, b) <- List((1, 2)) } println(a + b) => orig(List((1, 2))).foreach[Unit]({(x$1) => orig(println(a + b))})
          |  foreach => scala/collection/generic/FilterMonadic#foreach().
          |  Unit => scala/Unit#
-         |  x$1 => local1
+         |  x$1 => local0
          |[1:18..1:22): List => *.apply[Tuple2[Int, Int]]
          |  apply => scala/collection/immutable/List.apply().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:47): for { (a, b) <- List((1, 2)) } println(a + b) => orig(List((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).foreach[Unit]({(x$1) => orig(println(a + b))})
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:47): for { (a, b) <- List((1, 2)) } println(a + b) => orig(List((1, 2))).foreach[Unit]({(x$1) => orig(println(a + b))})
          |  foreach => scala/collection/WithFilter#foreach().
          |  Unit => scala/Unit#
-         |  x$1 => local1
+         |  x$1 => local0
          |[1:18..1:22): List => *.apply[Tuple2[Int, Int]]
          |  apply => scala/collection/IterableFactory#apply().
          |  Tuple2 => scala/Tuple2#
@@ -110,14 +100,12 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  for { (a, b) <- Option((1, 2)); c <- Option(a) } yield b + c
        |}
        |""".stripMargin,
-    """|[1:2..1:62): for { (a, b) <- Option((1, 2)); c <- Option(a) } yield b + c => orig(Option((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).flatMap[Int]({(x$1) => orig(Option(a)).map[Int]({(c) => orig(b + c)})})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$1 => local0
+    """|[1:2..1:62): for { (a, b) <- Option((1, 2)); c <- Option(a) } yield b + c => orig(Option((1, 2))).flatMap[Int]({(x$1) => orig(Option(a)).map[Int]({(c) => orig(b + c)})})
        |  flatMap => scala/Option#WithFilter#flatMap().
        |  Int => scala/Int#
-       |  x$1 => local1
+       |  x$1 => local0
        |  map => scala/Option#map().
-       |  c => local2
+       |  c => local1
        |[1:18..1:24): Option => *.apply[Tuple2[Int, Int]]
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
@@ -133,17 +121,15 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  for { a <- Option(1); b = a; (c, d) <- Option((a, b)) } yield c + d
        |}
        |""".stripMargin,
-    """|[1:2..1:69): for { a <- Option(1); b = a; (c, d) <- Option((a, b)) } yield c + d => orig(Option(1)).map[Tuple2[Int, Int]]({(a) => orig(b = a)}).flatMap[Int]({(x$2) => orig(Option((a, b))).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(c + d)})})
+    """|[1:2..1:69): for { a <- Option(1); b = a; (c, d) <- Option((a, b)) } yield c + d => orig(Option(1)).map[Tuple2[Int, Int]]({(a) => orig(b = a)}).flatMap[Int]({(x$2) => orig(Option((a, b))).map[Int]({(x$1) => orig(c + d)})})
        |  map => scala/Option#map().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  a => local0
        |  flatMap => scala/Option#flatMap().
        |  x$2 => local1
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$1 => local2
        |  map => scala/Option#WithFilter#map().
-       |  x$1 => local3
+       |  x$1 => local2
        |[1:13..1:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
@@ -180,15 +166,12 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  for { (a, b) <- Option((1, 2)) } yield for { (c, d) <- Option((a, b)) } yield c + d
        |}
        |""".stripMargin,
-    """|[1:2..1:85): for { (a, b) <- Option((1, 2)) } yield for { (c, d) <- Option((a, b)) } yield c + d => orig(Option((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).map[Option[Int]]({(x$2) => orig(Option((a, b))).withFilter({(check$ifrefutable$2) => orig()}).map[Int]({(x$1) => orig(c + d)})})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$1 => local0
+    """|[1:2..1:85): for { (a, b) <- Option((1, 2)) } yield for { (c, d) <- Option((a, b)) } yield c + d => orig(Option((1, 2))).map[Option[Int]]({(x$2) => orig(Option((a, b))).map[Int]({(x$1) => orig(c + d)})})
        |  map => scala/Option#WithFilter#map().
        |  Option => scala/Option#
        |  Int => scala/Int#
-       |  x$2 => local1
-       |  check$ifrefutable$2 => local2
-       |  x$1 => local3
+       |  x$2 => local0
+       |  x$1 => local1
        |[1:18..1:24): Option => *.apply[Tuple2[Int, Int]]
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
@@ -206,13 +189,11 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |}
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[1:2..1:35): for { a: Int <- List(1) } yield a => orig(List(1)).withFilter({(check$ifrefutable$1) => orig()}).map[Int, List[Int]]({(a) => orig(a)})(List.canBuildFrom[Int])
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:35): for { a: Int <- List(1) } yield a => orig(List(1)).map[Int, List[Int]]({(a) => orig(a)})(List.canBuildFrom[Int])
          |  map => scala/collection/generic/FilterMonadic#map().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  a => local1
+         |  a => local0
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[1:18..1:22): List => *.apply[Int]
@@ -220,12 +201,10 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:35): for { a: Int <- List(1) } yield a => orig(List(1)).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(a) => orig(a)})
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:35): for { a: Int <- List(1) } yield a => orig(List(1)).map[Int]({(a) => orig(a)})
          |  map => scala/collection/WithFilter#map().
          |  Int => scala/Int#
-         |  a => local1
+         |  a => local0
          |[1:18..1:22): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
@@ -237,13 +216,11 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  for { t @ (a, b) <- Option((1, 2)) } yield t
        |}
        |""".stripMargin,
-    """|[1:2..1:46): for { t @ (a, b) <- Option((1, 2)) } yield t => orig(Option((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).map[Tuple2[Int, Int]]({(x$1) => orig(t)})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$1 => local0
+    """|[1:2..1:46): for { t @ (a, b) <- Option((1, 2)) } yield t => orig(Option((1, 2))).map[Tuple2[Int, Int]]({(x$1) => orig(t)})
        |  map => scala/Option#WithFilter#map().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |  x$1 => local1
+       |  x$1 => local0
        |[1:22..1:28): Option => *.apply[Tuple2[Int, Int]]
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
@@ -257,13 +234,11 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |}
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[1:2..1:44): for { Some(a) <- List(Option(1)) } yield a => orig(List(Option(1))).withFilter({(check$ifrefutable$1) => orig()}).map[Int, List[Int]]({(x$1) => orig(a)})(List.canBuildFrom[Int])
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:44): for { Some(a) <- List(Option(1)) } yield a => orig(List(Option(1))).map[Int, List[Int]]({(x$1) => orig(a)})(List.canBuildFrom[Int])
          |  map => scala/collection/generic/FilterMonadic#map().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  x$1 => local1
+         |  x$1 => local0
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[1:19..1:23): List => *.apply[Option[Int]]
@@ -275,12 +250,10 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:44): for { Some(a) <- List(Option(1)) } yield a => orig(List(Option(1))).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(a)})
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[1:2..1:44): for { Some(a) <- List(Option(1)) } yield a => orig(List(Option(1))).map[Int]({(x$1) => orig(a)})
          |  map => scala/collection/WithFilter#map().
          |  Int => scala/Int#
-         |  x$1 => local1
+         |  x$1 => local0
          |[1:19..1:23): List => *.apply[Option[Int]]
          |  apply => scala/collection/IterableFactory#apply().
          |  Option => scala/Option#
@@ -317,13 +290,10 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[2:38..2:39): f => *.apply
        |  apply => scala/Function1#apply().
-       |[5:2..5:45): for { (b, c) <- new W((1, 2)) } yield b + c => orig(new W((1, 2))).withFilter[Nothing]({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(b + c)})
-       |  withFilter => _empty_/W#withFilter().
-       |  Nothing => scala/Nothing#
-       |  check$ifrefutable$1 => local0
+       |[5:2..5:45): for { (b, c) <- new W((1, 2)) } yield b + c => orig(new W((1, 2))).map[Int]({(x$1) => orig(b + c)})
        |  map => _empty_/W#map().
        |  Int => scala/Int#
-       |  x$1 => local1
+       |  x$1 => local0
        |""".stripMargin,
   )
 
@@ -336,28 +306,13 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  for { (b, c) <- new W((1, 2)) } yield b + c
        |}
        |""".stripMargin,
-    if (ScalaVersion.is212)
-      """|[2:38..2:39): f => *.apply
-         |  apply => scala/Function1#apply().
-         |[5:2..5:45): for { (b, c) <- new W((1, 2)) } yield b + c => orig(new W((1, 2))).withFilter({(check$ifrefutable$1) => orig()})(dummyImplicit).map[Int]({(x$1) => orig(b + c)})
-         |  withFilter => _empty_/W#withFilter().
-         |  check$ifrefutable$1 => local0
-         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
-         |  map => _empty_/W#map().
-         |  Int => scala/Int#
-         |  x$1 => local1
-         |""".stripMargin
-    else
-      """|[2:38..2:39): f => *.apply
-         |  apply => scala/Function1#apply().
-         |[5:2..5:45): for { (b, c) <- new W((1, 2)) } yield b + c => orig(new W((1, 2))).withFilter({(check$ifrefutable$1) => orig()})(dummyImplicit).map[Int]({(x$1) => orig(b + c)})
-         |  withFilter => _empty_/W#withFilter().
-         |  check$ifrefutable$1 => local0
-         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
-         |  map => _empty_/W#map().
-         |  Int => scala/Int#
-         |  x$1 => local1
-         |""".stripMargin,
+    """|[2:38..2:39): f => *.apply
+       |  apply => scala/Function1#apply().
+       |[5:2..5:45): for { (b, c) <- new W((1, 2)) } yield b + c => orig(new W((1, 2))).map[Int]({(x$1) => orig(b + c)})
+       |  map => _empty_/W#map().
+       |  Int => scala/Int#
+       |  x$1 => local0
+       |""".stripMargin,
   )
 
   synthetics(
@@ -408,9 +363,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  map => _empty_/G#map().
          |  Int => scala/Int#
          |  x$1 => local0
-         |[11:18..11:31): new F((1, 2)) => *.withFilter({(check$ifrefutable$1) => orig()})(dummyImplicit)
-         |  withFilter => _empty_/F#withFilter().
-         |  check$ifrefutable$1 => local1
+         |[11:18..11:31): new F((1, 2)) => *(dummyImplicit)
          |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
          |""".stripMargin
     else
@@ -420,9 +373,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  map => _empty_/G#map().
          |  Int => scala/Int#
          |  x$1 => local0
-         |[11:18..11:31): new F((1, 2)) => *.withFilter({(check$ifrefutable$1) => orig()})(dummyImplicit)
-         |  withFilter => _empty_/F#withFilter().
-         |  check$ifrefutable$1 => local1
+         |[11:18..11:31): new F((1, 2)) => *(dummyImplicit)
          |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
          |""".stripMargin,
   )
@@ -436,30 +387,13 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  for { (b, c) <- new W((1, 2)) } yield b + c
        |}
        |""".stripMargin,
-    if (ScalaVersion.is212)
-      """|[2:38..2:39): f => *.apply
-         |  apply => scala/Function1#apply().
-         |[5:2..5:45): for { (b, c) <- new W((1, 2)) } yield b + c => orig(new W((1, 2))).withFilter[Nothing]({(check$ifrefutable$1) => orig()})(dummyImplicit).map[Int]({(x$1) => orig(b + c)})
-         |  withFilter => _empty_/W#withFilter().
-         |  Nothing => scala/Nothing#
-         |  check$ifrefutable$1 => local0
-         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
-         |  map => _empty_/W#map().
-         |  Int => scala/Int#
-         |  x$1 => local1
-         |""".stripMargin
-    else
-      """|[2:38..2:39): f => *.apply
-         |  apply => scala/Function1#apply().
-         |[5:2..5:45): for { (b, c) <- new W((1, 2)) } yield b + c => orig(new W((1, 2))).withFilter[Nothing]({(check$ifrefutable$1) => orig()})(dummyImplicit).map[Int]({(x$1) => orig(b + c)})
-         |  withFilter => _empty_/W#withFilter().
-         |  Nothing => scala/Nothing#
-         |  check$ifrefutable$1 => local0
-         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
-         |  map => _empty_/W#map().
-         |  Int => scala/Int#
-         |  x$1 => local1
-         |""".stripMargin,
+    """|[2:38..2:39): f => *.apply
+       |  apply => scala/Function1#apply().
+       |[5:2..5:45): for { (b, c) <- new W((1, 2)) } yield b + c => orig(new W((1, 2))).map[Int]({(x$1) => orig(b + c)})
+       |  map => _empty_/W#map().
+       |  Int => scala/Int#
+       |  x$1 => local0
+       |""".stripMargin,
   )
 
   synthetics(
@@ -473,13 +407,9 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  for { (a, b) <- new M } yield a + b
        |}
        |""".stripMargin,
-    """|[6:18..6:23): new M => *.withFilter({(check$ifrefutable$1) => orig()}).foreach
-       |  withFilter => _empty_/M#withFilter().
-       |  check$ifrefutable$1 => local0
+    """|[6:18..6:23): new M => *.foreach
        |  foreach => _empty_/M#foreach().
-       |[7:18..7:23): new M => *.withFilter({(check$ifrefutable$2) => orig()}).map
-       |  withFilter => _empty_/M#withFilter().
-       |  check$ifrefutable$2 => local3
+       |[7:18..7:23): new M => *.map
        |  map => _empty_/M#map().
        |""".stripMargin,
   )
@@ -528,13 +458,11 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  ClassTag => scala/reflect/ClassTag#
          |[1:13..1:18): Array => *.apply
          |  apply => scala/Array.apply(+5).
-         |[2:2..2:45): for { (a, b) <- Array((1, 2)) } yield a + b => orig(Array((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).map[Int, Array[Int]]({(x$1) => orig(a + b)})(canBuildFrom((`macro-expandee` : ClassTag[Int])))
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local1
+         |[2:2..2:45): for { (a, b) <- Array((1, 2)) } yield a + b => orig(Array((1, 2))).map[Int, Array[Int]]({(x$1) => orig(a + b)})(canBuildFrom((`macro-expandee` : ClassTag[Int])))
          |  map => scala/collection/generic/FilterMonadic#map().
          |  Int => scala/Int#
          |  Array => scala/Array#
-         |  x$1 => local2
+         |  x$1 => local1
          |  canBuildFrom => scala/Array.canBuildFrom().
          |  ClassTag => scala/reflect/ClassTag#
          |[2:18..2:23): Array => *.apply[Tuple2[Int, Int]]
@@ -554,12 +482,10 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  ClassTag => scala/reflect/ClassTag#
          |[1:13..1:18): Array => *.apply
          |  apply => scala/Array.apply(+5).
-         |[2:2..2:45): for { (a, b) <- Array((1, 2)) } yield a + b => orig(Array((1, 2))).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(a + b)})((`macro-expandee` : ClassTag[Int]))
-         |  withFilter => scala/collection/ArrayOps#withFilter().
-         |  check$ifrefutable$1 => local1
+         |[2:2..2:45): for { (a, b) <- Array((1, 2)) } yield a + b => orig(Array((1, 2))).map[Int]({(x$1) => orig(a + b)})((`macro-expandee` : ClassTag[Int]))
          |  map => scala/collection/ArrayOps.WithFilter#map().
          |  Int => scala/Int#
-         |  x$1 => local2
+         |  x$1 => local1
          |  ClassTag => scala/reflect/ClassTag#
          |[2:18..2:23): Array => *.apply[Tuple2[Int, Int]]
          |  apply => scala/Array.apply().
@@ -702,9 +628,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  map => _empty_/G#map().
          |  Int => scala/Int#
          |  x$1 => local0
-         |[11:18..11:31): new F((1, 2)) => *.withFilter({(check$ifrefutable$1) => orig()})(dummyImplicit)
-         |  withFilter => _empty_/F#withFilter().
-         |  check$ifrefutable$1 => local1
+         |[11:18..11:31): new F((1, 2)) => *(dummyImplicit)
          |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
          |""".stripMargin
     else
@@ -715,9 +639,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  map => _empty_/G#map().
          |  Int => scala/Int#
          |  x$1 => local0
-         |[11:18..11:31): new F((1, 2)) => *.withFilter({(check$ifrefutable$1) => orig()})(dummyImplicit)
-         |  withFilter => _empty_/F#withFilter().
-         |  check$ifrefutable$1 => local1
+         |[11:18..11:31): new F((1, 2)) => *(dummyImplicit)
          |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
          |""".stripMargin,
   )
@@ -890,12 +812,10 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  apply => scala/Some.apply().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
-         |[2:2..2:33): for { (a, b) <- g } yield a + b => orig(g).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(a + b)})
-         |  withFilter => scala/Option#withFilter().
-         |  check$ifrefutable$1 => local0
+         |[2:2..2:33): for { (a, b) <- g } yield a + b => orig(g).map[Int]({(x$1) => orig(a + b)})
          |  map => scala/Option#WithFilter#map().
          |  Int => scala/Int#
-         |  x$1 => local1
+         |  x$1 => local0
          |[2:18..2:19): g => *(dummyImplicit)
          |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
          |""".stripMargin
@@ -904,12 +824,10 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  apply => scala/Some.apply().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
-         |[2:2..2:33): for { (a, b) <- g } yield a + b => orig(g).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(a + b)})
-         |  withFilter => scala/Option#withFilter().
-         |  check$ifrefutable$1 => local0
+         |[2:2..2:33): for { (a, b) <- g } yield a + b => orig(g).map[Int]({(x$1) => orig(a + b)})
          |  map => scala/Option#WithFilter#map().
          |  Int => scala/Int#
-         |  x$1 => local1
+         |  x$1 => local0
          |[2:18..2:19): g => *(dummyImplicit)
          |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
          |""".stripMargin,
@@ -1028,12 +946,10 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  a => local1
        |[2:13..2:14): f => *.apply
        |  apply => scala/Function1#apply().
-       |[3:2..3:53): for { (a, b) <- f(1).map(x => (x, x)) } yield a + b => orig(f(1).map(x => (x, x))).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$2) => orig(a + b)})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$1 => local2
+       |[3:2..3:53): for { (a, b) <- f(1).map(x => (x, x)) } yield a + b => orig(f(1).map(x => (x, x))).map[Int]({(x$2) => orig(a + b)})
        |  map => scala/Option#WithFilter#map().
        |  Int => scala/Int#
-       |  x$2 => local3
+       |  x$2 => local2
        |[3:18..3:19): f => *.apply
        |  apply => scala/Function1#apply().
        |[3:18..3:26): f(1).map => *[Tuple2[Int, Int]]
@@ -1304,19 +1220,17 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  apply => scala/Function1#apply().
        |[12:28..12:29): f => *.apply
        |  apply => scala/Function1#apply().
-       |[19:2..19:64): for { (b, c) <- for (x <- new V(1)) yield (x, x) } yield b + c => orig(for (x <- new V(1)) yield (x, x)).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(b + c)})
-       |  withFilter => _empty_/G#withFilter().
-       |  check$ifrefutable$1 => local0
+       |[19:2..19:64): for { (b, c) <- for (x <- new V(1)) yield (x, x) } yield b + c => orig(for (x <- new V(1)) yield (x, x)).map[Int]({(x$1) => orig(b + c)})
        |  map => _empty_/G#map().
        |  Int => scala/Int#
-       |  x$1 => local1
+       |  x$1 => local0
        |[19:28..19:36): new V(1) => *.map
        |  map => _empty_/V#map().
        |[20:2..20:57): for { p <- (for (x <- new V(1)) yield (x, x)) } yield p => orig(for (x <- new V(1)) yield (x, x)).map[Tuple2[Int, Int]]({(p) => orig(p)})
        |  map => _empty_/G#map().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |  p => local5
+       |  p => local4
        |[20:24..20:32): new V(1) => *.map
        |  map => _empty_/V#map().
        |[21:13..21:21): new O(1) => *.flatMap
@@ -1324,7 +1238,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |[21:23..21:77): p <- for (x <- new V(a)) yield (x, x) } yield new G(p) => orig(for (x <- new V(a)) yield (x, x)).map[G]({(p) => orig(new G(p))})
        |  map => _empty_/G#map().
        |  G => _empty_/G#
-       |  p => local8
+       |  p => local7
        |[21:38..21:46): new V(a) => *.map
        |  map => _empty_/V#map().
        |[22:13..22:21): new O(1) => *.map
@@ -1335,7 +1249,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  map => _empty_/V#map().
        |[23:2..23:70): for { a <- Option(1) if (for (x <- new V(a)) yield (x, x)) } yield a => orig(Option(1)).withFilter({(a) => orig(for (x <- new V(a)) yield (x, x))}).map[Int]({(a) => orig(a)})
        |  withFilter => scala/Option#withFilter().
-       |  a => local12
+       |  a => local11
        |  map => scala/Option#WithFilter#map().
        |  Int => scala/Int#
        |[23:13..23:19): Option => *.apply[Int]
@@ -1348,8 +1262,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  G => _empty_/G#
-       |  a => local14
-       |  x$2 => local15
+       |  a => local13
+       |  x$2 => local14
        |[24:13..24:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
@@ -1396,26 +1310,22 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |[5:23..5:29): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[6:2..6:65): for { (a, b) <- for (x <- Option(1)) yield (x, x) } yield a + b => orig(Option(1)).map[Tuple2[Int, Int]]({(x) => orig((x, x))}).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(a + b)})
+       |[6:2..6:65): for { (a, b) <- for (x <- Option(1)) yield (x, x) } yield a + b => orig(Option(1)).map[Tuple2[Int, Int]]({(x) => orig((x, x))}).map[Int]({(x$1) => orig(a + b)})
        |  map => scala/Option#map().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  x => local2
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$1 => local3
        |  map => scala/Option#WithFilter#map().
-       |  x$1 => local4
+       |  x$1 => local3
        |[6:28..6:34): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[7:2..7:61): for { p <- for ((x, 1) <- Option((1, 1))) yield x } yield p => orig(Option((1, 1))).withFilter({(check$ifrefutable$2) => orig()}).map[Int]({(x$2) => orig(x)}).map[Int]({(p) => orig(p)})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$2 => local7
+       |[7:2..7:61): for { p <- for ((x, 1) <- Option((1, 1))) yield x } yield p => orig(Option((1, 1))).map[Int]({(x$2) => orig(x)}).map[Int]({(p) => orig(p)})
        |  map => scala/Option#WithFilter#map().
        |  Int => scala/Int#
-       |  x$2 => local8
+       |  x$2 => local6
        |  map => scala/Option#map().
-       |  p => local9
+       |  p => local7
        |[7:28..7:34): Option => *.apply[Tuple2[Int, Int]]
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
@@ -1423,10 +1333,10 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |[8:2..8:67): for { a <- Option(1); p <- for (x <- Option(a)) yield x } yield p => orig(Option(1)).flatMap[Int]({(a) => orig(Option(a)).map[Int]({(x) => orig(x)}).map[Int]({(p) => orig(p)})})
        |  flatMap => scala/Option#flatMap().
        |  Int => scala/Int#
-       |  a => local11
+       |  a => local9
        |  map => scala/Option#map().
-       |  x => local12
-       |  p => local13
+       |  x => local10
+       |  p => local11
        |[8:13..8:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
@@ -1437,8 +1347,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  map => scala/Option#map().
        |  Option => scala/Option#
        |  Int => scala/Int#
-       |  a => local14
-       |  x => local15
+       |  a => local12
+       |  x => local13
        |[9:13..9:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
@@ -1447,23 +1357,21 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |[10:2..10:70): for { a <- Option(1) if (for (x <- new B((a, a))) yield x) } yield a => orig(Option(1)).withFilter({(a) => orig(new B((a, a))).map[Tuple2[Int, Int]]({(x) => orig(x)})}).map[Int]({(a) => orig(a)})
        |  withFilter => scala/Option#withFilter().
-       |  a => local16
+       |  a => local14
        |  map => _empty_/B#map().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |  x => local17
+       |  x => local15
        |  map => scala/Option#WithFilter#map().
        |[10:13..10:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[11:2..11:75): for { a <- Option(1) if (for ((x, 1) <- new B((a, a))) yield x) } yield a => orig(Option(1)).withFilter({(a) => orig(new B((a, a))).withFilter({(check$ifrefutable$3) => orig()}).map[Int]({(x$3) => orig(x)})}).map[Int]({(a) => orig(a)})
+       |[11:2..11:75): for { a <- Option(1) if (for ((x, 1) <- new B((a, a))) yield x) } yield a => orig(Option(1)).withFilter({(a) => orig(new B((a, a))).map[Int]({(x$3) => orig(x)})}).map[Int]({(a) => orig(a)})
        |  withFilter => scala/Option#withFilter().
-       |  a => local18
-       |  withFilter => _empty_/B#withFilter().
-       |  check$ifrefutable$3 => local19
+       |  a => local16
        |  map => _empty_/B#map().
        |  Int => scala/Int#
-       |  x$3 => local20
+       |  x$3 => local17
        |  map => scala/Option#WithFilter#map().
        |[11:13..11:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
@@ -1473,15 +1381,15 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  Option => scala/Option#
-       |  a => local22
-       |  x$4 => local23
+       |  a => local19
+       |  x$4 => local20
        |[12:13..12:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
        |[12:28..12:56): for (x <- Option(a)) yield x => orig(Option(a)).map[Int]({(x) => orig(x)})
        |  map => scala/Option#map().
        |  Int => scala/Int#
-       |  x => local24
+       |  x => local21
        |[12:38..12:44): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
@@ -1490,17 +1398,15 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  Option => scala/Option#
-       |  a => local26
-       |  x$6 => local27
+       |  a => local23
+       |  x$6 => local24
        |[13:13..13:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[13:28..13:66): for ((x, 1) <- Option((a, a))) yield x => orig(Option((a, a))).withFilter({(check$ifrefutable$4) => orig()}).map[Int]({(x$5) => orig(x)})
-       |  withFilter => scala/Option#withFilter().
-       |  check$ifrefutable$4 => local28
+       |[13:28..13:66): for ((x, 1) <- Option((a, a))) yield x => orig(Option((a, a))).map[Int]({(x$5) => orig(x)})
        |  map => scala/Option#WithFilter#map().
        |  Int => scala/Int#
-       |  x$5 => local29
+       |  x$5 => local25
        |[13:43..13:49): Option => *.apply[Tuple2[Int, Int]]
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
@@ -1532,7 +1438,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |[1:23..1:27): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
-         |[2:2..2:63): for { (a, b) <- for (x <- List(1)) yield (x, x) } yield a + b => orig(List(1)).map[Tuple2[Int, Int], List[Tuple2[Int, Int]]]({(x) => orig((x, x))})(List.canBuildFrom[Tuple2[Int, Int]]).withFilter({(check$ifrefutable$1) => orig()}).map[Int, List[Int]]({(x$1) => orig(a + b)})(List.canBuildFrom[Int])
+         |[2:2..2:63): for { (a, b) <- for (x <- List(1)) yield (x, x) } yield a + b => orig(List(1)).map[Tuple2[Int, Int], List[Tuple2[Int, Int]]]({(x) => orig((x, x))})(List.canBuildFrom[Tuple2[Int, Int]]).map[Int, List[Int]]({(x$1) => orig(a + b)})(List.canBuildFrom[Int])
          |  map => scala/collection/immutable/List#map().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
@@ -1540,24 +1446,20 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  x => local2
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$1 => local3
          |  map => scala/collection/generic/FilterMonadic#map().
-         |  x$1 => local4
+         |  x$1 => local3
          |[2:28..2:32): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
-         |[3:2..3:59): for { p <- for ((x, 1) <- List((1, 1))) yield x } yield p => orig(List((1, 1))).withFilter({(check$ifrefutable$2) => orig()}).map[Int, List[Int]]({(x$2) => orig(x)})(List.canBuildFrom[Int]).map[Int, List[Int]]({(p) => orig(p)})(List.canBuildFrom[Int])
-         |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  check$ifrefutable$2 => local7
+         |[3:2..3:59): for { p <- for ((x, 1) <- List((1, 1))) yield x } yield p => orig(List((1, 1))).map[Int, List[Int]]({(x$2) => orig(x)})(List.canBuildFrom[Int]).map[Int, List[Int]]({(p) => orig(p)})(List.canBuildFrom[Int])
          |  map => scala/collection/generic/FilterMonadic#map().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  x$2 => local8
+         |  x$2 => local6
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |  map => scala/collection/immutable/List#map().
-         |  p => local9
+         |  p => local7
          |[3:28..3:32): List => *.apply[Tuple2[Int, Int]]
          |  apply => scala/collection/immutable/List.apply().
          |  Tuple2 => scala/Tuple2#
@@ -1566,12 +1468,12 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  flatMap => scala/collection/immutable/List#flatMap().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  a => local11
+         |  a => local9
          |  map => scala/collection/immutable/List#map().
-         |  x => local12
+         |  x => local10
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
-         |  p => local13
+         |  p => local11
          |[4:13..4:17): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
@@ -1582,8 +1484,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  map => scala/collection/immutable/List#map().
          |  List => scala/collection/immutable/List#
          |  Int => scala/Int#
-         |  a => local14
-         |  x => local15
+         |  a => local12
+         |  x => local13
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[5:13..5:17): List => *.apply[Int]
@@ -1594,7 +1496,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |[6:2..6:70): for { a <- List(1) if (for (x <- List(a)) yield x).isEmpty } yield a => orig(List(1)).withFilter({(a) => orig((for (x <- List(a)) yield x).isEmpty)}).map[Int, List[Int]]({(a) => orig(a)})(List.canBuildFrom[Int])
          |  withFilter => scala/collection/TraversableLike#withFilter().
-         |  a => local16
+         |  a => local14
          |  map => scala/collection/generic/FilterMonadic#map().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
@@ -1607,7 +1509,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  map => scala/collection/immutable/List#map().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  x => local17
+         |  x => local15
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[6:35..6:39): List => *.apply[Int]
@@ -1618,10 +1520,10 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  a => local18
+         |  a => local16
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
-         |  x$3 => local19
+         |  x$3 => local17
          |[7:13..7:17): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
@@ -1629,7 +1531,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  map => scala/collection/immutable/List#map().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  x => local20
+         |  x => local18
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[7:36..7:40): List => *.apply[Int]
@@ -1646,26 +1548,22 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |[1:23..1:27): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
-         |[2:2..2:63): for { (a, b) <- for (x <- List(1)) yield (x, x) } yield a + b => orig(List(1)).map[Tuple2[Int, Int]]({(x) => orig((x, x))}).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(a + b)})
+         |[2:2..2:63): for { (a, b) <- for (x <- List(1)) yield (x, x) } yield a + b => orig(List(1)).map[Tuple2[Int, Int]]({(x) => orig((x, x))}).map[Int]({(x$1) => orig(a + b)})
          |  map => scala/collection/immutable/List#map().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  x => local2
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$1 => local3
          |  map => scala/collection/WithFilter#map().
-         |  x$1 => local4
+         |  x$1 => local3
          |[2:28..2:32): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
-         |[3:2..3:59): for { p <- for ((x, 1) <- List((1, 1))) yield x } yield p => orig(List((1, 1))).withFilter({(check$ifrefutable$2) => orig()}).map[Int]({(x$2) => orig(x)}).map[Int]({(p) => orig(p)})
-         |  withFilter => scala/collection/IterableOps#withFilter().
-         |  check$ifrefutable$2 => local7
+         |[3:2..3:59): for { p <- for ((x, 1) <- List((1, 1))) yield x } yield p => orig(List((1, 1))).map[Int]({(x$2) => orig(x)}).map[Int]({(p) => orig(p)})
          |  map => scala/collection/WithFilter#map().
          |  Int => scala/Int#
-         |  x$2 => local8
+         |  x$2 => local6
          |  map => scala/collection/immutable/List#map().
-         |  p => local9
+         |  p => local7
          |[3:28..3:32): List => *.apply[Tuple2[Int, Int]]
          |  apply => scala/collection/IterableFactory#apply().
          |  Tuple2 => scala/Tuple2#
@@ -1673,10 +1571,10 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |[4:2..4:63): for { a <- List(1); p <- for (x <- List(a)) yield x } yield p => orig(List(1)).flatMap[Int]({(a) => orig(List(a)).map[Int]({(x) => orig(x)}).map[Int]({(p) => orig(p)})})
          |  flatMap => scala/collection/immutable/List#flatMap().
          |  Int => scala/Int#
-         |  a => local11
+         |  a => local9
          |  map => scala/collection/immutable/List#map().
-         |  x => local12
-         |  p => local13
+         |  x => local10
+         |  p => local11
          |[4:13..4:17): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
@@ -1687,8 +1585,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  map => scala/collection/immutable/List#map().
          |  List => scala/collection/immutable/List#
          |  Int => scala/Int#
-         |  a => local14
-         |  x => local15
+         |  a => local12
+         |  x => local13
          |[5:13..5:17): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
@@ -1697,7 +1595,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |[6:2..6:70): for { a <- List(1) if (for (x <- List(a)) yield x).isEmpty } yield a => orig(List(1)).withFilter({(a) => orig((for (x <- List(a)) yield x).isEmpty)}).map[Int]({(a) => orig(a)})
          |  withFilter => scala/collection/IterableOps#withFilter().
-         |  a => local16
+         |  a => local14
          |  map => scala/collection/WithFilter#map().
          |  Int => scala/Int#
          |[6:13..6:17): List => *.apply[Int]
@@ -1706,7 +1604,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |[6:25..6:51): for (x <- List(a)) yield x => orig(List(a)).map[Int]({(x) => orig(x)})
          |  map => scala/collection/immutable/List#map().
          |  Int => scala/Int#
-         |  x => local17
+         |  x => local15
          |[6:35..6:39): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
@@ -1715,15 +1613,15 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  a => local18
-         |  x$3 => local19
+         |  a => local16
+         |  x$3 => local17
          |[7:13..7:17): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
          |[7:26..7:52): for (x <- List(a)) yield x => orig(List(a)).map[Int]({(x) => orig(x)})
          |  map => scala/collection/immutable/List#map().
          |  Int => scala/Int#
-         |  x => local20
+         |  x => local18
          |[7:36..7:40): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
@@ -1985,9 +1883,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  map => _empty_/G#map().
        |  Int => scala/Int#
        |  x$2 => local0
-       |[11:18..11:31): new F((1, 2)) => *.withFilter({(check$ifrefutable$1) => orig()}).withFilter
+       |[11:18..11:31): new F((1, 2)) => *.withFilter
        |  withFilter => _empty_/F#withFilter().
-       |  check$ifrefutable$1 => local1
        |""".stripMargin,
   )
 
@@ -2001,19 +1898,15 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |}
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[5:2..5:37): for { (a, b) <- new M } yield a + b => orig(new M).withFilter({(check$ifrefutable$1) => orig()}).map({(x$1) => orig(a + b)})(dummyImplicit)
-         |  withFilter => _empty_/M#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[5:2..5:37): for { (a, b) <- new M } yield a + b => orig(new M).map({(x$1) => orig(a + b)})(dummyImplicit)
          |  map => _empty_/M#map().
-         |  x$1 => local1
+         |  x$1 => local0
          |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
          |""".stripMargin
     else
-      """|[5:2..5:37): for { (a, b) <- new M } yield a + b => orig(new M).withFilter({(check$ifrefutable$1) => orig()}).map({(x$1) => orig(a + b)})(dummyImplicit)
-         |  withFilter => _empty_/M#withFilter().
-         |  check$ifrefutable$1 => local0
+      """|[5:2..5:37): for { (a, b) <- new M } yield a + b => orig(new M).map({(x$1) => orig(a + b)})(dummyImplicit)
          |  map => _empty_/M#map().
-         |  x$1 => local1
+         |  x$1 => local0
          |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
          |""".stripMargin,
   )
@@ -2136,20 +2029,18 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  apply => scala/Function1#apply().
        |[14:47..14:48): f => *.apply
        |  apply => scala/Function1#apply().
-       |[22:2..22:45): for { (b, c) <- new F((1, 2)) } yield b + c => orig(new F((1, 2)))(d).withFilter({(check$ifrefutable$1) => orig()}).map[Int]({(x$1) => orig(b + c)})
+       |[22:2..22:45): for { (b, c) <- new F((1, 2)) } yield b + c => orig(new F((1, 2)))(d).map[Int]({(x$1) => orig(b + c)})
        |  d => _empty_/D.d.
-       |  withFilter => _empty_/Gw#withFilter().
-       |  check$ifrefutable$1 => local0
        |  map => _empty_/Gw#map().
        |  Int => scala/Int#
-       |  x$1 => local1
+       |  x$1 => local0
        |[23:2..23:52): for { b <- new F((1, 2)); c <- Option(1) } yield c => orig(new F((1, 2)))(d).flatMap[Int]({(b) => orig(Option(1)).map[Int]({(c) => orig(c)})})
        |  d => _empty_/D.d.
        |  flatMap => _empty_/Gf#flatMap().
        |  Int => scala/Int#
-       |  b => local4
+       |  b => local3
        |  map => scala/Option#map().
-       |  c => local5
+       |  c => local4
        |[23:33..23:39): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
@@ -2157,7 +2048,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  d => _empty_/D.d.
        |  foreach => _empty_/Ge#foreach().
        |  Unit => scala/Unit#
-       |  b => local6
+       |  b => local5
        |""".stripMargin,
   )
 

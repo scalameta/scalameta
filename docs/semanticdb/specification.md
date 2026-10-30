@@ -3745,6 +3745,11 @@ Synthetic(
 
 For loop desugarings
 
+If scalac filters a generator to check its pattern, the synthetic leaves the
+check out. The method after the check keeps the symbol of the method that runs.
+That method is a member of the check's result type, or of the type that an
+implicit view of that result returns.
+
   </td>
   <td>
 

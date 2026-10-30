@@ -15,31 +15,31 @@ class ForComprehension/*<=example.ForComprehension#*/ {
       b/*=>local5*/
     ) ==/*=>java.lang.Object#`==`().*/ (1, 2)
     (
-      c/*<=local12*/,
-      d/*<=local13*/
+      c/*<=local11*/,
+      d/*<=local12*/
     ) <- List/*=>scala.collection.immutable.List.*/((a/*=>local4*/, b/*=>local5*/))
     if (
       a/*=>local4*/,
       b/*=>local5*/,
-      c/*=>local12*/,
-      d/*=>local13*/
+      c/*=>local11*/,
+      d/*=>local12*/
     ) ==/*=>java.lang.Object#`==`().*/ (1, 2, 3, 4)
-    e/*<=local14*/ = (
+    e/*<=local13*/ = (
       a/*=>local4*/,
       b/*=>local5*/,
-      c/*=>local12*/,
-      d/*=>local13*/
+      c/*=>local11*/,
+      d/*=>local12*/
     )
-    if e/*=>local14*/ ==/*=>java.lang.Object#`==`().*/ (1, 2, 3, 4)
-    f/*<=local11*/ <- List/*=>scala.collection.immutable.List.*/(e/*=>local14*/)
+    if e/*=>local13*/ ==/*=>java.lang.Object#`==`().*/ (1, 2, 3, 4)
+    f/*<=local10*/ <- List/*=>scala.collection.immutable.List.*/(e/*=>local13*/)
   } yield {
     (
       a/*=>local4*/,
       b/*=>local5*/,
-      c/*=>local12*/,
-      d/*=>local13*/,
-      e/*=>local14*/,
-      f/*=>local11*/
+      c/*=>local11*/,
+      d/*=>local12*/,
+      e/*=>local13*/,
+      f/*=>local10*/
     )
   }
   val x/*<=example.ForComprehension#x.*/: Option/*=>scala.Option#*/[(Int/*=>scala.Int#*/, Int/*=>scala.Int#*/)] = None/*=>scala.None.*/

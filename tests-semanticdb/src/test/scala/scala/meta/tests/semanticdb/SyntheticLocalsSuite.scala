@@ -10655,14 +10655,14 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |[8:14..8:15): M => _empty_/M#
        |[8:15..8:15):  => _empty_/M#`<init>`().
        |[9:6..9:7): p <= _empty_/t155.p.
+       |[9:15..9:26): (a, b) <- m <= local3
        |[9:15..9:26): (a, b) <- m <= local4
-       |[9:15..9:26): (a, b) <- m <= local5
-       |[9:16..9:17): a <= local2
-       |[9:19..9:20): b <= local3
+       |[9:16..9:17): a <= local1
+       |[9:19..9:20): b <= local2
        |[9:25..9:26): m => _empty_/t155.m.
-       |[9:34..9:35): a => local2
+       |[9:34..9:35): a => local1
        |[9:36..9:37): + => scala/Int#`+`(+4).
-       |[9:38..9:39): b => local3
+       |[9:38..9:39): b => local2
        |""".stripMargin,
   )
 
@@ -10731,13 +10731,13 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |[8:14..8:15): M => _empty_/M#
        |[8:15..8:15):  => _empty_/M#`<init>`().
        |[9:6..9:7): p <= _empty_/t155.p.
-       |[9:15..9:26): (a, b) <- m <= local4
-       |[9:16..9:17): a <= local2
-       |[9:19..9:20): b <= local3
+       |[9:15..9:26): (a, b) <- m <= local3
+       |[9:16..9:17): a <= local1
+       |[9:19..9:20): b <= local2
        |[9:25..9:26): m => _empty_/t155.m.
-       |[9:34..9:35): a => local2
+       |[9:34..9:35): a => local1
        |[9:36..9:37): + => scala/Int#`+`(+4).
-       |[9:38..9:39): b => local3
+       |[9:38..9:39): b => local2
        |""".stripMargin,
   )
 
@@ -10829,23 +10829,20 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |_empty_/t155.p. => val method p: M[Int]
        |  M => _empty_/M#
        |  Int => scala/Int#
-       |local0 => synthetic param check$ifrefutable$1: Tuple2[Int, Int]
+       |local0 => synthetic param x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
+       |local1 => val local a: Int
        |  Int => scala/Int#
-       |local2 => val local a: Int
+       |local2 => val local b: Int
        |  Int => scala/Int#
-       |local3 => val local b: Int
-       |  Int => scala/Int#
-       |local4 => synthetic class $anon extends Object with F[Tuple2[Int, Int], Int] { +1 decls }
+       |local3 => synthetic class $anon extends Object with F[Tuple2[Int, Int], Int] { +1 decls }
        |  Object => java/lang/Object#
        |  F => _empty_/F#
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local5 => synthetic method f(x$1: Tuple2[Int, Int]): Int <: _empty_/F#f().
-       |  x$1 => local1
+       |local4 => synthetic method f(x$1: Tuple2[Int, Int]): Int <: _empty_/F#f().
+       |  x$1 => local0
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |""".stripMargin,
@@ -10919,11 +10916,11 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |[8:16..8:22): Option => scala/Option.
        |[9:6..9:7): p <= _empty_/t156.p.
        |[9:15..9:19): Some => scala/Some.
+       |[9:15..9:27): Some(a) <- m <= local2
        |[9:15..9:27): Some(a) <- m <= local3
-       |[9:15..9:27): Some(a) <- m <= local4
-       |[9:20..9:21): a <= local2
+       |[9:20..9:21): a <= local1
        |[9:26..9:27): m => _empty_/t156.m.
-       |[9:35..9:36): a => local2
+       |[9:35..9:36): a => local1
        |""".stripMargin,
   )
 
@@ -10993,11 +10990,11 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |[8:15..8:15):  => _empty_/M#`<init>`().
        |[8:16..8:22): Option => scala/Option.
        |[9:6..9:7): p <= _empty_/t156.p.
-       |[9:15..9:27): Some(a) <- m <= local3
+       |[9:15..9:27): Some(a) <- m <= local2
        |[9:15..9:19): Some => scala/Some.
-       |[9:20..9:21): a <= local2
+       |[9:20..9:21): a <= local1
        |[9:26..9:27): m => _empty_/t156.m.
-       |[9:35..9:36): a => local2
+       |[9:35..9:36): a => local1
        |""".stripMargin,
   )
 
@@ -11089,21 +11086,18 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |_empty_/t156.p. => val method p: M[Int]
        |  M => _empty_/M#
        |  Int => scala/Int#
-       |local0 => synthetic param check$ifrefutable$1: Option[Int]
+       |local0 => synthetic param x$1: Option[Int]
        |  Option => scala/Option#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Option[Int]
-       |  Option => scala/Option#
+       |local1 => val local a: Int
        |  Int => scala/Int#
-       |local2 => val local a: Int
-       |  Int => scala/Int#
-       |local3 => synthetic class $anon extends Object with F[Option[Int], Int] { +1 decls }
+       |local2 => synthetic class $anon extends Object with F[Option[Int], Int] { +1 decls }
        |  Object => java/lang/Object#
        |  F => _empty_/F#
        |  Option => scala/Option#
        |  Int => scala/Int#
-       |local4 => synthetic method f(x$1: Option[Int]): Int <: _empty_/F#f().
-       |  x$1 => local1
+       |local3 => synthetic method f(x$1: Option[Int]): Int <: _empty_/F#f().
+       |  x$1 => local0
        |  Option => scala/Option#
        |  Int => scala/Int#
        |""".stripMargin,
@@ -11175,12 +11169,12 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |[8:14..8:15): M => _empty_/M#
        |[8:15..8:15):  => _empty_/M#`<init>`().
        |[9:6..9:7): p <= _empty_/t157.p.
+       |[9:15..9:28): (a: Int) <- m <= local1
        |[9:15..9:28): (a: Int) <- m <= local2
-       |[9:15..9:28): (a: Int) <- m <= local3
-       |[9:16..9:17): a <= local1
+       |[9:16..9:17): a <= local0
        |[9:19..9:22): Int => scala/Int#
        |[9:27..9:28): m => _empty_/t157.m.
-       |[9:36..9:37): a => local1
+       |[9:36..9:37): a => local0
        |""".stripMargin,
   )
 
@@ -11249,11 +11243,11 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |[8:14..8:15): M => _empty_/M#
        |[8:15..8:15):  => _empty_/M#`<init>`().
        |[9:6..9:7): p <= _empty_/t157.p.
-       |[9:15..9:28): (a: Int) <- m <= local2
-       |[9:16..9:17): a <= local1
+       |[9:15..9:28): (a: Int) <- m <= local1
+       |[9:16..9:17): a <= local0
        |[9:19..9:22): Int => scala/Int#
        |[9:27..9:28): m => _empty_/t157.m.
-       |[9:36..9:37): a => local1
+       |[9:36..9:37): a => local0
        |""".stripMargin,
   )
 
@@ -11344,16 +11338,14 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |_empty_/t157.p. => val method p: M[Int]
        |  M => _empty_/M#
        |  Int => scala/Int#
-       |local0 => synthetic param check$ifrefutable$1: Int
+       |local0 => param a: Int
        |  Int => scala/Int#
-       |local1 => param a: Int
-       |  Int => scala/Int#
-       |local2 => synthetic class $anon extends Object with F[Int, Int] { +1 decls }
+       |local1 => synthetic class $anon extends Object with F[Int, Int] { +1 decls }
        |  Object => java/lang/Object#
        |  F => _empty_/F#
        |  Int => scala/Int#
-       |local3 => synthetic method f(a: Int): Int <: _empty_/F#f().
-       |  a => local1
+       |local2 => synthetic method f(a: Int): Int <: _empty_/F#f().
+       |  a => local0
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -15634,15 +15626,15 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |[8:16..8:22): Option => scala/Option.
        |[9:6..9:7): p <= _empty_/t171.p.
        |[9:15..9:19): Some => scala/Some.
+       |[9:15..9:27): Some(a) <- m <= local5
        |[9:15..9:27): Some(a) <- m <= local6
-       |[9:15..9:27): Some(a) <- m <= local7
-       |[9:20..9:21): a <= local3
+       |[9:20..9:21): a <= local2
        |[9:26..9:27): m => _empty_/t171.m.
+       |[9:28..9:36): if a > 0 <= local3
        |[9:28..9:36): if a > 0 <= local4
-       |[9:28..9:36): if a > 0 <= local5
-       |[9:31..9:32): a => local3
+       |[9:31..9:32): a => local2
        |[9:33..9:34): > => scala/Int#`>`(+3).
-       |[9:44..9:45): a => local3
+       |[9:44..9:45): a => local2
        |""".stripMargin,
   )
 
@@ -15712,14 +15704,14 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |[8:15..8:15):  => _empty_/M#`<init>`().
        |[8:16..8:22): Option => scala/Option.
        |[9:6..9:7): p <= _empty_/t171.p.
-       |[9:15..9:27): Some(a) <- m <= local6
+       |[9:15..9:27): Some(a) <- m <= local5
        |[9:15..9:19): Some => scala/Some.
-       |[9:20..9:21): a <= local3
+       |[9:20..9:21): a <= local2
        |[9:26..9:27): m => _empty_/t171.m.
-       |[9:28..9:36): if a > 0 <= local4
-       |[9:31..9:32): a => local3
+       |[9:28..9:36): if a > 0 <= local3
+       |[9:31..9:32): a => local2
        |[9:33..9:34): > => scala/Int#`>`(+3).
-       |[9:44..9:45): a => local3
+       |[9:44..9:45): a => local2
        |""".stripMargin,
   )
 
@@ -15811,35 +15803,32 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |_empty_/t171.p. => val method p: M[Int]
        |  M => _empty_/M#
        |  Int => scala/Int#
-       |local0 => synthetic param check$ifrefutable$1: Option[Int]
+       |local0 => synthetic param x$1: Option[Int]
        |  Option => scala/Option#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Option[Int]
+       |local1 => synthetic param x$2: Option[Int]
        |  Option => scala/Option#
        |  Int => scala/Int#
-       |local2 => synthetic param x$2: Option[Int]
-       |  Option => scala/Option#
+       |local2 => val local a: Int
        |  Int => scala/Int#
-       |local3 => val local a: Int
-       |  Int => scala/Int#
-       |local4 => synthetic class $anon extends Object with F[Option[Int], Boolean] { +1 decls }
+       |local3 => synthetic class $anon extends Object with F[Option[Int], Boolean] { +1 decls }
        |  Object => java/lang/Object#
        |  F => _empty_/F#
        |  Option => scala/Option#
        |  Int => scala/Int#
        |  Boolean => scala/Boolean#
-       |local5 => synthetic method f(x$1: Option[Int]): Boolean <: _empty_/F#f().
-       |  x$1 => local1
+       |local4 => synthetic method f(x$1: Option[Int]): Boolean <: _empty_/F#f().
+       |  x$1 => local0
        |  Option => scala/Option#
        |  Int => scala/Int#
        |  Boolean => scala/Boolean#
-       |local6 => synthetic class $anon extends Object with F[Option[Int], Int] { +1 decls }
+       |local5 => synthetic class $anon extends Object with F[Option[Int], Int] { +1 decls }
        |  Object => java/lang/Object#
        |  F => _empty_/F#
        |  Option => scala/Option#
        |  Int => scala/Int#
-       |local7 => synthetic method f(x$2: Option[Int]): Int <: _empty_/F#f().
-       |  x$2 => local2
+       |local6 => synthetic method f(x$2: Option[Int]): Int <: _empty_/F#f().
+       |  x$2 => local1
        |  Option => scala/Option#
        |  Int => scala/Int#
        |""".stripMargin,
@@ -22440,29 +22429,26 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  Any => scala/Any#
        |_empty_/t13#m().(x) => param x: Any
        |  Any => scala/Any#
-       |local0 => synthetic param check$ifrefutable$1: Tuple2[Int, Int]
+       |local0 => synthetic param x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local1 => synthetic param x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
+       |local1 => val local a: Int
        |  Int => scala/Int#
-       |local2 => val local a: Int
+       |local2 => val local b: Int
        |  Int => scala/Int#
-       |local3 => val local b: Int
-       |  Int => scala/Int#
-       |local4 => val local arr: Array[Int]
+       |local3 => val local arr: Array[Int]
        |  Array => scala/Array#
        |  Int => scala/Int#
-       |local5 => var local i: Int
+       |local4 => var local i: Int
        |  Int => scala/Int#
-       |local6 => val local a: Int
+       |local5 => val local a: Int
        |  Int => scala/Int#
-       |local7 => val local b: Any
+       |local6 => val local b: Any
        |  Any => scala/Any#
-       |local8 => val local l: List[A]
+       |local7 => val local l: List[A]
        |  List => scala/collection/immutable/List#
-       |  A => local9
-       |local9 => abstract type A
+       |  A => local8
+       |local8 => abstract type A
        |""".stripMargin,
   )
 

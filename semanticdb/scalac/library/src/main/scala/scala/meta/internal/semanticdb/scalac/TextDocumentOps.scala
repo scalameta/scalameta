@@ -1500,6 +1500,9 @@ trait TextDocumentOps {
         private def cachedForApplyOrOrig(gt: g.Apply): s.Tree =
           cachedOrOrig(gt)(forApply(gt, usePos = false))
         private def cachedForImplicitArgsOrOrig(gt: g.ApplyToImplicitArgs): s.Tree = gt.fun match {
+          // hide the implicit arguments of the check too
+          case f: g.Apply if isRefutabilityCheck(f) =>
+            cachedOrOrig(gt)(cached(f)(forRefutabilityCheckFun(f.fun)))
           case _: g.Apply => cachedOrOrig(gt)(syn(getApplyToImplicitArgs(gt)))
           case _ => uncachedOrig(gt) // uncached, as above
         }
@@ -1524,9 +1527,24 @@ trait TextDocumentOps {
           syn(gt.toRange, s.ApplyTree(x.tree, List(arg)), usePos)
         }
 
+        @tailrec
+        private def forRefutabilityCheckFun(gt: g.Tree): Option[s.Synthetic] = gt match {
+          // step through the type arguments that scalac infers for a generic `withFilter`
+          case gt: g.TypeApply =>
+            cached(gt)(None)
+            forRefutabilityCheckFun(gt.fun)
+          // show the generator: the source does not write the check
+          case gt: g.Select =>
+            cached(gt)(None)
+            syn(cachedForOrOrig(gt.qualifier))
+          case _ => None
+        }
+
         private def forApply(gt: g.Apply, usePos: Boolean = true): Option[s.Synthetic] =
           gt.args match {
-            case (f: g.Function) :: Nil => forSingleFuncArgApply(gt, f, usePos)
+            case (f: g.Function) :: Nil =>
+              if (isRefutabilityCheck(f)) forRefutabilityCheckFun(gt.fun)
+              else forSingleFuncArgApply(gt, f, usePos)
             case _ => None
           }
 
@@ -1599,6 +1617,11 @@ trait TextDocumentOps {
   // the check that scalac adds for a generator whose pattern can fail
   private def isRefutabilityCheck(gt: g.Function): Boolean = gt.vparams
     .exists(_.name.startsWith(g.nme.CHECK_IF_REFUTABLE_STRING))
+
+  private def isRefutabilityCheck(gt: g.Apply): Boolean = gt.args match {
+    case (f: g.Function) :: Nil => isRefutabilityCheck(f)
+    case _ => false
+  }
 
   private def syntaxAndPos(mtree: m.Tree): String = s"`$mtree`[${mtree.pos.syntax}]"
 
