@@ -10,7 +10,7 @@ package object scalacp {
     def updateWithRemap(key: K)(remappingFunction: Option[V] => V): V = {
       val vOldOpt = obj.get(key)
       val vNew = remappingFunction(vOldOpt)
-      if (!vOldOpt.contains(vNew)) obj.update(key, vNew)
+      if (!vOldOpt.contains(vNew)) obj(key) = vNew
       vNew
     }
   }
