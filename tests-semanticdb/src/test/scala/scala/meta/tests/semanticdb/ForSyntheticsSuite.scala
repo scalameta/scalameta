@@ -166,16 +166,19 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  for { (a, b) <- Option((1, 2)) } yield for { (c, d) <- Option((a, b)) } yield c + d
        |}
        |""".stripMargin,
-    """|[1:2..1:85): for { (a, b) <- Option((1, 2)) } yield for { (c, d) <- Option((a, b)) } yield c + d => orig(Option((1, 2))).map[Option[Int]]({(x$2) => orig(Option((a, b))).map[Int]({(x$1) => orig(c + d)})})
+    """|[1:2..1:85): for { (a, b) <- Option((1, 2)) } yield for { (c, d) <- Option((a, b)) } yield c + d => orig(Option((1, 2))).map[Option[Int]]({(x$2) => orig(for { (c, d) <- Option((a, b)) } yield c + d)})
        |  map => scala/Option#WithFilter#map().
        |  Option => scala/Option#
        |  Int => scala/Int#
        |  x$2 => local0
-       |  x$1 => local1
        |[1:18..1:24): Option => *.apply[Tuple2[Int, Int]]
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
+       |[1:41..1:85): for { (c, d) <- Option((a, b)) } yield c + d => orig(Option((a, b))).map[Int]({(x$1) => orig(c + d)})
+       |  map => scala/Option#WithFilter#map().
+       |  Int => scala/Int#
+       |  x$1 => local3
        |[1:57..1:63): Option => *.apply[Tuple2[Int, Int]]
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
@@ -336,8 +339,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  map => _empty_/G#map().
        |  Int => scala/Int#
        |  x$1 => local0
-       |[11:18..11:31): new F((1, 2)) => *.withFilter
-       |  withFilter => _empty_/F#withFilter().
+       |[11:18..11:31): new F((1, 2)) => toG(*)
+       |  toG => _empty_/F.toG().
        |""".stripMargin,
   )
 
@@ -363,8 +366,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  map => _empty_/G#map().
          |  Int => scala/Int#
          |  x$1 => local0
-         |[11:18..11:31): new F((1, 2)) => *(dummyImplicit)
-         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+         |[11:18..11:31): new F((1, 2)) => toG(*)
+         |  toG => _empty_/F.toG().
          |""".stripMargin
     else
       """|[5:40..5:41): f => *.apply
@@ -373,8 +376,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  map => _empty_/G#map().
          |  Int => scala/Int#
          |  x$1 => local0
-         |[11:18..11:31): new F((1, 2)) => *(dummyImplicit)
-         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
+         |[11:18..11:31): new F((1, 2)) => toG(*)
+         |  toG => _empty_/F.toG().
          |""".stripMargin,
   )
 
@@ -425,20 +428,28 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  foreach => scala/collection/IndexedSeqOptimized#foreach().
          |  Unit => scala/Unit#
          |  c => local0
+         |[1:13..1:17): "ab" => augmentString(*)
+         |  augmentString => scala/Predef.augmentString().
          |[2:2..2:27): for { c <- "ab" } yield c => orig("ab").map[Char, String]({(c) => orig(c)})(StringCanBuildFrom)
          |  map => scala/collection/TraversableLike#map().
          |  Char => scala/Char#
          |  String => scala/Predef.String#
          |  c => local1
          |  StringCanBuildFrom => scala/Predef.StringCanBuildFrom.
+         |[2:13..2:17): "ab" => augmentString(*)
+         |  augmentString => scala/Predef.augmentString().
          |""".stripMargin
     else
       """|[1:2..1:30): for { c <- "ab" } println(c) => orig("ab").foreach[Unit]({(c) => orig(println(c))})
          |  foreach => scala/collection/StringOps#foreach().
          |  Unit => scala/Unit#
          |  c => local0
+         |[1:13..1:17): "ab" => augmentString(*)
+         |  augmentString => scala/Predef.augmentString().
          |[2:13..2:17): "ab" => *.map
          |  map => scala/collection/StringOps#map(+1).
+         |[2:13..2:17): "ab" => augmentString(*)
+         |  augmentString => scala/Predef.augmentString().
          |""".stripMargin,
   )
 
@@ -458,6 +469,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  ClassTag => scala/reflect/ClassTag#
          |[1:13..1:18): Array => *.apply
          |  apply => scala/Array.apply(+5).
+         |[1:13..1:21): Array(1) => intArrayOps(*)
+         |  intArrayOps => scala/Predef.intArrayOps().
          |[2:2..2:45): for { (a, b) <- Array((1, 2)) } yield a + b => orig(Array((1, 2))).map[Int, Array[Int]]({(x$1) => orig(a + b)})(canBuildFrom((`macro-expandee` : ClassTag[Int])))
          |  map => scala/collection/generic/FilterMonadic#map().
          |  Int => scala/Int#
@@ -467,6 +480,11 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  ClassTag => scala/reflect/ClassTag#
          |[2:18..2:23): Array => *.apply[Tuple2[Int, Int]]
          |  apply => scala/Array.apply().
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
+         |[2:18..2:31): Array((1, 2)) => Predef.refArrayOps[Tuple2[Int, Int]](*)
+         |  Predef => scala/Predef.
+         |  refArrayOps => scala/Predef.refArrayOps().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |[2:18..2:31): Array((1, 2)) => *((`macro-expandee` : ClassTag[Tuple2[Int, Int]]))
@@ -482,6 +500,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  ClassTag => scala/reflect/ClassTag#
          |[1:13..1:18): Array => *.apply
          |  apply => scala/Array.apply(+5).
+         |[1:13..1:21): Array(1) => intArrayOps(*)
+         |  intArrayOps => scala/Predef.intArrayOps().
          |[2:2..2:45): for { (a, b) <- Array((1, 2)) } yield a + b => orig(Array((1, 2))).map[Int]({(x$1) => orig(a + b)})((`macro-expandee` : ClassTag[Int]))
          |  map => scala/collection/ArrayOps.WithFilter#map().
          |  Int => scala/Int#
@@ -489,6 +509,11 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  ClassTag => scala/reflect/ClassTag#
          |[2:18..2:23): Array => *.apply[Tuple2[Int, Int]]
          |  apply => scala/Array.apply().
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
+         |[2:18..2:31): Array((1, 2)) => Predef.refArrayOps[Tuple2[Int, Int]](*)
+         |  Predef => scala/Predef.
+         |  refArrayOps => scala/Predef.refArrayOps().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |[2:18..2:31): Array((1, 2)) => *((`macro-expandee` : ClassTag[Tuple2[Int, Int]]))
@@ -514,16 +539,20 @@ class ForSyntheticsSuite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|[3:38..3:39): f => *.apply
          |  apply => scala/Function1#apply().
-         |[9:13..9:21): new K(1) => *(dummyImplicit).foreach
-         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+         |[9:13..9:21): new K(1) => *.foreach
          |  foreach => _empty_/H#foreach().
+         |[9:13..9:21): new K(1) => toH(*)(dummyImplicit)
+         |  toH => _empty_/K.toH().
+         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
          |""".stripMargin
     else
       """|[3:38..3:39): f => *.apply
          |  apply => scala/Function1#apply().
-         |[9:13..9:21): new K(1) => *(dummyImplicit).foreach
-         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
+         |[9:13..9:21): new K(1) => *.foreach
          |  foreach => _empty_/H#foreach().
+         |[9:13..9:21): new K(1) => toH(*)(dummyImplicit)
+         |  toH => _empty_/K.toH().
+         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
          |""".stripMargin,
   )
 
@@ -588,20 +617,24 @@ class ForSyntheticsSuite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|[3:31..3:32): f => *.apply
          |  apply => scala/Function1#apply().
-         |[9:2..9:31): for { c <- new K(1) } yield c => orig(new K(1))(dummyImplicit).map[Int]({(c) => orig(c)})
-         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+         |[9:2..9:31): for { c <- new K(1) } yield c => orig(new K(1)).map[Int]({(c) => orig(c)})
          |  map => _empty_/H#map().
          |  Int => scala/Int#
          |  c => local0
+         |[9:13..9:21): new K(1) => toH(*)(dummyImplicit)
+         |  toH => _empty_/K.toH().
+         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
          |""".stripMargin
     else
       """|[3:31..3:32): f => *.apply
          |  apply => scala/Function1#apply().
-         |[9:2..9:31): for { c <- new K(1) } yield c => orig(new K(1))(dummyImplicit).map[Int]({(c) => orig(c)})
-         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
+         |[9:2..9:31): for { c <- new K(1) } yield c => orig(new K(1)).map[Int]({(c) => orig(c)})
          |  map => _empty_/H#map().
          |  Int => scala/Int#
          |  c => local0
+         |[9:13..9:21): new K(1) => toH(*)(dummyImplicit)
+         |  toH => _empty_/K.toH().
+         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
          |""".stripMargin,
   )
 
@@ -623,23 +656,23 @@ class ForSyntheticsSuite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|[5:40..5:41): f => *.apply
          |  apply => scala/Function1#apply().
-         |[11:2..11:45): for { (b, c) <- new F((1, 2)) } yield b + c => orig(new F((1, 2)))(dummyImplicit).map[Int]({(x$1) => orig(b + c)})
-         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+         |[11:2..11:45): for { (b, c) <- new F((1, 2)) } yield b + c => orig(new F((1, 2))).map[Int]({(x$1) => orig(b + c)})
          |  map => _empty_/G#map().
          |  Int => scala/Int#
          |  x$1 => local0
-         |[11:18..11:31): new F((1, 2)) => *(dummyImplicit)
+         |[11:18..11:31): new F((1, 2)) => toG(*)(dummyImplicit)
+         |  toG => _empty_/F.toG().
          |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
          |""".stripMargin
     else
       """|[5:40..5:41): f => *.apply
          |  apply => scala/Function1#apply().
-         |[11:2..11:45): for { (b, c) <- new F((1, 2)) } yield b + c => orig(new F((1, 2)))(dummyImplicit).map[Int]({(x$1) => orig(b + c)})
-         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
+         |[11:2..11:45): for { (b, c) <- new F((1, 2)) } yield b + c => orig(new F((1, 2))).map[Int]({(x$1) => orig(b + c)})
          |  map => _empty_/G#map().
          |  Int => scala/Int#
          |  x$1 => local0
-         |[11:18..11:31): new F((1, 2)) => *(dummyImplicit)
+         |[11:18..11:31): new F((1, 2)) => toG(*)(dummyImplicit)
+         |  toG => _empty_/F.toG().
          |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
          |""".stripMargin,
   )
@@ -664,15 +697,15 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  apply => scala/Function1#apply().
        |[6:29..6:30): f => *.apply
        |  apply => scala/Function1#apply().
-       |[12:2..12:42): for { a <- new W(1); b = a } yield a + b => orig(a <- new W(1); b = a).map[Int]({(x$1) => orig(a + b)})
-       |  map => _empty_/G#map().
-       |  Int => scala/Int#
-       |  x$1 => local0
-       |[12:8..12:28): a <- new W(1); b = a => orig(new W(1)).map[Tuple2[Int, Int]]({(a) => orig(b = a)})
-       |  map => _empty_/W#map().
+       |[12:2..12:42): for { a <- new W(1); b = a } yield a + b => F.toG[Tuple2[Int, Int]](orig(new W(1)).map[Tuple2[Int, Int]]({(a) => orig(b = a)})).map[Int]({(x$1) => orig(a + b)})
+       |  F => _empty_/F.
+       |  toG => _empty_/F.toG().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |  a => local1
+       |  map => _empty_/W#map().
+       |  a => local0
+       |  map => _empty_/G#map().
+       |  x$1 => local1
        |""".stripMargin,
   )
 
@@ -697,32 +730,32 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  apply => scala/Function1#apply().
          |[6:29..6:30): f => *.apply
          |  apply => scala/Function1#apply().
-         |[12:2..12:42): for { a <- new W(1); b = a } yield a + b => orig(a <- new W(1); b = a)(dummyImplicit).map[Int]({(x$1) => orig(a + b)})
-         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
-         |  map => _empty_/G#map().
-         |  Int => scala/Int#
-         |  x$1 => local0
-         |[12:8..12:28): a <- new W(1); b = a => orig(new W(1)).map[Tuple2[Int, Int]]({(a) => orig(b = a)})
-         |  map => _empty_/W#map().
+         |[12:2..12:42): for { a <- new W(1); b = a } yield a + b => F.toG[Tuple2[Int, Int]](orig(new W(1)).map[Tuple2[Int, Int]]({(a) => orig(b = a)}))(dummyImplicit).map[Int]({(x$1) => orig(a + b)})
+         |  F => _empty_/F.
+         |  toG => _empty_/F.toG().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
-         |  a => local1
+         |  map => _empty_/W#map().
+         |  a => local0
+         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+         |  map => _empty_/G#map().
+         |  x$1 => local1
          |""".stripMargin
     else
       """|[2:40..2:41): f => *.apply
          |  apply => scala/Function1#apply().
          |[6:29..6:30): f => *.apply
          |  apply => scala/Function1#apply().
-         |[12:2..12:42): for { a <- new W(1); b = a } yield a + b => orig(a <- new W(1); b = a)(dummyImplicit).map[Int]({(x$1) => orig(a + b)})
-         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
-         |  map => _empty_/G#map().
-         |  Int => scala/Int#
-         |  x$1 => local0
-         |[12:8..12:28): a <- new W(1); b = a => orig(new W(1)).map[Tuple2[Int, Int]]({(a) => orig(b = a)})
-         |  map => _empty_/W#map().
+         |[12:2..12:42): for { a <- new W(1); b = a } yield a + b => F.toG[Tuple2[Int, Int]](orig(new W(1)).map[Tuple2[Int, Int]]({(a) => orig(b = a)}))(dummyImplicit).map[Int]({(x$1) => orig(a + b)})
+         |  F => _empty_/F.
+         |  toG => _empty_/F.toG().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
-         |  a => local1
+         |  map => _empty_/W#map().
+         |  a => local0
+         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
+         |  map => _empty_/G#map().
+         |  x$1 => local1
          |""".stripMargin,
   )
 
@@ -759,9 +792,13 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  Char => scala/Char#
          |  String => scala/Predef.String#
          |  StringCanBuildFrom => scala/Predef.StringCanBuildFrom.
+         |[1:13..1:17): "ab" => augmentString(*)
+         |  augmentString => scala/Predef.augmentString().
          |""".stripMargin
     else
-      """|[1:13..1:28): "ab" if c > 'a' => orig("ab").withFilter({(c) => orig(c > 'a')}).map
+      """|[1:13..1:17): "ab" => augmentString(*)
+         |  augmentString => scala/Predef.augmentString().
+         |[1:13..1:28): "ab" if c > 'a' => orig("ab").withFilter({(c) => orig(c > 'a')}).map
          |  withFilter => scala/collection/StringOps#withFilter().
          |  c => local0
          |  map => scala/collection/StringOps.WithFilter#map(+1).
@@ -774,19 +811,23 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |}
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[1:2..1:41): for { a <- List(1).map(_ + 1) } yield a => orig(List(1).map(_ + 1))(List.canBuildFrom[Int]).map[Int, List[Int]]({(a) => orig(a)})(List.canBuildFrom[Int])
-         |  List => scala/collection/immutable/List.
-         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
-         |  Int => scala/Int#
+      """|[1:2..1:41): for { a <- List(1).map(_ + 1) } yield a => orig(List(1).map(_ + 1)).map[Int, List[Int]]({(a) => orig(a)})(List.canBuildFrom[Int])
          |  map => scala/collection/immutable/List#map().
+         |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
          |  a => local0
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[1:13..1:17): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
          |[1:13..1:24): List(1).map => *[Int, List[Int]]
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
+         |[1:13..1:31): List(1).map(_ + 1) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
          |""".stripMargin
     else
       """|[1:2..1:41): for { a <- List(1).map(_ + 1) } yield a => orig(List(1).map(_ + 1)).map[Int]({(a) => orig(a)})
@@ -870,7 +911,7 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
          |[5:38..5:39): e => *[Nothing]
          |  Nothing => scala/Nothing#
-         |[6:2..6:47): for { a <- List(1) } yield List(a).map(_ + 1) => orig(List(1)).map[List[Int], List[List[Int]]]({(a) => orig(List(a).map(_ + 1))(List.canBuildFrom[Int])})(List.canBuildFrom[List[Int]])
+         |[6:2..6:47): for { a <- List(1) } yield List(a).map(_ + 1) => orig(List(1)).map[List[Int], List[List[Int]]]({(a) => orig(List(a).map(_ + 1))})(List.canBuildFrom[List[Int]])
          |  map => scala/collection/immutable/List#map().
          |  List => scala/collection/immutable/List#
          |  Int => scala/Int#
@@ -886,6 +927,10 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |[6:29..6:40): List(a).map => *[Int, List[Int]]
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
+         |[6:29..6:47): List(a).map(_ + 1) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
          |""".stripMargin
     else
       """|[4:2..4:37): for { a <- Option(1) if h } yield g => orig(Option(1)).withFilter({(a) => orig(h)}).map[Int]({(a) => orig(g)})
@@ -981,30 +1026,30 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  apply => scala/Function1#apply().
          |[8:40..8:41): f => *.apply
          |  apply => scala/Function1#apply().
-         |[14:2..14:64): for { (b, c) <- for (x <- new V(1)) yield (x, x) } yield b + c => orig(for (x <- new V(1)) yield (x, x))(dummyImplicit).map[Int]({(x$1) => orig(b + c)})
-         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+         |[14:2..14:64): for { (b, c) <- for (x <- new V(1)) yield (x, x) } yield b + c => orig(for (x <- new V(1)) yield (x, x)).map[Int]({(x$1) => orig(b + c)})
          |  map => _empty_/G#map().
          |  Int => scala/Int#
          |  x$1 => local0
-         |[14:18..14:50): for (x <- new V(1)) yield (x, x) => orig(new V(1)).map({(x) => orig((x, x))}).withFilter
+         |[14:18..14:50): for (x <- new V(1)) yield (x, x) => toG(*)(dummyImplicit)
+         |  toG => _empty_/F.toG().
+         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+         |[14:28..14:36): new V(1) => *.map
          |  map => _empty_/V#map().
-         |  x => local1
-         |  withFilter => _empty_/F#withFilter().
          |""".stripMargin
     else
       """|[2:43..2:44): f => *.apply
          |  apply => scala/Function1#apply().
          |[8:40..8:41): f => *.apply
          |  apply => scala/Function1#apply().
-         |[14:2..14:64): for { (b, c) <- for (x <- new V(1)) yield (x, x) } yield b + c => orig(for (x <- new V(1)) yield (x, x))(dummyImplicit).map[Int]({(x$1) => orig(b + c)})
-         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
+         |[14:2..14:64): for { (b, c) <- for (x <- new V(1)) yield (x, x) } yield b + c => orig(for (x <- new V(1)) yield (x, x)).map[Int]({(x$1) => orig(b + c)})
          |  map => _empty_/G#map().
          |  Int => scala/Int#
          |  x$1 => local0
-         |[14:18..14:50): for (x <- new V(1)) yield (x, x) => orig(new V(1)).map({(x) => orig((x, x))}).withFilter
+         |[14:18..14:50): for (x <- new V(1)) yield (x, x) => toG(*)(dummyImplicit)
+         |  toG => _empty_/F.toG().
+         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
+         |[14:28..14:36): new V(1) => *.map
          |  map => _empty_/V#map().
-         |  x => local1
-         |  withFilter => _empty_/F#withFilter().
          |""".stripMargin,
   )
 
@@ -1029,28 +1074,28 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  apply => scala/Function1#apply().
          |[6:40..6:41): f => *.apply
          |  apply => scala/Function1#apply().
-         |[12:2..12:42): for { a <- new W(1); b = a } yield a + b => orig(a <- new W(1); b = a).map[Int]({(x$1) => orig(a + b)})
+         |[12:2..12:42): for { a <- new W(1); b = a } yield a + b => toG(orig(new W(1)).map({(a) => orig(b = a)})(dummyImplicit)).map[Int]({(x$1) => orig(a + b)})
+         |  toG => _empty_/F.toG().
+         |  map => _empty_/W#map().
+         |  a => local0
+         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
          |  map => _empty_/G#map().
          |  Int => scala/Int#
-         |  x$1 => local0
-         |[12:8..12:28): a <- new W(1); b = a => orig(new W(1)).map({(a) => orig(b = a)})(dummyImplicit)
-         |  map => _empty_/W#map().
-         |  a => local1
-         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+         |  x$1 => local1
          |""".stripMargin
     else
       """|[2:70..2:71): f => *.apply
          |  apply => scala/Function1#apply().
          |[6:40..6:41): f => *.apply
          |  apply => scala/Function1#apply().
-         |[12:2..12:42): for { a <- new W(1); b = a } yield a + b => orig(a <- new W(1); b = a).map[Int]({(x$1) => orig(a + b)})
+         |[12:2..12:42): for { a <- new W(1); b = a } yield a + b => toG(orig(new W(1)).map({(a) => orig(b = a)})(dummyImplicit)).map[Int]({(x$1) => orig(a + b)})
+         |  toG => _empty_/F.toG().
+         |  map => _empty_/W#map().
+         |  a => local0
+         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
          |  map => _empty_/G#map().
          |  Int => scala/Int#
-         |  x$1 => local0
-         |[12:8..12:28): a <- new W(1); b = a => orig(new W(1)).map({(a) => orig(b = a)})(dummyImplicit)
-         |  map => _empty_/W#map().
-         |  a => local1
-         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
+         |  x$1 => local1
          |""".stripMargin,
   )
 
@@ -1077,32 +1122,34 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  apply => scala/Function1#apply().
          |[8:40..8:41): f => *.apply
          |  apply => scala/Function1#apply().
-         |[14:2..14:64): for { (b, c) <- for (x <- new V(1)) yield (x, x) } yield b + c => orig(for (x <- new V(1)) yield (x, x))(dummyImplicit).map[Int]({(x$1) => orig(b + c)})
-         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+         |[14:2..14:64): for { (b, c) <- for (x <- new V(1)) yield (x, x) } yield b + c => orig(for (x <- new V(1)) yield (x, x)).map[Int]({(x$1) => orig(b + c)})
          |  map => _empty_/G#map().
          |  Int => scala/Int#
          |  x$1 => local0
-         |[14:18..14:50): for (x <- new V(1)) yield (x, x) => orig(new V(1)).map({(x) => orig((x, x))})(dummyImplicit).withFilter
+         |[14:18..14:50): for (x <- new V(1)) yield (x, x) => toG(*)(dummyImplicit)
+         |  toG => _empty_/F.toG().
+         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+         |[14:18..14:50): for (x <- new V(1)) yield (x, x) => orig(new V(1)).map({(x) => orig((x, x))})(dummyImplicit)
          |  map => _empty_/V#map().
          |  x => local1
          |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
-         |  withFilter => _empty_/F#withFilter().
          |""".stripMargin
     else
       """|[2:70..2:71): f => *.apply
          |  apply => scala/Function1#apply().
          |[8:40..8:41): f => *.apply
          |  apply => scala/Function1#apply().
-         |[14:2..14:64): for { (b, c) <- for (x <- new V(1)) yield (x, x) } yield b + c => orig(for (x <- new V(1)) yield (x, x))(dummyImplicit).map[Int]({(x$1) => orig(b + c)})
-         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
+         |[14:2..14:64): for { (b, c) <- for (x <- new V(1)) yield (x, x) } yield b + c => orig(for (x <- new V(1)) yield (x, x)).map[Int]({(x$1) => orig(b + c)})
          |  map => _empty_/G#map().
          |  Int => scala/Int#
          |  x$1 => local0
-         |[14:18..14:50): for (x <- new V(1)) yield (x, x) => orig(new V(1)).map({(x) => orig((x, x))})(dummyImplicit).withFilter
+         |[14:18..14:50): for (x <- new V(1)) yield (x, x) => toG(*)(dummyImplicit)
+         |  toG => _empty_/F.toG().
+         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
+         |[14:18..14:50): for (x <- new V(1)) yield (x, x) => orig(new V(1)).map({(x) => orig((x, x))})(dummyImplicit)
          |  map => _empty_/V#map().
          |  x => local1
          |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
-         |  withFilter => _empty_/F#withFilter().
          |""".stripMargin,
   )
 
@@ -1115,22 +1162,23 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[1:36..1:37): f => *.apply
        |  apply => scala/Function1#apply().
-       |[2:2..2:44): for { a <- Option(1) } yield k(x => x + a) => orig(Option(1)).map[Int]({(a) => orig(k).apply({(x) => orig(x + a)})})
+       |[2:2..2:44): for { a <- Option(1) } yield k(x => x + a) => orig(Option(1)).map[Int]({(a) => orig(k(x => x + a))})
        |  map => scala/Option#map().
        |  Int => scala/Int#
        |  a => local1
-       |  apply => scala/Function1#apply().
-       |  x => local2
        |[2:13..2:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[3:2..3:45): for { f <- Some((x: Int) => x) } yield f(1) => orig(Some).apply[Function1[Int, Int]]({(x) => orig(x)}).map[Int]({(f) => orig(f(1))})
+       |[2:31..2:32): k => *.apply
+       |  apply => scala/Function1#apply().
+       |[3:2..3:45): for { f <- Some((x: Int) => x) } yield f(1) => orig(Some((x: Int) => x)).map[Int]({(f) => orig(f(1))})
+       |  map => scala/Option#map().
+       |  Int => scala/Int#
+       |  f => local3
+       |[3:13..3:17): Some => *.apply[Function1[Int, Int]]
        |  apply => scala/Some.apply().
        |  Function1 => scala/Function1#
        |  Int => scala/Int#
-       |  x => local3
-       |  map => scala/Option#map().
-       |  f => local4
        |[3:41..3:42): f => *.apply
        |  apply => scala/Function1#apply().
        |""".stripMargin,
@@ -1141,12 +1189,14 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  val a = Array((x: Int) => x)
        |}
        |""".stripMargin,
-    """|[1:10..1:30): Array((x: Int) => x) => orig(Array).apply[Function1[Int, Int]]({(x) => orig(x)})((`macro-expandee` : ClassTag[Function1[Int, Int]]))
+    """|[1:10..1:15): Array => *.apply[Function1[Int, Int]]
        |  apply => scala/Array.apply().
        |  Function1 => scala/Function1#
        |  Int => scala/Int#
-       |  x => local0
+       |[1:10..1:30): Array((x: Int) => x) => *((`macro-expandee` : ClassTag[Function1[Int, Int]]))
        |  ClassTag => scala/reflect/ClassTag#
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -1175,6 +1225,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  p => local0
+       |[12:13..12:45): for (x <- new V(1)) yield (x, x) => toG(*)
+       |  toG => _empty_/F.toG().
        |[12:23..12:31): new V(1) => *.map
        |  map => _empty_/V#map().
        |""".stripMargin,
@@ -1224,6 +1276,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  map => _empty_/G#map().
        |  Int => scala/Int#
        |  x$1 => local0
+       |[19:18..19:50): for (x <- new V(1)) yield (x, x) => toG(*)
+       |  toG => _empty_/F.toG().
        |[19:28..19:36): new V(1) => *.map
        |  map => _empty_/V#map().
        |[20:2..20:57): for { p <- (for (x <- new V(1)) yield (x, x)) } yield p => orig(for (x <- new V(1)) yield (x, x)).map[Tuple2[Int, Int]]({(p) => orig(p)})
@@ -1231,6 +1285,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  p => local4
+       |[20:14..20:46): for (x <- new V(1)) yield (x, x) => toG(*)
+       |  toG => _empty_/F.toG().
        |[20:24..20:32): new V(1) => *.map
        |  map => _empty_/V#map().
        |[21:13..21:21): new O(1) => *.flatMap
@@ -1239,6 +1295,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  map => _empty_/G#map().
        |  G => _empty_/G#
        |  p => local7
+       |[21:28..21:60): for (x <- new V(a)) yield (x, x) => toG(*)
+       |  toG => _empty_/F.toG().
        |[21:38..21:46): new V(a) => *.map
        |  map => _empty_/V#map().
        |[22:13..22:21): new O(1) => *.map
@@ -1255,6 +1313,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |[23:13..23:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
+       |[23:27..23:59): for (x <- new V(a)) yield (x, x) => toB(*)
+       |  toB => _empty_/F.toB().
        |[23:37..23:45): new V(a) => *.map
        |  map => _empty_/V#map().
        |[24:2..24:75): for { a <- Option(1); g: G = for (x <- new V(a)) yield (x, x) } yield g.a => orig(Option(1)).map[Tuple2[Int, G]]({(a) => orig(g: G = for (x <- new V(a)) yield (x, x))}).map[Tuple2[Int, Int]]({(x$2) => orig(g.a)})
@@ -1279,6 +1339,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  map => _empty_/V#map().
        |[26:13..26:45): for (x <- new V(1)) yield (x, x) => *.foreach
        |  foreach => _empty_/G#foreach().
+       |[26:13..26:45): for (x <- new V(1)) yield (x, x) => toG(*)
+       |  toG => _empty_/F.toG().
        |[26:23..26:31): new V(1) => *.map
        |  map => _empty_/V#map().
        |""".stripMargin,
@@ -1301,81 +1363,99 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  for { a <- Option(1); b = for ((x, 1) <- Option((a, a))) yield x } yield b
        |}
        |""".stripMargin,
-    """|[5:2..5:56): for { p <- for (x <- Option(1)) yield (x, x) } yield p => orig(Option(1)).map[Tuple2[Int, Int]]({(x) => orig((x, x))}).map[Tuple2[Int, Int]]({(p) => orig(p)})
+    """|[5:2..5:56): for { p <- for (x <- Option(1)) yield (x, x) } yield p => orig(for (x <- Option(1)) yield (x, x)).map[Tuple2[Int, Int]]({(p) => orig(p)})
        |  map => scala/Option#map().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |  x => local0
-       |  p => local1
+       |  p => local0
+       |[5:13..5:46): for (x <- Option(1)) yield (x, x) => orig(Option(1)).map[Tuple2[Int, Int]]({(x) => orig((x, x))})
+       |  map => scala/Option#map().
+       |  Tuple2 => scala/Tuple2#
+       |  Int => scala/Int#
+       |  x => local1
        |[5:23..5:29): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[6:2..6:65): for { (a, b) <- for (x <- Option(1)) yield (x, x) } yield a + b => orig(Option(1)).map[Tuple2[Int, Int]]({(x) => orig((x, x))}).map[Int]({(x$1) => orig(a + b)})
+       |[6:2..6:65): for { (a, b) <- for (x <- Option(1)) yield (x, x) } yield a + b => orig(for (x <- Option(1)) yield (x, x)).map[Int]({(x$1) => orig(a + b)})
+       |  map => scala/Option#WithFilter#map().
+       |  Int => scala/Int#
+       |  x$1 => local2
+       |[6:18..6:51): for (x <- Option(1)) yield (x, x) => orig(Option(1)).map[Tuple2[Int, Int]]({(x) => orig((x, x))})
        |  map => scala/Option#map().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |  x => local2
-       |  map => scala/Option#WithFilter#map().
-       |  x$1 => local3
+       |  x => local3
        |[6:28..6:34): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[7:2..7:61): for { p <- for ((x, 1) <- Option((1, 1))) yield x } yield p => orig(Option((1, 1))).map[Int]({(x$2) => orig(x)}).map[Int]({(p) => orig(p)})
+       |[7:2..7:61): for { p <- for ((x, 1) <- Option((1, 1))) yield x } yield p => orig(for ((x, 1) <- Option((1, 1))) yield x).map[Int]({(p) => orig(p)})
+       |  map => scala/Option#map().
+       |  Int => scala/Int#
+       |  p => local6
+       |[7:13..7:51): for ((x, 1) <- Option((1, 1))) yield x => orig(Option((1, 1))).map[Int]({(x$2) => orig(x)})
        |  map => scala/Option#WithFilter#map().
        |  Int => scala/Int#
-       |  x$2 => local6
-       |  map => scala/Option#map().
-       |  p => local7
+       |  x$2 => local7
        |[7:28..7:34): Option => *.apply[Tuple2[Int, Int]]
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |[8:2..8:67): for { a <- Option(1); p <- for (x <- Option(a)) yield x } yield p => orig(Option(1)).flatMap[Int]({(a) => orig(Option(a)).map[Int]({(x) => orig(x)}).map[Int]({(p) => orig(p)})})
+       |[8:2..8:67): for { a <- Option(1); p <- for (x <- Option(a)) yield x } yield p => orig(Option(1)).flatMap[Int]({(a) => orig(for (x <- Option(a)) yield x).map[Int]({(p) => orig(p)})})
        |  flatMap => scala/Option#flatMap().
        |  Int => scala/Int#
        |  a => local9
        |  map => scala/Option#map().
-       |  x => local10
-       |  p => local11
+       |  p => local10
        |[8:13..8:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
+       |[8:29..8:57): for (x <- Option(a)) yield x => orig(Option(a)).map[Int]({(x) => orig(x)})
+       |  map => scala/Option#map().
+       |  Int => scala/Int#
+       |  x => local11
        |[8:39..8:45): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[9:2..9:59): for { a <- Option(1) } yield for (x <- Option(a)) yield x => orig(Option(1)).map[Option[Int]]({(a) => orig(Option(a)).map[Int]({(x) => orig(x)})})
+       |[9:2..9:59): for { a <- Option(1) } yield for (x <- Option(a)) yield x => orig(Option(1)).map[Option[Int]]({(a) => orig(for (x <- Option(a)) yield x)})
        |  map => scala/Option#map().
        |  Option => scala/Option#
        |  Int => scala/Int#
        |  a => local12
-       |  x => local13
        |[9:13..9:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
+       |[9:31..9:59): for (x <- Option(a)) yield x => orig(Option(a)).map[Int]({(x) => orig(x)})
+       |  map => scala/Option#map().
+       |  Int => scala/Int#
+       |  x => local13
        |[9:41..9:47): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[10:2..10:70): for { a <- Option(1) if (for (x <- new B((a, a))) yield x) } yield a => orig(Option(1)).withFilter({(a) => orig(new B((a, a))).map[Tuple2[Int, Int]]({(x) => orig(x)})}).map[Int]({(a) => orig(a)})
+       |[10:2..10:70): for { a <- Option(1) if (for (x <- new B((a, a))) yield x) } yield a => orig(Option(1)).withFilter({(a) => orig(for (x <- new B((a, a))) yield x)}).map[Int]({(a) => orig(a)})
        |  withFilter => scala/Option#withFilter().
        |  a => local14
+       |  map => scala/Option#WithFilter#map().
+       |  Int => scala/Int#
+       |[10:13..10:19): Option => *.apply[Int]
+       |  apply => scala/Option.apply().
+       |  Int => scala/Int#
+       |[10:27..10:59): for (x <- new B((a, a))) yield x => orig(new B((a, a))).map[Tuple2[Int, Int]]({(x) => orig(x)})
        |  map => _empty_/B#map().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  x => local15
-       |  map => scala/Option#WithFilter#map().
-       |[10:13..10:19): Option => *.apply[Int]
-       |  apply => scala/Option.apply().
-       |  Int => scala/Int#
-       |[11:2..11:75): for { a <- Option(1) if (for ((x, 1) <- new B((a, a))) yield x) } yield a => orig(Option(1)).withFilter({(a) => orig(new B((a, a))).map[Int]({(x$3) => orig(x)})}).map[Int]({(a) => orig(a)})
+       |[11:2..11:75): for { a <- Option(1) if (for ((x, 1) <- new B((a, a))) yield x) } yield a => orig(Option(1)).withFilter({(a) => orig(for ((x, 1) <- new B((a, a))) yield x)}).map[Int]({(a) => orig(a)})
        |  withFilter => scala/Option#withFilter().
        |  a => local16
-       |  map => _empty_/B#map().
-       |  Int => scala/Int#
-       |  x$3 => local17
        |  map => scala/Option#WithFilter#map().
+       |  Int => scala/Int#
        |[11:13..11:19): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
+       |[11:27..11:64): for ((x, 1) <- new B((a, a))) yield x => orig(new B((a, a))).map[Int]({(x$3) => orig(x)})
+       |  map => _empty_/B#map().
+       |  Int => scala/Int#
+       |  x$3 => local17
        |[12:2..12:66): for { a <- Option(1); b = for (x <- Option(a)) yield x } yield b => orig(Option(1)).map[Tuple2[Int, Option[Int]]]({(a) => orig(b = for (x <- Option(a)) yield x)}).map[Option[Int]]({(x$4) => orig(b)})
        |  map => scala/Option#map().
        |  Tuple2 => scala/Tuple2#
@@ -1426,71 +1506,100 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |}
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|[1:2..1:54): for { p <- for (x <- List(1)) yield (x, x) } yield p => orig(List(1)).map[Tuple2[Int, Int], List[Tuple2[Int, Int]]]({(x) => orig((x, x))})(List.canBuildFrom[Tuple2[Int, Int]]).map[Tuple2[Int, Int], List[Tuple2[Int, Int]]]({(p) => orig(p)})(List.canBuildFrom[Tuple2[Int, Int]])
+      """|[1:2..1:54): for { p <- for (x <- List(1)) yield (x, x) } yield p => orig(for (x <- List(1)) yield (x, x)).map[Tuple2[Int, Int], List[Tuple2[Int, Int]]]({(p) => orig(p)})(List.canBuildFrom[Tuple2[Int, Int]])
          |  map => scala/collection/immutable/List#map().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  x => local0
+         |  p => local0
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
-         |  p => local1
+         |[1:13..1:44): for (x <- List(1)) yield (x, x) => orig(List(1)).map[Tuple2[Int, Int], List[Tuple2[Int, Int]]]({(x) => orig((x, x))})(List.canBuildFrom[Tuple2[Int, Int]])
+         |  map => scala/collection/immutable/List#map().
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |  x => local1
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[1:23..1:27): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
-         |[2:2..2:63): for { (a, b) <- for (x <- List(1)) yield (x, x) } yield a + b => orig(List(1)).map[Tuple2[Int, Int], List[Tuple2[Int, Int]]]({(x) => orig((x, x))})(List.canBuildFrom[Tuple2[Int, Int]]).map[Int, List[Int]]({(x$1) => orig(a + b)})(List.canBuildFrom[Int])
+         |[2:2..2:63): for { (a, b) <- for (x <- List(1)) yield (x, x) } yield a + b => orig(for (x <- List(1)) yield (x, x)).map[Int, List[Int]]({(x$1) => orig(a + b)})(List.canBuildFrom[Int])
+         |  map => scala/collection/generic/FilterMonadic#map().
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |  x$1 => local2
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |[2:18..2:49): for (x <- List(1)) yield (x, x) => orig(List(1)).map[Tuple2[Int, Int], List[Tuple2[Int, Int]]]({(x) => orig((x, x))})(List.canBuildFrom[Tuple2[Int, Int]])
          |  map => scala/collection/immutable/List#map().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  x => local2
+         |  x => local3
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
-         |  map => scala/collection/generic/FilterMonadic#map().
-         |  x$1 => local3
          |[2:28..2:32): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
-         |[3:2..3:59): for { p <- for ((x, 1) <- List((1, 1))) yield x } yield p => orig(List((1, 1))).map[Int, List[Int]]({(x$2) => orig(x)})(List.canBuildFrom[Int]).map[Int, List[Int]]({(p) => orig(p)})(List.canBuildFrom[Int])
+         |[3:2..3:59): for { p <- for ((x, 1) <- List((1, 1))) yield x } yield p => orig(for ((x, 1) <- List((1, 1))) yield x).map[Int, List[Int]]({(p) => orig(p)})(List.canBuildFrom[Int])
+         |  map => scala/collection/immutable/List#map().
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |  p => local6
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |[3:13..3:49): for ((x, 1) <- List((1, 1))) yield x => orig(List((1, 1))).map[Int, List[Int]]({(x$2) => orig(x)})(List.canBuildFrom[Int])
          |  map => scala/collection/generic/FilterMonadic#map().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
-         |  x$2 => local6
+         |  x$2 => local7
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
-         |  map => scala/collection/immutable/List#map().
-         |  p => local7
          |[3:28..3:32): List => *.apply[Tuple2[Int, Int]]
          |  apply => scala/collection/immutable/List.apply().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
-         |[4:2..4:63): for { a <- List(1); p <- for (x <- List(a)) yield x } yield p => orig(List(1)).flatMap[Int, List[Int]]({(a) => orig(List(a)).map[Int, List[Int]]({(x) => orig(x)})(List.canBuildFrom[Int]).map[Int, List[Int]]({(p) => orig(p)})(List.canBuildFrom[Int])})(List.canBuildFrom[Int])
+         |[4:2..4:63): for { a <- List(1); p <- for (x <- List(a)) yield x } yield p => orig(List(1)).flatMap[Int, List[Int]]({(a) => orig(for (x <- List(a)) yield x).map[Int, List[Int]]({(p) => orig(p)})(List.canBuildFrom[Int])})(List.canBuildFrom[Int])
          |  flatMap => scala/collection/immutable/List#flatMap().
          |  Int => scala/Int#
          |  List => scala/collection/immutable/List#
          |  a => local9
          |  map => scala/collection/immutable/List#map().
-         |  x => local10
+         |  p => local10
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
-         |  p => local11
          |[4:13..4:17): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
+         |[4:27..4:53): for (x <- List(a)) yield x => orig(List(a)).map[Int, List[Int]]({(x) => orig(x)})(List.canBuildFrom[Int])
+         |  map => scala/collection/immutable/List#map().
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |  x => local11
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[4:37..4:41): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
-         |[5:2..5:55): for { a <- List(1) } yield for (x <- List(a)) yield x => orig(List(1)).map[List[Int], List[List[Int]]]({(a) => orig(List(a)).map[Int, List[Int]]({(x) => orig(x)})(List.canBuildFrom[Int])})(List.canBuildFrom[List[Int]])
+         |[5:2..5:55): for { a <- List(1) } yield for (x <- List(a)) yield x => orig(List(1)).map[List[Int], List[List[Int]]]({(a) => orig(for (x <- List(a)) yield x)})(List.canBuildFrom[List[Int]])
          |  map => scala/collection/immutable/List#map().
          |  List => scala/collection/immutable/List#
          |  Int => scala/Int#
          |  a => local12
-         |  x => local13
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[5:13..5:17): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
+         |[5:29..5:55): for (x <- List(a)) yield x => orig(List(a)).map[Int, List[Int]]({(x) => orig(x)})(List.canBuildFrom[Int])
+         |  map => scala/collection/immutable/List#map().
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |  x => local13
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
          |[5:39..5:43): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
@@ -1539,57 +1648,71 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:54): for { p <- for (x <- List(1)) yield (x, x) } yield p => orig(List(1)).map[Tuple2[Int, Int]]({(x) => orig((x, x))}).map[Tuple2[Int, Int]]({(p) => orig(p)})
+      """|[1:2..1:54): for { p <- for (x <- List(1)) yield (x, x) } yield p => orig(for (x <- List(1)) yield (x, x)).map[Tuple2[Int, Int]]({(p) => orig(p)})
          |  map => scala/collection/immutable/List#map().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
-         |  x => local0
-         |  p => local1
+         |  p => local0
+         |[1:13..1:44): for (x <- List(1)) yield (x, x) => orig(List(1)).map[Tuple2[Int, Int]]({(x) => orig((x, x))})
+         |  map => scala/collection/immutable/List#map().
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
+         |  x => local1
          |[1:23..1:27): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
-         |[2:2..2:63): for { (a, b) <- for (x <- List(1)) yield (x, x) } yield a + b => orig(List(1)).map[Tuple2[Int, Int]]({(x) => orig((x, x))}).map[Int]({(x$1) => orig(a + b)})
+         |[2:2..2:63): for { (a, b) <- for (x <- List(1)) yield (x, x) } yield a + b => orig(for (x <- List(1)) yield (x, x)).map[Int]({(x$1) => orig(a + b)})
+         |  map => scala/collection/WithFilter#map().
+         |  Int => scala/Int#
+         |  x$1 => local2
+         |[2:18..2:49): for (x <- List(1)) yield (x, x) => orig(List(1)).map[Tuple2[Int, Int]]({(x) => orig((x, x))})
          |  map => scala/collection/immutable/List#map().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
-         |  x => local2
-         |  map => scala/collection/WithFilter#map().
-         |  x$1 => local3
+         |  x => local3
          |[2:28..2:32): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
-         |[3:2..3:59): for { p <- for ((x, 1) <- List((1, 1))) yield x } yield p => orig(List((1, 1))).map[Int]({(x$2) => orig(x)}).map[Int]({(p) => orig(p)})
+         |[3:2..3:59): for { p <- for ((x, 1) <- List((1, 1))) yield x } yield p => orig(for ((x, 1) <- List((1, 1))) yield x).map[Int]({(p) => orig(p)})
+         |  map => scala/collection/immutable/List#map().
+         |  Int => scala/Int#
+         |  p => local6
+         |[3:13..3:49): for ((x, 1) <- List((1, 1))) yield x => orig(List((1, 1))).map[Int]({(x$2) => orig(x)})
          |  map => scala/collection/WithFilter#map().
          |  Int => scala/Int#
-         |  x$2 => local6
-         |  map => scala/collection/immutable/List#map().
-         |  p => local7
+         |  x$2 => local7
          |[3:28..3:32): List => *.apply[Tuple2[Int, Int]]
          |  apply => scala/collection/IterableFactory#apply().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
-         |[4:2..4:63): for { a <- List(1); p <- for (x <- List(a)) yield x } yield p => orig(List(1)).flatMap[Int]({(a) => orig(List(a)).map[Int]({(x) => orig(x)}).map[Int]({(p) => orig(p)})})
+         |[4:2..4:63): for { a <- List(1); p <- for (x <- List(a)) yield x } yield p => orig(List(1)).flatMap[Int]({(a) => orig(for (x <- List(a)) yield x).map[Int]({(p) => orig(p)})})
          |  flatMap => scala/collection/immutable/List#flatMap().
          |  Int => scala/Int#
          |  a => local9
          |  map => scala/collection/immutable/List#map().
-         |  x => local10
-         |  p => local11
+         |  p => local10
          |[4:13..4:17): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
+         |[4:27..4:53): for (x <- List(a)) yield x => orig(List(a)).map[Int]({(x) => orig(x)})
+         |  map => scala/collection/immutable/List#map().
+         |  Int => scala/Int#
+         |  x => local11
          |[4:37..4:41): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
-         |[5:2..5:55): for { a <- List(1) } yield for (x <- List(a)) yield x => orig(List(1)).map[List[Int]]({(a) => orig(List(a)).map[Int]({(x) => orig(x)})})
+         |[5:2..5:55): for { a <- List(1) } yield for (x <- List(a)) yield x => orig(List(1)).map[List[Int]]({(a) => orig(for (x <- List(a)) yield x)})
          |  map => scala/collection/immutable/List#map().
          |  List => scala/collection/immutable/List#
          |  Int => scala/Int#
          |  a => local12
-         |  x => local13
          |[5:13..5:17): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
+         |[5:29..5:55): for (x <- List(a)) yield x => orig(List(a)).map[Int]({(x) => orig(x)})
+         |  map => scala/collection/immutable/List#map().
+         |  Int => scala/Int#
+         |  x => local13
          |[5:39..5:43): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
@@ -1669,20 +1792,25 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  G => _empty_/G#
        |  p => local1
        |  d => _empty_/D.d.
+       |[20:28..20:60): for (x <- new V(a)) yield (x, x) => toG(*)
+       |  toG => _empty_/F.toG().
        |[20:38..20:46): new V(a) => *.map
        |  map => _empty_/V#map().
        |[21:2..21:62): for { a <- new O(1) } yield for (x <- new V(a)) yield (x, x) => orig(new O(1)).map({(a) => orig(for (x <- new V(a)) yield (x, x))})(d)
        |  map => _empty_/O#map().
        |  a => local3
        |  d => _empty_/D.d.
+       |[21:30..21:62): for (x <- new V(a)) yield (x, x) => toG(*)
+       |  toG => _empty_/F.toG().
        |[21:40..21:48): new V(a) => *.map
        |  map => _empty_/V#map().
-       |[22:2..22:51): for { a <- new O(1); x <- new V(a) } yield (x, x) => orig(new O(1)).flatMap({(a) => orig(x <- new V(a) } yield (x, x))})(d)
+       |[22:2..22:51): for { a <- new O(1); x <- new V(a) } yield (x, x) => orig(new O(1)).flatMap({(a) => toG(orig(new V(a)).map({(x) => orig((x, x))}))})(d)
        |  flatMap => _empty_/O#flatMap().
        |  a => local5
-       |  d => _empty_/D.d.
-       |[22:28..22:36): new V(a) => *.map
+       |  toG => _empty_/F.toG().
        |  map => _empty_/V#map().
+       |  x => local6
+       |  d => _empty_/D.d.
        |""".stripMargin,
   )
 
@@ -1713,20 +1841,24 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  apply => scala/Function1#apply().
          |[9:40..9:41): f => *.apply
          |  apply => scala/Function1#apply().
-         |[15:2..15:55): for { p <- for (x <- new V(1)) yield (x, x) } yield p => orig(for (x <- new V(1)) yield (x, x))(dummyImplicit).map[Tuple2[Int, Int]]({(p) => orig(p)})
-         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+         |[15:2..15:55): for { p <- for (x <- new V(1)) yield (x, x) } yield p => orig(for (x <- new V(1)) yield (x, x)).map[Tuple2[Int, Int]]({(p) => orig(p)})
          |  map => _empty_/G#map().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  p => local0
+         |[15:13..15:45): for (x <- new V(1)) yield (x, x) => toG(*)(dummyImplicit)
+         |  toG => _empty_/F.toG().
+         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
          |[15:23..15:31): new V(1) => *.map
          |  map => _empty_/V#map().
-         |[16:2..16:55): for { p <- for (x <- new W(1)) yield (x, x) } yield p => orig(for (x <- new W(1)) yield (x, x))(dummyImplicit).map[Tuple2[Int, Int]]({(p) => orig(p)})
-         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+         |[16:2..16:55): for { p <- for (x <- new W(1)) yield (x, x) } yield p => orig(for (x <- new W(1)) yield (x, x)).map[Tuple2[Int, Int]]({(p) => orig(p)})
          |  map => _empty_/G#map().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  p => local2
+         |[16:13..16:45): for (x <- new W(1)) yield (x, x) => toG(*)(dummyImplicit)
+         |  toG => _empty_/F.toG().
+         |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
          |[16:13..16:45): for (x <- new W(1)) yield (x, x) => orig(new W(1)).map({(x) => orig((x, x))})(dummyImplicit)
          |  map => _empty_/W#map().
          |  x => local3
@@ -1739,20 +1871,24 @@ class ForSyntheticsSuite extends SemanticdbSuite {
          |  apply => scala/Function1#apply().
          |[9:40..9:41): f => *.apply
          |  apply => scala/Function1#apply().
-         |[15:2..15:55): for { p <- for (x <- new V(1)) yield (x, x) } yield p => orig(for (x <- new V(1)) yield (x, x))(dummyImplicit).map[Tuple2[Int, Int]]({(p) => orig(p)})
-         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
+         |[15:2..15:55): for { p <- for (x <- new V(1)) yield (x, x) } yield p => orig(for (x <- new V(1)) yield (x, x)).map[Tuple2[Int, Int]]({(p) => orig(p)})
          |  map => _empty_/G#map().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  p => local0
+         |[15:13..15:45): for (x <- new V(1)) yield (x, x) => toG(*)(dummyImplicit)
+         |  toG => _empty_/F.toG().
+         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
          |[15:23..15:31): new V(1) => *.map
          |  map => _empty_/V#map().
-         |[16:2..16:55): for { p <- for (x <- new W(1)) yield (x, x) } yield p => orig(for (x <- new W(1)) yield (x, x))(dummyImplicit).map[Tuple2[Int, Int]]({(p) => orig(p)})
-         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
+         |[16:2..16:55): for { p <- for (x <- new W(1)) yield (x, x) } yield p => orig(for (x <- new W(1)) yield (x, x)).map[Tuple2[Int, Int]]({(p) => orig(p)})
          |  map => _empty_/G#map().
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  p => local2
+         |[16:13..16:45): for (x <- new W(1)) yield (x, x) => toG(*)(dummyImplicit)
+         |  toG => _empty_/F.toG().
+         |  dummyImplicit => scala/DummyImplicit.dummyImplicit.
          |[16:13..16:45): for (x <- new W(1)) yield (x, x) => orig(new W(1)).map({(x) => orig((x, x))})(dummyImplicit)
          |  map => _empty_/W#map().
          |  x => local3
@@ -1783,15 +1919,15 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  apply => scala/Function1#apply().
        |[9:40..9:41): f => *.apply
        |  apply => scala/Function1#apply().
-       |[15:2..15:67): for { p <- for (x <- new V(1)) yield (x, x) if p._1 > 0 } yield p => orig(for (x <- new V(1)) yield (x, x) if p._1 > 0).map[Tuple2[Int, Int]]({(p) => orig(p)})
+       |[15:2..15:67): for { p <- for (x <- new V(1)) yield (x, x) if p._1 > 0 } yield p => toG(orig(for (x <- new V(1)) yield (x, x)).withFilter({(p) => orig(p._1 > 0)})).map[Tuple2[Int, Int]]({(p) => orig(p)})
+       |  toG => _empty_/H.toG().
+       |  withFilter => _empty_/F#withFilter().
+       |  p => local0
        |  map => _empty_/G#map().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |  p => local0
-       |[15:13..15:45): for (x <- new V(1)) yield (x, x) => orig(new V(1)).map({(x) => orig((x, x))}).withFilter
+       |[15:23..15:31): new V(1) => *.map
        |  map => _empty_/V#map().
-       |  x => local1
-       |  withFilter => _empty_/F#withFilter().
        |""".stripMargin,
   )
 
@@ -1820,14 +1956,15 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  apply => scala/Function1#apply().
        |[9:40..9:41): f => *.apply
        |  apply => scala/Function1#apply().
-       |[15:2..15:61): for { p <- for (x <- new V(1)) yield x; q = p } yield p + q => orig(p <- for (x <- new V(1)) yield x; q = p).map[Int]({(x$1) => orig(p + q)})
+       |[15:2..15:61): for { p <- for (x <- new V(1)) yield x; q = p } yield p + q => toG(orig(for (x <- new V(1)) yield x).map({(p) => orig(q = p)})).map[Int]({(x$1) => orig(p + q)})
+       |  toG => _empty_/F.toG().
+       |  map => _empty_/X#map().
+       |  p => local0
        |  map => _empty_/G#map().
        |  Int => scala/Int#
-       |  x$1 => local0
-       |[15:13..15:40): for (x <- new V(1)) yield x => orig(new V(1)).map({(x) => orig(x)}).map
+       |  x$1 => local1
+       |[15:23..15:31): new V(1) => *.map
        |  map => _empty_/V#map().
-       |  x => local1
-       |  map => _empty_/X#map().
        |""".stripMargin,
   )
 
@@ -1857,8 +1994,10 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  map => _empty_/G#map().
        |  Int => scala/Int#
        |  x$1 => local0
-       |[16:18..16:31): new E((1, 2)) => *.withFilter
-       |  withFilter => _empty_/F#withFilter().
+       |[16:18..16:31): new E((1, 2)) => toG(*)
+       |  toG => _empty_/H.toG().
+       |[16:18..16:31): new E((1, 2)) => toF(*)
+       |  toF => _empty_/E.toF().
        |""".stripMargin,
   )
 
@@ -1879,12 +2018,13 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[5:40..5:41): f => *.apply
        |  apply => scala/Function1#apply().
-       |[11:2..11:54): for { (b, c) <- new F((1, 2)) if b > 0 } yield b + c => orig(new F((1, 2)) if b > 0).map[Int]({(x$2) => orig(b + c)})
+       |[11:2..11:54): for { (b, c) <- new F((1, 2)) if b > 0 } yield b + c => toG(orig(new F((1, 2))).withFilter({(x$1) => orig(b > 0)})).map[Int]({(x$2) => orig(b + c)})
+       |  toG => _empty_/F.toG().
+       |  withFilter => _empty_/F#withFilter().
+       |  x$1 => local0
        |  map => _empty_/G#map().
        |  Int => scala/Int#
-       |  x$2 => local0
-       |[11:18..11:31): new F((1, 2)) => *.withFilter
-       |  withFilter => _empty_/F#withFilter().
+       |  x$2 => local1
        |""".stripMargin,
   )
 
@@ -1933,19 +2073,21 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[9:40..9:41): f => *.apply
        |  apply => scala/Function1#apply().
-       |[15:2..15:36): for { b <- new F((1, 2)) } yield b => orig(new F((1, 2)))(d).map[Tuple2[Int, Int]]({(b) => orig(b)})
-       |  d => _empty_/D.d.
+       |[15:2..15:36): for { b <- new F((1, 2)) } yield b => orig(new F((1, 2))).map[Tuple2[Int, Int]]({(b) => orig(b)})
        |  map => _empty_/G#map().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  b => local0
-       |[16:2..16:45): for { (b, c) <- new F((1, 2)) } yield b + c => orig(new F((1, 2)))(d).map[Int]({(x$1) => orig(b + c)})
+       |[15:13..15:26): new F((1, 2)) => map(*)(d)
+       |  map => _empty_/F.map().
        |  d => _empty_/D.d.
+       |[16:2..16:45): for { (b, c) <- new F((1, 2)) } yield b + c => orig(new F((1, 2))).map[Int]({(x$1) => orig(b + c)})
        |  map => _empty_/G#map().
        |  Int => scala/Int#
        |  x$1 => local1
-       |[16:18..16:31): new F((1, 2)) => *.withFilter
-       |  withFilter => _empty_/F#withFilter().
+       |[16:18..16:31): new F((1, 2)) => map(*)(d)
+       |  map => _empty_/F.map().
+       |  d => _empty_/D.d.
        |""".stripMargin,
   )
 
@@ -1992,6 +2134,8 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  map => _empty_/O#map().
        |  G => _empty_/G#
        |  a => local0
+       |[10:41..10:54): new F((a, a)) => toG(*)
+       |  toG => _empty_/F.toG().
        |""".stripMargin,
   )
 
@@ -2029,26 +2173,32 @@ class ForSyntheticsSuite extends SemanticdbSuite {
        |  apply => scala/Function1#apply().
        |[14:47..14:48): f => *.apply
        |  apply => scala/Function1#apply().
-       |[22:2..22:45): for { (b, c) <- new F((1, 2)) } yield b + c => orig(new F((1, 2)))(d).map[Int]({(x$1) => orig(b + c)})
-       |  d => _empty_/D.d.
+       |[22:2..22:45): for { (b, c) <- new F((1, 2)) } yield b + c => orig(new F((1, 2))).map[Int]({(x$1) => orig(b + c)})
        |  map => _empty_/Gw#map().
        |  Int => scala/Int#
        |  x$1 => local0
-       |[23:2..23:52): for { b <- new F((1, 2)); c <- Option(1) } yield c => orig(new F((1, 2)))(d).flatMap[Int]({(b) => orig(Option(1)).map[Int]({(c) => orig(c)})})
+       |[22:18..22:31): new F((1, 2)) => withFilter(*)(d)
+       |  withFilter => _empty_/F.withFilter().
        |  d => _empty_/D.d.
+       |[23:2..23:52): for { b <- new F((1, 2)); c <- Option(1) } yield c => orig(new F((1, 2))).flatMap[Int]({(b) => orig(Option(1)).map[Int]({(c) => orig(c)})})
        |  flatMap => _empty_/Gf#flatMap().
        |  Int => scala/Int#
        |  b => local3
        |  map => scala/Option#map().
        |  c => local4
+       |[23:13..23:26): new F((1, 2)) => flatMap(*)(d)
+       |  flatMap => _empty_/F.flatMap().
+       |  d => _empty_/D.d.
        |[23:33..23:39): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[24:2..24:39): for { b <- new F((1, 2)) } println(b) => orig(new F((1, 2)))(d).foreach[Unit]({(b) => orig(println(b))})
-       |  d => _empty_/D.d.
+       |[24:2..24:39): for { b <- new F((1, 2)) } println(b) => orig(new F((1, 2))).foreach[Unit]({(b) => orig(println(b))})
        |  foreach => _empty_/Ge#foreach().
        |  Unit => scala/Unit#
        |  b => local5
+       |[24:13..24:26): new F((1, 2)) => foreach(*)(d)
+       |  foreach => _empty_/F.foreach().
+       |  d => _empty_/D.d.
        |""".stripMargin,
   )
 
