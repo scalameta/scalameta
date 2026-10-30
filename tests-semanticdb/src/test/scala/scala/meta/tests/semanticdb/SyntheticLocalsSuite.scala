@@ -20368,6 +20368,724 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |""".stripMargin,
   )
 
+  occurrences(
+    "context bounds of global definitions",
+    """|object ev1 {
+       |  def g[T: Ordering](t: T) = t
+       |  class j[T: Manifest] { val a = Array.empty[T] }
+       |  class c[T: Ordering](t: T)
+       |  case class k[T: Ordering](t: T)
+       |  implicit class i[T: Ordering](t: T) { def x = implicitly[Ordering[T]] }
+       |  trait d { def f[T: Ordering](t: T): T }
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): ev1 <= _empty_/ev1.
+       |[1:6..1:7): g <= _empty_/ev1.g().
+       |[1:8..1:9): T <= _empty_/ev1.g().[T]
+       |[1:11..1:19): Ordering => scala/package.Ordering#
+       |[1:21..1:22): t <= _empty_/ev1.g().(t)
+       |[1:24..1:25): T => _empty_/ev1.g().[T]
+       |[1:29..1:30): t => _empty_/ev1.g().(t)
+       |[2:8..2:9): j <= _empty_/ev1.j#
+       |[2:10..2:11): T <= _empty_/ev1.j#[T]
+       |[2:13..2:21): Manifest => scala/Predef.Manifest#
+       |[2:29..2:30): a <= _empty_/ev1.j#a.
+       |[2:33..2:38): Array => scala/Array.
+       |[2:39..2:44): empty => scala/Array.empty().
+       |[2:45..2:46): T => _empty_/ev1.j#[T]
+       |[3:8..3:9): c <= _empty_/ev1.c#
+       |[3:10..3:11): T <= _empty_/ev1.c#[T]
+       |[3:13..3:21): Ordering => scala/package.Ordering#
+       |[3:23..3:24): t <= _empty_/ev1.c#`<init>`().(t)
+       |[3:23..3:24): t <= _empty_/ev1.c#t.
+       |[3:26..3:27): T => _empty_/ev1.c#[T]
+       |[4:13..4:14): k <= _empty_/ev1.k#
+       |[4:15..4:16): T <= _empty_/ev1.k#[T]
+       |[4:18..4:26): Ordering => scala/package.Ordering#
+       |[4:28..4:29): t <= _empty_/ev1.k#`<init>`().(t)
+       |[4:28..4:29): t <= _empty_/ev1.k#t.
+       |[4:31..4:32): T => _empty_/ev1.k#[T]
+       |[5:17..5:18): i <= _empty_/ev1.i#
+       |[5:19..5:20): T <= _empty_/ev1.i#[T]
+       |[5:22..5:30): Ordering => scala/package.Ordering#
+       |[5:32..5:33): t <= _empty_/ev1.i#`<init>`().(t)
+       |[5:32..5:33): t <= _empty_/ev1.i#t.
+       |[5:35..5:36): T => _empty_/ev1.i#[T]
+       |[5:44..5:45): x <= _empty_/ev1.i#x().
+       |[5:48..5:58): implicitly => scala/Predef.implicitly().
+       |[5:59..5:67): Ordering => scala/package.Ordering#
+       |[5:68..5:69): T => _empty_/ev1.i#[T]
+       |[6:8..6:9): d <= _empty_/ev1.d#
+       |[6:16..6:17): f <= _empty_/ev1.d#f().
+       |[6:18..6:19): T <= _empty_/ev1.d#f().[T]
+       |[6:21..6:29): Ordering => scala/package.Ordering#
+       |[6:31..6:32): t <= _empty_/ev1.d#f().(t)
+       |[6:34..6:35): T => _empty_/ev1.d#f().[T]
+       |[6:38..6:39): T => _empty_/ev1.d#f().[T]
+       |""".stripMargin,
+  )
+
+  symbols(
+    "context bounds of local definitions",
+    """|object ev2 {
+       |  def m: Any = {
+       |    def g[T: Ordering](t: T) = t
+       |    class c[T: Ordering](t: T) { def o = implicitly[Ordering[T]] }
+       |    case class k[T: Ordering](t: T)
+       |    implicit class i[T: Ordering](t: T) { def x = implicitly[Ordering[T]] }
+       |    val a = new AnyRef { def h[T: Ordering](t: T) = t }
+       |    (g(1), new c(1), k(1), 1.x, a)
+       |  }
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/ev2. => final object ev2 extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/ev2.m(). => method m: Any
+         |  Any => scala/Any#
+         |local0 => method g[T](t: T)(implicit evidence$1: Ordering[T]): T
+         |  T => local3
+         |  t => local1
+         |  evidence$1 => local2
+         |  Ordering => scala/package.Ordering#
+         |local1 => param t: T
+         |  T => local3
+         |local2 => synthetic implicit param evidence$1: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local3
+         |local3 => typeparam T
+         |local4 => class c[T] extends AnyRef { +4 decls }
+         |  T => local9
+         |  AnyRef => scala/AnyRef#
+         |local5 => param t: T
+         |  T => local9
+         |local6 => implicit param evidence$2: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local9
+         |local7 => primary ctor <init>(t: T)(implicit evidence$2: Ordering[T])
+         |  t => local5
+         |  T => local9
+         |  evidence$2 => local6
+         |  Ordering => scala/package.Ordering#
+         |local8 => method o: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local9
+         |local9 => typeparam T
+         |local10 => case class k[T] extends AnyRef with Product with Serializable { +13 decls }
+         |  T => local24
+         |  AnyRef => scala/AnyRef#
+         |  Product => scala/Product#
+         |  Serializable => scala/Serializable#
+         |local11 => val param t: T
+         |  T => local24
+         |local12 => implicit param evidence$3: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local24
+         |local13 => primary ctor <init>(val t: T)(implicit evidence$3: Ordering[T])
+         |  t => local11
+         |  T => local24
+         |  evidence$3 => local12
+         |  Ordering => scala/package.Ordering#
+         |local14 => synthetic method copy[T](t: T)(implicit evidence$3: Ordering[T]): k[T]
+         |  T => local24
+         |  t => local25
+         |  evidence$3 => local26
+         |  Ordering => scala/package.Ordering#
+         |  k => local10
+         |local15 => synthetic method copy$default$1[T]: T @uncheckedVariance
+         |  T => local24
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |local16 => synthetic method productPrefix: String <: scala/Product#productPrefix().
+         |  String => java/lang/String#
+         |local17 => synthetic method productArity: Int <: scala/Product#productArity().
+         |  Int => scala/Int#
+         |local18 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
+         |  x$1 => local27
+         |  Int => scala/Int#
+         |  Any => scala/Any#
+         |local19 => synthetic method productIterator: Iterator[Any] <: scala/Product#productIterator().
+         |  Iterator => scala/collection/Iterator#
+         |  Any => scala/Any#
+         |local20 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+         |  x$1 => local28
+         |  Any => scala/Any#
+         |  Boolean => scala/Boolean#
+         |local21 => synthetic method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
+         |  Int => scala/Int#
+         |local22 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |  String => java/lang/String#
+         |local23 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |  x$1 => local29
+         |  Any => scala/Any#
+         |  Boolean => scala/Boolean#
+         |local24 => typeparam T
+         |local25 => default param t: T
+         |  T => local24
+         |local26 => implicit param evidence$3: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local24
+         |local27 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local28 => synthetic param x$1: Any
+         |  Any => scala/Any#
+         |local29 => synthetic param x$1: Any
+         |  Any => scala/Any#
+         |local30 => implicit class i[T] extends AnyRef { +4 decls }
+         |  T => local35
+         |  AnyRef => scala/AnyRef#
+         |local31 => param t: T
+         |  T => local35
+         |local32 => implicit param evidence$4: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local35
+         |local33 => primary ctor <init>(t: T)(implicit evidence$4: Ordering[T])
+         |  t => local31
+         |  T => local35
+         |  evidence$4 => local32
+         |  Ordering => scala/package.Ordering#
+         |local34 => method x: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local35
+         |local35 => typeparam T
+         |local36 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local37 => method h[T](t: T)(implicit evidence$5: Ordering[T]): T
+         |  T => local40
+         |  t => local38
+         |  evidence$5 => local39
+         |  Ordering => scala/package.Ordering#
+         |local38 => param t: T
+         |  T => local40
+         |local39 => synthetic implicit param evidence$5: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local40
+         |local40 => typeparam T
+         |local41 => val local a: AnyRef { def h[T](t: T)(implicit evidence$5: Ordering[T]): T }
+         |  AnyRef => scala/AnyRef#
+         |  h => local37
+         |  T => local40
+         |  t => local38
+         |  evidence$5 => local39
+         |  Ordering => scala/package.Ordering#
+         |local42 => synthetic method apply[T](t: T)(implicit evidence$3: Ordering[T]): k[T]
+         |  T => local24
+         |  t => local45
+         |  evidence$3 => local46
+         |  Ordering => scala/package.Ordering#
+         |  k => local10
+         |local43 => synthetic final object k extends AnyRef with Serializable { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |  Serializable => scala/Serializable#
+         |local44 => synthetic implicit method i[T](t: T)(implicit evidence$4: Ordering[T]): i[T]
+         |  T => local35
+         |  t => local49
+         |  evidence$4 => local50
+         |  Ordering => scala/package.Ordering#
+         |  i => local30
+         |local45 => param t: T
+         |  T => local24
+         |local46 => implicit param evidence$3: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local24
+         |local47 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |  String => java/lang/String#
+         |local48 => synthetic method unapply[T](x$0: k[T]): Option[T]
+         |  T => local24
+         |  x$0 => local51
+         |  k => local10
+         |  Option => scala/Option#
+         |local49 => param t: T
+         |  T => local35
+         |local50 => implicit param evidence$4: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local35
+         |local51 => synthetic param x$0: k[T]
+         |  k => local10
+         |  T => local24
+         |""".stripMargin
+    else
+      """|_empty_/ev2. => final object ev2 extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/ev2.m(). => method m: Any
+         |  Any => scala/Any#
+         |local0 => method g[T](t: T)(implicit evidence$1: Ordering[T]): T
+         |  T => local3
+         |  t => local1
+         |  evidence$1 => local2
+         |  Ordering => scala/package.Ordering#
+         |local1 => param t: T
+         |  T => local3
+         |local2 => synthetic implicit param evidence$1: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local3
+         |local3 => typeparam T
+         |local4 => class c[T] extends AnyRef { +4 decls }
+         |  T => local9
+         |  AnyRef => scala/AnyRef#
+         |local5 => param t: T
+         |  T => local9
+         |local6 => implicit param evidence$2: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local9
+         |local7 => primary ctor <init>(t: T)(implicit evidence$2: Ordering[T])
+         |  t => local5
+         |  T => local9
+         |  evidence$2 => local6
+         |  Ordering => scala/package.Ordering#
+         |local8 => method o: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local9
+         |local9 => typeparam T
+         |local10 => case class k[T] extends AnyRef with Product with Serializable { +14 decls }
+         |  T => local25
+         |  AnyRef => scala/AnyRef#
+         |  Product => scala/Product#
+         |  Serializable => scala/package.Serializable#
+         |local11 => val param t: T
+         |  T => local25
+         |local12 => implicit param evidence$3: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local25
+         |local13 => primary ctor <init>(val t: T)(implicit evidence$3: Ordering[T])
+         |  t => local11
+         |  T => local25
+         |  evidence$3 => local12
+         |  Ordering => scala/package.Ordering#
+         |local14 => synthetic method copy[T](t: T)(implicit evidence$3: Ordering[T]): k[T]
+         |  T => local25
+         |  t => local26
+         |  evidence$3 => local27
+         |  Ordering => scala/package.Ordering#
+         |  k => local10
+         |local15 => synthetic method copy$default$1[T]: T @uncheckedVariance
+         |  T => local25
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |local16 => synthetic method productPrefix: String <: scala/Product#productPrefix().
+         |  String => java/lang/String#
+         |local17 => synthetic method productArity: Int <: scala/Product#productArity().
+         |  Int => scala/Int#
+         |local18 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
+         |  x$1 => local28
+         |  Int => scala/Int#
+         |  Any => scala/Any#
+         |local19 => synthetic method productIterator: Iterator[Any] <: scala/Product#productIterator().
+         |  Iterator => scala/collection/Iterator#
+         |  Any => scala/Any#
+         |local20 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+         |  x$1 => local29
+         |  Any => scala/Any#
+         |  Boolean => scala/Boolean#
+         |local21 => synthetic method productElementName(x$1: Int): String <: scala/Product#productElementName().
+         |  x$1 => local30
+         |  Int => scala/Int#
+         |  String => java/lang/String#
+         |local22 => synthetic method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
+         |  Int => scala/Int#
+         |local23 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |  String => java/lang/String#
+         |local24 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |  x$1 => local31
+         |  Any => scala/Any#
+         |  Boolean => scala/Boolean#
+         |local25 => typeparam T
+         |local26 => default param t: T
+         |  T => local25
+         |local27 => implicit param evidence$3: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local25
+         |local28 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local29 => synthetic param x$1: Any
+         |  Any => scala/Any#
+         |local30 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local31 => synthetic param x$1: Any
+         |  Any => scala/Any#
+         |local32 => implicit class i[T] extends AnyRef { +4 decls }
+         |  T => local37
+         |  AnyRef => scala/AnyRef#
+         |local33 => param t: T
+         |  T => local37
+         |local34 => implicit param evidence$4: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local37
+         |local35 => primary ctor <init>(t: T)(implicit evidence$4: Ordering[T])
+         |  t => local33
+         |  T => local37
+         |  evidence$4 => local34
+         |  Ordering => scala/package.Ordering#
+         |local36 => method x: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local37
+         |local37 => typeparam T
+         |local38 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local39 => method h[T](t: T)(implicit evidence$5: Ordering[T]): T
+         |  T => local42
+         |  t => local40
+         |  evidence$5 => local41
+         |  Ordering => scala/package.Ordering#
+         |local40 => param t: T
+         |  T => local42
+         |local41 => synthetic implicit param evidence$5: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local42
+         |local42 => typeparam T
+         |local43 => val local a: AnyRef { def h[T](t: T)(implicit evidence$5: Ordering[T]): T }
+         |  AnyRef => scala/AnyRef#
+         |  h => local39
+         |  T => local42
+         |  t => local40
+         |  evidence$5 => local41
+         |  Ordering => scala/package.Ordering#
+         |local44 => synthetic method apply[T](t: T)(implicit evidence$3: Ordering[T]): k[T]
+         |  T => local25
+         |  t => local47
+         |  evidence$3 => local48
+         |  Ordering => scala/package.Ordering#
+         |  k => local10
+         |local45 => synthetic final object k extends AnyRef with Serializable { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |  Serializable => java/io/Serializable#
+         |local46 => synthetic implicit method i[T](t: T)(implicit evidence$4: Ordering[T]): i[T]
+         |  T => local37
+         |  t => local51
+         |  evidence$4 => local52
+         |  Ordering => scala/package.Ordering#
+         |  i => local32
+         |local47 => param t: T
+         |  T => local25
+         |local48 => implicit param evidence$3: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local25
+         |local49 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |  String => java/lang/String#
+         |local50 => synthetic method unapply[T](x$0: k[T]): Option[T]
+         |  T => local25
+         |  x$0 => local53
+         |  k => local10
+         |  Option => scala/Option#
+         |local51 => param t: T
+         |  T => local37
+         |local52 => implicit param evidence$4: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local37
+         |local53 => synthetic param x$0: k[T]
+         |  k => local10
+         |  T => local25
+         |""".stripMargin,
+  )
+
+  occurrences(
+    "context bounds of local definitions",
+    """|object ev2 {
+       |  def m: Any = {
+       |    def g[T: Ordering](t: T) = t
+       |    class c[T: Ordering](t: T) { def o = implicitly[Ordering[T]] }
+       |    case class k[T: Ordering](t: T)
+       |    implicit class i[T: Ordering](t: T) { def x = implicitly[Ordering[T]] }
+       |    val a = new AnyRef { def h[T: Ordering](t: T) = t }
+       |    (g(1), new c(1), k(1), 1.x, a)
+       |  }
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[0:7..0:10): ev2 <= _empty_/ev2.
+         |[1:6..1:7): m <= _empty_/ev2.m().
+         |[1:9..1:12): Any => scala/Any#
+         |[2:8..2:9): g <= local0
+         |[2:10..2:11): T <= local3
+         |[2:13..2:21): Ordering => scala/package.Ordering#
+         |[2:23..2:24): t <= local1
+         |[2:26..2:27): T => local3
+         |[2:31..2:32): t => local1
+         |[3:10..3:11): c <= local4
+         |[3:12..3:13): T <= local9
+         |[3:15..3:23): Ordering => scala/package.Ordering#
+         |[3:25..3:26): t <= local5
+         |[3:28..3:29): T => local9
+         |[3:37..3:38): o <= local8
+         |[3:41..3:51): implicitly => scala/Predef.implicitly().
+         |[3:52..3:60): Ordering => scala/package.Ordering#
+         |[3:61..3:62): T => local9
+         |[4:15..4:16): k <= local10
+         |[4:17..4:18): T <= local24
+         |[4:20..4:28): Ordering => scala/package.Ordering#
+         |[4:30..4:31): t <= local11
+         |[4:33..4:34): T => local24
+         |[5:19..5:20): i <= local30
+         |[5:21..5:22): T <= local35
+         |[5:24..5:32): Ordering => scala/package.Ordering#
+         |[5:34..5:35): t <= local31
+         |[5:37..5:38): T => local35
+         |[5:46..5:47): x <= local34
+         |[5:50..5:60): implicitly => scala/Predef.implicitly().
+         |[5:61..5:69): Ordering => scala/package.Ordering#
+         |[5:70..5:71): T => local35
+         |[6:8..6:9): a <= local41
+         |[6:16..6:16):  <= local36
+         |[6:16..6:22): AnyRef => scala/AnyRef#
+         |[6:22..6:22):  => java/lang/Object#`<init>`().
+         |[6:29..6:30): h <= local37
+         |[6:31..6:32): T <= local40
+         |[6:34..6:42): Ordering => scala/package.Ordering#
+         |[6:44..6:45): t <= local38
+         |[6:47..6:48): T => local40
+         |[6:52..6:53): t => local38
+         |[7:5..7:6): g => local0
+         |[7:15..7:16): c => local4
+         |[7:16..7:16):  => local7
+         |[7:21..7:22): k => local43
+         |[7:29..7:30): x => local34
+         |[7:32..7:33): a => local41
+         |""".stripMargin
+    else
+      """|[0:7..0:10): ev2 <= _empty_/ev2.
+         |[1:6..1:7): m <= _empty_/ev2.m().
+         |[1:9..1:12): Any => scala/Any#
+         |[2:8..2:9): g <= local0
+         |[2:10..2:11): T <= local3
+         |[2:13..2:21): Ordering => scala/package.Ordering#
+         |[2:23..2:24): t <= local1
+         |[2:26..2:27): T => local3
+         |[2:31..2:32): t => local1
+         |[3:10..3:11): c <= local4
+         |[3:12..3:13): T <= local9
+         |[3:15..3:23): Ordering => scala/package.Ordering#
+         |[3:25..3:26): t <= local5
+         |[3:28..3:29): T => local9
+         |[3:37..3:38): o <= local8
+         |[3:41..3:51): implicitly => scala/Predef.implicitly().
+         |[3:52..3:60): Ordering => scala/package.Ordering#
+         |[3:61..3:62): T => local9
+         |[4:15..4:16): k <= local10
+         |[4:17..4:18): T <= local25
+         |[4:20..4:28): Ordering => scala/package.Ordering#
+         |[4:30..4:31): t <= local11
+         |[4:33..4:34): T => local25
+         |[5:19..5:20): i <= local32
+         |[5:21..5:22): T <= local37
+         |[5:24..5:32): Ordering => scala/package.Ordering#
+         |[5:34..5:35): t <= local33
+         |[5:37..5:38): T => local37
+         |[5:46..5:47): x <= local36
+         |[5:50..5:60): implicitly => scala/Predef.implicitly().
+         |[5:61..5:69): Ordering => scala/package.Ordering#
+         |[5:70..5:71): T => local37
+         |[6:8..6:9): a <= local43
+         |[6:16..6:16):  <= local38
+         |[6:16..6:22): AnyRef => scala/AnyRef#
+         |[6:22..6:22):  => java/lang/Object#`<init>`().
+         |[6:29..6:30): h <= local39
+         |[6:31..6:32): T <= local42
+         |[6:34..6:42): Ordering => scala/package.Ordering#
+         |[6:44..6:45): t <= local40
+         |[6:47..6:48): T => local42
+         |[6:52..6:53): t => local40
+         |[7:5..7:6): g => local0
+         |[7:15..7:16): c => local4
+         |[7:16..7:16):  => local7
+         |[7:21..7:22): k => local45
+         |[7:29..7:30): x => local36
+         |[7:32..7:33): a => local43
+         |""".stripMargin,
+  )
+
+  occurrences(
+    "several context bounds",
+    """|object ev3 {
+       |  def g[T: Ordering: Numeric](t: T) = t
+       |  def h[T: Ordering, U: Numeric](t: T, u: U) = t
+       |  class c[T: Ordering: Numeric](val t: T)
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): ev3 <= _empty_/ev3.
+       |[1:6..1:7): g <= _empty_/ev3.g().
+       |[1:8..1:9): T <= _empty_/ev3.g().[T]
+       |[1:11..1:19): Ordering => scala/package.Ordering#
+       |[1:21..1:28): Numeric => scala/package.Numeric#
+       |[1:30..1:31): t <= _empty_/ev3.g().(t)
+       |[1:33..1:34): T => _empty_/ev3.g().[T]
+       |[1:38..1:39): t => _empty_/ev3.g().(t)
+       |[2:6..2:7): h <= _empty_/ev3.h().
+       |[2:8..2:9): T <= _empty_/ev3.h().[T]
+       |[2:11..2:19): Ordering => scala/package.Ordering#
+       |[2:21..2:22): U <= _empty_/ev3.h().[U]
+       |[2:24..2:31): Numeric => scala/package.Numeric#
+       |[2:33..2:34): t <= _empty_/ev3.h().(t)
+       |[2:36..2:37): T => _empty_/ev3.h().[T]
+       |[2:39..2:40): u <= _empty_/ev3.h().(u)
+       |[2:42..2:43): U => _empty_/ev3.h().[U]
+       |[2:47..2:48): t => _empty_/ev3.h().(t)
+       |[3:8..3:9): c <= _empty_/ev3.c#
+       |[3:10..3:11): T <= _empty_/ev3.c#[T]
+       |[3:13..3:21): Ordering => scala/package.Ordering#
+       |[3:23..3:30): Numeric => scala/package.Numeric#
+       |[3:36..3:37): t <= _empty_/ev3.c#`<init>`().(t)
+       |[3:36..3:37): t <= _empty_/ev3.c#t.
+       |[3:39..3:40): T => _empty_/ev3.c#[T]
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "view bounds",
+    """|object ev4 {
+       |  def g[T <% Int](t: T): Int = t
+       |  def h[T <% Int: Ordering](t: T): Int = t
+       |  class c[T <% Int](t: T) { def i: Int = t }
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): ev4 <= _empty_/ev4.
+       |[1:6..1:7): g <= _empty_/ev4.g().
+       |[1:8..1:9): T <= _empty_/ev4.g().[T]
+       |[1:13..1:16): Int => scala/Int#
+       |[1:18..1:19): t <= _empty_/ev4.g().(t)
+       |[1:21..1:22): T => _empty_/ev4.g().[T]
+       |[1:25..1:28): Int => scala/Int#
+       |[1:31..1:32): t => _empty_/ev4.g().(t)
+       |[2:6..2:7): h <= _empty_/ev4.h().
+       |[2:8..2:9): T <= _empty_/ev4.h().[T]
+       |[2:13..2:16): Int => scala/Int#
+       |[2:18..2:26): Ordering => scala/package.Ordering#
+       |[2:28..2:29): t <= _empty_/ev4.h().(t)
+       |[2:31..2:32): T => _empty_/ev4.h().[T]
+       |[2:35..2:38): Int => scala/Int#
+       |[2:41..2:42): t => _empty_/ev4.h().(t)
+       |[3:8..3:9): c <= _empty_/ev4.c#
+       |[3:10..3:11): T <= _empty_/ev4.c#[T]
+       |[3:15..3:18): Int => scala/Int#
+       |[3:20..3:21): t <= _empty_/ev4.c#`<init>`().(t)
+       |[3:20..3:21): t <= _empty_/ev4.c#t.
+       |[3:23..3:24): T => _empty_/ev4.c#[T]
+       |[3:32..3:33): i <= _empty_/ev4.c#i().
+       |[3:35..3:38): Int => scala/Int#
+       |[3:41..3:42): t => _empty_/ev4.c#t.
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "context bounds beside a named implicit parameter",
+    """|object ev5 {
+       |  def g[T: Ordering](t: T)(implicit n: Numeric[T]) = t
+       |  class c[T: Ordering](t: T)(implicit val n: Numeric[T])
+       |  def h[T](t: T)(implicit evidence$1: Ordering[T]) = t
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): ev5 <= _empty_/ev5.
+       |[1:6..1:7): g <= _empty_/ev5.g().
+       |[1:8..1:9): T <= _empty_/ev5.g().[T]
+       |[1:11..1:19): Ordering => scala/package.Ordering#
+       |[1:21..1:22): t <= _empty_/ev5.g().(t)
+       |[1:24..1:25): T => _empty_/ev5.g().[T]
+       |[1:36..1:37): n <= _empty_/ev5.g().(n)
+       |[1:39..1:46): Numeric => scala/package.Numeric#
+       |[1:47..1:48): T => _empty_/ev5.g().[T]
+       |[1:53..1:54): t => _empty_/ev5.g().(t)
+       |[2:8..2:9): c <= _empty_/ev5.c#
+       |[2:10..2:11): T <= _empty_/ev5.c#[T]
+       |[2:13..2:21): Ordering => scala/package.Ordering#
+       |[2:23..2:24): t <= _empty_/ev5.c#`<init>`().(t)
+       |[2:23..2:24): t <= _empty_/ev5.c#t.
+       |[2:26..2:27): T => _empty_/ev5.c#[T]
+       |[2:42..2:43): n <= _empty_/ev5.c#`<init>`().(n)
+       |[2:42..2:43): n <= _empty_/ev5.c#n.
+       |[2:45..2:52): Numeric => scala/package.Numeric#
+       |[2:53..2:54): T => _empty_/ev5.c#[T]
+       |[3:6..3:7): h <= _empty_/ev5.h().
+       |[3:8..3:9): T <= _empty_/ev5.h().[T]
+       |[3:11..3:12): t <= _empty_/ev5.h().(t)
+       |[3:14..3:15): T => _empty_/ev5.h().[T]
+       |[3:26..3:36): evidence$1 <= _empty_/ev5.h().(evidence$1)
+       |[3:38..3:46): Ordering => scala/package.Ordering#
+       |[3:47..3:48): T => _empty_/ev5.h().[T]
+       |[3:53..3:54): t => _empty_/ev5.h().(t)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "context bounds of other definitions",
+    """|object ev6 {
+       |  class s[T: Ordering](t: T) { def this(t: T, n: Int) = this(t) }
+       |  def a[A, B: Ordering](a: A, b: B) = b
+       |  class v[T <% Int: Ordering](t: T)
+       |  def d[T: Ordering](t: T, n: Int = 1) = t
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): ev6 <= _empty_/ev6.
+       |[1:8..1:9): s <= _empty_/ev6.s#
+       |[1:10..1:11): T <= _empty_/ev6.s#[T]
+       |[1:13..1:21): Ordering => scala/package.Ordering#
+       |[1:23..1:24): t <= _empty_/ev6.s#`<init>`().(t)
+       |[1:23..1:24): t <= _empty_/ev6.s#t.
+       |[1:26..1:27): T => _empty_/ev6.s#[T]
+       |[1:35..1:39): this <= _empty_/ev6.s#`<init>`(+1).
+       |[1:40..1:41): t <= _empty_/ev6.s#`<init>`(+1).(t)
+       |[1:43..1:44): T => _empty_/ev6.s#[T]
+       |[1:46..1:47): n <= _empty_/ev6.s#`<init>`(+1).(n)
+       |[1:49..1:52): Int => scala/Int#
+       |[1:60..1:60):  => _empty_/ev6.s#`<init>`().
+       |[1:61..1:62): t => _empty_/ev6.s#`<init>`(+1).(t)
+       |[2:6..2:7): a <= _empty_/ev6.a().
+       |[2:8..2:9): A <= _empty_/ev6.a().[A]
+       |[2:11..2:12): B <= _empty_/ev6.a().[B]
+       |[2:14..2:22): Ordering => scala/package.Ordering#
+       |[2:24..2:25): a <= _empty_/ev6.a().(a)
+       |[2:27..2:28): A => _empty_/ev6.a().[A]
+       |[2:30..2:31): b <= _empty_/ev6.a().(b)
+       |[2:33..2:34): B => _empty_/ev6.a().[B]
+       |[2:38..2:39): b => _empty_/ev6.a().(b)
+       |[3:8..3:9): v <= _empty_/ev6.v#
+       |[3:10..3:11): T <= _empty_/ev6.v#[T]
+       |[3:15..3:18): Int => scala/Int#
+       |[3:20..3:28): Ordering => scala/package.Ordering#
+       |[3:30..3:31): t <= _empty_/ev6.v#`<init>`().(t)
+       |[3:30..3:31): t <= _empty_/ev6.v#t.
+       |[3:33..3:34): T => _empty_/ev6.v#[T]
+       |[4:6..4:7): d <= _empty_/ev6.d().
+       |[4:8..4:9): T <= _empty_/ev6.d().[T]
+       |[4:11..4:19): Ordering => scala/package.Ordering#
+       |[4:21..4:22): t <= _empty_/ev6.d().(t)
+       |[4:24..4:25): T => _empty_/ev6.d().[T]
+       |[4:27..4:28): n <= _empty_/ev6.d().(n)
+       |[4:30..4:33): Int => scala/Int#
+       |[4:41..4:42): t => _empty_/ev6.d().(t)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "context bounds of local and qualified definitions",
+    """|object ev7 {
+       |  def m = {
+       |    def g[T <% Int](t: T) = t
+       |    class c[T <% Int](t: T)
+       |    0
+       |  }
+       |  def q[T: math.Ordering](t: T) = t
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): ev7 <= _empty_/ev7.
+       |[1:6..1:7): m <= _empty_/ev7.m().
+       |[2:8..2:9): g <= local0
+       |[2:10..2:11): T <= local3
+       |[2:15..2:18): Int => scala/Int#
+       |[2:20..2:21): t <= local1
+       |[2:23..2:24): T => local3
+       |[2:28..2:29): t => local1
+       |[3:10..3:11): c <= local4
+       |[3:12..3:13): T <= local8
+       |[3:17..3:20): Int => scala/Int#
+       |[3:22..3:23): t <= local5
+       |[3:25..3:26): T => local8
+       |[6:6..6:7): q <= _empty_/ev7.q().
+       |[6:8..6:9): T <= _empty_/ev7.q().[T]
+       |[6:11..6:15): math => scala/math/
+       |[6:16..6:24): Ordering => scala/math/Ordering#
+       |[6:26..6:27): t <= _empty_/ev7.q().(t)
+       |[6:29..6:30): T => _empty_/ev7.q().[T]
+       |[6:34..6:35): t => _empty_/ev7.q().(t)
+       |""".stripMargin,
+  )
+
   symbols(
     "default argument that refers to a parameter",
     """|object s7 {

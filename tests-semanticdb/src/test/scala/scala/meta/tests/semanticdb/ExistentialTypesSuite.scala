@@ -2945,6 +2945,77 @@ class ExistentialTypesSuite extends SemanticdbSuite {
          |""".stripMargin,
   )
 
+  symbols(
+    "existential value in classOf with a context bound and an implicit parameter",
+    """|object e56 {
+       |  val a = classOf[Option[x.type] forSome { val x: AnyRef { def f[A: Ordering](b: A)(implicit c: Int): A; def g[B <% Int](d: B): B } }]
+       |}
+       |""".stripMargin,
+    """|_empty_/e56. => final object e56 extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/e56.a. => val method a: Class[Option[x.type] forSome { type x.type <: AnyRef { def f[A](b: A)(implicit evidence$1: Ordering[A], implicit c: Int): A; def g[B](d: B)(implicit evidence$2: Function1[B, Int]): B } with Singleton {} }]
+       |  Class => java/lang/Class#
+       |  Option => scala/Option#
+       |  x.type => local10
+       |  AnyRef => scala/AnyRef#
+       |  f => local1
+       |  A => local3
+       |  b => local2
+       |  evidence$1 => local4
+       |  Ordering => scala/package.Ordering#
+       |  c => local5
+       |  Int => scala/Int#
+       |  g => local6
+       |  B => local8
+       |  d => local7
+       |  evidence$2 => local9
+       |  Function1 => scala/Function1#
+       |  Singleton => scala/Singleton#
+       |local0 => val local x: AnyRef { def f[A](b: A)(implicit evidence$1: Ordering[A], implicit c: Int): A; def g[B](d: B)(implicit evidence$2: Function1[B, Int]): B }
+       |  AnyRef => scala/AnyRef#
+       |  f => local1
+       |  A => local3
+       |  b => local2
+       |  evidence$1 => local4
+       |  Ordering => scala/package.Ordering#
+       |  c => local5
+       |  Int => scala/Int#
+       |  g => local6
+       |  B => local8
+       |  d => local7
+       |  evidence$2 => local9
+       |  Function1 => scala/Function1#
+       |local1 => abstract method f[A](b: A)(implicit evidence$1: Ordering[A], implicit c: Int): A
+       |  A => local3
+       |  b => local2
+       |  evidence$1 => local4
+       |  Ordering => scala/package.Ordering#
+       |  c => local5
+       |  Int => scala/Int#
+       |local2 => param b: A
+       |  A => local3
+       |local3 => typeparam A
+       |local4 => synthetic implicit param evidence$1: Ordering[A]
+       |  Ordering => scala/package.Ordering#
+       |  A => local3
+       |local5 => implicit param c: Int
+       |  Int => scala/Int#
+       |local6 => abstract method g[B](d: B)(implicit evidence$2: Function1[B, Int]): B
+       |  B => local8
+       |  d => local7
+       |  evidence$2 => local9
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |local7 => param d: B
+       |  B => local8
+       |local8 => typeparam B
+       |local9 => synthetic implicit param evidence$2: Function1[B, Int]
+       |  Function1 => scala/Function1#
+       |  B => local8
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
   occurrences(
     "existential value in classOf with a context bound and an implicit parameter",
     """|object e56 {
@@ -2972,6 +3043,97 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |[1:121..1:122): d <= local7
        |[1:124..1:125): B => local8
        |[1:128..1:129): B => local8
+       |""".stripMargin,
+  )
+
+  symbols(
+    "existential value in classOf with bounds after the last parameter",
+    """|object e57 {
+       |  val a = classOf[Option[x.type] forSome { val x: AnyRef { def f[A: Ordering](b: A): A; def g[B: Ordering]: B; def h[C <% Int: Ordering](c: C)(d: Int): C } }]
+       |}
+       |""".stripMargin,
+    """|_empty_/e57. => final object e57 extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/e57.a. => val method a: Class[Option[x.type] forSome { type x.type <: AnyRef { def f[A](b: A)(implicit evidence$1: Ordering[A]): A; def g[B](implicit evidence$2: Ordering[B]): B; def h[C](c: C)(d: Int)(implicit evidence$3: Function1[C, Int], implicit evidence$4: Ordering[C]): C } with Singleton {} }]
+       |  Class => java/lang/Class#
+       |  Option => scala/Option#
+       |  x.type => local14
+       |  AnyRef => scala/AnyRef#
+       |  f => local1
+       |  A => local3
+       |  b => local2
+       |  evidence$1 => local4
+       |  Ordering => scala/package.Ordering#
+       |  g => local5
+       |  B => local7
+       |  evidence$2 => local6
+       |  h => local8
+       |  C => local10
+       |  c => local9
+       |  d => local11
+       |  Int => scala/Int#
+       |  evidence$3 => local12
+       |  Function1 => scala/Function1#
+       |  evidence$4 => local13
+       |  Singleton => scala/Singleton#
+       |local0 => val local x: AnyRef { def f[A](b: A)(implicit evidence$1: Ordering[A]): A; def g[B](implicit evidence$2: Ordering[B]): B; def h[C](c: C)(d: Int)(implicit evidence$3: Function1[C, Int], implicit evidence$4: Ordering[C]): C }
+       |  AnyRef => scala/AnyRef#
+       |  f => local1
+       |  A => local3
+       |  b => local2
+       |  evidence$1 => local4
+       |  Ordering => scala/package.Ordering#
+       |  g => local5
+       |  B => local7
+       |  evidence$2 => local6
+       |  h => local8
+       |  C => local10
+       |  c => local9
+       |  d => local11
+       |  Int => scala/Int#
+       |  evidence$3 => local12
+       |  Function1 => scala/Function1#
+       |  evidence$4 => local13
+       |local1 => abstract method f[A](b: A)(implicit evidence$1: Ordering[A]): A
+       |  A => local3
+       |  b => local2
+       |  evidence$1 => local4
+       |  Ordering => scala/package.Ordering#
+       |local2 => param b: A
+       |  A => local3
+       |local3 => typeparam A
+       |local4 => synthetic implicit param evidence$1: Ordering[A]
+       |  Ordering => scala/package.Ordering#
+       |  A => local3
+       |local5 => abstract method g[B](implicit evidence$2: Ordering[B]): B
+       |  B => local7
+       |  evidence$2 => local6
+       |  Ordering => scala/package.Ordering#
+       |local6 => synthetic implicit param evidence$2: Ordering[B]
+       |  Ordering => scala/package.Ordering#
+       |  B => local7
+       |local7 => typeparam B
+       |local8 => abstract method h[C](c: C)(d: Int)(implicit evidence$3: Function1[C, Int], implicit evidence$4: Ordering[C]): C
+       |  C => local10
+       |  c => local9
+       |  d => local11
+       |  Int => scala/Int#
+       |  evidence$3 => local12
+       |  Function1 => scala/Function1#
+       |  evidence$4 => local13
+       |  Ordering => scala/package.Ordering#
+       |local9 => param c: C
+       |  C => local10
+       |local10 => typeparam C
+       |local11 => param d: Int
+       |  Int => scala/Int#
+       |local12 => synthetic implicit param evidence$3: Function1[C, Int]
+       |  Function1 => scala/Function1#
+       |  C => local10
+       |  Int => scala/Int#
+       |local13 => synthetic implicit param evidence$4: Ordering[C]
+       |  Ordering => scala/package.Ordering#
+       |  C => local10
        |""".stripMargin,
   )
 
