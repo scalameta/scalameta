@@ -1495,12 +1495,14 @@ trait TextDocumentOps {
         private def cachedForOrOrig(gt: g.Tree): s.Tree = gt match {
           case t: g.ApplyToImplicitArgs => cachedForImplicitArgsOrOrig(t)
           case t: g.Apply => cachedForApplyOrOrig(t)
-          case _ => cachedOrOrig(gt)(None)
+          case _ => uncachedOrig(gt) // uncached: the traverser builds its own synthetic
         }
         private def cachedForApplyOrOrig(gt: g.Apply): s.Tree =
           cachedOrOrig(gt)(forApply(gt, usePos = false))
-        private def cachedForImplicitArgsOrOrig(gt: g.ApplyToImplicitArgs): s.Tree =
-          cachedOrOrig(gt)(syn(getApplyToImplicitArgs(gt)))
+        private def cachedForImplicitArgsOrOrig(gt: g.ApplyToImplicitArgs): s.Tree = gt.fun match {
+          case _: g.Apply => cachedOrOrig(gt)(syn(getApplyToImplicitArgs(gt)))
+          case _ => uncachedOrig(gt) // uncached, as above
+        }
 
         // use it when we don't want to output the original in `synthetics`
         private def uncachedOrig(gt: g.Tree): s.Tree = gt.toSemanticOriginal
