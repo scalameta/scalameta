@@ -3082,6 +3082,15 @@ Notes:
   synthetic `apply` method of the companion object.
 - Parameters of primary constructors are covered in "Constructors" below.
 
+A definition that the source writes without a name produces an empty-range
+`DEFINITION` occurrence of its symbol at the start of the type that the
+source writes for it. Examples: an anonymous `using` parameter (`Int` in
+`using Int`), an anonymous given (`Int` in `given Int = 1`), and the evidence
+parameter of a context bound (`Ordering` in `T: Ordering`) or of a view bound
+(`U` in `T <% U`). If the compiler also creates a field for the parameter of
+a class, and that field has a symbol of its own, the field gets a second
+occurrence at the same range.
+
 **Function declarations and definitions** [\[48\]][48] produce occurrences
 for the names of the methods that they define and for every reference to
 those names. References resolve to the exact overload, as described in
@@ -3198,8 +3207,8 @@ Notes:
   symbol of the class member that it gives rise to - the value symbol for
   plain and `val` parameters and the getter symbol for `var` parameters. The
   associated constructor parameter symbol, e.g.
-  <code>_empty_/C#`&lt;init&gt;`().(x)</code>, does not produce an
-  occurrence.
+  <code>_empty_/C#`&lt;init&gt;`().(x)</code>, produces a second
+  occurrence at the same range if the member has a symbol of its own.
 - Parent constructor invocations in extends clauses also produce empty-range
   references right after the name of the parent type. For example,
   `class D extends C(1)` produces a reference to
