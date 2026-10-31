@@ -71,12 +71,12 @@ scala/AnyRef#ne(). => final method ne(that: AnyRef): Boolean
   Boolean => scala/Boolean#
 scala/AnyRef#ne().(that) => param that: AnyRef
   AnyRef => scala/AnyRef#
-scala/AnyRef#synchronized(). => final method synchronized[T](body: T): T
-  T => scala/AnyRef#synchronized().[T]
+scala/AnyRef#synchronized(). => final method synchronized[A](body: A): A
+  A => scala/AnyRef#synchronized().[A]
   body => scala/AnyRef#synchronized().(body)
-scala/AnyRef#synchronized().(body) => param body: T
-  T => scala/AnyRef#synchronized().[T]
-scala/AnyRef#synchronized().[T] => typeparam T
+scala/AnyRef#synchronized().(body) => param body: A
+  A => scala/AnyRef#synchronized().[A]
+scala/AnyRef#synchronized().[A] => typeparam A
 
 scala/AnyVal.class
 ------------------

@@ -72,11 +72,11 @@ object Scalalib {
 
   private def anyRefClass: ClassfileInfos = {
     // FIXME: https://github.com/scalameta/scalameta/issues/1564
-    val synchronizedT = "scala/AnyRef#synchronized().[T]"
+    val synchronizedA = "scala/AnyRef#synchronized().[A]"
     implicit val symbols = List.newBuilder[s.SymbolInformation]
     builtinMethod("AnyRef", List(p.FINAL), "eq", Nil, List("that" -> anyRefSymbol), booleanSymbol)
     builtinMethod("AnyRef", List(p.FINAL), "ne", Nil, List("that" -> anyRefSymbol), booleanSymbol)
-    builtinMethod("AnyRef", List(p.FINAL), "synchronized", List("T"), List("body" -> synchronizedT), synchronizedT)
+    builtinMethod("AnyRef", List(p.FINAL), "synchronized", List("A"), List("body" -> synchronizedA), synchronizedA)
     builtin(k.CLASS, Nil, "AnyRef", List(anySymbol), symbols.result())
   }
   // scalafmt: {}
