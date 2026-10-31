@@ -176,6 +176,7 @@ object TypeOps {
     def ret: Type = tpe match {
       case tpe: NullaryMethodType => tpe.resultType.ret
       case tpe: MethodType => tpe.resultType.ret
+      case tpe: PolyType => tpe.typeRef.ret
       case _ => tpe
     }
 

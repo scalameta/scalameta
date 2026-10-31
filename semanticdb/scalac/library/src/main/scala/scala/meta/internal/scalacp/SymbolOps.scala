@@ -383,6 +383,15 @@ trait SymbolOps {
 
 object SymbolOps {
 
+  import TypeOps._
+
+  implicit class XtensionResultClass(private val sym: SymbolInfoSymbol) extends AnyVal {
+    def resultClass: Symbol = sym.infoType.ret match {
+      case t: TypeRefType => t.symbol
+      case _ => NoSymbol
+    }
+  }
+
   /* scalap reads the flags as an Int and drops the bits from 32 up, such as EXISTENTIAL (bit 35),
    * so read them again: name_Ref owner_Ref flags_LongNat, after a Nat if the tag is over 64 */
   private def pickledFlags(sym: SymbolInfoSymbol): Long = {
