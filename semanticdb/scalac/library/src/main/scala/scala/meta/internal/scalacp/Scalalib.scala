@@ -5,7 +5,7 @@ import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, DisplayNames => dn, Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k, Property => p}
-import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.{KnownSymbols => ks, Language => l}
 import scala.meta.internal.{semanticdb => s}
 
 import java.io.IOException
@@ -54,47 +54,40 @@ object Scalalib {
   // scalafmt: { maxColumn = 150 }
   private def anyClass(isHashHashNullary: Boolean): ClassfileInfos = {
     implicit val symbols = List.newBuilder[s.SymbolInformation]
-    builtinMethod("Any", List(p.ABSTRACT), "equals", Nil, List("that" -> anySymbol), booleanSymbol)
-    builtinMethod("Any", List(p.FINAL), "==", Nil, List("that" -> anySymbol), booleanSymbol)
-    builtinMethod("Any", List(p.FINAL), "!=", Nil, List("that" -> anySymbol), booleanSymbol)
-    builtinMethod("Any", List(p.ABSTRACT), "hashCode", Nil, Nil, intSymbol)
-    builtinMethod("Any", List(p.FINAL), "##", Nil, Nil, intSymbol, nullary = isHashHashNullary)
-    builtinMethod("Any", List(p.ABSTRACT), "toString", Nil, Nil, stringSymbol)
+    builtinMethod("Any", List(p.ABSTRACT), "equals", Nil, List("that" -> ks.Any), ks.Boolean)
+    builtinMethod("Any", List(p.FINAL), "==", Nil, List("that" -> ks.Any), ks.Boolean)
+    builtinMethod("Any", List(p.FINAL), "!=", Nil, List("that" -> ks.Any), ks.Boolean)
+    builtinMethod("Any", List(p.ABSTRACT), "hashCode", Nil, Nil, ks.Int)
+    builtinMethod("Any", List(p.FINAL), "##", Nil, Nil, ks.Int, nullary = isHashHashNullary)
+    builtinMethod("Any", List(p.ABSTRACT), "toString", Nil, Nil, ks.String)
     // NOTE: Return type of getClass can't be expressed in the SemanticDB type system.
     // The method is special-cased in both the Java and Scala compilers, so we'll slack a little bit too for the time being.
-    builtinMethod("Any", List(p.FINAL), "getClass", Nil, Nil, "java/lang/Class#")
-    builtinMethod("Any", List(p.FINAL), "isInstanceOf", List("A"), Nil, booleanSymbol, nullary = true)
-    builtinMethod("Any", List(p.FINAL), "asInstanceOf", List("A"), Nil, "scala/Any#asInstanceOf().[A]", nullary = true)
+    builtinMethod("Any", List(p.FINAL), "getClass", Nil, Nil, ks.Class)
+    builtinMethod("Any", List(p.FINAL), "isInstanceOf", List("A"), Nil, ks.Boolean, nullary = true)
+    builtinMethod("Any", List(p.FINAL), "asInstanceOf", List("A"), Nil, ks.anyAsInstanceOfTParam("A"), nullary = true)
     builtin(k.CLASS, List(p.ABSTRACT), "Any", Nil, symbols.result())
   }
 
-  private def anyValClass: ClassfileInfos = builtin(k.CLASS, List(p.ABSTRACT), "AnyVal", List(anySymbol), Nil)
+  private def anyValClass: ClassfileInfos = builtin(k.CLASS, List(p.ABSTRACT), "AnyVal", List(ks.Any), Nil)
 
   private def anyRefClass: ClassfileInfos = {
     // FIXME: https://github.com/scalameta/scalameta/issues/1564
-    val synchronizedA = "scala/AnyRef#synchronized().[A]"
+    val synchronizedA = ks.anyRefSynchronizedTParam("A")
     implicit val symbols = List.newBuilder[s.SymbolInformation]
-    builtinMethod("AnyRef", List(p.FINAL), "eq", Nil, List("that" -> anyRefSymbol), booleanSymbol)
-    builtinMethod("AnyRef", List(p.FINAL), "ne", Nil, List("that" -> anyRefSymbol), booleanSymbol)
+    builtinMethod("AnyRef", List(p.FINAL), "eq", Nil, List("that" -> ks.AnyRef), ks.Boolean)
+    builtinMethod("AnyRef", List(p.FINAL), "ne", Nil, List("that" -> ks.AnyRef), ks.Boolean)
     builtinMethod("AnyRef", List(p.FINAL), "synchronized", List("A"), List("body" -> synchronizedA), synchronizedA)
-    builtin(k.CLASS, Nil, "AnyRef", List(anySymbol), symbols.result())
+    builtin(k.CLASS, Nil, "AnyRef", List(ks.Any), symbols.result())
   }
   // scalafmt: {}
 
   private def nothingClass: ClassfileInfos =
-    builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Nothing", List(anySymbol), Nil)
+    builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Nothing", List(ks.Any), Nil)
 
   private def nullClass: ClassfileInfos =
-    builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Null", List(anyRefSymbol), Nil)
+    builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Null", List(ks.AnyRef), Nil)
 
-  private def singletonTrait: ClassfileInfos =
-    builtin(k.TRAIT, Nil, "Singleton", List(anySymbol), Nil)
-
-  private[internal] val anySymbol = "scala/Any#"
-  private[internal] val anyRefSymbol = "scala/AnyRef#"
-  private[internal] val booleanSymbol = "scala/Boolean#"
-  private[internal] val intSymbol = "scala/Int#"
-  private[internal] val stringSymbol = "java/lang/String#"
+  private def singletonTrait: ClassfileInfos = builtin(k.TRAIT, Nil, "Singleton", List(ks.Any), Nil)
 
   private val scalaPackage: String = Symbols.Global(Symbols.RootPackage, d.Package("scala"))
 

@@ -42,7 +42,7 @@ class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[Referen
 
   override def visitClassType(name: String): Unit = name match {
     // ASM does not strip off the L for java.lang.Object for some reason.
-    case "Ljava/lang/Object" => startSimpleClass("java/lang/Object")
+    case "Ljava/lang/Object" => startSimpleClass(Javacp.JavaObjectName)
     case _ => startSimpleClass(name)
   }
 

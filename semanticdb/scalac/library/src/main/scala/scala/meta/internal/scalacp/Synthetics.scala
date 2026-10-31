@@ -3,7 +3,7 @@ package scala.meta.internal.scalacp
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.{KnownSymbols => ks, Language => l}
 import scala.meta.internal.{semanticdb => s}
 
 object Synthetics {
@@ -36,7 +36,7 @@ object Synthetics {
     )
 
     val setterSig = {
-      val unit = s.TypeRef(s.NoType, "scala/Unit#", Nil)
+      val unit = s.TypeRef(s.NoType, ks.Unit, Nil)
       val setterParamss = linkMode match {
         case SymlinkChildren => List(s.Scope(symlinks = List(paramInfo.symbol)))
         case HardlinkChildren => List(s.Scope(hardlinks = List(paramInfo)))

@@ -3,6 +3,7 @@ package scala.meta.internal.symtab
 import org.scalameta.collections.Conversions._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, _}
 import scala.meta.internal.semanticdb._
+import scala.meta.internal.semanticdb.{KnownSymbols => ks}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -249,10 +250,10 @@ trait SymbolTable {
   private def erasure(tpe: Type, env: Map[String, String]): Option[String] = {
     val seen = mutable.Set.empty[String] // guards against alias/type-parameter cycles
     def loop(t: Type): Option[String] = t match {
-      case _: ByNameType => Some("scala/Function0#")
+      case _: ByNameType => Some(ks.Function0)
       case RepeatedType(elem) => loop(elem).map(_ + "*")
       case _ => typeRefs(t).nextOption().flatMap {
-          case ("scala/Array#", Seq(elem)) => loop(elem).map(e => s"scala/Array#[$e]")
+          case (ks.Array, Seq(elem)) => loop(elem).map(e => s"${ks.Array}[$e]")
           case (sym, _) => env.get(sym).orElse(sym.signature[TypeSignature] match {
               case Some(ts) if seen.add(sym) => loop(ts.upperBound).orElse(Some(sym))
               case _ => Some(sym)

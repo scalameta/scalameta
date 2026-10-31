@@ -8,7 +8,7 @@ import scala.meta.internal.scalacp.Scalalib
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.{KnownSymbols => ks, Language => l}
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 
@@ -20,6 +20,9 @@ import scala.tools.asm.{Opcodes => o}
 import scala.tools.nsc.backend.jvm.GenBCode
 
 object Javacp {
+
+  private[javacp] val JavaObjectName = "java/lang/Object"
+  private[javacp] val JavaStringName = "java/lang/String"
 
   def parse(node: ClassNode, classpathIndex: ClasspathIndex): ClassfileInfos = {
     val infos = sinfos(node, classpathIndex, 0, Scope.empty)
@@ -70,7 +73,7 @@ object Javacp {
 
     val classKind = if (classAccess.hasFlag(o.ACC_INTERFACE)) k.INTERFACE else k.CLASS
 
-    val isJavaLangObject = node.name == "java/lang/Object"
+    val isJavaLangObject = node.name == JavaObjectName
     val classSignature: ClassSignature =
       if (isJavaLangObject)
         // java/lang/Object has no super class so node.superName == null.
@@ -193,7 +196,7 @@ object Javacp {
             val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
             val paramTpe =
               if (isRepeatedType) param.toSemanticTpe(methodScope) match {
-                case s.TypeRef(s.NoType, "scala/Array#", targ :: Nil) => s.RepeatedType(targ)
+                case s.TypeRef(s.NoType, ks.Array, targ :: Nil) => s.RepeatedType(targ)
                 case tpe => sys.error(s"expected $paramDisplayName to be a scala/Array#, found $tpe")
               }
               else param.toSemanticTpe(methodScope)
@@ -228,7 +231,7 @@ object Javacp {
             case "values" => method.signature.params.isEmpty &&
               method.signature.result == ArrayTypeSignature(enumType)
             case "valueOf" =>
-              method.signature.params == List(ClassTypeSignature.simple("java/lang/String")) &&
+              method.signature.params == List(ClassTypeSignature.simple(JavaStringName)) &&
               method.signature.result == enumType
             case _ => false
           })
@@ -281,20 +284,20 @@ object Javacp {
       className: String,
       classpathIndex: ClasspathIndex,
   ): List[s.SymbolInformation] = className match {
-    case "java/lang/Object" =>
+    case JavaObjectName =>
       implicit val symbols = List.newBuilder[s.SymbolInformation]
       val nullary = Scalalib.isHashHashNullary(classpathIndex)
-      val synchronizedA = "java/lang/Object#synchronized().[A]"
-      jdkMethod("Object", "==", Nil, List("that" -> Scalalib.anySymbol), Scalalib.booleanSymbol)
-      jdkMethod("Object", "!=", Nil, List("that" -> Scalalib.anySymbol), Scalalib.booleanSymbol)
-      jdkMethod("Object", "##", Nil, Nil, Scalalib.intSymbol, nullary = nullary)
-      jdkMethod("Object", "eq", Nil, List("that" -> Scalalib.anyRefSymbol), Scalalib.booleanSymbol)
-      jdkMethod("Object", "ne", Nil, List("that" -> Scalalib.anyRefSymbol), Scalalib.booleanSymbol)
+      val synchronizedA = ks.objectSynchronizedTParam("A")
+      jdkMethod("Object", "==", Nil, List("that" -> ks.Any), ks.Boolean)
+      jdkMethod("Object", "!=", Nil, List("that" -> ks.Any), ks.Boolean)
+      jdkMethod("Object", "##", Nil, Nil, ks.Int, nullary = nullary)
+      jdkMethod("Object", "eq", Nil, List("that" -> ks.AnyRef), ks.Boolean)
+      jdkMethod("Object", "ne", Nil, List("that" -> ks.AnyRef), ks.Boolean)
       jdkMethod("Object", "synchronized", List("A"), List("body" -> synchronizedA), synchronizedA)
       symbols.result()
-    case "java/lang/String" =>
+    case JavaStringName =>
       implicit val symbols = List.newBuilder[s.SymbolInformation]
-      jdkMethod("String", "+", Nil, List("that" -> Scalalib.anySymbol), Scalalib.stringSymbol)
+      jdkMethod("String", "+", Nil, List("that" -> ks.Any), ks.String)
       symbols.result()
     case _ => Nil
   }
@@ -500,7 +503,7 @@ object Javacp {
 
     def push(symbol: String): Unit = buf += s.AnnotationTree(styperef(symbol))
 
-    if (access.hasFlag(o.ACC_STRICT)) push("scala/annotation/strictfp#")
+    if (access.hasFlag(o.ACC_STRICT)) push(ks.Strictfp)
 
     buf.result()
   }
@@ -531,7 +534,7 @@ object Javacp {
     bits
   }
 
-  private def sarray(tpe: s.Type): s.Type = styperef("scala/Array#", tpe :: Nil)
+  private def sarray(tpe: s.Type): s.Type = styperef(ks.Array, tpe :: Nil)
 
   private def styperef(
       symbol: String,

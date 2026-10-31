@@ -4,6 +4,7 @@ import scala.meta.internal.inputs._
 import scala.meta.internal.scalacp._
 import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.{KnownSymbols => ks}
 import scala.meta.internal.{semanticdb => s}
 
 import scala.annotation.tailrec
@@ -1256,7 +1257,7 @@ trait TextDocumentOps {
               val mpos = t.toMeta
               val mposClassOf = stripClassOf(mpos)
               if (mpos ne mposClassOf) {
-                addOccurrenceFromSemantic(mposClassOf, "scala/Predef.classOf().", Role.REFERENCE)
+                addOccurrenceFromSemantic(mposClassOf, ks.PredefClassOf, Role.REFERENCE)
                 // scalac replaces `classOf[T]` with a constant of type T
                 mclassofs.get(mpos.start).foreach(tryFindType(_, t.value.typeValue))
               } else tryFindMtree(t)
