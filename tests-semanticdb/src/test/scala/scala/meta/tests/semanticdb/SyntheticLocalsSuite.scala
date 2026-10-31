@@ -19752,7 +19752,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local5 => param t: T
          |  T => local8
-         |local6 => implicit param evidence$2: Ordering[T]
+         |local6 => synthetic implicit param evidence$2: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local8
          |local7 => primary ctor <init>(t: T)(implicit evidence$2: Ordering[T])
@@ -19855,7 +19855,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local5 => param t: T
          |  T => local8
-         |local6 => implicit param evidence$2: Ordering[T]
+         |local6 => synthetic implicit param evidence$2: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local8
          |local7 => primary ctor <init>(t: T)(implicit evidence$2: Ordering[T])
@@ -19971,7 +19971,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  T => _empty_/s4b.t#[T]
        |  evidence$1 => _empty_/s4b.t#`<init>`().(evidence$1)
        |  Ordering => scala/package.Ordering#
-       |_empty_/s4b.t#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+       |_empty_/s4b.t#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |  Ordering => scala/package.Ordering#
        |  T => _empty_/s4b.t#[T]
        |_empty_/s4b.t#`<init>`().(t) => param t: T
@@ -19989,7 +19989,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |local1 => param t: T
        |  T => local5
-       |local2 => implicit param evidence$2: Ordering[T]
+       |local2 => synthetic implicit param evidence$2: Ordering[T]
        |  Ordering => scala/package.Ordering#
        |  T => local5
        |local3 => primary ctor <init>(t: T)(implicit evidence$2: Ordering[T])
@@ -20006,10 +20006,10 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |local7 => val param t: T
        |  T => local11
-       |local8 => implicit param evidence$3: Ordering[T]
+       |local8 => synthetic implicit param evidence$3: Ordering[T]
        |  Ordering => scala/package.Ordering#
        |  T => local11
-       |local9 => implicit param evidence$4: Numeric[T]
+       |local9 => synthetic implicit param evidence$4: Numeric[T]
        |  Numeric => scala/package.Numeric#
        |  T => local11
        |local10 => primary ctor <init>(val t: T)(implicit evidence$3: Ordering[T], implicit evidence$4: Numeric[T])
@@ -20074,7 +20074,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |local3 => param t: T
        |  T => local7
-       |local4 => implicit param evidence$1: Ordering[T]
+       |local4 => synthetic implicit param evidence$1: Ordering[T]
        |  Ordering => scala/package.Ordering#
        |  T => local7
        |local5 => primary ctor <init>(t: T)(implicit evidence$1: Ordering[T])
@@ -20093,7 +20093,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |local10 => param t: T
        |  T => local14
-       |local11 => implicit param evidence$2: Ordering[T]
+       |local11 => synthetic implicit param evidence$2: Ordering[T]
        |  Ordering => scala/package.Ordering#
        |  T => local14
        |local12 => primary ctor <init>(t: T)(implicit evidence$2: Ordering[T])
@@ -20130,7 +20130,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |local1 => param t: T
        |  T => local5
-       |local2 => implicit param evidence$1: Ordering[T]
+       |local2 => synthetic implicit param evidence$1: Ordering[T]
        |  Ordering => scala/package.Ordering#
        |  T => local5
        |local3 => primary ctor <init>(t: T)(implicit evidence$1: Ordering[T])
@@ -20150,7 +20150,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  i => local0
        |local7 => param t: T
        |  T => local5
-       |local8 => implicit param evidence$1: Ordering[T]
+       |local8 => synthetic implicit param evidence$1: Ordering[T]
        |  Ordering => scala/package.Ordering#
        |  T => local5
        |""".stripMargin,
@@ -20177,7 +20177,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  Serializable => scala/Serializable#
          |local1 => val param t: T
          |  T => local15
-         |local2 => implicit param evidence$1: Ordering[T]
+         |local2 => synthetic implicit param evidence$1: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local15
          |local3 => primary ctor <init>(val t: T)(implicit evidence$1: Ordering[T])
@@ -20223,7 +20223,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |local15 => typeparam T
          |local16 => default param t: T
          |  T => local15
-         |local17 => implicit param evidence$1: Ordering[T]
+         |local17 => synthetic implicit param evidence$1: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local15
          |local18 => synthetic param x$1: Int
@@ -20243,7 +20243,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  Serializable => scala/Serializable#
          |local23 => param t: T
          |  T => local15
-         |local24 => implicit param evidence$1: Ordering[T]
+         |local24 => synthetic implicit param evidence$1: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local15
          |local25 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
@@ -20269,7 +20269,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  Serializable => scala/package.Serializable#
          |local1 => val param t: T
          |  T => local16
-         |local2 => implicit param evidence$1: Ordering[T]
+         |local2 => synthetic implicit param evidence$1: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local16
          |local3 => primary ctor <init>(val t: T)(implicit evidence$1: Ordering[T])
@@ -20319,7 +20319,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |local16 => typeparam T
          |local17 => default param t: T
          |  T => local16
-         |local18 => implicit param evidence$1: Ordering[T]
+         |local18 => synthetic implicit param evidence$1: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local16
          |local19 => synthetic param x$1: Int
@@ -20341,7 +20341,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  Serializable => java/io/Serializable#
          |local25 => param t: T
          |  T => local16
-         |local26 => implicit param evidence$1: Ordering[T]
+         |local26 => synthetic implicit param evidence$1: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local16
          |local27 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
@@ -20458,7 +20458,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local5 => param t: T
          |  T => local9
-         |local6 => implicit param evidence$2: Ordering[T]
+         |local6 => synthetic implicit param evidence$2: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local9
          |local7 => primary ctor <init>(t: T)(implicit evidence$2: Ordering[T])
@@ -20477,7 +20477,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  Serializable => scala/Serializable#
          |local11 => val param t: T
          |  T => local24
-         |local12 => implicit param evidence$3: Ordering[T]
+         |local12 => synthetic implicit param evidence$3: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local24
          |local13 => primary ctor <init>(val t: T)(implicit evidence$3: Ordering[T])
@@ -20520,7 +20520,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |local24 => typeparam T
          |local25 => default param t: T
          |  T => local24
-         |local26 => implicit param evidence$3: Ordering[T]
+         |local26 => synthetic implicit param evidence$3: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local24
          |local27 => synthetic param x$1: Int
@@ -20534,7 +20534,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local31 => param t: T
          |  T => local35
-         |local32 => implicit param evidence$4: Ordering[T]
+         |local32 => synthetic implicit param evidence$4: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local35
          |local33 => primary ctor <init>(t: T)(implicit evidence$4: Ordering[T])
@@ -20583,7 +20583,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  i => local30
          |local45 => param t: T
          |  T => local24
-         |local46 => implicit param evidence$3: Ordering[T]
+         |local46 => synthetic implicit param evidence$3: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local24
          |local47 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
@@ -20595,7 +20595,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  Option => scala/Option#
          |local49 => param t: T
          |  T => local35
-         |local50 => implicit param evidence$4: Ordering[T]
+         |local50 => synthetic implicit param evidence$4: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local35
          |local51 => synthetic param x$0: k[T]
@@ -20623,7 +20623,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local5 => param t: T
          |  T => local9
-         |local6 => implicit param evidence$2: Ordering[T]
+         |local6 => synthetic implicit param evidence$2: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local9
          |local7 => primary ctor <init>(t: T)(implicit evidence$2: Ordering[T])
@@ -20642,7 +20642,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  Serializable => scala/package.Serializable#
          |local11 => val param t: T
          |  T => local25
-         |local12 => implicit param evidence$3: Ordering[T]
+         |local12 => synthetic implicit param evidence$3: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local25
          |local13 => primary ctor <init>(val t: T)(implicit evidence$3: Ordering[T])
@@ -20689,7 +20689,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |local25 => typeparam T
          |local26 => default param t: T
          |  T => local25
-         |local27 => implicit param evidence$3: Ordering[T]
+         |local27 => synthetic implicit param evidence$3: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local25
          |local28 => synthetic param x$1: Int
@@ -20705,7 +20705,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local33 => param t: T
          |  T => local37
-         |local34 => implicit param evidence$4: Ordering[T]
+         |local34 => synthetic implicit param evidence$4: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local37
          |local35 => primary ctor <init>(t: T)(implicit evidence$4: Ordering[T])
@@ -20754,7 +20754,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  i => local32
          |local47 => param t: T
          |  T => local25
-         |local48 => implicit param evidence$3: Ordering[T]
+         |local48 => synthetic implicit param evidence$3: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local25
          |local49 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
@@ -20766,7 +20766,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  Option => scala/Option#
          |local51 => param t: T
          |  T => local37
-         |local52 => implicit param evidence$4: Ordering[T]
+         |local52 => synthetic implicit param evidence$4: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local37
          |local53 => synthetic param x$0: k[T]

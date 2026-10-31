@@ -2149,7 +2149,8 @@ Notes:
   - `VAR`: set for `var` parameters of primary constructors.
   - `DEFAULT`: set for parameters with default values.
   - `SYNTHETIC`: set for parameters of compiler-synthesized methods that are not
-    written in source code.
+    written in source code, and for the evidence of a context bound or a view
+    bound.
 - Scalac semantic model does not distinguish parameters in `class C(x: Int)` and
   `class C(private[this] val x: Int)`. As a result, due to implementation
   restrictions `private[this] val` parameters currently don't have the `VAL`

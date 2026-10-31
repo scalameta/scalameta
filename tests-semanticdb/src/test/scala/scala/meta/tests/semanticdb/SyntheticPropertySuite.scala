@@ -118,19 +118,19 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |}
        |""".stripMargin,
     """|local11 => synthetic implicit param evidence$8: Ordering[Z]
-       |local2 => implicit param evidence$6: Ordering[X]
+       |local2 => synthetic implicit param evidence$6: Ordering[X]
        |local7 => synthetic implicit param evidence$7: Ordering[Y]
        |p/A#m().(evidence$3) => synthetic implicit param evidence$3: Ordering[V]
        |p/A#n().(evidence$4) => synthetic implicit param evidence$4: Ordering[W]
        |p/A#n().(evidence$5) => synthetic implicit param evidence$5: Numeric[W]
-       |p/C#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+       |p/C#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/C#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
        |p/C#m().(evidence$2) => synthetic implicit param evidence$2: Ordering[U]
        |""".stripMargin,
     """|p/A#m().(evidence$3) => synthetic implicit param evidence$3: Ordering[V]
        |p/A#n().(evidence$4) => synthetic implicit param evidence$4: Ordering[W]
        |p/A#n().(evidence$5) => synthetic implicit param evidence$5: Numeric[W]
-       |p/C#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+       |p/C#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/C#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
        |p/C#m().(evidence$2) => synthetic implicit param evidence$2: Ordering[U]
        |""".stripMargin,
@@ -151,13 +151,13 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |  }
        |}
        |""".stripMargin,
-    """|local2 => implicit param evidence$3: Function1[X, Int]
+    """|local2 => synthetic implicit param evidence$3: Function1[X, Int]
        |local7 => synthetic implicit param evidence$4: Function1[Z, Int]
-       |p/C#`<init>`().(evidence$1) => implicit param evidence$1: Function1[T, Int]
+       |p/C#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Function1[T, Int]
        |p/C#evidence$1. => private[this] synthetic implicit val method evidence$1: Function1[T, Int]
        |p/C#m().(evidence$2) => synthetic implicit param evidence$2: Function1[U, Int]
        |""".stripMargin,
-    """|p/C#`<init>`().(evidence$1) => implicit param evidence$1: Function1[T, Int]
+    """|p/C#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Function1[T, Int]
        |p/C#evidence$1. => private[this] synthetic implicit val method evidence$1: Function1[T, Int]
        |p/C#m().(evidence$2) => synthetic implicit param evidence$2: Function1[U, Int]
        |""".stripMargin,
@@ -172,22 +172,22 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |  implicit class I[V: Ordering](v: V)
        |}
        |""".stripMargin,
-    """|p/K#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
-       |p/K#copy().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/K#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
+       |p/K#copy().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/K#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
-       |p/K.apply().(evidence$1) => implicit param evidence$1: Ordering[T]
-       |p/O.I#`<init>`().(evidence$3) => implicit param evidence$3: Ordering[V]
+       |p/K.apply().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
+       |p/O.I#`<init>`().(evidence$3) => synthetic implicit param evidence$3: Ordering[V]
        |p/O.I#evidence$3. => private[this] synthetic implicit val method evidence$3: Ordering[V]
-       |p/O.I().(evidence$3) => implicit param evidence$3: Ordering[V]
+       |p/O.I().(evidence$3) => synthetic implicit param evidence$3: Ordering[V]
        |p/W#m().(evidence$2) => synthetic implicit param evidence$2: Ordering[U]
        |""".stripMargin,
-    """|p/K#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
-       |p/K#copy().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/K#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
+       |p/K#copy().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/K#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
-       |p/K.apply().(evidence$1) => implicit param evidence$1: Ordering[T]
-       |p/O.I#`<init>`().(evidence$3) => implicit param evidence$3: Ordering[V]
+       |p/K.apply().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
+       |p/O.I#`<init>`().(evidence$3) => synthetic implicit param evidence$3: Ordering[V]
        |p/O.I#evidence$3. => private[this] synthetic implicit val method evidence$3: Ordering[V]
-       |p/O.I().(evidence$3) => implicit param evidence$3: Ordering[V]
+       |p/O.I().(evidence$3) => synthetic implicit param evidence$3: Ordering[V]
        |p/W#m().(evidence$2) => synthetic implicit param evidence$2: Ordering[U]
        |""".stripMargin,
   )
@@ -201,25 +201,25 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |  case class K[V: Ordering](v: V)
        |}
        |""".stripMargin,
-    """|p/Out#C#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/Out#C#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/Out#C#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
-       |p/Out#I#`<init>`().(evidence$2) => implicit param evidence$2: Ordering[U]
+       |p/Out#I#`<init>`().(evidence$2) => synthetic implicit param evidence$2: Ordering[U]
        |p/Out#I#evidence$2. => private[this] synthetic implicit val method evidence$2: Ordering[U]
-       |p/Out#I().(evidence$2) => implicit param evidence$2: Ordering[U]
-       |p/Out#K#`<init>`().(evidence$3) => implicit param evidence$3: Ordering[V]
-       |p/Out#K#copy().(evidence$3) => implicit param evidence$3: Ordering[V]
+       |p/Out#I().(evidence$2) => synthetic implicit param evidence$2: Ordering[U]
+       |p/Out#K#`<init>`().(evidence$3) => synthetic implicit param evidence$3: Ordering[V]
+       |p/Out#K#copy().(evidence$3) => synthetic implicit param evidence$3: Ordering[V]
        |p/Out#K#evidence$3. => private[this] synthetic implicit val method evidence$3: Ordering[V]
-       |p/Out#K.apply().(evidence$3) => implicit param evidence$3: Ordering[V]
+       |p/Out#K.apply().(evidence$3) => synthetic implicit param evidence$3: Ordering[V]
        |""".stripMargin,
-    """|p/Out#C#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/Out#C#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/Out#C#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
-       |p/Out#I#`<init>`().(evidence$2) => implicit param evidence$2: Ordering[U]
+       |p/Out#I#`<init>`().(evidence$2) => synthetic implicit param evidence$2: Ordering[U]
        |p/Out#I#evidence$2. => private[this] synthetic implicit val method evidence$2: Ordering[U]
-       |p/Out#I().(evidence$2) => implicit param evidence$2: Ordering[U]
-       |p/Out#K#`<init>`().(evidence$3) => implicit param evidence$3: Ordering[V]
-       |p/Out#K#copy().(evidence$3) => implicit param evidence$3: Ordering[V]
+       |p/Out#I().(evidence$2) => synthetic implicit param evidence$2: Ordering[U]
+       |p/Out#K#`<init>`().(evidence$3) => synthetic implicit param evidence$3: Ordering[V]
+       |p/Out#K#copy().(evidence$3) => synthetic implicit param evidence$3: Ordering[V]
        |p/Out#K#evidence$3. => private[this] synthetic implicit val method evidence$3: Ordering[V]
-       |p/Out#K.apply().(evidence$3) => implicit param evidence$3: Ordering[V]
+       |p/Out#K.apply().(evidence$3) => synthetic implicit param evidence$3: Ordering[V]
        |""".stripMargin,
   )
 
@@ -240,13 +240,13 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |p/F#copy().(evidence$92) => implicit param evidence$92: Ordering[T]
        |p/F#evidence$92. => private[this] implicit val method evidence$92: Ordering[T]
        |p/F.apply().(evidence$92) => implicit param evidence$92: Ordering[T]
-       |p/H#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+       |p/H#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/H#`<init>`().(evidence$93) => implicit param evidence$93: Numeric[T]
-       |p/H#copy().(evidence$1) => implicit param evidence$1: Ordering[T]
+       |p/H#copy().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/H#copy().(evidence$93) => implicit param evidence$93: Numeric[T]
        |p/H#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
        |p/H#evidence$93. => private[this] implicit val method evidence$93: Numeric[T]
-       |p/H.apply().(evidence$1) => implicit param evidence$1: Ordering[T]
+       |p/H.apply().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/H.apply().(evidence$93) => implicit param evidence$93: Numeric[T]
        |p/O.G#`<init>`().(evidence$94) => implicit param evidence$94: Ordering[T]
        |p/O.G#evidence$94. => private[this] implicit val method evidence$94: Ordering[T]
@@ -259,13 +259,13 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |p/F#copy().(evidence$92) => implicit param evidence$92: Ordering[T]
        |p/F#evidence$92. => private[this] implicit val method evidence$92: Ordering[T]
        |p/F.apply().(evidence$92) => implicit param evidence$92: Ordering[T]
-       |p/H#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+       |p/H#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/H#`<init>`().(evidence$93) => implicit param evidence$93: Numeric[T]
-       |p/H#copy().(evidence$1) => implicit param evidence$1: Ordering[T]
+       |p/H#copy().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/H#copy().(evidence$93) => implicit param evidence$93: Numeric[T]
        |p/H#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
        |p/H#evidence$93. => private[this] implicit val method evidence$93: Numeric[T]
-       |p/H.apply().(evidence$1) => implicit param evidence$1: Ordering[T]
+       |p/H.apply().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/H.apply().(evidence$93) => implicit param evidence$93: Numeric[T]
        |p/O.G#`<init>`().(evidence$94) => implicit param evidence$94: Ordering[T]
        |p/O.G#evidence$94. => private[this] implicit val method evidence$94: Ordering[T]
@@ -283,36 +283,36 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |  implicit class I[T: Ordering](t: T)(implicit evidence$98: Numeric[T])
        |}
        |""".stripMargin,
-    """|p/M#`<init>`().(evidence$1) => implicit param evidence$1: Function1[A, Int]
-       |p/M#`<init>`().(evidence$2) => implicit param evidence$2: Ordering[A]
-       |p/M#`<init>`().(evidence$3) => implicit param evidence$3: Numeric[B]
+    """|p/M#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Function1[A, Int]
+       |p/M#`<init>`().(evidence$2) => synthetic implicit param evidence$2: Ordering[A]
+       |p/M#`<init>`().(evidence$3) => synthetic implicit param evidence$3: Numeric[B]
        |p/M#`<init>`().(evidence$96) => implicit param evidence$96: Int
        |p/M#evidence$1. => private[this] synthetic implicit val method evidence$1: Function1[A, Int]
        |p/M#evidence$2. => private[this] synthetic implicit val method evidence$2: Ordering[A]
        |p/M#evidence$3. => private[this] synthetic implicit val method evidence$3: Numeric[B]
        |p/M#evidence$96. => private[this] implicit val method evidence$96: Int
-       |p/O.I#`<init>`().(evidence$5) => implicit param evidence$5: Ordering[T]
+       |p/O.I#`<init>`().(evidence$5) => synthetic implicit param evidence$5: Ordering[T]
        |p/O.I#`<init>`().(evidence$98) => implicit param evidence$98: Numeric[T]
        |p/O.I#evidence$5. => private[this] synthetic implicit val method evidence$5: Ordering[T]
        |p/O.I#evidence$98. => private[this] implicit val method evidence$98: Numeric[T]
-       |p/O.I().(evidence$5) => implicit param evidence$5: Ordering[T]
+       |p/O.I().(evidence$5) => synthetic implicit param evidence$5: Ordering[T]
        |p/O.I().(evidence$98) => implicit param evidence$98: Numeric[T]
        |p/O.m().(evidence$4) => synthetic implicit param evidence$4: Ordering[T]
        |p/O.m().(evidence$97) => implicit param evidence$97: Numeric[T]
        |""".stripMargin,
-    """|p/M#`<init>`().(evidence$1) => implicit param evidence$1: Function1[A, Int]
-       |p/M#`<init>`().(evidence$2) => implicit param evidence$2: Ordering[A]
-       |p/M#`<init>`().(evidence$3) => implicit param evidence$3: Numeric[B]
+    """|p/M#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Function1[A, Int]
+       |p/M#`<init>`().(evidence$2) => synthetic implicit param evidence$2: Ordering[A]
+       |p/M#`<init>`().(evidence$3) => synthetic implicit param evidence$3: Numeric[B]
        |p/M#`<init>`().(evidence$96) => implicit param evidence$96: Int
        |p/M#evidence$1. => private[this] synthetic implicit val method evidence$1: Function1[A, Int]
        |p/M#evidence$2. => private[this] synthetic implicit val method evidence$2: Ordering[A]
        |p/M#evidence$3. => private[this] synthetic implicit val method evidence$3: Numeric[B]
        |p/M#evidence$96. => private[this] implicit val method evidence$96: Int
-       |p/O.I#`<init>`().(evidence$5) => implicit param evidence$5: Ordering[T]
+       |p/O.I#`<init>`().(evidence$5) => synthetic implicit param evidence$5: Ordering[T]
        |p/O.I#`<init>`().(evidence$98) => implicit param evidence$98: Numeric[T]
        |p/O.I#evidence$5. => private[this] synthetic implicit val method evidence$5: Ordering[T]
        |p/O.I#evidence$98. => private[this] implicit val method evidence$98: Numeric[T]
-       |p/O.I().(evidence$5) => implicit param evidence$5: Ordering[T]
+       |p/O.I().(evidence$5) => synthetic implicit param evidence$5: Ordering[T]
        |p/O.I().(evidence$98) => implicit param evidence$98: Numeric[T]
        |p/O.m().(evidence$4) => synthetic implicit param evidence$4: Ordering[T]
        |p/O.m().(evidence$97) => implicit param evidence$97: Numeric[T]
@@ -332,20 +332,20 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |}
        |""".stripMargin,
     if (ScalaVersion.is212)
-      """|local17 => implicit param evidence$1: Ordering[T]
+      """|local17 => synthetic implicit param evidence$1: Ordering[T]
          |local18 => implicit param evidence$97: Numeric[T]
-         |local2 => implicit param evidence$1: Ordering[T]
-         |local24 => implicit param evidence$2: Ordering[T]
+         |local2 => synthetic implicit param evidence$1: Ordering[T]
+         |local24 => synthetic implicit param evidence$2: Ordering[T]
          |local25 => implicit param evidence$98: Numeric[T]
          |local3 => implicit param evidence$97: Numeric[T]
          |local30 => synthetic implicit param evidence$3: Ordering[T]
          |local31 => implicit param evidence$99: Numeric[T]
          |""".stripMargin
     else
-      """|local18 => implicit param evidence$1: Ordering[T]
+      """|local18 => synthetic implicit param evidence$1: Ordering[T]
          |local19 => implicit param evidence$97: Numeric[T]
-         |local2 => implicit param evidence$1: Ordering[T]
-         |local26 => implicit param evidence$2: Ordering[T]
+         |local2 => synthetic implicit param evidence$1: Ordering[T]
+         |local26 => synthetic implicit param evidence$2: Ordering[T]
          |local27 => implicit param evidence$98: Numeric[T]
          |local3 => implicit param evidence$97: Numeric[T]
          |local32 => synthetic implicit param evidence$3: Ordering[T]
@@ -370,27 +370,27 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |  }
        |}
        |""".stripMargin,
-    """|local2 => implicit param evidence$6: Function1[T, Int]
+    """|local2 => synthetic implicit param evidence$6: Function1[T, Int]
        |local8 => synthetic implicit param evidence$7: Function1[T, Int]
-       |p/`C c`#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+       |p/`C c`#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/`C c`#`<init>`(+1).(evidence$2) => synthetic implicit param evidence$2: Ordering[T]
        |p/`C c`#`<init>`(+2).(evidence$3) => synthetic implicit param evidence$3: Ordering[T]
        |p/`C c`#`m m`().(evidence$4) => synthetic implicit param evidence$4: Ordering[U]
        |p/`C c`#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
-       |p/`K k`#`<init>`().(evidence$5) => implicit param evidence$5: Ordering[T]
-       |p/`K k`#copy().(evidence$5) => implicit param evidence$5: Ordering[T]
+       |p/`K k`#`<init>`().(evidence$5) => synthetic implicit param evidence$5: Ordering[T]
+       |p/`K k`#copy().(evidence$5) => synthetic implicit param evidence$5: Ordering[T]
        |p/`K k`#evidence$5. => private[this] synthetic implicit val method evidence$5: Ordering[T]
-       |p/`K k`.apply().(evidence$5) => implicit param evidence$5: Ordering[T]
+       |p/`K k`.apply().(evidence$5) => synthetic implicit param evidence$5: Ordering[T]
        |""".stripMargin,
-    """|p/`C c`#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/`C c`#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/`C c`#`<init>`(+1).(evidence$2) => synthetic implicit param evidence$2: Ordering[T]
        |p/`C c`#`<init>`(+2).(evidence$3) => synthetic implicit param evidence$3: Ordering[T]
        |p/`C c`#`m m`().(evidence$4) => synthetic implicit param evidence$4: Ordering[U]
        |p/`C c`#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
-       |p/`K k`#`<init>`().(evidence$5) => implicit param evidence$5: Ordering[T]
-       |p/`K k`#copy().(evidence$5) => implicit param evidence$5: Ordering[T]
+       |p/`K k`#`<init>`().(evidence$5) => synthetic implicit param evidence$5: Ordering[T]
+       |p/`K k`#copy().(evidence$5) => synthetic implicit param evidence$5: Ordering[T]
        |p/`K k`#evidence$5. => private[this] synthetic implicit val method evidence$5: Ordering[T]
-       |p/`K k`.apply().(evidence$5) => implicit param evidence$5: Ordering[T]
+       |p/`K k`.apply().(evidence$5) => synthetic implicit param evidence$5: Ordering[T]
        |""".stripMargin,
   )
 
@@ -402,12 +402,12 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |  def this(t: T, i: Int)(implicit evidence$91: Numeric[T]) = this(t)
        |}
        |""".stripMargin,
-    """|p/C#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/C#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/C#`<init>`(+1).(evidence$2) => synthetic implicit param evidence$2: Ordering[T]
        |p/C#`<init>`(+1).(evidence$91) => implicit param evidence$91: Numeric[T]
        |p/C#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
        |""".stripMargin,
-    """|p/C#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/C#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/C#`<init>`(+1).(evidence$2) => synthetic implicit param evidence$2: Ordering[T]
        |p/C#`<init>`(+1).(evidence$91) => implicit param evidence$91: Numeric[T]
        |p/C#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
@@ -422,12 +422,12 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |  def this(t: T, i: Int)(implicit evidence$1: Ordering[T]) = this(t)(evidence$1)
        |}
        |""".stripMargin,
-    """|p/C#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/C#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/C#`<init>`(+1).(evidence$1) => implicit param evidence$1: Ordering[T]
        |p/C#`<init>`(+1).(evidence$2) => synthetic implicit param evidence$2: Ordering[T]
        |p/C#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
        |""".stripMargin,
-    """|p/C#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/C#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/C#`<init>`(+1).(evidence$1) => implicit param evidence$1: Ordering[T]
        |p/C#`<init>`(+1).(evidence$2) => synthetic implicit param evidence$2: Ordering[T]
        |p/C#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
@@ -442,12 +442,12 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |}
        |object K { def apply[T](t: T)(implicit evidence$1: Ordering[T]): K[T] = new K(t) }
        |""".stripMargin,
-    """|p/K#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/K#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/K#copy().(evidence$1) => implicit param evidence$1: Ordering[T]
        |p/K#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
        |p/K.apply().(evidence$1) => implicit param evidence$1: Ordering[T]
        |""".stripMargin,
-    """|p/K#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/K#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/K#copy().(evidence$1) => implicit param evidence$1: Ordering[T]
        |p/K#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
        |p/K.apply().(evidence$1) => implicit param evidence$1: Ordering[T]
@@ -463,12 +463,12 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |  def n(evidence$2: Int) = evidence$2
        |}
        |""".stripMargin,
-    """|p/H#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/H#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/H#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
        |p/H.mkH().(evidence$1) => implicit param evidence$1: Ordering[T]
        |p/H.n().(evidence$2) => param evidence$2: Int
        |""".stripMargin,
-    """|p/H#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/H#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/H#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
        |p/H.mkH().(evidence$1) => implicit param evidence$1: Ordering[T]
        |p/H.n().(evidence$2) => param evidence$2: Int
@@ -485,11 +485,11 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |  def n[A: Ordering](implicit evidence$22: Numeric[A]): Int = 1
        |}
        |""".stripMargin,
-    """|p/K#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[A]
+    """|p/K#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[A]
        |p/K#`<init>`().(evidence$2) => implicit param evidence$2: Numeric[A]
        |p/K#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[A]
        |p/K#evidence$2. => private[this] implicit val method evidence$2: Numeric[A]
-       |p/L#`<init>`().(evidence$2) => implicit param evidence$2: Ordering[A]
+       |p/L#`<init>`().(evidence$2) => synthetic implicit param evidence$2: Ordering[A]
        |p/L#`<init>`().(evidence$22) => implicit param evidence$22: Numeric[A]
        |p/L#evidence$2. => private[this] synthetic implicit val method evidence$2: Ordering[A]
        |p/L#evidence$22. => private[this] implicit val method evidence$22: Numeric[A]
@@ -498,11 +498,11 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |p/O.n().(evidence$22) => implicit param evidence$22: Numeric[A]
        |p/O.n().(evidence$4) => synthetic implicit param evidence$4: Ordering[A]
        |""".stripMargin,
-    """|p/K#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[A]
+    """|p/K#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[A]
        |p/K#`<init>`().(evidence$2) => implicit param evidence$2: Numeric[A]
        |p/K#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[A]
        |p/K#evidence$2. => private[this] implicit val method evidence$2: Numeric[A]
-       |p/L#`<init>`().(evidence$2) => implicit param evidence$2: Ordering[A]
+       |p/L#`<init>`().(evidence$2) => synthetic implicit param evidence$2: Ordering[A]
        |p/L#`<init>`().(evidence$22) => implicit param evidence$22: Numeric[A]
        |p/L#evidence$2. => private[this] synthetic implicit val method evidence$2: Ordering[A]
        |p/L#evidence$22. => private[this] implicit val method evidence$22: Numeric[A]
@@ -545,10 +545,10 @@ class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
        |  class In { def o = implicitly[Ordering[T]] }
        |}
        |""".stripMargin,
-    """|p/C#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/C#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/C#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
        |""".stripMargin,
-    """|p/C#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+    """|p/C#`<init>`().(evidence$1) => synthetic implicit param evidence$1: Ordering[T]
        |p/C#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
        |""".stripMargin,
   )
