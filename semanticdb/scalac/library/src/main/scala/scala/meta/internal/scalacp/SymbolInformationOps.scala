@@ -15,6 +15,7 @@ trait SymbolInformationOps {
   self: Scalacp =>
   private val primaryCtors = mutable.Map[String, Int]()
   implicit class XtensionGSymbolSSymbolInformation(sym: SymbolInfoSymbol) {
+
     private def language: s.Language =
       // NOTE: We have no way to figure out whether an external symbol
       // comes from Java or Scala. Moreover, we can't even find out
@@ -49,10 +50,16 @@ trait SymbolInformationOps {
       case _ => sys.error(s"unsupported symbol $sym")
     }
 
+    private[scalacp] def isPrimaryConstructor: Boolean = sym.isConstructor && !sym.isJava && {
+      val index = sym.entry.index
+      primaryCtors.getOrElseUpdate(sym.path, index) == index
+    }
+
     private[meta] def properties: Int = {
       if (sym.isPackage) return 0
       var flags = 0
       def flip(sprop: s.SymbolInformation.Property) = flags |= sprop.value
+      def flipValOrVar(isVal: Boolean) = flip(if (isVal) p.VAL else p.VAR)
       def isAbstractClass = sym.isClass && sym.isAbstract && !sym.isTrait
       def isAbstractMethod = sym.isMethod && sym.isDeferred
       def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
@@ -89,25 +96,19 @@ trait SymbolInformationOps {
         if (sym.isType && sym.isCovariant) flip(p.COVARIANT)
         if (sym.isType && sym.isContravariant) flip(p.CONTRAVARIANT)
         // NOTE: Scalap doesn't expose locals.
-        if ( /*kind.isLocal ||*/ sym.isUsefulField) if (sym.isMutable) flip(p.VAR) else flip(p.VAL)
-        if (sym.isAccessor) if (sym.isStable) flip(p.VAL) else flip(p.VAR)
-        if (sym.isParam) sym.parent.foreach {
-          case parent: SymbolInfoSymbol => if ((parent.properties & p.PRIMARY.value) != 0) parent
-              .parent.foreach { grandParent =>
-                val classMembers = grandParent.children
-                val accessor = classMembers
-                  .find(m => m.isParamAccessor && m.symbolName == sym.symbolName)
-                accessor.foreach { accessor =>
-                  val isStable = if (accessor.isMethod) accessor.isStable else !accessor.isMutable
-                  if (!isStable) flip(p.VAR) else if (accessor.isMethod) flip(p.VAL) else ()
-                }
+        if ( /*kind.isLocal ||*/ sym.isUsefulField) flipValOrVar(!sym.isMutable)
+        else if (sym.isAccessor) flipValOrVar(sym.isStable)
+        else if (sym.isParam) sym.symbolInfo.owner match {
+          case parent: SymbolInfoSymbol => if (parent.isPrimaryConstructor)
+              parent.symbolInfo.owner.children.find(_.isAccessorOf(sym)) match {
+                case Some(accessor) =>
+                  if (accessor.isMethod) flipValOrVar(accessor.isStable)
+                  else if (accessor.isMutable) flip(p.VAR)
+                case _ =>
               }
           case _ => ()
         }
-        if (sym.isConstructor) {
-          val primaryIndex = primaryCtors.getOrElseUpdate(sym.path, sym.entry.index)
-          if (sym.entry.index == primaryIndex) flip(p.PRIMARY)
-        }
+        if (isPrimaryConstructor) flip(p.PRIMARY)
         if (sym.isDefaultParameter) flip(p.DEFAULT)
       }
       flags
@@ -132,7 +133,7 @@ trait SymbolInformationOps {
             // } else {
             if (sym.isAlias) {
               def preprocess(tpe: Type): Type = tpe match {
-                case PolyType(tpe, tparams) => PolyType(preprocess(tpe), tparams)
+                case t: PolyType => t.copy(typeRef = preprocess(t.typeRef))
                 case tpe => TypeBoundsType(tpe, tpe)
               }
               preprocess(sym.infoType)
@@ -218,5 +219,6 @@ trait SymbolInformationOps {
       overriddenSymbols = Nil,
       access = access,
     )
+
   }
 }
