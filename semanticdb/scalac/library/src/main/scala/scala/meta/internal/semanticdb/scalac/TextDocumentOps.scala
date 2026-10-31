@@ -111,7 +111,6 @@ trait TextDocumentOps {
       val symbols = mutable.Map[String, s.SymbolInformation]()
       val synthetics = mutable.ArrayBuffer[s.Synthetic]()
       val syntheticTreeCache = new mutable.HashMap[g.Tree, Option[s.Synthetic]]
-      val todo = mutable.Set[m.Name]() // names to map to global trees
       val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
       val mends = mutable.Map[Int, m.Name]() // end offset -> tree
       // start offset of enclosing apply -> its arg names
@@ -175,26 +174,27 @@ trait TextDocumentOps {
        * in its generator. Its end is in its guard or in the body of the `for`.
        */
       def forEnumerator(gpos: gu.Position): Option[m.Position] = {
-        val gpoint = gpos.point
-        val gend = gpos.end
-        mfors.reverseIterator.find { mfor =>
-          val mpos = mfor.pos
-          mpos.start <= gpoint && gend <= mpos.end
-        }.flatMap { mfor =>
-          val menums = mfor.enums
-          menums.find { menum =>
-            val mpos = menum.pos
-            mpos.start < gend && gend <= mpos.end
-          } match {
-            case Some(menum: m.Enumerator.Guard) => Some(menum.pos)
-            // a value is not a function in the source
-            case Some(_: m.Enumerator.Val) => None
-            case _ => menums.find { menum =>
-                val mpos = menum.pos
-                mpos.start <= gpoint && gpoint < mpos.end
-              }.map(_.pos)
+        def findWithin[A >: Null <: m.Tree](iter: Iterator[A], beg: Int, end: Int): A = {
+          while (iter.hasNext) {
+            val res = iter.next()
+            val mpos = res.pos
+            if (mpos.start <= beg && end < mpos.end) return res
           }
+          null
         }
+
+        val gpoint = gpos.point
+        val gendIncl = gpos.end - 1
+        val mfor = findWithin(mfors.reverseIterator, gpoint, gendIncl)
+        if (null eq mfor) return None
+
+        val menums = mfor.enums
+        val menum = findWithin(menums.iterator, gendIncl, gendIncl) match {
+          case t: m.Enumerator.Guard => t
+          case _: m.Enumerator.Val => null // a value is not a function in the source
+          case _ => findWithin(menums.iterator, gpoint, gpoint)
+        }
+        if (null eq menum) None else Some(menum.pos)
       }
 
       def addSamOccurrence(gt: g.Function, isFor: Boolean): Unit = {
@@ -275,7 +275,6 @@ trait TextDocumentOps {
           private def indexName(mname: m.Name): Unit = {
             val mpos = mname.pos
             if (mpos.isEmpty) return // for instance, missing type in method declaration
-            todo += mname
             mstarts.put(mpos.start, mname).foreach(errorAmbiguous("mStart", mname, _))
             mends.put(mpos.end, mname).foreach(errorAmbiguous("mEnd", mname, _))
           }
@@ -292,21 +291,18 @@ trait TextDocumentOps {
           }
           private def setWithins(mencl: m.Tree, mname: m.Name): Unit = mwithins.put(mencl, mname)
             .foreach(errorAmbiguous("mWithins", mname, _))
-          private def indexWithin(mname: m.Name.Indeterminate): Unit = {
-            todo += mname
-            mname.parent.parent.get match {
-              case mencl: m.Ctor.Primary => mencl.parent match {
-                  case Some(p: m.Member) => mwithinctors.put(p.name, mname)
-                      .foreach(errorAmbiguous("mWithinCtors", mname, _))
-                  case _ =>
-                }
-              case mencl: m.Member => setWithins(mencl.name, mname)
-              case t: m.Tree.WithPats => t.pats match {
-                  case (p: m.Pat.Var) :: Nil => setWithins(p.name, mname)
-                  case _ => // indexPat sets the withins of the other patterns
-                }
-              case _ =>
-            }
+          private def indexWithin(mname: m.Name.Indeterminate): Unit = mname.parent.parent.get match {
+            case mencl: m.Ctor.Primary => mencl.parent match {
+                case Some(p: m.Member) => mwithinctors.put(p.name, mname)
+                    .foreach(errorAmbiguous("mWithinCtors", mname, _))
+                case _ =>
+              }
+            case mencl: m.Member => setWithins(mencl.name, mname)
+            case t: m.Tree.WithPats => t.pats match {
+                case (p: m.Pat.Var) :: Nil => setWithins(p.name, mname)
+                case _ => // indexPat sets the withins of the other patterns
+              }
+            case _ =>
           }
           // scalac puts the constructor reference of `n.B(1)` at `B`
           @tailrec
@@ -337,12 +333,6 @@ trait TextDocumentOps {
             case Some(_: m.Tree.WithPats) => true
             case Some(p: m.Pat) => isNestedPat(p)
             case _ => false
-          }
-          @tailrec // only a whole pattern, like `_` in `val _ =` or `_: Int <- xs`, has a symbol
-          private def isWholePat(mpat: m.Pat): Boolean = mpat.parent match {
-            case Some(p: m.Pat.Typed) => isWholePat(p)
-            case Some(_: m.Pat | _: m.Pat.ArgClause | _: m.Case) => false
-            case _ => true
           }
           // index the variables of a pattern and accumulate their number
           private def indexPat(mtree: m.Tree, cnt: IntRef): Unit = mtree match {
@@ -545,7 +535,6 @@ trait TextDocumentOps {
             val symbol = gsym.toSemantic
             if (symbol == Symbols.None) return
 
-            todo -= mtree
             register(if (mtree.isDefinition) withCtorParam(gsym, symbol) else symbol)
 
             def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = map.get(mtree)
@@ -1666,6 +1655,13 @@ trait TextDocumentOps {
   private def isRefutabilityCheck(gt: g.Apply): Boolean = gt.args match {
     case (f: g.Function) :: Nil => isRefutabilityCheck(f)
     case _ => false
+  }
+
+  @tailrec // only a whole pattern, like `_` in `val _ =` or `_: Int <- xs`, has a symbol
+  private def isWholePat(mpat: m.Pat): Boolean = mpat.parent match {
+    case Some(p: m.Pat.Typed) => isWholePat(p)
+    case Some(_: m.Pat | _: m.Pat.ArgClause | _: m.Case) => false
+    case _ => true
   }
 
   private def syntaxAndPos(mtree: m.Tree): String = s"`$mtree`[${mtree.pos.syntax}]"
