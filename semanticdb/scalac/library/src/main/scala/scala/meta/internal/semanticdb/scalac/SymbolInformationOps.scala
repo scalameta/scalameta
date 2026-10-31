@@ -70,6 +70,15 @@ trait SymbolInformationOps {
         !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred && !kind.isLocal
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
+      /* scalac drops `SYNTHETIC` from a class's evidence that it copies into the primary
+       * constructor, `copy`, `apply` or a factory, but the class's accessor keeps it */
+      def isClassEvidence = gsym.isParameter && gsym.isImplicit && {
+        val gmethod = gsym.owner
+        (gmethod.isSynthetic || gmethod.isPrimaryConstructor) && {
+          val gaccessor = gmethod.info.finalResultType.typeSymbol.info.decl(gsym.name)
+          gaccessor.isParamAccessor && gaccessor.isSynthetic
+        }
+      }
       if (isJava) {
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
           flip(p.ABSTRACT)
@@ -87,7 +96,7 @@ trait SymbolInformationOps {
         // marked in javacp (metac emits no SymbolInformation for them). Self parameters
         // carry the synthetic flag even when written in source (`self =>`), but the spec
         // grants them no properties, so exclude them.
-        if (!gsym.isSelfParameter && gsym.isSynthetic) flip(p.SYNTHETIC)
+        if (!gsym.isSelfParameter && gsym.isSynthetic || isClassEvidence) flip(p.SYNTHETIC)
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
           flip(p.ABSTRACT)
           flip(p.OVERRIDE)

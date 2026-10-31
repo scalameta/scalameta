@@ -13,6 +13,7 @@ import scala.tools.scalap.scalax.rules.scalasig._
 
 trait SymbolInformationOps {
   self: Scalacp =>
+  import SymbolOps._
   private val primaryCtors = mutable.Map[String, Int]()
   implicit class XtensionGSymbolSSymbolInformation(sym: SymbolInfoSymbol) {
 
@@ -63,6 +64,14 @@ trait SymbolInformationOps {
       def isAbstractClass = sym.isClass && sym.isAbstract && !sym.isTrait
       def isAbstractMethod = sym.isMethod && sym.isDeferred
       def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
+      /* scalac drops `SYNTHETIC` from a class's evidence that it copies into the primary
+       * constructor, `copy`, `apply` or a factory, but the class's accessor keeps it */
+      def isClassEvidence = sym.isParam && sym.isImplicit &&
+        (sym.symbolInfo.owner match {
+          case m: SymbolInfoSymbol if m.isSynthetic || m.isPrimaryConstructor =>
+            m.resultClass.children.exists(a => a.isSynthetic && a.isAccessorOf(sym))
+          case _ => false
+        })
       if (sym.isJava) {
         if (sym.isAbstractOverride) {
           flip(p.ABSTRACT)
@@ -80,7 +89,7 @@ trait SymbolInformationOps {
         // SYNTHETIC is emitted for Scala symbols only; marking Java synthetics is
         // deferred to a follow-up. (No self-parameter guard needed here, unlike the
         // scalac plugin: scalap doesn't model self parameters — see `kind`.)
-        if (sym.isSynthetic) flip(p.SYNTHETIC)
+        if (sym.isSynthetic || isClassEvidence) flip(p.SYNTHETIC)
         if (sym.isAbstractOverride) {
           flip(p.ABSTRACT)
           flip(p.OVERRIDE)
