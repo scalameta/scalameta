@@ -11,6 +11,7 @@ import java.util.HashSet
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.reflect.NameTransformer
+import scala.reflect.internal.pickling.PickleFormat
 import scala.reflect.internal.{Flags => gf}
 import scala.tools.nsc.backend.jvm.GenBCode
 import scala.tools.scalap.scalax.rules.scalasig._
@@ -42,7 +43,7 @@ trait SymbolOps {
         // sym.isLocalDummy ||
         sym.isRefinementClass || sym.isAnonymousClass || sym.isAnonymousFunction ||
         sym.isExistentialType
-      def ownerLocal = sym.parent.map(_.isSemanticdbLocal).getOrElse(false)
+      def ownerLocal = sym.parent.exists(_.isSemanticdbLocal)
       !definitelyGlobal && (definitelyLocal || ownerLocal)
     }
     def owner: String =
@@ -73,7 +74,7 @@ trait SymbolOps {
           case k.METHOD if sym.isValMethod => d.Term(symbolName)
           case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
             val overloads = {
-              val peers = sym.parent.get.semanticdbDecls.syms
+              val peers = sym.symbolInfo.owner.semanticdbDecls.syms
               peers.filter {
                 case peer: MethodSymbol => peer.symbolName == sym.symbolName && !peer.isValMethod
                 case _ => false
@@ -91,9 +92,9 @@ trait SymbolOps {
           case k.PARAMETER => d.Parameter(symbolName)
           case k.TYPE_PARAMETER if sym.name == "_" =>
             // 2.12 names each anonymous type param `_`: number them within the owner
-            val tparams = sym.parent.get match {
+            val tparams = sym.symbolInfo.owner match {
               case owner: SymbolInfoSymbol => owner.infoType match {
-                  case PolyType(_, tparams) => tparams
+                  case t: PolyType => t.symbols
                   case _ => Nil
                 }
               case _ => Nil
@@ -271,7 +272,7 @@ trait SymbolOps {
     def moduleClass: Symbol = sym match {
       case sym: SymbolInfoSymbol if sym.isModule =>
         sym.infoType match {
-          case TypeRefType(_, moduleClass, _) => moduleClass
+          case tpe: TypeRefType => tpe.symbol
           case _ => NoSymbol
         }
       case _ => NoSymbol
@@ -341,6 +342,9 @@ trait SymbolOps {
 
     def decodedName: String = NameTransformer.decode(sym.name)
 
+    private[scalacp] def isAccessorOf(param: Symbol): Boolean = sym.isParamAccessor &&
+      sym.symbolName == param.symbolName
+
   }
 
   /* scalac prefixed the name with the full name of an enclosing class and `$$`: the class that a
@@ -405,5 +409,19 @@ object SymbolOps {
   }
 
   private def isExpandedName(sym: SymbolInfoSymbol): Boolean = sym.hasLongFlag(gf.EXPANDEDNAME)
+
+  implicit class XtensionSymbolOwner(private val sym: Symbol) extends AnyVal {
+    // a reference to another pickle's symbol has no flags, only its entry's type
+    private[scalacp] def isModuleSymbol: Boolean = sym match {
+      case sym: SymbolInfoSymbol => sym.isModule
+      case sym: ExternalSymbol => sym.entry.entryType == PickleFormat.EXTMODCLASSref
+      case _ => false
+    }
+
+    private[scalacp] def isOwnedBy(owner: Symbol, module: Boolean): Boolean = sym.parent match {
+      case Some(parent) => owner.path == parent.path && parent.isModuleSymbol == module
+      case None => true
+    }
+  }
 
 }

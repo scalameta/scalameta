@@ -10,6 +10,7 @@ import scala.tools.scalap.scalax.rules.scalasig._
 
 trait TypeOps {
   self: Scalacp =>
+  import TypeOps._
   implicit class XtensionTypeSType(tpe: Type) {
     def toSemanticTpe: s.Type = {
       // A repeated type (`T*`) is only valid in parameter position; scalac widens it to
@@ -30,24 +31,24 @@ trait TypeOps {
         case RepeatedType(tpe) =>
           val stpe = loop(tpe)
           s.RepeatedType(stpe)
-        case TypeRefType(pre, sym, args) =>
-          val spre = if (tpe.hasTrivialPrefix) s.NoType else loop(pre)
-          val ssym = sym.ssym
-          val sargs = args.map(widenRepeated)
+        case tpe: TypeRefType =>
+          val spre = if (tpe.hasTrivialPrefix) s.NoType else loop(tpe.prefix)
+          val ssym = tpe.symbol.ssym
+          val sargs = tpe.typeArgs.map(widenRepeated)
           s.TypeRef(spre, ssym, sargs)
-        case SingleType(pre, sym) =>
-          val spre = if (tpe.hasTrivialPrefix) s.NoType else loop(pre)
+        case tpe: SingleType =>
+          val spre = if (tpe.hasTrivialPrefix) s.NoType else loop(tpe.typeRef)
           val ssym = {
             // NOTE: Due to some unclear reason, Scalac sometimes saves
             // (or Scalap sometimes loads) single types that point to
             // companion classes, not module classes (see #1392).
             // We assume that it's a mistake and work around accordingly.
-            val raw = sym.ssym
+            val raw = tpe.symbol.ssym
             if (raw.isType) Symbols.Global(raw.owner, d.Term(raw.desc.value)) else raw
           }
           s.SingleType(spre, ssym)
-        case ThisType(sym) =>
-          val ssym = sym.ssym
+        case tpe: ThisType =>
+          val ssym = tpe.symbol.ssym
           s.ThisType(ssym)
         // NOTE: There is deliberately no SuperType case. SuperType (`This.super[Mixin]`) is the
         // type of `super` references, an expression-level type that scalac never pickles (pickles
@@ -55,39 +56,38 @@ trait TypeOps {
         // for the SUPERtpe pickle tag (scala.reflect.internal.pickling.PickleFormat) -- so metacp
         // can never receive one. The scalac/TextDocumentOps path handles SuperType because it walks
         // typed source trees. See https://github.com/scalameta/scalameta/issues/1291.
-        case ConstantType(underlying: ExternalSymbol) =>
-          // NOTE(olafur): manually construct a term symbol for external Java
-          // enum symbols because `underlying.entry.entryType == 9` which by
-          // default becomes a type symbol.
-          val ssym = Symbols.Global(underlying.parent.get.ssym, d.Term(underlying.name))
-          s.SingleType(s.NoType, ssym)
-        case ConstantType(underlying: Type) => loop(underlying) match {
-            case s.NoType => s.NoType
-            case sarg =>
-              val ssym = ks.Class
-              val sargs = sarg :: Nil
-              s.TypeRef(s.NoType, ssym, sargs)
+        case tpe: ConstantType => tpe.constant match {
+            case c: ExternalSymbol =>
+              // NOTE(olafur): manually construct a term symbol for external Java
+              // enum symbols because `underlying.entry.entryType == 9` which by
+              // default becomes a type symbol.
+              val ssym = Symbols.Global(c.parent.get.ssym, d.Term(c.name))
+              s.SingleType(s.NoType, ssym)
+            case c: Type => loop(c) match {
+                case s.NoType => s.NoType
+                case sarg => s.TypeRef(s.NoType, ks.Class, sarg :: Nil)
+              }
+            case c =>
+              val sconst = signedConstantType(tpe).getOrElse(s.Constant(c))
+              s.ConstantType(sconst)
           }
-        case ctpe @ ConstantType(const) =>
-          val sconst = signedConstantType(ctpe).getOrElse(s.Constant(const))
-          s.ConstantType(sconst)
-        case RefinedType(sym, parents) =>
-          val sparents = parents.map(loop)
+        case tpe: RefinedType =>
+          val sparents = tpe.typeRefs.map(loop)
           val stpe = s.WithType(sparents)
-          val sdecls = Some(sym.semanticdbDecls.sscope(HardlinkChildren))
+          val sdecls = Some(tpe.classSym.semanticdbDecls.sscope(HardlinkChildren))
           s.StructuralType(stpe, sdecls)
-        case AnnotatedType(tpe, anns) =>
-          val sanns = anns.reverse.map(_.toSemantic)
-          val stpe = loop(tpe)
+        case tpe: AnnotatedType =>
+          val sanns = tpe.attribTreeRefs.reverse.map(_.toSemantic)
+          val stpe = loop(tpe.typeRef)
           s.AnnotatedType(sanns, stpe)
-        case ExistentialType(tpe, tparams) =>
-          val stpe = loop(tpe)
-          val sdecls = Some(tparams.sscope(HardlinkChildren))
+        case tpe: ExistentialType =>
+          val stpe = loop(tpe.typeRef)
+          val sdecls = Some(tpe.symbols.sscope(HardlinkChildren))
           s.ExistentialType(stpe, sdecls)
-        case PolyType(tpe, tparams) => loop(tpe) match {
+        case tpe: PolyType => loop(tpe.typeRef) match {
             case s.NoType => s.NoType
             case stpe =>
-              val stparams = tparams.sscope(HardlinkChildren)
+              val stparams = tpe.symbols.sscope(HardlinkChildren)
               s.UniversalType(Some(stparams), stpe)
           }
         case NoType => s.NoType
@@ -98,83 +98,35 @@ trait TypeOps {
     }
     def toSemanticSig(linkMode: LinkMode): s.Signature = {
       def loop(tpe: Type): s.Signature = tpe match {
-        case ClassInfoType(sym, parents) =>
+        case tpe: ClassInfoType =>
           val stparams = Some(s.Scope())
-          val sparents = parents.map(_.toSemanticTpe)
-          val sself = sym.self.toSemanticTpe
-          val sdecls = Some(sym.semanticdbDecls.sscope(linkMode))
+          val sparents = tpe.typeRefs.map(_.toSemanticTpe)
+          val sself = tpe.symbol.self.toSemanticTpe
+          val sdecls = Some(tpe.symbol.semanticdbDecls.sscope(linkMode))
           s.ClassSignature(stparams, sparents, sself, sdecls)
         case _: NullaryMethodType | _: MethodType =>
           val stparams = Some(s.Scope())
           val sparamss = tpe.paramss.map(_.sscope(linkMode))
           val sret = tpe.ret.toSemanticTpe
           s.MethodSignature(stparams, sparamss, sret)
-        case TypeBoundsType(lo, hi) =>
+        case tpe: TypeBoundsType =>
           val stparams = Some(s.Scope())
-          val slo = lo.toSemanticTpe
-          val shi = hi.toSemanticTpe
+          val slo = tpe.lower.toSemanticTpe
+          val shi = tpe.upper.toSemanticTpe
           s.TypeSignature(stparams, slo, shi)
-        case PolyType(tpe, tparams) => loop(tpe) match {
+        case tpe: PolyType => loop(tpe.typeRef) match {
             case s.NoSignature => s.NoSignature
-            case t: s.ClassSignature =>
-              val stparams = tparams.sscope(linkMode)
-              t.copy(typeParameters = Some(stparams))
-            case t: s.MethodSignature =>
-              val stparams = tparams.sscope(linkMode)
-              t.copy(typeParameters = Some(stparams))
-            case t: s.TypeSignature =>
-              val stparams = tparams.sscope(linkMode)
-              t.copy(typeParameters = Some(stparams))
+            case t: s.ClassSignature => t.withTypeParameters(tpe.symbols.sscope(linkMode))
+            case t: s.MethodSignature => t.withTypeParameters(tpe.symbols.sscope(linkMode))
+            case t: s.TypeSignature => t.withTypeParameters(tpe.symbols.sscope(linkMode))
             case t: s.ValueSignature =>
-              val stparams = tparams.sscope(HardlinkChildren)
-              val stpe = t.tpe
-              s.ValueSignature(s.UniversalType(Some(stparams), stpe))
+              val stparams = tpe.symbols.sscope(HardlinkChildren)
+              s.ValueSignature(s.UniversalType(Some(stparams), t.tpe))
           }
         case NoType => s.NoSignature
         case other => s.ValueSignature(other.toSemanticTpe)
       }
       loop(tpe)
-    }
-  }
-
-  implicit class XtensionType(tpe: Type) {
-    def hasTrivialPrefix: Boolean = {
-      def checkTrivialPrefix(pre: Type, sym: Symbol): Boolean = pre match {
-        case TypeRefType(prepre, presym, _) => checkTrivialPrefix(prepre, presym) &&
-          checkTrivialOwner(presym, sym, module = true) && checkModule(presym)
-        case SingleType(prepre, presym) => checkTrivialPrefix(prepre, presym) &&
-          checkTrivialOwner(presym, sym, module = true)
-        case ThisType(presym) => checkTrivialOwner(presym, sym, checkModule(presym))
-        case NoPrefixType => true
-        case _ => false
-      }
-      def checkTrivialOwner(presym: Symbol, sym: Symbol, module: Boolean): Boolean =
-        sym.parent match {
-          case Some(owner) => presym.path == owner.path && checkModule(owner) == module
-          case None => true
-        }
-      def checkModule(presym: Symbol): Boolean = presym match {
-        case presym: SymbolInfoSymbol => presym.isModule
-        case presym: ExternalSymbol => presym.entry.entryType == 10
-        case _ => false
-      }
-      tpe match {
-        case TypeRefType(pre, sym, _) => checkTrivialPrefix(pre, sym)
-        case SingleType(pre, sym) => checkTrivialPrefix(pre, sym)
-        case _ => false
-      }
-    }
-    def paramss: List[List[SymbolInfoSymbol]] = tpe match {
-      case NullaryMethodType(_) => Nil
-      case MethodType(tpe, params) =>
-        val symbolInfoParams = params.map(_.asInstanceOf[SymbolInfoSymbol])
-        symbolInfoParams.toList +: tpe.paramss
-      case _ => Nil
-    }
-    def ret: Type = tpe match {
-      case NullaryMethodType(tpe) => tpe.ret
-      case MethodType(tpe, _) => tpe.ret
-      case _ => tpe
     }
   }
 
@@ -191,4 +143,49 @@ trait TypeOps {
       case _ => None
     }
   }
+}
+
+object TypeOps {
+  import SymbolOps._
+
+  implicit class XtensionTypeRefType(private val tpe: TypeRefType) extends AnyVal {
+    def hasTrivialPrefix: Boolean = tpe.prefix.isTrivialPrefixOf(tpe.symbol)
+
+    def isTrivialPrefixOf(sym: Symbol): Boolean = hasTrivialPrefix &&
+      sym.isOwnedBy(tpe.symbol, module = true) && tpe.symbol.isModuleSymbol
+  }
+
+  implicit class XtensionSingleType(private val tpe: SingleType) extends AnyVal {
+    def hasTrivialPrefix: Boolean = tpe.typeRef.isTrivialPrefixOf(tpe.symbol)
+
+    def isTrivialPrefixOf(sym: Symbol): Boolean = hasTrivialPrefix &&
+      sym.isOwnedBy(tpe.symbol, module = true)
+  }
+
+  implicit class XtensionPrefixType(private val tpe: Type) extends AnyVal {
+    def isTrivialPrefixOf(sym: Symbol): Boolean = tpe match {
+      case tpe: TypeRefType => tpe.isTrivialPrefixOf(sym)
+      case tpe: SingleType => tpe.isTrivialPrefixOf(sym)
+      case tpe: ThisType => sym.isOwnedBy(tpe.symbol, tpe.symbol.isModuleSymbol)
+      case NoPrefixType => true
+      case _ => false
+    }
+  }
+
+  implicit class XtensionResultType(private val tpe: Type) extends AnyVal {
+    def ret: Type = tpe match {
+      case tpe: NullaryMethodType => tpe.resultType.ret
+      case tpe: MethodType => tpe.resultType.ret
+      case _ => tpe
+    }
+
+    def paramss: List[List[SymbolInfoSymbol]] = tpe match {
+      case _: NullaryMethodType => Nil
+      case tpe: MethodType =>
+        val symbolInfoParams = tpe.paramSymbols.map(_.asInstanceOf[SymbolInfoSymbol])
+        symbolInfoParams.toList :: tpe.resultType.paramss
+      case _ => Nil
+    }
+  }
+
 }
