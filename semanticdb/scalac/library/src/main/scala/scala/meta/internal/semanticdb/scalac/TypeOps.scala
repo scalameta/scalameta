@@ -2,6 +2,7 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.scalacp._
 import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.{KnownSymbols => ks}
 import scala.meta.internal.{semanticdb => s}
 
 import scala.annotation.tailrec
@@ -28,7 +29,7 @@ trait TypeOps {
       def widenRepeated(gtpe: g.Type): s.Type = gtpe match {
         case gtpe: g.TypeRef
             if gtpe.sym == g.definitions.RepeatedParamClass && gtpe.args.lengthCompare(1) == 0 =>
-          s.TypeRef(s.NoType, "scala/package.Seq#", loop(gtpe.args.head) :: Nil)
+          s.TypeRef(s.NoType, ks.Seq, loop(gtpe.args.head) :: Nil)
         case _ => loop(gtpe)
       }
       def referenced(gsym: g.Symbol): String = {

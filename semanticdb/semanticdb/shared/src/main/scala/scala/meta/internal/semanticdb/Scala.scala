@@ -30,6 +30,8 @@ object Scala {
 
   implicit class ScalaSymbolOps(private val symbol: String) extends AnyVal {
 
+    def global(desc: Descriptor): String = Symbols.Global(symbol, desc)
+
     def isNone: Boolean = symbol == Symbols.None
     def isRootPackage: Boolean = symbol == Symbols.RootPackage
     def isEmptyPackage: Boolean = symbol == Symbols.EmptyPackage

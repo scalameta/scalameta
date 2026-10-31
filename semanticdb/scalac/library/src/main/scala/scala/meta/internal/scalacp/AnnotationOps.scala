@@ -1,6 +1,7 @@
 package scala.meta.internal.scalacp
 
 import scala.meta.internal.classpath.MissingSymbolException
+import scala.meta.internal.semanticdb.{KnownSymbols => ks}
 import scala.meta.internal.{semanticdb => s}
 
 import scala.annotation.tailrec
@@ -243,7 +244,7 @@ trait AnnotationOps {
 
 object AnnotationOps {
 
-  private val syntheticAnnotationsSymbols = Set("scala/reflect/macros/internal/macroImpl#")
+  private val syntheticAnnotationsSymbols = Set(ks.MacroImpl)
 
   private val entryRefsParser = {
     import ScalaSigEntryParsers._

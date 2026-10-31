@@ -3,6 +3,7 @@ package scala.meta.internal.scalacp
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb.{KnownSymbols => ks}
 import scala.meta.internal.{semanticdb => s}
 
 import scala.tools.scalap.scalax.rules.scalasig._
@@ -19,7 +20,7 @@ trait TypeOps {
       // `<repeated>` marker (Java varargs in classfiles are read by Javacp, not scalacp), so this
       // only ever widens a Scala repeated -> `Seq[T]`. See scalameta/scalameta#1497.
       def widenRepeated(tpe: Type): s.Type = tpe match {
-        case RepeatedType(elem) => s.TypeRef(s.NoType, "scala/package.Seq#", loop(elem) :: Nil)
+        case RepeatedType(elem) => s.TypeRef(s.NoType, ks.Seq, loop(elem) :: Nil)
         case _ => loop(tpe)
       }
       def loop(tpe: Type): s.Type = tpe match {
@@ -63,7 +64,7 @@ trait TypeOps {
         case ConstantType(underlying: Type) => loop(underlying) match {
             case s.NoType => s.NoType
             case sarg =>
-              val ssym = "java/lang/Class#"
+              val ssym = ks.Class
               val sargs = sarg :: Nil
               s.TypeRef(s.NoType, ssym, sargs)
           }

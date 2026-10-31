@@ -3,7 +3,7 @@ package scala.meta.internal.semanticdb.scalac
 import scala.meta.internal.scalacp._
 import scala.meta.internal.semanticdb.Scala.{DisplayNames => dn}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k, Property => p}
-import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.{KnownSymbols => ks, Language => l}
 import scala.meta.internal.{semanticdb => s}
 
 import scala.collection.mutable
@@ -165,9 +165,9 @@ trait SymbolInformationOps {
         else if (gsym.isClassfileAnnotation) ssig match {
           case ssig: s.ClassSignature =>
             val parents1 = ssig.parents.flatMap {
-              case s.TypeRef(s.NoType, "scala/annotation/Annotation#", Nil) =>
-                Some(s.TypeRef(s.NoType, "java/lang/Object#", Nil))
-              case s.TypeRef(s.NoType, "scala/annotation/ClassfileAnnotation#", Nil) => None
+              case s.TypeRef(s.NoType, ks.Annotation, Nil) =>
+                Some(s.TypeRef(s.NoType, ks.Object, Nil))
+              case s.TypeRef(s.NoType, ks.ClassfileAnnotation, Nil) => None
               case sother => Some(sother)
             }
             ssig.copy(parents = parents1)
@@ -177,8 +177,7 @@ trait SymbolInformationOps {
           case ssig: s.TypeSignature =>
             val upperBound1 = ssig.upperBound match {
               case s.StructuralType(s.WithType(tpes), _) => s.IntersectionType(tpes)
-              case s.TypeRef(s.NoType, "scala/Any#", Nil) => s
-                  .TypeRef(s.NoType, "java/lang/Object#", Nil)
+              case s.TypeRef(s.NoType, ks.Any, Nil) => s.TypeRef(s.NoType, ks.Object, Nil)
               case sother => sother
             }
             ssig.copy(lowerBound = s.NoType, upperBound = upperBound1)
