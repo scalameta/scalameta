@@ -2,6 +2,7 @@ package scala.meta.tests.metacp
 
 import scala.meta.internal.metacp._
 import scala.meta.internal.metap.PrinterSymtab
+import scala.meta.internal.scalacp.SymbolOps._
 import scala.meta.internal.scalacp.TypeOps._
 import scala.meta.internal.semanticdb.Print
 import scala.meta.metap.Format
@@ -45,11 +46,28 @@ class ScalacpSuite extends FunSuite with MetacpSnippets {
          |w_$eq: scala.Unit
          |<init>: a.C
          |<init>: a.C
-         |f: PolyType
+         |f: scala.package.List
          |g: scala.Int
          |h: scala.Predef.String
          |o: scala.Option
          |s: SingleType
+         |""".stripMargin,
+    )
+  }
+
+  test("resultClass") {
+    assertNoDiff(
+      methods(_.resultClass.path),
+      """|v: scala.Int
+         |w: scala.Int
+         |w_$eq: scala.Unit
+         |<init>: a.C
+         |<init>: a.C
+         |f: scala.package.List
+         |g: scala.Int
+         |h: scala.Predef.String
+         |o: scala.Option
+         |s: <no symbol>
          |""".stripMargin,
     )
   }
