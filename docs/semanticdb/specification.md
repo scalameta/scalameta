@@ -2554,7 +2554,7 @@ abstract class AnyVal extends Any
 class AnyRef extends Any {
   final def eq(that: AnyRef): Boolean
   final def ne(that: AnyRef): Boolean
-  final def synchronized[T](body: T): T
+  final def synchronized[A](body: A): A
 }
 
 abstract class Nothing extends Any
@@ -2600,7 +2600,7 @@ class Object {
   final def ##: Int
   final def eq(that: AnyRef): Boolean
   final def ne(that: AnyRef): Boolean
-  final def synchronized[T](body: T): T
+  final def synchronized[A](body: A): A
 }
 
 final class String {

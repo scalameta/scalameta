@@ -284,13 +284,13 @@ object Javacp {
     case "java/lang/Object" =>
       implicit val symbols = List.newBuilder[s.SymbolInformation]
       val nullary = Scalalib.isHashHashNullary(classpathIndex)
-      val synchronizedT = "java/lang/Object#synchronized().[T]"
+      val synchronizedA = "java/lang/Object#synchronized().[A]"
       jdkMethod("Object", "==", Nil, List("that" -> Scalalib.anySymbol), Scalalib.booleanSymbol)
       jdkMethod("Object", "!=", Nil, List("that" -> Scalalib.anySymbol), Scalalib.booleanSymbol)
       jdkMethod("Object", "##", Nil, Nil, Scalalib.intSymbol, nullary = nullary)
       jdkMethod("Object", "eq", Nil, List("that" -> Scalalib.anyRefSymbol), Scalalib.booleanSymbol)
       jdkMethod("Object", "ne", Nil, List("that" -> Scalalib.anyRefSymbol), Scalalib.booleanSymbol)
-      jdkMethod("Object", "synchronized", List("T"), List("body" -> synchronizedT), synchronizedT)
+      jdkMethod("Object", "synchronized", List("A"), List("body" -> synchronizedA), synchronizedA)
       symbols.result()
     case "java/lang/String" =>
       implicit val symbols = List.newBuilder[s.SymbolInformation]

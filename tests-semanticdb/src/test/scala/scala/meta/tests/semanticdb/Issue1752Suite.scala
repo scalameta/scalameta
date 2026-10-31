@@ -106,7 +106,7 @@ class Issue1752Suite extends SemanticdbSuite {
        |""".stripMargin,
     check(
       "java/lang/Object#synchronized().",
-      Some("java/lang/Object#synchronized(). => final method synchronized[T](body: T): T"),
+      Some("java/lang/Object#synchronized(). => final method synchronized[A](body: A): A"),
       true,
     ),
   )
@@ -117,7 +117,7 @@ class Issue1752Suite extends SemanticdbSuite {
        |""".stripMargin,
     check(
       "java/lang/Object#synchronized().",
-      Some("java/lang/Object#synchronized(). => final method synchronized[T](body: T): T"),
+      Some("java/lang/Object#synchronized(). => final method synchronized[A](body: A): A"),
       true,
     ),
   )
