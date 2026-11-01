@@ -11,12 +11,13 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.reflect.internal._
 import scala.reflect.internal.{Flags => gf, util => gu}
-import scala.runtime.IntRef
 import scala.tools.nsc.settings.ScalaVersion
 import scala.{meta => m}
 
 trait TextDocumentOps {
   self: SemanticdbOps =>
+
+  import TextDocumentOps._
 
   def validateCompilerState(): Unit = {
     if (!g.settings.Yrangepos.value) sys.error("the compiler instance must have -Yrangepos enabled")
@@ -111,34 +112,48 @@ trait TextDocumentOps {
       val symbols = mutable.Map[String, s.SymbolInformation]()
       val synthetics = mutable.ArrayBuffer[s.Synthetic]()
       val syntheticTreeCache = new mutable.HashMap[g.Tree, Option[s.Synthetic]]
-      val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
-      val mends = mutable.Map[Int, m.Name]() // end offset -> tree
-      // start offset of enclosing apply -> its arg names
-      val margnames = mutable.Map[Int, List[m.Name]]()
-      // name of enclosing member -> name of private/protected within
-      val mwithins = mutable.Map[m.Tree, m.Name]()
-      val mwithinctors = mutable.Map[m.Tree, m.Name]() // name of enclosing class -> name of private/protected within for primary ctor
-      val mctordefs = mutable.Map[Int, m.Name]() // start offset of ctor -> ctor's anonymous name
-      val mctorrefs = mutable.Map[Int, m.Name]() // start of new, init or init's type name -> name
-      val mparents = mutable.Map[Int, m.Type]() // start offset of init's type -> the type
-      val mselftypes = mutable.Map[Int, m.Type]() // start offset -> declared self type
-      val mclassofs = mutable.Map[Int, m.Type]() // start offset of classOf -> its type argument
-      val mexistentials = mutable.Map[Int, m.Type.Existential]() // start offset -> existential type
-      val msupers = mutable.Map.empty[Int, m.Term.Super] // end offset
-      val mfuncs = mutable.Map.empty[Int, m.Position] // start offset of a function
-      val mannottees = mutable.Map.empty[Int, m.Member] // start offset of an annotation's init
-      val mexpansions = mutable.Map.empty[Int, m.Member] // the same, for a macro annotation
-      val munderscores = mutable.Map.empty[Int, m.Position] // start offset -> an underscore
+      val msource = unit.toSource(explicitDialect)
+      val mtrees = TreeIndex(msource)
+      // the offset of a macro annotation that scalac expanded -> the annotated member
+      val mexpansions = mutable.LongMap.empty[m.Member]
+      val mcolons = mutable.LongMap.empty[m.Pat] // the colon after a whole pattern -> the pattern
       val mfors = mutable.ArrayBuffer.empty[m.Term.ForClause] // outer first
-      val mforEnds = mutable.Map.empty[Int, Int] // start offset of a `for` -> its end offset
 
       // Occurrences for names in val patterns, like `val (a, b) =`. Unlike the `occurrences` map, val pattern
       // occurrences uses "last occurrence wins" instead of "first occurrences wins" when disambiguating between
       // multiple symbols that resolve to the same position.
       val mpatoccurrences = emptyOccurrenceMap()
-      val mvalpatstart = mutable.Set.empty[Int] // start pos for Pat.Var names inside val patterns
-      // start pos for vals with single-element patterns -> their Pat.Var name
-      val msinglevalpats = mutable.Map.empty[Int, m.Name]
+
+      def mstart(offset: Int): m.Tree = mtrees.mstart(offset)
+      def mend(offset: Int): m.Tree = mtrees.mend(offset)
+      @tailrec
+      def mtreeOf[A >: Null <: AnyRef](mtree: m.Tree, offset: Int, atEnd: Boolean)(
+          f: m.Tree => A,
+      ): A = {
+        if (null eq mtree) return null
+        val res = f(mtree)
+        if (null ne res) return res
+        mtree.parent match {
+          case Some(p) if (if (atEnd) p.pos.end else p.pos.start) == offset =>
+            mtreeOf[A](p, offset, atEnd)(f)
+          case _ => null
+        }
+      }
+      // the first non-null value of `f` on the trees that start at `offset`, innermost first
+      def mstartOf[A >: Null <: AnyRef](offset: Int)(f: m.Tree => A): A =
+        mtreeOf[A](mstart(offset), offset, atEnd = false)(f)
+      // the first non-null value of `f` on the trees that end at `offset`, innermost first
+      def mendOf[A >: Null <: AnyRef](offset: Int)(f: m.Tree => A): A =
+        mtreeOf[A](mend(offset), offset, atEnd = true)(f)
+      // an anonymous name, `this` and `_` have lookups of their own
+      def asName(mtree: m.Tree): m.Name = mtree match {
+        case _: m.Name.Anonymous | _: m.Name.This | _: m.Name.Placeholder => null
+        case t: m.Name if !t.pos.isEmpty => t
+        case _ => null
+      }
+      // a name is a leaf, so it is the last tree that starts or ends at its offsets
+      def mnameAt(offset: Int): m.Name = asName(mstart(offset))
+      def mnameEndingAt(offset: Int): m.Name = asName(mend(offset))
 
       def addOccurrenceFromSemantic(mpos: m.Position, ssym: String, role: Role): Unit =
         if (ssym != Symbols.None) occurrences(mpos) = (ssym, role)
@@ -147,12 +162,12 @@ trait TextDocumentOps {
 
       // the method's name in a method value, like `g` in `K.g`
       @tailrec
-      def methodName(gtree: g.Tree): Option[m.Name] = gtree match {
+      def methodName(gtree: g.Tree): m.Name = gtree match {
         case t: g.Function => methodName(t.body)
         case t: g.Apply => methodName(t.fun)
         case t: g.TypeApply => methodName(t.fun)
-        case t: g.RefTree if t.pos.isDefined => mstarts.get(t.pos.point)
-        case _ => None
+        case t: g.RefTree if t.pos.isDefined => mnameAt(t.pos.point)
+        case _ => null
       }
 
       def setSamOccurrence(
@@ -237,12 +252,19 @@ trait TextDocumentOps {
             case _ => mtree
           }
           if (isFor) forEnumerator(gpos).foreach(atPos)
-          else mfuncs.get(gbeg) match {
+          else mstartOf[m.Position](gbeg) {
+            case t: m.Term.FunctionLike => t.pos
+            case t: m.Term.AnonymousFunction => t.pos
+            case t: m.Term.PartialFunction => t.pos
+            case _ => null
+          } match {
             // scalac sets a transparent position on a method value, even inside a placeholder
-            case Some(mpos) if !gpos.isTransparent => atPos(mpos)
-            case _ => methodName(gt.body).foreach { name =>
-                val mpos = outermost(name).pos
-                if (mpos.start == gbeg && mpos.end == gend) atPos(mpos)
+            case mpos: m.Position if !gpos.isTransparent => atPos(mpos)
+            case _ => methodName(gt.body) match {
+                case name: m.Name =>
+                  val mpos = outermost(name).pos
+                  if (mpos.start == gbeg && mpos.end == gend) atPos(mpos)
+                case _ =>
               }
           }
         }
@@ -268,55 +290,7 @@ trait TextDocumentOps {
         config.symbols.isLocalOnly && !ssym.isLocal
 
       locally {
-        object traverser extends m.Traverser {
-          private var mpatvar: m.Name = null // the last variable that indexPat found
-          private var mpatwithin: m.Name = null // the qualifier of the definition that we index
-
-          private def indexName(mname: m.Name): Unit = {
-            val mpos = mname.pos
-            if (mpos.isEmpty) return // for instance, missing type in method declaration
-            mstarts.put(mpos.start, mname).foreach(errorAmbiguous("mStart", mname, _))
-            mends.put(mpos.end, mname).foreach(errorAmbiguous("mEnd", mname, _))
-          }
-          private def setArgNames(pos: => Iterable[Int])(terms: m.Term.ArgClause*): Unit = {
-            val names = List.newBuilder[m.Name]
-            terms.foreach(_.values.foreach {
-              case m.Term.Assign(n: m.Term.Name, _) => names += n
-              case _ =>
-            })
-            names.result() match {
-              case Nil =>
-              case names => pos.foreach(margnames(_) = names)
-            }
-          }
-          private def setWithins(mencl: m.Tree, mname: m.Name): Unit = mwithins.put(mencl, mname)
-            .foreach(errorAmbiguous("mWithins", mname, _))
-          private def indexWithin(mname: m.Name.Indeterminate): Unit = mname.parent.parent.get match {
-            case mencl: m.Ctor.Primary => mencl.parent match {
-                case Some(p: m.Member) => mwithinctors.put(p.name, mname)
-                    .foreach(errorAmbiguous("mWithinCtors", mname, _))
-                case _ =>
-              }
-            case mencl: m.Member => setWithins(mencl.name, mname)
-            case t: m.Tree.WithPats => t.pats match {
-                case (p: m.Pat.Var) :: Nil => setWithins(p.name, mname)
-                case _ => // indexPat sets the withins of the other patterns
-              }
-            case _ =>
-          }
-          // scalac puts the constructor reference of `n.B(1)` at `B`
-          @tailrec
-          private def typeNameStart(mtpe: m.Type): Int = mtpe match {
-            case t: m.Type.Apply => typeNameStart(t.tpe)
-            case t: m.Type.Select => t.name.pos.start
-            case t: m.Type.Project => t.name.pos.start
-            case t => t.pos.start
-          }
-          private def indexUnderscore(mtree: m.Tree): m.Position = {
-            val mpos = mtree.pos.trunc(1)
-            munderscores(mpos.start) = mpos
-            mpos
-          }
+        object traverser extends MTreeIndexer(mtrees) {
           // the start of the colon after a pattern that has a type, or -1
           private def typedColon(mpat: m.Pat): Int =
             if (!mpat.parent.is[m.Pat.Typed]) -1
@@ -328,123 +302,23 @@ trait TextDocumentOps {
                 case _ => -1
               }
             }
-          @tailrec
-          private def isNestedPat(mtree: m.Tree): Boolean = mtree.parent match {
-            case Some(_: m.Tree.WithPats) => true
-            case Some(p: m.Pat) => isNestedPat(p)
-            case _ => false
-          }
-          // index the variables of a pattern and accumulate their number
-          private def indexPat(mtree: m.Tree, cnt: IntRef): Unit = mtree match {
-            case pat: m.Pat.Var =>
-              mpatvar = pat.name
-              mvalpatstart += pat.name.pos.start
-              if (mpatwithin ne null) setWithins(pat.name, mpatwithin)
-              cnt.elem += 1
-            case pat: m.Pat.Extract => indexPatsWithExtract(pat, cnt)
-            case _: m.Pat | _: m.Pat.ArgClause => mtree.foreachChild(indexPat(_, cnt))
+          override protected def visit(mtree: m.Tree): Unit = mtree match {
+            case mtree: m.Pat.Wildcard => if (isWholePat(mtree)) {
+                // scalac before 2.13.17 puts the value of `val (_: Int) = 1` at the colon
+                val colon = typedColon(mtree)
+                if (colon >= 0) mcolons(colon) = mtree
+              }
+            // scalac before 2.13.17 puts the value of `val (a: Int) = 1` at the colon
+            case mtree: m.Pat.Var => if (isWholePat(mtree)) {
+                val colon = typedColon(mtree)
+                if (colon >= 0) mcolons(colon) = mtree
+              }
+            case mtree: m.Term.ForClause => mfors += mtree
             case _ =>
-          }
-          // In an Extract pattern `Foo(name) = ...`, let's map the start position of the `fun` field
-          // to the `name` position. Compiler desugars it into a getter DefDef and specifically
-          // in the case of a single binder sets the position of this getter as an OffsetPosition
-          // pointing to "start of fun" rather than the field being extracted.
-          def indexPatsWithExtract(extract: m.Pat.Extract, cnt: IntRef): Unit = extract.args match {
-            case pat :: Nil =>
-              val mpos = singleValPatPos(extract)
-              val curcnt = cnt.elem
-              indexPat(pat, cnt)
-              if (cnt.elem - curcnt == 1) msinglevalpats(mpos) = mpatvar
-            case pats => pats.foreach(indexPat(_, cnt))
-          }
-          // Most likely the difference coming from https://github.com/scalameta/scalameta/pull/4118
-          private def singleValPatPos(extract: m.Pat.Extract): Int =
-            if (isOldBehaviourOnPats) extract.fun.pos.end else extract.fun.pos.start
-          override def apply(mtree: m.Tree): Unit = {
-            mtree match {
-              case mtree: m.Term.Apply => setArgNames(mtree.fun.pos.end :: Nil)(mtree.argClause)
-              case m.Mod.WithWithin(mname: m.Name.Indeterminate) => indexWithin(mname)
-              // NOTE: ignore mrename for now, we may decide to make it a binder
-              case mtree: m.Importee.Rename =>
-                indexName(mtree.name)
-                return
-              case mtree: m.Term.Super => msupers(mtree.pos.end) = mtree
-              case mtree: m.Self => mtree.decltpe.foreach(t => mselftypes(t.pos.start) = t)
-              case m.Term.ApplyType(m.Term.Name(Symbols.ClassOfLabel), mtpe :: Nil) =>
-                mclassofs(mtree.pos.start) = mtpe
-              case mtree: m.Type.Existential => mexistentials(mtree.pos.start) = mtree
-              case mtree: m.Mod.Annot => mtree.parent.foreach {
-                  case p: m.Member => mannottees(mtree.init.pos.start) = p
-                  case _ =>
-                }
-              case mtree: m.Ctor => mctordefs(mtree.pos.start) = mtree.name
-              case mtree: m.Term.New => mctorrefs(mtree.pos.start) = mtree.init.name
-              case mtree: m.Init =>
-                mctorrefs(mtree.pos.start) = mtree.name
-                mctorrefs(typeNameStart(mtree.tpe)) = mtree.name
-                mparents(mtree.tpe.pos.start) = mtree.tpe
-                def parentOpt = mtree.parent.collect { case p: m.Term.New => p }
-                setArgNames((mtree +: parentOpt.toList).map(_.pos.start))(mtree.argClauses: _*)
-              case _: m.Name.Anonymous | _: m.Name.This =>
-              case _: m.Name.Placeholder | _: m.Term.Placeholder | _: m.Type.Wildcard =>
-                indexUnderscore(mtree)
-              case mtree: m.Pat.Wildcard => if (isWholePat(mtree)) {
-                  val mpos = indexUnderscore(mtree)
-                  // scalac before 2.13.17 puts the value of `val (_: Int) = 1` at the colon
-                  val colon = typedColon(mtree)
-                  if (colon >= 0) munderscores(colon) = mpos
-                }
-              // scalac before 2.13.17 puts the value of `val (a: Int) = 1` at the colon
-              case mtree: m.Pat.Var => if (isWholePat(mtree)) {
-                  val colon = typedColon(mtree)
-                  if (colon >= 0) msinglevalpats(colon) = mtree.name
-                }
-              case mtree: m.Name => indexName(mtree)
-              case _: m.Term.FunctionLike | _: m.Term.AnonymousFunction |
-                  _: m.Term.PartialFunction =>
-                val mpos = mtree.pos
-                mfuncs(mpos.start) = mpos
-              // index only the outermost patterns: they include the nested ones
-              case mtree: m.Tree.WithPats if !isNestedPat(mtree) =>
-                mtree.pats match {
-                  case Nil | (_: m.Pat.Var) :: Nil =>
-                  case pats =>
-                    val cnt = IntRef.zero()
-                    mtree match {
-                      case t: m.Stat.WithMods =>
-                        mpatwithin = t.mods
-                          .collectFirst { case m.Mod.WithWithin(n: m.Name.Indeterminate) => n }
-                          .orNull
-                        pats.foreach { mpat =>
-                          cnt.elem = 0
-                          indexPat(mpat, cnt)
-                          if (cnt.elem == 1) {
-                            /* older scalac puts the value of `val a :: Nil = xs` at the operator,
-                             * and of `val Tuple2(a, _) = x` at the paren. Newer scalac puts it
-                             * at the start. */
-                            val mpos = mpat match {
-                              case x: m.Pat.ExtractInfix if isOldBehaviourOnPats => x.op.pos.start
-                              case x: m.Pat.Extract => singleValPatPos(x)
-                              case _ => mpat.pos.start
-                            }
-                            msinglevalpats(mpos) = mpatvar
-                          }
-                        }
-                      case _ =>
-                        mpatwithin = null
-                        pats.foreach(mpat => indexPat(mpat, cnt))
-                    }
-                }
-              case mtree: m.Term.ForClause =>
-                mfors += mtree
-                mforEnds(mtree.pos.start) = mtree.pos.end
-              case _ =>
-            }
-            super.apply(mtree)
           }
         }
 
-        traverser(unit.toSource(explicitDialect))
+        traverser(msource)
       }
 
       locally {
@@ -498,13 +372,11 @@ trait TextDocumentOps {
             else gsym.owner.primaryConstructor.info.paramss.flatten
               .find(_.symbolName == gsym.symbolName)
               .fold(ssym)(gparam => Symbols.Multi(List(ssym, gparam.toSemantic)))
-          private def success(mtree: Option[m.Name], gsym0: => g.Symbol): Unit = mtree
-            .foreach(success(_, gsym0))
           private def success(mtree: m.Name, gsym0: g.Symbol): Unit = {
             // We cannot be guaranteed that all symbols have a position, see
             // https://github.com/scalameta/scalameta/issues/665
             // Instead of crashing with "unsupported file", we ignore these cases.
-            if (gsym0 == null) return
+            if ((null eq mtree) || (null eq gsym0)) return
             // scalac types a reference to `self` in `class C { self => }` as `C.this`
             if (gsym0.isClass && mtree.isInstanceOf[m.Term.Name]) {
               val gself = gsym0.thisSym
@@ -526,8 +398,7 @@ trait TextDocumentOps {
 
             val register: String => Unit =
               if (mtree.isDefinition)
-                if (!mvalpatstart.contains(pos.start))
-                  addOccurrenceFromSemantic(pos, _, Role.DEFINITION)
+                if (!isValPatName(mtree)) addOccurrenceFromSemantic(pos, _, Role.DEFINITION)
                 else if (gsym.symbolName == mtree.value) addPatOccurrenceFromSemantic(pos, _)
                 else null
               else addOccurrenceFromSemantic(pos, _, Role.REFERENCE)
@@ -537,36 +408,56 @@ trait TextDocumentOps {
 
             register(if (mtree.isDefinition) withCtorParam(gsym, symbol) else symbol)
 
-            def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = map.get(mtree)
-              .foreach { mname =>
-                val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
-                if (!gsym.hasAccessBoundary) return
-                val within1 = gsym.privateWithin
-                val within2 = within1.owner.info.member {
-                  val wname = within1.name
-                  if (wname.isTermName) wname.toTypeName else wname.toTermName
-                }
-                success(mname, wrapAlternatives("<within " + symbol + ">", within1, within2))
+            def tryWithin(mname: m.Name, gsym0: g.Symbol): Unit = if (null ne mname) {
+              val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
+              if (!gsym.hasAccessBoundary) return
+              val within1 = gsym.privateWithin
+              val within2 = within1.owner.info.member {
+                val wname = within1.name
+                if (wname.isTermName) wname.toTypeName else wname.toTermName
               }
-            tryWithin(mwithins, gsym)
-            tryWithin(mwithinctors, gsym.primaryConstructor)
+              success(mname, wrapAlternatives("<within " + symbol + ">", within1, within2))
+            }
+            tryWithin(withinOf(mtree), gsym)
+            tryWithin(
+              mtree.parent match {
+                case Some(p: m.Member with m.Stat.WithCtor) if p.name eq mtree =>
+                  withinOf(p.ctor.mods)
+                case _ => null
+              },
+              gsym.primaryConstructor,
+            )
           }
           // define the symbol that scalac created for an underscore, like in `_ + 1` or `List[_]`
           private def defineUnderscore(gtree: g.Tree): Unit =
             defineUnderscore(findUnderscore(gtree), gtree.symbol)
           private def defineUnderscore(mpos: m.Position, gsym: g.Symbol): Unit =
             if (mpos ne null) addOccurrenceFromSemantic(mpos, saveUnderscore(gsym), Role.DEFINITION)
+          private val munderscore: m.Tree => m.Tree = {
+            case t @ (_: m.Name.Placeholder | _: m.Term.Placeholder | _: m.Type.Wildcard) => t
+            case t: m.Pat.Wildcard if isWholePat(t) => t
+            case _ => null
+          }
           // the underscore at a tree that has no occurrence yet, or null
           private def findUnderscore(gtree: g.Tree): m.Position = {
-            if (munderscores.isEmpty) return null
             val gpos = gtree.pos
             if (!gpos.isDefined) return null
             val mpos = findUnderscore(gpos.start)
             if (mpos ne null) mpos else findUnderscore(gpos.point)
           }
           private def findUnderscore(offset: Int): m.Position = {
-            val mpos = munderscores.getOrElse(offset, null)
-            if ((mpos eq null) || occurrences.contains(mpos)) null else mpos
+            val mtree = mstartOf[m.Tree](offset)(munderscore) match {
+              case null => mcolons.getOrNull(offset) match {
+                  case t: m.Pat.Wildcard => t
+                  case _ => null
+                }
+              case t => t
+            }
+            if (null eq mtree) null
+            else {
+              val mpos = mtree.pos.trunc(1)
+              if (occurrences.contains(mpos)) null else mpos
+            }
           }
           private def saveUnderscore(gsym: g.Symbol): String = {
             // define the getter rather than its field, and never an anonymous self
@@ -576,14 +467,152 @@ trait TextDocumentOps {
               saveSymbolFromSemantic(gsym, ssym)
             ssym
           }
-          private def tryNamedArg(gsym: g.Symbol, offsets: Int*): Unit =
-            if (gsym != null && (gsym.isMethod || gsym.isConstructor)) for {
-              offset <- offsets
-              margnames <- margnames.get(offset)
-              margname <- margnames
-              gparams <- gsym.paramss
-              gparam <- gparams.find(_.decodedName == margname.value)
-            } success(margname, gparam)
+          /* the name of the constructor at `offset`. An empty primary constructor is at its template,
+           * or at the end of its class if the template is empty. */
+          private def mctorAt(offset: Int): m.Name = mstartOf[m.Name](offset) {
+            case t: m.Ctor => t.name
+            case t: m.Template => t.parent match {
+                case Some(p: m.Stat.WithCtor) if p.ctor.pos.start == t.pos.start => p.ctor.name
+                case _ => null
+              }
+            case _ => null
+          } match {
+            case t: m.Name => t
+            case _ => mendOf[m.Name](offset) {
+                case t: m.Stat.WithCtor if t.ctor.pos.start == t.pos.end => t.ctor.name
+                case _ => null
+              }
+          }
+          @tailrec
+          private def initOf(mtpe: m.Type): m.Init = mtpe.parent match {
+            case Some(p: m.Type.Apply) if p.tpe eq mtpe => initOf(p)
+            case Some(p: m.Init) if p.tpe eq mtpe => p
+            case _ => null
+          }
+          // scalac puts the constructor reference of `n.B(1)` at `B`
+          private def initNamedBy(mtpe: m.Type): m.Init = mtpe.parent match {
+            case Some(p: m.Type.Select) if p.name eq mtpe => initOf(p)
+            case Some(p: m.Type.Project) if p.name eq mtpe => initOf(p)
+            case _ => mtpe match {
+                case _: m.Type.Select | _: m.Type.Project | _: m.Type.Apply => null
+                case _ => initOf(mtpe)
+              }
+          }
+          private val mctorRef: m.Tree => m.Name = {
+            case t: m.Term.New => t.init.name
+            case t: m.Init => t.name
+            case t: m.Type =>
+              val init = initNamedBy(t)
+              if (null eq init) null else init.name
+            case _ => null
+          }
+          // the name of the constructor that `new`, an init or its type name refers to at `offset`
+          private def mctorRefAt(offset: Int): m.Name = mstartOf[m.Name](offset)(mctorRef)
+          // the type of the init at `offset`
+          private def mparentAt(offset: Int): m.Type = mstartOf[m.Type](offset) {
+            case t: m.Type => t.parent match {
+                case Some(p: m.Init) if p.tpe eq t => t
+                case _ => null
+              }
+            case _ => null
+          }
+          private def mselfTypeAt(offset: Int): m.Type = mstartOf[m.Type](offset) {
+            case t: m.Type => t.parent match {
+                case Some(_: m.Self) => t
+                case _ => null
+              }
+            case _ => null
+          }
+          // the type argument of the `classOf` at `offset`
+          private def mclassOfAt(offset: Int): m.Type = mstartOf[m.Type](offset) {
+            case t: m.Term.ApplyType => t.fun match {
+                case fun: m.Term.Name if fun.value == Symbols.ClassOfLabel =>
+                  t.targClause.values match {
+                    case mtpe :: Nil => mtpe
+                    case _ => null
+                  }
+                case _ => null
+              }
+            case _ => null
+          }
+          private def msuperAt(end: Int): m.Term.Super = mendOf[m.Term.Super](end) {
+            case t: m.Term.Super => t
+            case _ => null
+          }
+          // the member that the annotation at `offset` annotates
+          private def mannotteeAt(offset: Int): m.Member = mstartOf[m.Member](offset) {
+            case t: m.Init => t.parent match {
+                case Some(p: m.Mod.Annot) => p.parent match {
+                    case Some(pp: m.Member) => pp
+                    case _ => null
+                  }
+                case _ => null
+              }
+            case _ => null
+          }
+          private val mvalPatVarAtStart: m.Tree => m.Pat.Var = {
+            case t: m.Pat.Extract => if (isOldBehaviourOnPats) null else extractVar(t)
+            case _: m.Pat.ExtractInfix if isOldBehaviourOnPats => null
+            case t: m.Term.Name if isOldBehaviourOnPats =>
+              t.parent match {
+                case Some(p: m.Pat.ExtractInfix) if (p.op eq t) && isValPat(p) => onlyVar(p)
+                case _ => null
+              }
+            case t: m.Pat if isValPat(t) => onlyVar(t)
+            case _ => null
+          }
+          private val mvalPatVarAtEnd: m.Tree => m.Pat.Var = {
+            case t: m.Term => t.parent match {
+                case Some(p: m.Pat.Extract) if p.fun eq t => extractVar(p)
+                case _ => null
+              }
+            case _ => null
+          }
+          /* scalac before 2.13.17 (#4118) puts the value of `val a :: Nil = xs` at the operator,
+           * of `val Tuple2(a, _) = x` at the paren and of `val (a: Int) = 1` at the colon */
+          private def mvalPatVarAt(offset: Int): m.Name = {
+            val mvar = mcolons.getOrNull(offset) match {
+              case t: m.Pat.Var => t
+              case _ =>
+                val atStart =
+                  mtreeOf[m.Pat.Var](mstart(offset), offset, atEnd = false)(mvalPatVarAtStart)
+                if ((null ne atStart) || !isOldBehaviourOnPats) atStart
+                else mtreeOf[m.Pat.Var](mend(offset), offset, atEnd = true)(mvalPatVarAtEnd)
+            }
+            if (null eq mvar) null else mvar.name
+          }
+          // the call whose arguments are at `offset`: past its function, or at its init or `new`
+          private def mcallAt(offset: Int): m.Tree = mendOf[m.Tree](offset) {
+            case t: m.Term => t.parent match {
+                case Some(p: m.Term.Apply) if p.fun eq t => p
+                case _ => null
+              }
+            case _ => null
+          } match {
+            case t: m.Tree => t
+            case _ => mstartOf[m.Tree](offset) {
+                case t: m.Init => t
+                case t: m.Term.New => t.init
+                case _ => null
+              }
+          }
+          private def tryNamedArg(gsym: g.Symbol, offsets: Int*): Unit = {
+            def tryNamedArgs(margs: m.Term.ArgClause): Unit = margs.values.foreach {
+              case t: m.Term.Assign => t.lhs match {
+                  case mname: m.Term.Name => gsym.paramss
+                      .foreach(_.find(_.decodedName == mname.value).foreach(success(mname, _)))
+                  case _ =>
+                }
+              case _ =>
+            }
+            if ((null ne gsym) && (gsym.isMethod || gsym.isConstructor)) offsets.foreach(offset =>
+              mcallAt(offset) match {
+                case t: m.Term.Apply => tryNamedArgs(t.argClause)
+                case t: m.Init => t.argClauses.foreach(tryNamedArgs)
+                case _ =>
+              },
+            )
+          }
 
           private def tryFindMtree(gtree: g.Tree): Unit = {
             val gpos = gtree.pos
@@ -593,11 +622,13 @@ trait TextDocumentOps {
             val gpoint = gpos.point
             val gend = gpos.end
 
-            def tryMstart(pos: Int): Unit = success(mstarts.get(pos), gsym)
-            def tryMend(pos: Int): Unit = success(mends.get(pos), gsym)
+            def tryMstart(pos: Int): Unit = success(mnameAt(pos), gsym)
+            def tryMend(pos: Int): Unit = success(mnameEndingAt(pos), gsym)
 
-            def singleValPat(sym: g.Symbol): Unit = msinglevalpats.get(gpoint)
-              .fold(success(mstarts.get(gpoint), sym))(success(_, sym))
+            def singleValPat(sym: g.Symbol): Unit = {
+              val mvar = mvalPatVarAt(gpoint)
+              success(if (null ne mvar) mvar else mnameAt(gpoint), sym)
+            }
 
             gtree match {
               case _: g.TypeDef | _: g.Bind | _: g.ValOrDefDef =>
@@ -651,18 +682,18 @@ trait TextDocumentOps {
                   .find(x => x != null && x.isPrimaryConstructor)
               case _: g.DefDef if gsym.isConstructor => Some(gsym)
               case _ => None
-            }).foreach(success(mctordefs.get(gstart), _))
+            }).foreach(success(mctorAt(gstart), _))
 
             gtree match {
-              case g.Select(_, g.nme.CONSTRUCTOR) => success(mctorrefs.get(gpoint), gsym)
+              case g.Select(_, g.nme.CONSTRUCTOR) => success(mctorRefAt(gpoint), gsym)
               case _ =>
             }
 
             // Ideally, we'd like a perfect match when gtree.pos == mtree.pos.
             // Unfortunately, this is often not the case as demonstrated by a bunch of cases above and below.
-            val gstartMtree = mstarts.get(gstart)
+            val gstartMtree = mnameAt(gstart)
             gstartMtree match {
-              case Some(mtree) if mtree.pos.end == gend =>
+              case mtree: m.Name if mtree.pos.end == gend =>
                 success(mtree, gsym)
                 return
               case _ =>
@@ -698,36 +729,42 @@ trait TextDocumentOps {
                   trySymbolDefinition(ggetter)
                   singleValPat(ggetter)
                 }
-              // mctordefs found it above; its point can be on a parent's name
+              // mctorAt found it above; its point can be on a parent's name
               case _: g.DefDef if gsym.isConstructor =>
               /* skip the fresh name that scalac binds to the pattern of a for value definition.
                * Its point can be the operator of an infix pattern, such as `::`. */
               case gtree: g.Bind if gtree.pos == gtree.body.pos =>
               case _: g.DefTree => tryMstart(gpoint)
-              case _: g.This => mstarts.get(gpoint)
-                  .foreach(name => if (gsym.nameString == name.value) success(name, gsym))
-              case t: g.Super => msupers.get(gend).foreach { mtree =>
-                  success(mtree.thisp, gsym)
-                  // now find the super parent
-                  val parent = t.mix
-                  val parents = gsym.asClass.info.parents.map(_.typeSymbol)
-                  if (parent.nonEmpty) parents.find(_.name == parent)
-                    .foreach(success(mtree.superp, _))
+              case _: g.This => mnameAt(gpoint) match {
+                  case name: m.Name if gsym.nameString == name.value => success(name, gsym)
+                  case _ =>
+                }
+              case t: g.Super => msuperAt(gend) match {
+                  case mtree: m.Term.Super =>
+                    success(mtree.thisp, gsym)
+                    // now find the super parent
+                    val parent = t.mix
+                    val parents = gsym.asClass.info.parents.map(_.typeSymbol)
+                    if (parent.nonEmpty) parents.find(_.name == parent)
+                      .foreach(success(mtree.superp, _))
+                  case _ =>
                 }
               // an unqualified super stands for the parent that has the selected member
               case g.Select(t: g.Super, _) if t.mix.isEmpty =>
                 tryMstart(gpoint)
-                if (gsym != null && gsym.exists) msupers.get(t.pos.end).foreach { mtree =>
-                  val owner = gsym.owner
-                  val parents = t.symbol.asClass.info.parents.map(_.typeSymbol)
-                  if (parents.contains(owner)) success(mtree.superp, owner)
-                  else parents.find(_.isSubClass(owner)).foreach(success(mtree.superp, _))
+                if ((null ne gsym) && gsym.exists) msuperAt(t.pos.end) match {
+                  case mtree: m.Term.Super =>
+                    val owner = gsym.owner
+                    val parents = t.symbol.asClass.info.parents.map(_.typeSymbol)
+                    if (parents.contains(owner)) success(mtree.superp, owner)
+                    else parents.find(_.isSubClass(owner)).foreach(success(mtree.superp, _))
+                  case _ =>
                 }
               case gtree: g.Select if gtree.symbol == g.definitions.NilModule =>
                 // NOTE: List() gets desugared into mkAttributedRef(NilModule)
                 tryMstart(gstart)
                 // the type arguments of `List[T]()` remain only in the type of `Nil`
-                if (gtree.tpe ne null) mstarts.get(gstart).parent.foreach {
+                if (gtree.tpe ne null) mnameAt(gstart).parentOrNull match {
                   case p: m.Term.ApplyType => tryFindTypes(p.targClause.values, gtree.tpe.typeArgs)
                   case _ =>
                 }
@@ -735,17 +772,17 @@ trait TextDocumentOps {
                   if qualTerm.decoded.startsWith(g.nme.QUAL_PREFIX) => tryMend(gend)
               case _: g.RefTree => if (!gsym.isDefaultGetter) tryMstart(gpoint)
               case gtree: g.Import if gtree.expr != null && gtree.expr.tpe != null =>
-                val sels = gtree.selectors.flatMap(sel =>
-                  if (sel.name == g.nme.WILDCARD) Nil
-                  else mstarts.get(sel.namePos).map(mname => (sel.name, mname)),
-                )
-                sels.foreach { case (gname, mname) =>
-                  val gexpr = gtree.expr
-                  val gtpe = gexpr.tpe
-                  val import1 = gtpe.member(gname.toTermName)
-                  val import2 = gtpe.member(gname.toTypeName)
-                  val altName = "<import " + gexpr + "." + gname + ">"
-                  success(mname, wrapAlternatives(altName, import1, import2))
+                gtree.selectors.foreach { sel =>
+                  val gname = sel.name
+                  val mname = if (gname == g.nme.WILDCARD) null else mnameAt(sel.namePos)
+                  if (null ne mname) {
+                    val gexpr = gtree.expr
+                    val gtpe = gexpr.tpe
+                    val import1 = gtpe.member(gname.toTermName)
+                    val import2 = gtpe.member(gname.toTypeName)
+                    val altName = "<import " + gexpr + "." + gname + ">"
+                    success(mname, wrapAlternatives(altName, import1, import2))
+                  }
                 }
               case gtree: g.AppliedTypeTree
                   if gtree.symbol.name == g.typeNames.REPEATED_PARAM_CLASS_NAME =>
@@ -1057,19 +1094,18 @@ trait TextDocumentOps {
             case _ =>
           }
           // the evidence comes first in the last parameter list of `gmethod`, defined at `mpoint`
-          private def defineEvidence(gmethod: g.Symbol, mpoint: Int): Unit = mstarts.get(mpoint)
-            .parent.foreach { mdef =>
-              val mtparams = mdef match {
-                case t: m.Tree.WithParamClauseGroups => t.paramClauseGroups
-                    .flatMap(_.tparamClause.values)
-                case t: m.Tree.WithParamClauseGroup => t.paramClauseGroup
-                    .fold(List.empty[m.Type.Param])(_.tparamClause.values)
-                case t: m.Tree.WithTParamClause => t.tparamClause.values
-                case _ => Nil
-              }
-              if (mtparams.nonEmpty) gmethod.paramss.lastOption
-                .foreach(defineEvidence(mtparams, _, findTypes = false))
+          private def defineEvidence(gmethod: g.Symbol, mpoint: Int): Unit = {
+            val mtparams = mnameAt(mpoint).parentOrNull match {
+              case t: m.Tree.WithParamClauseGroups => t.paramClauseGroups
+                  .flatMap(_.tparamClause.values)
+              case t: m.Tree.WithParamClauseGroup => t.paramClauseGroup
+                  .fold(List.empty[m.Type.Param])(_.tparamClause.values)
+              case t: m.Tree.WithTParamClause => t.tparamClause.values
+              case _ => Nil
             }
+            if (mtparams.nonEmpty) gmethod.paramss.lastOption
+              .foreach(defineEvidence(mtparams, _, findTypes = false))
+          }
           // scalac types `A <% B` as `A => B` and `A: B` as `B[A]`, in the order of the bounds
           private def defineEvidence(
               mtparams: Iterable[m.Type.Param],
@@ -1190,8 +1226,10 @@ trait TextDocumentOps {
             // a macro annotation puts its expansion at the offset of the annotation
             if (gtree.isInstanceOf[g.ImplDef]) {
               val gpos = gtree.pos
-              if (gpos.isDefined && !gpos.isRange) mannottees.get(gpos.point)
-                .foreach(mexpansions(gpos.point) = _)
+              if (gpos.isDefined && !gpos.isRange) mannotteeAt(gpos.point) match {
+                case t: m.Member => mexpansions(gpos.point) = t
+                case _ =>
+              }
             }
             traverseAnnotations(gtree)
             tryFindMtree(gtree)
@@ -1248,7 +1286,10 @@ trait TextDocumentOps {
               if (mpos ne mposClassOf) {
                 addOccurrenceFromSemantic(mposClassOf, ks.PredefClassOf, Role.REFERENCE)
                 // scalac replaces `classOf[T]` with a constant of type T
-                mclassofs.get(mpos.start).foreach(tryFindType(_, t.value.typeValue))
+                mclassOfAt(mpos.start) match {
+                  case mtpe: m.Type => tryFindType(mtpe, t.value.typeValue)
+                  case _ =>
+                }
               } else tryFindMtree(t)
 
             case t: g.Function =>
@@ -1315,8 +1356,14 @@ trait TextDocumentOps {
             case select: g.Select if isSyntheticName(select) => tryFindSynthetic(select)
             case gtree: g.AppliedTypeTree => tryFindMtree(gtree)
             case gtree: g.ExistentialTypeTree =>
-              if (gtree.pos.isDefined) mexistentials.get(gtree.pos.start)
-                .foreach(mtpe => tryFindDecls(mtpe.stats, gtree.whereClauses.map(_.symbol)))
+              if (gtree.pos.isDefined) mstartOf[m.Type.Existential](gtree.pos.start) {
+                case t: m.Type.Existential => t
+                case _ => null
+              } match {
+                case mtpe: m.Type.Existential =>
+                  tryFindDecls(mtpe.stats, gtree.whereClauses.map(_.symbol))
+                case _ =>
+              }
               tryFindMtree(gtree)
             case gblock @ NamedApplyBlock(_) =>
               // Given the result of NamesDefaults.transformNamedApplication, such as:
@@ -1363,12 +1410,13 @@ trait TextDocumentOps {
               t.parents.foreach {
                 // a parent with inferred type arguments, like `n.P(1)`, has no original tree
                 case p: g.TypeTree if p.original == null && p.pos.isRange =>
-                  mparents.get(p.pos.start).foreach(mtpe =>
-                    if (!tryFindParent(mtpe, p.tpe)) mtpe match {
-                      case mtpe: m.Type.Select => success(mtpe.name, p.tpe.typeSymbol)
-                      case _ => tryFindType(mtpe, p.tpe)
-                    },
-                  )
+                  mparentAt(p.pos.start) match {
+                    case mtpe: m.Type => if (!tryFindParent(mtpe, p.tpe)) mtpe match {
+                        case mtpe: m.Type.Select => success(mtpe.name, p.tpe.typeSymbol)
+                        case _ => tryFindType(mtpe, p.tpe)
+                      }
+                    case _ =>
+                  }
                 case _ =>
               }
               t.self.tpt match {
@@ -1381,7 +1429,10 @@ trait TextDocumentOps {
                         if gcls.typeSymbol == t.symbol.owner => gtpe
                     case gtpe => gtpe
                   }
-                  mselftypes.get(tpt.original.pos.start).foreach(tryFindType(_, gtpe))
+                  mselfTypeAt(tpt.original.pos.start) match {
+                    case mtpe: m.Type => tryFindType(mtpe, gtpe)
+                    case _ =>
+                  }
                 case _ =>
               }
               tryFindMtree(t)
@@ -1532,7 +1583,13 @@ trait TextDocumentOps {
 
         // the outermost call of a `for` has the range of the `for`
         private def isSourceFor(gpos: gu.Position): Boolean = gpos.isRange &&
-          mforEnds.get(gpos.start).contains(gpos.end)
+          (mstartOf[m.Term.ForClause](gpos.start) {
+            case t: m.Term.ForClause => t
+            case _ => null
+          } match {
+            case t: m.Term.ForClause => t.pos.end == gpos.end
+            case _ => false
+          })
 
         // use it when we don't want to output the original in `synthetics`
         private def uncachedOrig(gt: g.Tree): s.Tree = gt.toSemanticOriginal
@@ -1626,7 +1683,7 @@ trait TextDocumentOps {
         buildTarget = config.buildTarget,
         symbols = symbols.values.toIndexedSeq.sorted,
         occurrences = finalOccurrences.sorted,
-        diagnostics = unit.reportedDiagnostics(mstarts).toIndexedSeq.sorted,
+        diagnostics = unit.reportedDiagnostics(mnameAt).toIndexedSeq.sorted,
         synthetics = synthetics.toIndexedSeq.sorted,
       )
     }
@@ -1664,10 +1721,71 @@ trait TextDocumentOps {
     case _ => true
   }
 
-  private def syntaxAndPos(mtree: m.Tree): String = s"`$mtree`[${mtree.pos.syntax}]"
+  // a pattern of a val or a var, like `a :: Nil` in `val a :: Nil = xs`
+  private def isValPat(mpat: m.Pat): Boolean = mpat.parent match {
+    case Some(p: m.Stat.WithMods with m.Tree.WithPats) => p.pats.contains(mpat)
+    case _ => false
+  }
 
-  private def errorAmbiguous(kind: String, ntree: m.Tree, otree: m.Tree): Unit = sys
-    .error(s"ambiguous $kind: ${syntaxAndPos(ntree)} ${syntaxAndPos(otree)}")
+  // the only variable of a pattern, or null
+  private def onlyVar(mpat: m.Pat): m.Pat.Var = {
+    var mvar: m.Pat.Var = null
+    var count = 0
+    def visit(mtree: m.Tree): Unit = if (count < 2) mtree match {
+      case t: m.Pat.Var =>
+        mvar = t
+        count += 1
+      case _: m.Pat | _: m.Pat.ArgClause => mtree.foreachChild(visit)
+      case _ =>
+    }
+    visit(mpat)
+    if (count == 1) mvar else null
+  }
+
+  /* the only variable of `Foo(a)` if scalac puts its getter at `Foo`. scalac does that for a
+   * pattern in a val or in the arguments of another pattern. */
+  private def extractVar(mpat: m.Pat.Extract): m.Pat.Var =
+    if (isValPat(mpat) || mpat.argClause.values.lengthCompare(1) == 0 && (null ne patOwner(mpat)))
+      onlyVar(mpat)
+    else null
+
+  // a variable in a pattern that is more than a lone variable
+  private def isValPatName(mname: m.Name): Boolean = mname.parent match {
+    case Some(p: m.Pat.Var) => patOwner(p) match {
+        case null => false
+        case t => t.pats match {
+            case (_: m.Pat.Var) :: Nil => false
+            case _ => true
+          }
+      }
+    case _ => false
+  }
+
+  @tailrec // the qualifier of the first `private[q]` or `protected[q]`, or null
+  private def withinOf(mods: List[m.Mod]): m.Name = mods match {
+    case (t: m.Mod.WithWithin) :: rest => t.within match {
+        case mname: m.Name.Indeterminate => mname
+        case _ => withinOf(rest)
+      }
+    case _ :: rest => withinOf(rest)
+    case _ => null
+  }
+
+  // the qualifier of the access of the definition `mname`, or null
+  private def withinOf(mname: m.Name): m.Name = mname.parent match {
+    case Some(p: m.Pat.Var) => patOwner(p) match {
+        case t: m.Stat.WithMods => withinOf(t.mods)
+        case _ => null
+      }
+    case Some(p: m.Member) if p.name eq mname =>
+      p match {
+        case t: m.Stat.WithMods => withinOf(t.mods)
+        case t: m.Member.Param => withinOf(t.mods)
+        case t: m.Type.FunctionParamOrArg => withinOf(t.mods)
+        case _ => null
+      }
+    case _ => null
+  }
 
   private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {
     val normalizedAlts = {
@@ -1687,6 +1805,56 @@ trait TextDocumentOps {
 }
 
 object TextDocumentOps {
+
+  // index the trees of a source in `mtrees`
+  private[scalac] class MTreeIndexer(mtrees: TreeIndex) extends m.Traverser {
+    // an empty tree may not nest with the trees at its offsets
+    private def index(mtree: m.Tree): Unit = {
+      val mpos = mtree.pos
+      if (!mpos.isEmpty) {
+        mtrees(mpos.start) = mtree
+        mtrees(mpos.end - 1) = mtree
+      }
+    }
+    protected def visit(mtree: m.Tree): Unit = {}
+    override def apply(mtree: m.Tree): Unit = {
+      index(mtree)
+      mtree match {
+        // NOTE: ignore mrename for now, we may decide to make it a binder
+        case mtree: m.Importee.Rename => index(mtree.name)
+        case _ =>
+          visit(mtree)
+          super.apply(mtree)
+      }
+    }
+  }
+
+  object TreeIndex {
+    val empty = new TreeIndex(Array.empty[m.Tree])
+    def apply(msource: m.Source): TreeIndex =
+      new TreeIndex(new Array[m.Tree](msource.pos.input.chars.length))
+  }
+
+  /* offset -> the last non-empty tree that starts there or ends right past it. The others that
+   * start or end there are its ancestors. */
+  class TreeIndex(private val self: Array[m.Tree]) extends AnyVal {
+    private def contains(offset: Int): Boolean = offset >= 0 && offset < self.length
+
+    private[scalac] def update(offset: Int, value: m.Tree): Unit =
+      if (contains(offset)) self(offset) = value
+
+    def apply(offset: Int): m.Tree = if (contains(offset)) self(offset) else null
+
+    private[scalac] def mstart(offset: Int): m.Tree = apply(offset) match {
+      case t: m.Tree if t.pos.start == offset => t
+      case _ => null
+    }
+
+    private[scalac] def mend(offset: Int): m.Tree = apply(offset - 1) match {
+      case t: m.Tree if t.pos.end == offset => t
+      case _ => null
+    }
+  }
 
   /* the outermost `Tree.WithPats` that contains `mtree` with only patterns between them, or
    * `owner` if there is none */
