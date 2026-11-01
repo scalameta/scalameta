@@ -1007,6 +1007,26 @@ class CtorSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  // classes right before a brace or the end of a file
+  occurrences(
+    """|package i
+       |object O { class C1}
+       |object P { class C2[T]}
+       |class C3[T]""".stripMargin,
+    """|[0:8..0:9): i <= i/
+       |[1:7..1:8): O <= i/O.
+       |[1:17..1:19): C1 <= i/O.C1#
+       |[1:19..1:19):  <= i/O.C1#`<init>`().
+       |[2:7..2:8): P <= i/P.
+       |[2:17..2:19): C2 <= i/P.C2#
+       |[2:20..2:21): T <= i/P.C2#[T]
+       |[2:22..2:22):  <= i/P.C2#`<init>`().
+       |[3:6..3:8): C3 <= i/C3#
+       |[3:9..3:10): T <= i/C3#[T]
+       |[3:11..3:11):  <= i/C3#`<init>`().
+       |""".stripMargin,
+  )
+
   // #4913: nested classes
   occurrences(
     """|package g
