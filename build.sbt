@@ -418,9 +418,17 @@ lazy val semanticdbIntegration = projectMatrix.in(file("semanticdb/integration")
     )
     else Nil
   },
+  // only Unused.scala pins the warnings of unused definitions
+  scalacOptions += {
+    val cats = Seq("privates", "locals", "params", "pat-vars").map(c => s"cat=unused-$c")
+    val filters = cats.map(_ + "&src=.*/Unused[.]scala:w") ++ cats.map(_ + ":s")
+    // scalac 2.12 applies the first matching filter, and 2.13 the last
+    (if (isScala213.value) filters.reverse else filters).mkString("-Wconf:", ",", "")
+  },
   scalacOptions ++= Seq(
     "-Xplugin-require:semanticdb",
-    if (isScala213.value) "-Wunused:imports" else "-Ywarn-unused-import",
+    if (isScala213.value) "-Wunused:imports,privates,locals,patvars,params"
+    else "-Ywarn-unused:imports,privates,locals,patvars,params",
     "-Yrangepos",
     "-P:semanticdb:text:on", // include text to print occurrences in expect suite
     "-P:semanticdb:failures:error", // fail fast during development.
