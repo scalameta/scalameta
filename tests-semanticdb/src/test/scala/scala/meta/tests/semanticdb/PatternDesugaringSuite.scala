@@ -1,5 +1,8 @@
 package scala.meta.tests.semanticdb
 
+import scala.meta.internal.semanticdb.scalac.TextDocumentOps.patOwner
+import scala.meta.{Pat, Stat, Term, dialects}
+
 class PatternDesugaringSuite extends SemanticdbSuite {
 
   private def occurrences(name: String, code: String, expected: String)(implicit
@@ -7963,5 +7966,26 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |[4:44..4:44):  => _empty_/sy.sa#`<init>`().
        |""".stripMargin,
   )
+
+  private def checkPatOwner(name: String, code: String, expected: String)(implicit
+      loc: munit.Location,
+  ): Unit = test(s"patOwner: $name") {
+    val tree = dialects.Scala213(code).parse[Stat].get
+    val mtree = tree.collect { case t @ (_: Pat.Var | _: Term.Name) if t.toString == "a" => t }.head
+    val obtained = patOwner(mtree) match {
+      case null => "null"
+      case t => s"${t.productPrefix}: $t"
+    }
+    assertNoDiff(obtained, expected)
+  }
+
+  checkPatOwner("val pattern", "val (a, b) = x", "Defn.Val: val (a, b) = x")
+  checkPatOwner("case pattern", "x match { case (a, b) => a }", "Pat.Tuple: (a, b)")
+  checkPatOwner("lone case variable", "x match { case a => a }", "null")
+  checkPatOwner("nested pattern", "val Some((a, 1)) = x", "Defn.Val: val Some((a, 1)) = x")
+  checkPatOwner("for generator", "for ((a, b) <- xs) yield a", "Pat.Tuple: (a, b)")
+  checkPatOwner("not in a pattern", "x + a", "null")
+  checkPatOwner("val right side", "val z = a", "null")
+  checkPatOwner("val right side select", "val z = a.b", "null")
 
 }

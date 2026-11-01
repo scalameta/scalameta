@@ -1685,3 +1685,21 @@ trait TextDocumentOps {
   }
 
 }
+
+object TextDocumentOps {
+
+  /* the outermost `Tree.WithPats` that contains `mtree` with only patterns between them, or
+   * `owner` if there is none */
+  @tailrec
+  private[meta] def patOwner(mtree: m.Tree, owner: m.Tree.WithPats = null): m.Tree.WithPats =
+    mtree.parent match {
+      case Some(p: m.Tree.WithPats) => p match {
+          case _: m.Pat | _: m.Pat.ArgClause => patOwner(p, p)
+          case p: m.Tree.WithBody if p.body eq mtree => owner
+          case _ => p
+        }
+      case Some(p: m.Pat) => patOwner(p, owner)
+      case _ => owner
+    }
+
+}
