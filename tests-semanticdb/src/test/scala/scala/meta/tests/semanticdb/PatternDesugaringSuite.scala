@@ -7967,6 +7967,44 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  occurrences(
+    "an extractor before an infix operator",
+    """|object a {
+       |  val xs = List(Option(1))
+       |  val Some(b) :: Nil = xs
+       |  private[a] val Some(c) :: Nil = xs
+       |  def m(): Int = {
+       |    val Some(d) :: Nil = xs
+       |    d
+       |  }
+       |}
+       |""".stripMargin,
+    s"""|[0:7..0:8): a <= _empty_/a.
+        |[1:6..1:8): xs <= _empty_/a.xs.
+        |[1:11..1:15): List => ${if (ScalaVersion.is212) "scala/collection/immutable/List." else "scala/package.List."}
+        |[1:16..1:22): Option => scala/Option.
+        |[2:6..2:10): Some => scala/Some.
+        |[2:11..2:12): b <= _empty_/a.b.
+        |[2:14..2:16): :: => scala/package.`::`.
+        |[2:17..2:20): Nil => ${if (ScalaVersion.is212) "scala/collection/immutable/Nil." else "scala/package.Nil."}
+        |[2:23..2:25): xs => _empty_/a.xs.
+        |[3:10..3:11): a => _empty_/a.
+        |[3:17..3:21): Some => scala/Some.
+        |[3:22..3:23): c <= _empty_/a.c.
+        |[3:25..3:27): :: => scala/package.`::`.
+        |[3:28..3:31): Nil => ${if (ScalaVersion.is212) "scala/collection/immutable/Nil." else "scala/package.Nil."}
+        |[3:34..3:36): xs => _empty_/a.xs.
+        |[4:6..4:7): m <= _empty_/a.m().
+        |[4:11..4:14): Int => scala/Int#
+        |[5:8..5:12): Some => scala/Some.
+        |[5:13..5:14): d <= local0
+        |[5:16..5:18): :: => scala/package.`::`.
+        |[5:19..5:22): Nil => ${if (ScalaVersion.is212) "scala/collection/immutable/Nil." else "scala/package.Nil."}
+        |[5:25..5:27): xs => _empty_/a.xs.
+        |[6:4..6:5): d => local0
+        |""".stripMargin,
+  )
+
   private def checkPatOwner(name: String, code: String, expected: String)(implicit
       loc: munit.Location,
   ): Unit = test(s"patOwner: $name") {
