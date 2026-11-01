@@ -3997,6 +3997,142 @@ example/T#`101`(). => method 101: Int
   Int => scala/Int#
 example/T#`<init>`(). => primary ctor <init>()
 
+example/Unused.class
+--------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Unused.class
+Text => empty
+Language => Scala
+Symbols => 47 entries
+
+Symbols:
+example/Unused# => class Unused extends AnyRef { +18 decls }
+  AnyRef => scala/AnyRef#
+example/Unused#PrivateCaseClass# => private final case class PrivateCaseClass extends AnyRef with Product with Serializable { +11 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/package.Serializable#
+example/Unused#PrivateCaseClass#`<init>`(). => primary ctor <init>()
+example/Unused#PrivateCaseClass#canEqual(). => synthetic method canEqual(x$1: Any): Boolean
+  x$1 => example/Unused#PrivateCaseClass#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/Unused#PrivateCaseClass#canEqual().(x$1) => synthetic param x$1: Any
+  Any => scala/Any#
+example/Unused#PrivateCaseClass#copy(). => synthetic method copy(): PrivateCaseClass
+  PrivateCaseClass => example/Unused#PrivateCaseClass#
+example/Unused#PrivateCaseClass#equals(). => synthetic method equals(x$1: Any): Boolean
+  x$1 => example/Unused#PrivateCaseClass#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/Unused#PrivateCaseClass#equals().(x$1) => synthetic param x$1: Any
+  Any => scala/Any#
+example/Unused#PrivateCaseClass#hashCode(). => synthetic method hashCode(): Int
+  Int => scala/Int#
+example/Unused#PrivateCaseClass#productArity(). => synthetic method productArity: Int
+  Int => scala/Int#
+example/Unused#PrivateCaseClass#productElement(). => synthetic method productElement(x$1: Int): Any
+  x$1 => example/Unused#PrivateCaseClass#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+example/Unused#PrivateCaseClass#productElement().(x$1) => synthetic param x$1: Int
+  Int => scala/Int#
+example/Unused#PrivateCaseClass#productElementName(). => synthetic method productElementName(x$1: Int): String
+  x$1 => example/Unused#PrivateCaseClass#productElementName().(x$1)
+  Int => scala/Int#
+  String => java/lang/String#
+example/Unused#PrivateCaseClass#productElementName().(x$1) => synthetic param x$1: Int
+  Int => scala/Int#
+example/Unused#PrivateCaseClass#productIterator(). => synthetic method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+example/Unused#PrivateCaseClass#productPrefix(). => synthetic method productPrefix: String
+  String => java/lang/String#
+example/Unused#PrivateCaseClass#toString(). => synthetic method toString(): String
+  String => java/lang/String#
+example/Unused#PrivateCaseClass. => private synthetic final object PrivateCaseClass extends AbstractFunction0[PrivateCaseClass] with Serializable { +3 decls }
+  AbstractFunction0 => scala/runtime/AbstractFunction0#
+  PrivateCaseClass => example/Unused#PrivateCaseClass#
+  Serializable => java/io/Serializable#
+example/Unused#PrivateCaseClass.apply(). => synthetic method apply(): PrivateCaseClass
+  PrivateCaseClass => example/Unused#PrivateCaseClass#
+example/Unused#PrivateCaseClass.toString(). => synthetic final method toString(): String
+  String => java/lang/String#
+example/Unused#PrivateCaseClass.unapply(). => synthetic method unapply(x$0: PrivateCaseClass): Boolean
+  x$0 => example/Unused#PrivateCaseClass.unapply().(x$0)
+  PrivateCaseClass => example/Unused#PrivateCaseClass#
+  Boolean => scala/Boolean#
+example/Unused#PrivateCaseClass.unapply().(x$0) => synthetic param x$0: PrivateCaseClass
+  PrivateCaseClass => example/Unused#PrivateCaseClass#
+example/Unused#PrivateClass# => private class PrivateClass extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Unused#PrivateClass#`<init>`(). => primary ctor <init>()
+example/Unused#PrivateObject. => private final object PrivateObject extends AnyRef
+  AnyRef => scala/AnyRef#
+example/Unused#PrivateTrait# => private trait PrivateTrait extends AnyRef
+  AnyRef => scala/AnyRef#
+example/Unused#PrivateType# => private type PrivateType = Int
+  Int => scala/Int#
+example/Unused#`<init>`(). => primary ctor <init>(ctorParam: Int)
+  ctorParam => example/Unused#`<init>`().(ctorParam)
+  Int => scala/Int#
+example/Unused#`<init>`().(ctorParam) => param ctorParam: Int
+  Int => scala/Int#
+example/Unused#`privateVar_=`(). => private var method privateVar_=(x$1: Int): Unit
+  x$1 => example/Unused#`privateVar_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Unused#`privateVar_=`().(x$1) => synthetic param x$1: Int
+  Int => scala/Int#
+example/Unused#annotatedDef(). => @deprecated private method annotatedDef: Int
+  deprecated => scala/deprecated#
+  Int => scala/Int#
+example/Unused#ctorParam. => private[this] val method ctorParam: Int
+  Int => scala/Int#
+example/Unused#implicitAlone(). => method implicitAlone(implicit alone: Int): Unit
+  alone => example/Unused#implicitAlone().(alone)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Unused#implicitAlone().(alone) => implicit param alone: Int
+  Int => scala/Int#
+example/Unused#implicitPair(). => method implicitPair(implicit first: Int, implicit second: String): Unit
+  first => example/Unused#implicitPair().(first)
+  Int => scala/Int#
+  second => example/Unused#implicitPair().(second)
+  String => scala/Predef.String#
+  Unit => scala/Unit#
+example/Unused#implicitPair().(first) => implicit param first: Int
+  Int => scala/Int#
+example/Unused#implicitPair().(second) => implicit param second: String
+  String => scala/Predef.String#
+example/Unused#locals(). => method locals(): Unit
+  Unit => scala/Unit#
+example/Unused#params(). => method params(param: Int)(implicit implicitParam: Int): Unit
+  param => example/Unused#params().(param)
+  Int => scala/Int#
+  implicitParam => example/Unused#params().(implicitParam)
+  Unit => scala/Unit#
+example/Unused#params().(implicitParam) => implicit param implicitParam: Int
+  Int => scala/Int#
+example/Unused#params().(param) => param param: Int
+  Int => scala/Int#
+example/Unused#patterns(). => method patterns(x: Option[Int]): Unit
+  x => example/Unused#patterns().(x)
+  Option => scala/Option#
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Unused#patterns().(x) => param x: Option[Int]
+  Option => scala/Option#
+  Int => scala/Int#
+example/Unused#privateDef(). => private method privateDef: Int
+  Int => scala/Int#
+example/Unused#privateVal. => private val method privateVal: Int
+  Int => scala/Int#
+example/Unused#privateVar(). => private var method privateVar: Int
+  Int => scala/Int#
+
 example/ValPattern.class
 ------------------------
 

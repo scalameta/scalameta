@@ -922,6 +922,102 @@ example/Synthetic#s.Bar.toString().
 -overridden_symbols: "scala/Any#toString()."
 
 
+===========================================
+example/Unused#PrivateCaseClass#canEqual().
+===========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#canEqual()."
+
+
+=========================================
+example/Unused#PrivateCaseClass#equals().
+=========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#equals()."
+-overridden_symbols: "java/lang/Object#equals()."
+-overridden_symbols: "scala/Any#equals()."
+
+
+===========================================
+example/Unused#PrivateCaseClass#hashCode().
+===========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#hashCode()."
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+===============================================
+example/Unused#PrivateCaseClass#productArity().
+===============================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productArity()."
+
+
+=================================================
+example/Unused#PrivateCaseClass#productElement().
+=================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productElement()."
+
+
+==================================================
+example/Unused#PrivateCaseClass#productIterator().
+==================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productIterator()."
+
+
+================================================
+example/Unused#PrivateCaseClass#productPrefix().
+================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productPrefix()."
+
+
+===========================================
+example/Unused#PrivateCaseClass#toString().
+===========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
+========================================
+example/Unused#PrivateCaseClass.apply().
+========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function0#apply()."
+
+
+===========================================
+example/Unused#PrivateCaseClass.toString().
+===========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function0#toString()."
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
 =============================
 flags/p/package.X.canEqual().
 =============================
