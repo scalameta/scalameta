@@ -438,7 +438,7 @@ class TargetedSuite extends SemanticdbSuite {
       .replace("Occurrences => 15 entries", "Occurrences => 15 entries\nDiagnostics => 1 entries") +
       """|
          |Diagnostics:
-         |[0:1..0:26) [warning] Usage of named or default arguments transformed this annotation
+         |[0:1..0:11) [warning] Usage of named or default arguments transformed this annotation
          |constructor call into a block. The corresponding AnnotationInfo
          |will contain references to local values and default getters instead
          |of the actual argument trees

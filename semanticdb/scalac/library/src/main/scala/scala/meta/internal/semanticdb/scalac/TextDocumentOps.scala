@@ -12,6 +12,7 @@ import scala.collection.mutable
 import scala.reflect.internal._
 import scala.reflect.internal.{Flags => gf, util => gu}
 import scala.tools.nsc.settings.ScalaVersion
+import scala.util.control.NonFatal
 import scala.{meta => m}
 
 trait TextDocumentOps {
@@ -96,6 +97,15 @@ trait TextDocumentOps {
   }
 
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
+    // the tree index of the source, or an empty one if the source does not parse
+    def toMtrees: TreeIndex =
+      try {
+        val msource = unit.toSource
+        val mtrees = TreeIndex(msource)
+        new MTreeIndexer(mtrees).apply(msource)
+        mtrees
+      } catch { case NonFatal(_) => TreeIndex.empty }
+
     def toTextDocument: s.TextDocument = toTextDocument(None)
 
     def toTextDocument(explicitDialect: Option[m.Dialect]): s.TextDocument = {
@@ -1683,7 +1693,7 @@ trait TextDocumentOps {
         buildTarget = config.buildTarget,
         symbols = symbols.values.toIndexedSeq.sorted,
         occurrences = finalOccurrences.sorted,
-        diagnostics = unit.reportedDiagnostics(mnameAt).toIndexedSeq.sorted,
+        diagnostics = unit.hijackedDiagnostics.toDiagnostics(mstart).toIndexedSeq.sorted,
         synthetics = synthetics.toIndexedSeq.sorted,
       )
     }

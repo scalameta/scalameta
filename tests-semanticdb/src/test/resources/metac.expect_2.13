@@ -675,7 +675,7 @@ Occurrences:
 
 Diagnostics:
 [1:22..1:33) [warning] Unused import of deprecated lazy value higherKinds: higherKinds no longer needs to be imported explicitly
-[6:15..6:15) [warning] Top-level wildcard is not allowed
+[6:15..6:16) [warning] Top-level wildcard is not allowed
 
 Synthetics:
 [8:2..8:9): locally => *[Unit]
@@ -2160,7 +2160,7 @@ Language => Scala
 Diagnostics => 1 entries
 
 Diagnostics:
-[16:2..16:2) [warning] method any2stringadd in object Predef is deprecated (since 2.13.0): Implicit injection of + is deprecated. Convert to String to call +
+[16:2..16:7) [warning] method any2stringadd in object Predef is deprecated (since 2.13.0): Implicit injection of + is deprecated. Convert to String to call +
 
 semanticdb/integration/src/main/scala/example/Imports.scala
 -----------------------------------------------------------
@@ -2800,8 +2800,8 @@ Occurrences:
 
 Diagnostics:
 [3:22..3:33) [warning] Unused import of deprecated lazy value higherKinds: higherKinds no longer needs to be imported explicitly
-[10:22..10:22) [warning] Top-level wildcard is not allowed
-[11:8..11:8) [warning] Top-level wildcard is not allowed
+[10:22..10:23) [warning] Top-level wildcard is not allowed
+[11:8..11:9) [warning] Top-level wildcard is not allowed
 
 semanticdb/integration/src/main/scala/example/Issue1872.scala
 -------------------------------------------------------------
@@ -3160,7 +3160,7 @@ Occurrences:
 [18:4..18:26): includeCommitCharacter => example/Issue2116#check().(includeCommitCharacter)
 
 Diagnostics:
-[15:15..15:15) [warning] Implicit definition should have explicit type (inferred scala.concurrent.ExecutionContextExecutor) [quickfixable]
+[15:15..15:17) [warning] Implicit definition should have explicit type (inferred scala.concurrent.ExecutionContextExecutor) [quickfixable]
 
 Synthetics:
 [17:2..19:3): check(
@@ -4153,7 +4153,7 @@ Occurrences:
 [37:44..37:47): ??? => scala/Predef.`???`().
 
 Diagnostics:
-[18:12..18:12) [warning] view bounds are deprecated; use an implicit parameter instead.
+[18:12..18:16) [warning] view bounds are deprecated; use an implicit parameter instead.
   example: instead of `def f[A <% Int](a: A)` use `def f[A](a: A)(implicit ev: A => Int)`
 
 semanticdb/integration/src/main/scala/example/MethodUsages.scala
@@ -4965,7 +4965,7 @@ Occurrences:
 
 Diagnostics:
 [2:29..2:44) [warning] Unused import
-[8:2..8:5) [warning] reflective access of structural type member value b should be enabled
+[8:4..8:5) [warning] reflective access of structural type member value b should be enabled
 by making the implicit value scala.language.reflectiveCalls visible.
 This can be achieved by adding the import clause 'import scala.language.reflectiveCalls'
 or by setting the compiler option -language:reflectiveCalls.
@@ -4982,7 +4982,7 @@ Language => Scala
 Diagnostics => 1 entries
 
 Diagnostics:
-[8:2..8:5) [warning] a pure expression does nothing in statement position; multiline expressions may require enclosing parentheses
+[8:4..8:5) [warning] a pure expression does nothing in statement position; multiline expressions may require enclosing parentheses
 
 semanticdb/integration/src/main/scala/example/StructuralTypes2.scala
 --------------------------------------------------------------------
@@ -5015,7 +5015,7 @@ Occurrences:
 
 Diagnostics:
 [2:29..2:44) [warning] Unused import
-[5:2..5:21) [warning] reflective access of structural type member value b should be enabled
+[5:20..5:21) [warning] reflective access of structural type member value b should be enabled
 by making the implicit value scala.language.reflectiveCalls visible.
 semanticdb/integration/src/main/scala/example/StructuralTypes2.scala
 --------------------------------------------------------------------
@@ -5028,7 +5028,7 @@ Language => Scala
 Diagnostics => 1 entries
 
 Diagnostics:
-[5:2..5:21) [warning] a pure expression does nothing in statement position
+[5:20..5:21) [warning] a pure expression does nothing in statement position
 
 semanticdb/integration/src/main/scala/example/Synthetic.scala
 -------------------------------------------------------------
@@ -5441,16 +5441,16 @@ Language => Scala
 Diagnostics => 10 entries
 
 Diagnostics:
-[9:8..9:8) [warning] method unapply in object #:: is deprecated (since 2.13.0): Prefer LazyList instead
+[9:8..9:11) [warning] method unapply in object #:: is deprecated (since 2.13.0): Prefer LazyList instead
 [9:17..9:23) [warning] value Stream in package scala is deprecated (since 2.13.0): Use LazyList instead of Stream
-[9:23..9:23) [warning] class Stream in package immutable is deprecated (since 2.13.0): Use LazyList (which is fully lazy) instead of Stream (which has a lazy tail only)
-[11:10..11:10) [warning] object Stream in package immutable is deprecated (since 2.13.0): Use LazyList (which is fully lazy) instead of Stream (which has a lazy tail only)
+[9:23..9:29) [warning] class Stream in package immutable is deprecated (since 2.13.0): Use LazyList (which is fully lazy) instead of Stream (which has a lazy tail only)
+[11:10..11:13) [warning] object Stream in package immutable is deprecated (since 2.13.0): Use LazyList (which is fully lazy) instead of Stream (which has a lazy tail only)
 [11:14..11:20) [warning] value Stream in package scala is deprecated (since 2.13.0): Use LazyList instead of Stream
-[11:21..11:21) [warning] object Stream in package immutable is deprecated (since 2.13.0): Use LazyList (which is fully lazy) instead of Stream (which has a lazy tail only)
-[13:20..13:20) [warning] object Stream in package immutable is deprecated (since 2.13.0): Use LazyList (which is fully lazy) instead of Stream (which has a lazy tail only)
+[11:21..11:26) [warning] object Stream in package immutable is deprecated (since 2.13.0): Use LazyList (which is fully lazy) instead of Stream (which has a lazy tail only)
+[13:20..13:23) [warning] object Stream in package immutable is deprecated (since 2.13.0): Use LazyList (which is fully lazy) instead of Stream (which has a lazy tail only)
 [13:24..13:30) [warning] value Stream in package scala is deprecated (since 2.13.0): Use LazyList instead of Stream
-[13:31..13:31) [warning] object Stream in package immutable is deprecated (since 2.13.0): Use LazyList (which is fully lazy) instead of Stream (which has a lazy tail only)
-[14:2..14:2) [warning] method any2stringadd in object Predef is deprecated (since 2.13.0): Implicit injection of + is deprecated. Convert to String to call +
+[13:31..13:36) [warning] object Stream in package immutable is deprecated (since 2.13.0): Use LazyList (which is fully lazy) instead of Stream (which has a lazy tail only)
+[14:2..14:5) [warning] method any2stringadd in object Predef is deprecated (since 2.13.0): Implicit injection of + is deprecated. Convert to String to call +
 
 semanticdb/integration/src/main/scala/example/Traits.scala
 ----------------------------------------------------------
@@ -6362,7 +6362,7 @@ Occurrences:
 [32:14..32:20): patVar <= local10
 
 Diagnostics:
-[3:13..3:27) [warning] parameter ctorParam in class Unused is never used
+[3:13..3:22) [warning] parameter ctorParam in class Unused is never used
 [5:17..5:30) [warning] private object PrivateObject in class Unused is never used
 [6:16..6:28) [warning] private class PrivateClass in class Unused is never used
 [7:16..7:28) [warning] private trait PrivateTrait in class Unused is never used
@@ -6379,11 +6379,11 @@ Diagnostics:
 [21:8..21:16) [warning] local method localDef in method locals is never used
 [22:8..22:16) [warning] local val localVal in method locals is never used
 [23:8..23:16) [warning] local var localVar in method locals is never used
-[27:13..27:23) [warning] parameter param in method params is never used
-[27:34..27:52) [warning] parameter implicitParam in method params is never used
-[28:29..28:39) [warning] parameter alone in method implicitAlone is never used
-[29:28..29:38) [warning] parameter first in method implicitPair is never used
-[29:40..29:54) [warning] parameter second in method implicitPair is never used
+[27:13..27:18) [warning] parameter param in method params is never used
+[27:34..27:47) [warning] parameter implicitParam in method params is never used
+[28:29..28:34) [warning] parameter alone in method implicitAlone is never used
+[29:28..29:33) [warning] parameter first in method implicitPair is never used
+[29:40..29:46) [warning] parameter second in method implicitPair is never used
 [32:14..32:20) [warning] pattern var patVar in method patterns is never used
 
 Synthetics:
@@ -6401,7 +6401,7 @@ Language => Scala
 Diagnostics => 1 entries
 
 Diagnostics:
-[14:27..14:27) [warning] The outer reference in this type test cannot be checked at run time.
+[14:27..14:43) [warning] The outer reference in this type test cannot be checked at run time.
 
 semanticdb/integration/src/main/scala/example/ValPattern.scala
 --------------------------------------------------------------
