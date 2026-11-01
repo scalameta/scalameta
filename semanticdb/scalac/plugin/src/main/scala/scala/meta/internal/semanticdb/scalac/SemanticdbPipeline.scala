@@ -98,8 +98,11 @@ trait SemanticdbPipeline extends SemanticdbOps {
       override def apply(unit: g.CompilationUnit): Unit = {
         if (unit.isIgnored) return
         try if (config.diagnostics.isOn) {
-            val diagnostics = unit.reportedDiagnostics(_ => null).toIndexedSeq.sorted
-            if (diagnostics.nonEmpty && unit.source.isInSourceroot()) {
+            val gdiagnostics = unit.hijackedDiagnostics
+            if (gdiagnostics.hasNext && unit.source.isInSourceroot()) {
+              // the index from typer is gone, so index the source again
+              val mtrees = unit.toMtrees
+              val diagnostics = gdiagnostics.toDiagnostics(mtrees.mstart).toIndexedSeq.sorted
               val sdoc = s.TextDocument(
                 schema = s.Schema.SEMANTICDB4,
                 uri = unit.source.toUri,

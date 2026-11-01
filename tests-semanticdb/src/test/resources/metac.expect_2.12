@@ -1315,7 +1315,7 @@ Language => Scala
 Diagnostics => 1 entries
 
 Diagnostics:
-[5:6..5:41) [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
+[5:31..5:36) [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
 
 semanticdb/integration/src/main/scala/example/Existentials.scala
 ----------------------------------------------------------------
@@ -1445,7 +1445,7 @@ Occurrences:
 [17:41..17:42): x => example/ExistentialsE#x.
 
 Diagnostics:
-[4:20..4:25) [warning] higher-kinded type should be enabled
+[4:20..4:22) [warning] higher-kinded type should be enabled
 by making the implicit value scala.language.higherKinds visible.
 ----
 This can be achieved by adding the import clause 'import scala.language.higherKinds'
@@ -1459,7 +1459,7 @@ This can be achieved by adding the import clause 'import scala.language.existent
 or by setting the compiler option -language:existentials.
 See the Scaladoc for value scala.language.existentials for a discussion
 why the feature should be explicitly enabled.
-[11:8..11:12) [warning] higher-kinded type should be enabled
+[11:8..11:9) [warning] higher-kinded type should be enabled
 by making the implicit value scala.language.higherKinds visible.
 
 semanticdb/integration/src/main/scala/example/filename%20with%20spaces.scala
@@ -2464,31 +2464,31 @@ Occurrences:
 [24:6..24:14): namedDef <= example/Issue1672.namedDef().
 
 Diagnostics:
-[5:1..5:31) [warning] Usage of named or default arguments transformed this annotation
+[5:1..5:15) [warning] Usage of named or default arguments transformed this annotation
 constructor call into a block. The corresponding AnnotationInfo
 will contain references to local values and default getters instead
 of the actual argument trees
-[7:3..7:33) [warning] Usage of named or default arguments transformed this annotation
+[7:3..7:17) [warning] Usage of named or default arguments transformed this annotation
 constructor call into a block. The corresponding AnnotationInfo
 will contain references to local values and default getters instead
 of the actual argument trees
-[9:3..9:33) [warning] Usage of named or default arguments transformed this annotation
+[9:3..9:17) [warning] Usage of named or default arguments transformed this annotation
 constructor call into a block. The corresponding AnnotationInfo
 will contain references to local values and default getters instead
 of the actual argument trees
-[15:18..15:48) [warning] Usage of named or default arguments transformed this annotation
+[15:18..15:32) [warning] Usage of named or default arguments transformed this annotation
 constructor call into a block. The corresponding AnnotationInfo
 will contain references to local values and default getters instead
 of the actual argument trees
-[16:3..16:33) [warning] Usage of named or default arguments transformed this annotation
+[16:3..16:17) [warning] Usage of named or default arguments transformed this annotation
 constructor call into a block. The corresponding AnnotationInfo
 will contain references to local values and default getters instead
 of the actual argument trees
-[18:3..18:33) [warning] Usage of named or default arguments transformed this annotation
+[18:3..18:17) [warning] Usage of named or default arguments transformed this annotation
 constructor call into a block. The corresponding AnnotationInfo
 will contain references to local values and default getters instead
 of the actual argument trees
-[23:3..23:33) [warning] Usage of named or default arguments transformed this annotation
+[23:3..23:17) [warning] Usage of named or default arguments transformed this annotation
 constructor call into a block. The corresponding AnnotationInfo
 will contain references to local values and default getters instead
 of the actual argument trees
@@ -4859,7 +4859,7 @@ Occurrences:
 
 Diagnostics:
 [2:29..2:44) [warning] Unused import
-[8:2..8:5) [warning] reflective access of structural type member value b should be enabled
+[8:4..8:5) [warning] reflective access of structural type member value b should be enabled
 by making the implicit value scala.language.reflectiveCalls visible.
 ----
 This can be achieved by adding the import clause 'import scala.language.reflectiveCalls'
@@ -4877,7 +4877,7 @@ Language => Scala
 Diagnostics => 1 entries
 
 Diagnostics:
-[8:2..8:5) [warning] a pure expression does nothing in statement position; multiline expressions may require enclosing parentheses
+[8:4..8:5) [warning] a pure expression does nothing in statement position; multiline expressions may require enclosing parentheses
 
 semanticdb/integration/src/main/scala/example/StructuralTypes2.scala
 --------------------------------------------------------------------
@@ -4910,7 +4910,7 @@ Occurrences:
 
 Diagnostics:
 [2:29..2:44) [warning] Unused import
-[5:2..5:21) [warning] reflective access of structural type member value b should be enabled
+[5:20..5:21) [warning] reflective access of structural type member value b should be enabled
 by making the implicit value scala.language.reflectiveCalls visible.
 semanticdb/integration/src/main/scala/example/StructuralTypes2.scala
 --------------------------------------------------------------------
@@ -4923,7 +4923,7 @@ Language => Scala
 Diagnostics => 1 entries
 
 Diagnostics:
-[5:2..5:21) [warning] a pure expression does nothing in statement position; multiline expressions may require enclosing parentheses
+[5:20..5:21) [warning] a pure expression does nothing in statement position; multiline expressions may require enclosing parentheses
 
 semanticdb/integration/src/main/scala/example/Synthetic.scala
 -------------------------------------------------------------
@@ -6225,29 +6225,29 @@ Occurrences:
 [32:14..32:20): patVar <= local10
 
 Diagnostics:
-[3:13..3:27) [warning] parameter value ctorParam in class Unused is never used
-[5:2..5:30) [warning] private object PrivateObject in class Unused is never used
-[6:2..6:28) [warning] private class PrivateClass in class Unused is never used
-[7:2..7:28) [warning] private trait PrivateTrait in class Unused is never used
-[8:2..8:32) [warning] private type PrivateType in class Unused is never used
-[9:2..9:28) [warning] private method privateDef in class Unused is never used
-[10:14..10:14) [warning] private val privateVal in class Unused is never used
-[11:14..11:14) [warning] private var privateVar in class Unused is never used
-[13:2..13:30) [warning] private method annotatedDef in class Unused is never used
-[17:4..17:22) [warning] local object LocalObject in method locals is never used
-[18:4..18:20) [warning] local class LocalClass is never used
-[19:4..19:20) [warning] local trait LocalTrait is never used
-[20:4..20:24) [warning] local type LocalType is never used
-[21:4..21:20) [warning] local method localDef in method locals is never used
-[22:4..22:20) [warning] local val localVal in method locals is never used
-[23:4..23:20) [warning] local var localVar in method locals is never used
+[3:13..3:22) [warning] parameter value ctorParam in class Unused is never used
+[5:17..5:30) [warning] private object PrivateObject in class Unused is never used
+[6:16..6:28) [warning] private class PrivateClass in class Unused is never used
+[7:16..7:28) [warning] private trait PrivateTrait in class Unused is never used
+[8:15..8:26) [warning] private type PrivateType in class Unused is never used
+[9:14..9:24) [warning] private method privateDef in class Unused is never used
+[10:14..10:24) [warning] private val privateVal in class Unused is never used
+[11:14..11:24) [warning] private var privateVar in class Unused is never used
+[13:14..13:26) [warning] private method annotatedDef in class Unused is never used
+[17:11..17:22) [warning] local object LocalObject in method locals is never used
+[18:10..18:20) [warning] local class LocalClass is never used
+[19:10..19:20) [warning] local trait LocalTrait is never used
+[20:9..20:18) [warning] local type LocalType is never used
+[21:8..21:16) [warning] local method localDef in method locals is never used
+[22:8..22:16) [warning] local val localVal in method locals is never used
+[23:8..23:16) [warning] local var localVar in method locals is never used
 [24:9..24:15) [warning] pattern var tupleA in method locals is never used: use a wildcard `_` or suppress this warning with `tupleA@_`
 [24:17..24:23) [warning] pattern var tupleB in method locals is never used: use a wildcard `_` or suppress this warning with `tupleB@_`
-[27:13..27:23) [warning] parameter value param in method params is never used
-[27:34..27:52) [warning] parameter value implicitParam in method params is never used
-[28:29..28:39) [warning] parameter value alone in method implicitAlone is never used
-[29:28..29:38) [warning] parameter value first in method implicitPair is never used
-[29:40..29:54) [warning] parameter value second in method implicitPair is never used
+[27:13..27:18) [warning] parameter value param in method params is never used
+[27:34..27:47) [warning] parameter value implicitParam in method params is never used
+[28:29..28:34) [warning] parameter value alone in method implicitAlone is never used
+[29:28..29:33) [warning] parameter value first in method implicitPair is never used
+[29:40..29:46) [warning] parameter value second in method implicitPair is never used
 [32:14..32:20) [warning] pattern var patVar in method patterns is never used: use a wildcard `_` or suppress this warning with `patVar@_`
 
 Synthetics:
@@ -6265,7 +6265,7 @@ Language => Scala
 Diagnostics => 1 entries
 
 Diagnostics:
-[14:27..14:27) [warning] The outer reference in this type test cannot be checked at run time.
+[14:27..14:43) [warning] The outer reference in this type test cannot be checked at run time.
 
 semanticdb/integration/src/main/scala/example/ValPattern.scala
 --------------------------------------------------------------
