@@ -18,6 +18,8 @@ import scala.util.control.NonFatal
 trait SymbolOps {
   self: SemanticdbOps =>
 
+  import SymbolOps._
+
   def clearSymbolCaches(): Unit = {
     symbolCache.clear()
     declarationCache.clear()
@@ -329,17 +331,6 @@ trait SymbolOps {
   // `qual.map(f)` of a `for` has `ForAttachment` on `qual.map`; scalac 2.13 marks tuples too
   private[scalac] def hasFor(tree: g.Tree): Boolean = tree.hasAttachment[g.ForAttachment.type]
 
-  // the source does not have the whole name written at `at`, maybe in backquotes
-  private def notWrittenAt(text: Array[Char], at: Int, name: String): Boolean = {
-    val quoted = at < text.length && text(at) == '`'
-    val start = if (quoted) at + 1 else at
-    val end = start + name.length
-    val notEndsThere =
-      if (end == text.length) quoted
-      else end > text.length || (if (quoted) text(end) != '`' else Chars.isIdentifierPart(text(end)))
-    notEndsThere || !name.contentEquals(CharBuffer.wrap(text, start, name.length))
-  }
-
   // the source has `name` written at the start or at the point of `pos`
   private def isWrittenAt(pos: g.Position, name: String): Boolean = {
     val text = pos.source.content
@@ -431,22 +422,6 @@ trait SymbolOps {
       }
     }
     sym
-  }
-
-  // the number of a local such as `local12`, or -1
-  private def localNumber(local: String): Int = {
-    val start = Symbols.LocalPrefix.length
-    // a namespace has fewer than 10^9 locals
-    if (local.length <= start || local.length > start + 9) return -1
-    var number = 0
-    var i = start
-    while (i < local.length) {
-      val digit = local.charAt(i) - '0'
-      if (digit < 0 || digit > 9) return -1
-      number = number * 10 + digit
-      i += 1
-    }
-    number
   }
 
   // calls `f` with each local of the document and its declaration, also with the locals `f` adds
@@ -714,6 +689,37 @@ trait SymbolOps {
     runSourcesRun = run
     runSourcesSize = run.size
     runSources.get(source)
+  }
+
+}
+
+object SymbolOps {
+
+  // the number of a local such as `local12`, or -1
+  private def localNumber(local: String): Int = {
+    val start = Symbols.LocalPrefix.length
+    // a namespace has fewer than 10^9 locals
+    if (local.length <= start || local.length > start + 9) return -1
+    var number = 0
+    var i = start
+    while (i < local.length) {
+      val digit = local.charAt(i) - '0'
+      if (digit < 0 || digit > 9) return -1
+      number = number * 10 + digit
+      i += 1
+    }
+    number
+  }
+
+  // the source does not have the whole name written at `at`, maybe in backquotes
+  private def notWrittenAt(text: Array[Char], at: Int, name: String): Boolean = {
+    val quoted = at < text.length && text(at) == '`'
+    val start = if (quoted) at + 1 else at
+    val end = start + name.length
+    val notEndsThere =
+      if (end == text.length) quoted
+      else end > text.length || (if (quoted) text(end) != '`' else Chars.isIdentifierPart(text(end)))
+    notEndsThere || !name.contentEquals(CharBuffer.wrap(text, start, name.length))
   }
 
 }

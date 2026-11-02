@@ -41,10 +41,6 @@ trait TextDocumentOps {
   }
 
   import s.SymbolOccurrence.Role
-  type Occurrence = (String, Role)
-  def emptyOccurrenceMap() = mutable.Map.empty[m.Position, Occurrence]
-
-  val isOldBehaviourOnPats = ScalaVersion(BuildInfo.scalaVersion) < ScalaVersion("2.13.17")
 
   // walks each tree once, as a document does: its expandee, its original, itself, its children
   private[scalac] abstract class DocumentTraverser(source: gu.SourceFile) extends g.Traverser {
@@ -165,11 +161,6 @@ trait TextDocumentOps {
       def mnameAt(offset: Int): m.Name = asName(mstart(offset))
       def mnameEndingAt(offset: Int): m.Name = asName(mend(offset))
 
-      def addOccurrenceFromSemantic(mpos: m.Position, ssym: String, role: Role): Unit =
-        if (ssym != Symbols.None) occurrences(mpos) = (ssym, role)
-      def addOccurrence(mpos: m.Position, gsym: g.Symbol, role: Role): Unit =
-        addOccurrenceFromSemantic(mpos, gsym.toSemantic, role)
-
       // the method's name in a method value, like `g` in `K.g`
       @tailrec
       def methodName(gtree: g.Tree): m.Name = gtree match {
@@ -180,21 +171,6 @@ trait TextDocumentOps {
         case _ => null
       }
 
-      def setSamOccurrence(
-          gsym: g.Symbol,
-          mdef: m.Position,
-          map: mutable.Map[m.Position, Occurrence],
-      ) = {
-        val ssym = gsym.toSemantic
-        if (ssym == Symbols.None) null
-        else {
-          // keep the definition of each nested lambda that starts at this position
-          val sdef = map.get(mdef).fold(ssym)(o => Symbols.Multi(o._1.asMulti :+ ssym))
-          map(mdef) = (sdef, Role.DEFINITION)
-          saveSymbolFromSemantic(gsym, ssym)
-        }
-      }
-
       /* Find the enumerator of a closure that scalac makes for a `for`. The point of the closure is
        * in its generator. Its end is in its guard or in the body of the `for`.
        */
@@ -202,8 +178,7 @@ trait TextDocumentOps {
         def findWithin[A >: Null <: m.Tree](iter: Iterator[A], beg: Int, end: Int): A = {
           while (iter.hasNext) {
             val res = iter.next()
-            val mpos = res.pos
-            if (mpos.start <= beg && end < mpos.end) return res
+            if (res.containsIncl(beg, end)) return res
           }
           null
         }
@@ -220,6 +195,30 @@ trait TextDocumentOps {
           case _ => findWithin(menums.iterator, gpoint, gpoint)
         }
         if (null eq menum) None else Some(menum.pos)
+      }
+
+      /*
+       * Methods to save symbols, occurrences, etc
+       */
+
+      def addOccurrenceFromSemantic(mpos: m.Position, ssym: String, role: Role): Unit =
+        if (ssym != Symbols.None) occurrences(mpos) = (ssym, role)
+      def addOccurrence(mpos: m.Position, gsym: g.Symbol, role: Role): Unit =
+        addOccurrenceFromSemantic(mpos, gsym.toSemantic, role)
+
+      def setSamOccurrence(
+          gsym: g.Symbol,
+          mdef: m.Position,
+          map: mutable.Map[m.Position, Occurrence],
+      ) = {
+        val ssym = gsym.toSemantic
+        if (ssym == Symbols.None) null
+        else {
+          // keep the definition of each nested lambda that starts at this position
+          val sdef = map.get(mdef).fold(ssym)(o => Symbols.Multi(o._1.asMulti :+ ssym))
+          map(mdef) = (sdef, Role.DEFINITION)
+          saveSymbolFromSemantic(gsym, ssym)
+        }
       }
 
       def addSamOccurrence(gt: g.Function, isFor: Boolean): Unit = {
@@ -562,9 +561,9 @@ trait TextDocumentOps {
           case _ => null
         }
         private val mvalPatVarAtStart: m.Tree => m.Pat.Var = {
-          case t: m.Pat.Extract => if (isOldBehaviourOnPats) null else extractVar(t)
-          case _: m.Pat.ExtractInfix if isOldBehaviourOnPats => null
-          case t: m.Term.Name if isOldBehaviourOnPats =>
+          case t: m.Pat.Extract => if (IsOldBehaviourOnPats) null else extractVar(t)
+          case _: m.Pat.ExtractInfix if IsOldBehaviourOnPats => null
+          case t: m.Term.Name if IsOldBehaviourOnPats =>
             t.parent match {
               case Some(p: m.Pat.ExtractInfix) if (p.op eq t) && isValPat(p) => onlyVar(p)
               case _ => null
@@ -587,7 +586,7 @@ trait TextDocumentOps {
             case _ =>
               val atStart =
                 mtreeOf[m.Pat.Var](mstart(offset), offset, atEnd = false)(mvalPatVarAtStart)
-              if ((null ne atStart) || !isOldBehaviourOnPats) atStart
+              if ((null ne atStart) || !IsOldBehaviourOnPats) atStart
               else mtreeOf[m.Pat.Var](mend(offset), offset, atEnd = true)(mvalPatVarAtEnd)
           }
           if (null eq mvar) null else mvar.name
@@ -1729,6 +1728,95 @@ trait TextDocumentOps {
     case _ => false
   }
 
+  private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {
+    val normalizedAlts = {
+      val alts1 = alts.toList.filter(_.exists)
+      val alts2 = alts1.map(alt => if (alt.isModuleClass) alt.asClass.module else alt)
+      alts2.distinct
+    }
+    normalizedAlts match {
+      case List(sym) => sym
+      case normalizedAlts =>
+        val wrapper = g.NoSymbol.newTermSymbol(g.TermName(name))
+        wrapper.setFlag(gf.OVERLOADED)
+        wrapper.setInfo(g.OverloadedType(g.NoType, normalizedAlts))
+    }
+  }
+
+}
+
+object TextDocumentOps {
+
+  import s.SymbolOccurrence.Role
+  type Occurrence = (String, Role)
+  def emptyOccurrenceMap() = mutable.Map.empty[m.Position, Occurrence]
+
+  val IsOldBehaviourOnPats = ScalaVersion(BuildInfo.scalaVersion) < ScalaVersion("2.13.17")
+
+  // index the trees of a source in `mtrees`
+  private[scalac] class MTreeIndexer(mtrees: TreeIndex) extends m.Traverser {
+    // an empty tree may not nest with the trees at its offsets
+    private def index(mtree: m.Tree): Unit = {
+      val mpos = mtree.pos
+      if (!mpos.isEmpty) {
+        mtrees(mpos.start) = mtree
+        mtrees(mpos.end - 1) = mtree
+      }
+    }
+    protected def visit(mtree: m.Tree): Unit = {}
+    override def apply(mtree: m.Tree): Unit = {
+      index(mtree)
+      mtree match {
+        // NOTE: ignore mrename for now, we may decide to make it a binder
+        case mtree: m.Importee.Rename => index(mtree.name)
+        case _ =>
+          visit(mtree)
+          super.apply(mtree)
+      }
+    }
+  }
+
+  object TreeIndex {
+    val empty = new TreeIndex(Array.empty[m.Tree])
+    def apply(msource: m.Source): TreeIndex =
+      new TreeIndex(new Array[m.Tree](msource.pos.input.chars.length))
+  }
+
+  /* offset -> the last non-empty tree that starts there or ends right past it. The others that
+   * start or end there are its ancestors. */
+  class TreeIndex(private val self: Array[m.Tree]) extends AnyVal {
+    private def contains(offset: Int): Boolean = offset >= 0 && offset < self.length
+
+    private[scalac] def update(offset: Int, value: m.Tree): Unit =
+      if (contains(offset)) self(offset) = value
+
+    def apply(offset: Int): m.Tree = if (contains(offset)) self(offset) else null
+
+    private[scalac] def mstart(offset: Int): m.Tree = apply(offset) match {
+      case t: m.Tree if t.pos.start == offset => t
+      case _ => null
+    }
+
+    private[scalac] def mend(offset: Int): m.Tree = apply(offset - 1) match {
+      case t: m.Tree if t.pos.end == offset => t
+      case _ => null
+    }
+  }
+
+  /* the outermost `Tree.WithPats` that contains `mtree` with only patterns between them, or
+   * `owner` if there is none */
+  @tailrec
+  private[meta] def patOwner(mtree: m.Tree, owner: m.Tree.WithPats = null): m.Tree.WithPats =
+    mtree.parent match {
+      case Some(p: m.Tree.WithPats) => p match {
+          case _: m.Pat | _: m.Pat.ArgClause => patOwner(p, p)
+          case p: m.Tree.WithBody if p.body eq mtree => owner
+          case _ => p
+        }
+      case Some(p: m.Pat) => patOwner(p, owner)
+      case _ => owner
+    }
+
   @tailrec // only a whole pattern, like `_` in `val _ =` or `_: Int <- xs`, has a symbol
   private def isWholePat(mpat: m.Pat): Boolean = mpat.parent match {
     case Some(p: m.Pat.Typed) => isWholePat(p)
@@ -1802,87 +1890,12 @@ trait TextDocumentOps {
     case _ => null
   }
 
-  private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {
-    val normalizedAlts = {
-      val alts1 = alts.toList.filter(_.exists)
-      val alts2 = alts1.map(alt => if (alt.isModuleClass) alt.asClass.module else alt)
-      alts2.distinct
-    }
-    normalizedAlts match {
-      case List(sym) => sym
-      case normalizedAlts =>
-        val wrapper = g.NoSymbol.newTermSymbol(g.TermName(name))
-        wrapper.setFlag(gf.OVERLOADED)
-        wrapper.setInfo(g.OverloadedType(g.NoType, normalizedAlts))
+  private implicit class ImplicitMetaTreeOps(val self: m.Tree) extends AnyVal {
+
+    def containsIncl(beg: Int, endIncl: Int): Boolean = {
+      val mpos = self.pos
+      mpos.start <= beg && endIncl < mpos.end
     }
   }
-
-}
-
-object TextDocumentOps {
-
-  // index the trees of a source in `mtrees`
-  private[scalac] class MTreeIndexer(mtrees: TreeIndex) extends m.Traverser {
-    // an empty tree may not nest with the trees at its offsets
-    private def index(mtree: m.Tree): Unit = {
-      val mpos = mtree.pos
-      if (!mpos.isEmpty) {
-        mtrees(mpos.start) = mtree
-        mtrees(mpos.end - 1) = mtree
-      }
-    }
-    protected def visit(mtree: m.Tree): Unit = {}
-    override def apply(mtree: m.Tree): Unit = {
-      index(mtree)
-      mtree match {
-        // NOTE: ignore mrename for now, we may decide to make it a binder
-        case mtree: m.Importee.Rename => index(mtree.name)
-        case _ =>
-          visit(mtree)
-          super.apply(mtree)
-      }
-    }
-  }
-
-  object TreeIndex {
-    val empty = new TreeIndex(Array.empty[m.Tree])
-    def apply(msource: m.Source): TreeIndex =
-      new TreeIndex(new Array[m.Tree](msource.pos.input.chars.length))
-  }
-
-  /* offset -> the last non-empty tree that starts there or ends right past it. The others that
-   * start or end there are its ancestors. */
-  class TreeIndex(private val self: Array[m.Tree]) extends AnyVal {
-    private def contains(offset: Int): Boolean = offset >= 0 && offset < self.length
-
-    private[scalac] def update(offset: Int, value: m.Tree): Unit =
-      if (contains(offset)) self(offset) = value
-
-    def apply(offset: Int): m.Tree = if (contains(offset)) self(offset) else null
-
-    private[scalac] def mstart(offset: Int): m.Tree = apply(offset) match {
-      case t: m.Tree if t.pos.start == offset => t
-      case _ => null
-    }
-
-    private[scalac] def mend(offset: Int): m.Tree = apply(offset - 1) match {
-      case t: m.Tree if t.pos.end == offset => t
-      case _ => null
-    }
-  }
-
-  /* the outermost `Tree.WithPats` that contains `mtree` with only patterns between them, or
-   * `owner` if there is none */
-  @tailrec
-  private[meta] def patOwner(mtree: m.Tree, owner: m.Tree.WithPats = null): m.Tree.WithPats =
-    mtree.parent match {
-      case Some(p: m.Tree.WithPats) => p match {
-          case _: m.Pat | _: m.Pat.ArgClause => patOwner(p, p)
-          case p: m.Tree.WithBody if p.body eq mtree => owner
-          case _ => p
-        }
-      case Some(p: m.Pat) => patOwner(p, owner)
-      case _ => owner
-    }
 
 }
