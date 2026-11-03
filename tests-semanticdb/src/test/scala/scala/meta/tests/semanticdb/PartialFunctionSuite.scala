@@ -464,9 +464,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[1:10..1:25): PartialFunction => scala/PartialFunction#
        |[1:26..1:29): Int => scala/Int#
        |[1:31..1:34): Int => scala/Int#
-       |[1:43..1:44): x => scala/Any#asInstanceOf().
+       |[1:43..1:44): x => local3
        |[1:45..1:45):  <= local0
-       |[1:45..1:46): + => local1
+       |[1:45..1:46): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
 
@@ -478,13 +478,13 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:7..0:10): t38 <= _empty_/t38.
        |[1:6..1:7): m <= _empty_/t38.m().
-       |[1:16..1:17): f <= local9
+       |[1:16..1:17): f <= local8
        |[1:19..1:34): PartialFunction => scala/PartialFunction#
        |[1:35..1:38): Int => scala/Int#
        |[1:40..1:43): Int => scala/Int#
        |[1:52..1:52):  <= local0
        |[1:52..1:53): x => local3
-       |[1:55..1:56): f => local9
+       |[1:55..1:56): f => local8
        |""".stripMargin,
   )
 
@@ -640,9 +640,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:10..2:25): PartialFunction => scala/PartialFunction#
        |[2:26..2:29): Int => scala/Int#
        |[2:31..2:34): Int => scala/Int#
-       |[2:43..2:44): x => scala/Any#asInstanceOf().
+       |[2:43..2:44): x => local4
        |[2:45..2:45):  <= local1
-       |[2:45..2:46): + => local2
+       |[2:45..2:46): + => scala/Int#`+`(+4).
        |[3:6..3:9): cpf <= _empty_/t178.cpf().
        |[3:11..3:26): PartialFunction => scala/PartialFunction#
        |[3:27..3:30): Int => scala/Int#
@@ -673,8 +673,8 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:10..2:25): PartialFunction => scala/PartialFunction#
        |[2:26..2:29): Int => scala/Int#
        |[2:31..2:34): Int => scala/Int#
-       |[2:43..2:44): x => scala/Any#asInstanceOf().
-       |[2:45..2:46): + => local2
+       |[2:43..2:44): x => local4
+       |[2:45..2:46): + => scala/Int#`+`(+4).
        |[3:6..3:9): cpf <= _empty_/t178.cpf().
        |[3:11..3:26): PartialFunction => scala/PartialFunction#
        |[3:27..3:30): Int => scala/Int#
@@ -704,9 +704,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:10..2:25): PartialFunction => scala/PartialFunction#
        |[2:26..2:29): Int => scala/Int#
        |[2:31..2:34): Int => scala/Int#
-       |[2:50..2:51): x => scala/Any#asInstanceOf().
+       |[2:50..2:51): x => local4
        |[2:52..2:52):  <= local1
-       |[2:52..2:53): + => local2
+       |[2:52..2:53): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
 
@@ -729,7 +729,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:31..2:34): Int => scala/Int#
        |[2:38..2:39): _ <= local2
        |[2:40..2:40):  <= local1
-       |[2:40..2:41): + => local2
+       |[2:40..2:41): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
 
@@ -752,9 +752,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:10..2:25): PartialFunction => scala/PartialFunction#
        |[2:26..2:29): Int => scala/Int#
        |[2:31..2:37): String => scala/Predef.String#
-       |[2:46..2:47): x => scala/Any#asInstanceOf().
+       |[2:46..2:47): x => local4
        |[2:48..2:48):  <= local1
-       |[2:48..2:56): toString => local2
+       |[2:48..2:56): toString => scala/Any#toString().
        |""".stripMargin,
   )
 
@@ -818,24 +818,23 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |local11 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local9
        |  Int => scala/Int#
-       |  B1 => local16
-       |  x => local14
-       |  default => local15
+       |  B1 => local15
+       |  x => local13
+       |  default => local14
        |  Function1 => scala/Function1#
        |local12 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
-       |  x => local17
+       |  x => local16
        |  Int => scala/Int#
        |  Boolean => scala/Boolean#
-       |local13 => method <local $anonfun>
-       |local14 => synthetic param x: A1
+       |local13 => synthetic param x: A1
        |  A1 => local9
-       |local15 => synthetic param default: Function1[A1, B1]
+       |local14 => synthetic param default: Function1[A1, B1]
        |  Function1 => scala/Function1#
        |  A1 => local9
-       |  B1 => local16
-       |local16 => typeparam B1 >: A1
+       |  B1 => local15
+       |local15 => typeparam B1 >: A1
        |  A1 => local9
-       |local17 => synthetic param x: Int
+       |local16 => synthetic param x: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -858,9 +857,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:6..2:7): m <= _empty_/t183.m().
        |[2:10..2:14): List => scala/package.List.
        |[2:18..2:25): collect => scala/collection/immutable/List#collect().
-       |[2:31..2:32): x => scala/Any#asInstanceOf().
+       |[2:31..2:32): x => local4
        |[2:33..2:33):  <= local1
-       |[2:33..2:34): + => local2
+       |[2:33..2:34): + => scala/Int#`+`(+4).
        |[3:6..3:7): n <= _empty_/t183.n().
        |[3:10..3:14): List => scala/package.List.
        |[3:18..3:25): collect => scala/collection/immutable/List#collect().
@@ -882,9 +881,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[1:22..1:23): y <= local0
        |[1:27..1:31): List => scala/package.List.
        |[1:35..1:42): collect => scala/collection/immutable/List#collect().
-       |[1:48..1:49): x => scala/Any#asInstanceOf().
+       |[1:48..1:49): x => local4
        |[1:50..1:50):  <= local1
-       |[1:50..1:51): + => local2
+       |[1:50..1:51): + => scala/Int#`+`(+4).
        |[1:52..1:53): y => local0
        |""".stripMargin,
   )
@@ -902,14 +901,14 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[1:20..1:35): PartialFunction => scala/PartialFunction#
        |[1:36..1:39): Int => scala/Int#
        |[1:41..1:44): Int => scala/Int#
-       |[1:53..1:57): List => scala/Any#asInstanceOf().
+       |[1:53..1:57): List => scala/package.List.
        |[1:58..1:59): x => local3
        |[1:61..1:64): map => scala/collection/immutable/List#map().
        |[1:65..1:66): x <= local7
        |[1:70..1:71): x => local7
        |[1:72..1:73): + => scala/Int#`+`(+4).
        |[1:77..1:77):  <= local0
-       |[1:77..1:81): head => local1
+       |[1:77..1:81): head => scala/collection/IterableOps#head().
        |""".stripMargin,
   )
 
@@ -967,54 +966,53 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |local10 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local8
        |  Int => scala/Int#
-       |  B1 => local15
-       |  x => local13
-       |  default => local14
+       |  B1 => local14
+       |  x => local12
+       |  default => local13
        |  Function1 => scala/Function1#
        |local11 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
-       |  x => local16
+       |  x => local15
        |  Int => scala/Int#
        |  Boolean => scala/Boolean#
-       |local12 => method <local $anonfun>
-       |local13 => synthetic param x: A1
+       |local12 => synthetic param x: A1
        |  A1 => local8
-       |local14 => synthetic param default: Function1[A1, B1]
+       |local13 => synthetic param default: Function1[A1, B1]
        |  Function1 => scala/Function1#
        |  A1 => local8
-       |  B1 => local15
-       |local15 => typeparam B1 >: A1
+       |  B1 => local14
+       |local14 => typeparam B1 >: A1
        |  A1 => local8
-       |local16 => synthetic param x: Int
+       |local15 => synthetic param x: Int
        |  Int => scala/Int#
-       |local17 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[A1, Int] with Serializable { +2 decls }
+       |local16 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[A1, Int] with Serializable { +2 decls }
        |  SerialVersionUID => scala/SerialVersionUID#
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  A1 => local8
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local18 => final method applyOrElse[A1 <: A1, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
-       |  A1 => local23
+       |local17 => final method applyOrElse[A1 <: A1, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local22
        |  A1 => local8
-       |  B1 => local22
+       |  B1 => local21
        |  Int => scala/Int#
-       |  x => local20
-       |  default => local21
+       |  x => local19
+       |  default => local20
        |  Function1 => scala/Function1#
-       |local19 => final method isDefinedAt(x: A1): Boolean <: scala/PartialFunction#isDefinedAt().
-       |  x => local24
+       |local18 => final method isDefinedAt(x: A1): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local23
        |  A1 => local8
        |  Boolean => scala/Boolean#
-       |local20 => synthetic param x: A1
-       |  A1 => local23
-       |local21 => synthetic param default: Function1[A1, B1]
+       |local19 => synthetic param x: A1
+       |  A1 => local22
+       |local20 => synthetic param default: Function1[A1, B1]
        |  Function1 => scala/Function1#
-       |  A1 => local23
-       |  B1 => local22
-       |local22 => typeparam B1 >: Int
+       |  A1 => local22
+       |  B1 => local21
+       |local21 => typeparam B1 >: Int
        |  Int => scala/Int#
-       |local23 => typeparam A1 <: A1
+       |local22 => typeparam A1 <: A1
        |  A1 => local8
-       |local24 => synthetic param x: A1
+       |local23 => synthetic param x: A1
        |  A1 => local8
        |""".stripMargin,
   )
@@ -1042,9 +1040,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:31..2:31):  <= local9
        |[2:31..2:32): x => local12
        |[2:34..2:41): collect => scala/collection/immutable/List#collect().
-       |[2:47..2:48): x => scala/Any#asInstanceOf().
-       |[2:49..2:49):  <= local17
-       |[2:49..2:50): + => local18
+       |[2:47..2:48): x => local19
+       |[2:49..2:49):  <= local16
+       |[2:49..2:50): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
 
@@ -1072,9 +1070,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:26..2:30): List => scala/package.List#
        |[2:31..2:34): Int => scala/Int#
        |[2:37..2:43): String => scala/Predef.String#
-       |[2:66..2:68): xs => scala/Any#asInstanceOf().
+       |[2:66..2:68): xs => local4
        |[2:69..2:69):  <= local1
-       |[2:69..2:77): mkString => local2
+       |[2:69..2:77): mkString => scala/collection/IterableOnceOps#mkString(+2).
        |[3:6..3:7): g <= _empty_/t188.g().
        |[3:9..3:15): String => scala/Predef.String#
        |[3:19..3:22): Int => scala/Int#
@@ -1086,9 +1084,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[4:10..4:25): PartialFunction => scala/PartialFunction#
        |[4:26..4:32): String => scala/Predef.String#
        |[4:34..4:37): Int => scala/Int#
-       |[4:57..4:58): s => scala/Any#asInstanceOf().
+       |[4:57..4:58): s => local13
        |[4:59..4:59):  <= local10
-       |[4:59..4:65): length => local11
+       |[4:59..4:65): length => java/lang/String#length().
        |""".stripMargin,
   )
 
@@ -1107,23 +1105,23 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[1:10..1:25): PartialFunction => scala/PartialFunction#
        |[1:26..1:29): Int => scala/Int#
        |[1:31..1:34): Int => scala/Int#
-       |[1:45..1:46): x => scala/Any#asInstanceOf().
+       |[1:45..1:46): x => local3
        |[1:47..1:47):  <= local0
-       |[1:47..1:48): + => local1
+       |[1:47..1:48): + => scala/Int#`+`(+4).
        |[2:6..2:8): pb <= _empty_/t189.pb().
        |[2:10..2:25): PartialFunction => scala/PartialFunction#
        |[2:26..2:29): Int => scala/Int#
        |[2:31..2:34): Int => scala/Int#
-       |[2:44..2:45): x => scala/Any#asInstanceOf().
+       |[2:44..2:45): x => local11
        |[2:46..2:46):  <= local8
-       |[2:46..2:47): + => local9
+       |[2:46..2:47): + => scala/Int#`+`(+4).
        |[3:6..3:8): pc <= _empty_/t189.pc().
        |[3:10..3:25): PartialFunction => scala/PartialFunction#
        |[3:26..3:29): Int => scala/Int#
        |[3:31..3:34): Int => scala/Int#
-       |[3:45..3:46): x => scala/Any#asInstanceOf().
+       |[3:45..3:46): x => local19
        |[3:47..3:47):  <= local16
-       |[3:47..3:48): + => local17
+       |[3:47..3:48): + => scala/Int#`+`(+4).
        |[4:6..4:8): pd <= _empty_/t189.pd().
        |[4:10..4:25): PartialFunction => scala/PartialFunction#
        |[4:26..4:29): Int => scala/Int#
@@ -1132,7 +1130,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[4:52..4:55): Int => scala/Int#
        |[4:65..4:66): _ <= local25
        |[4:67..4:67):  <= local31
-       |[4:67..4:68): + => local25
+       |[4:67..4:68): + => scala/Int#`+`(+4).
        |[4:69..4:70): x => local27
        |[5:6..5:8): pe <= _empty_/t189.pe().
        |[5:10..5:25): PartialFunction => scala/PartialFunction#
@@ -1140,11 +1138,10 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[5:31..5:46): PartialFunction => scala/PartialFunction#
        |[5:47..5:50): Int => scala/Int#
        |[5:52..5:55): Int => scala/Int#
-       |[5:65..5:66): y <= scala/Any#asInstanceOf().
        |[5:67..5:67):  <= local40
-       |[5:70..5:71): x => scala/Any#asInstanceOf().
+       |[5:70..5:71): x => local43
        |[5:72..5:72):  <= local47
-       |[5:72..5:73): + => local48
+       |[5:72..5:73): + => scala/Int#`+`(+4).
        |[5:74..5:75): y => local50
        |""".stripMargin,
   )
@@ -1176,7 +1173,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:31..2:37): String => scala/Predef.String#
        |[2:41..2:42): _ <= local2
        |[2:43..2:43):  <= local1
-       |[2:43..2:51): toString => local2
+       |[2:43..2:51): toString => scala/Any#toString().
        |[3:6..3:7): b <= _empty_/t190.b().
        |[3:9..3:12): Int => scala/Int#
        |[3:16..3:19): Int => scala/Int#
@@ -1190,7 +1187,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[4:39..4:40): _ <= local13
        |[4:42..4:45): Int => scala/Int#
        |[4:47..4:47):  <= local10
-       |[4:47..4:48): + => local11
+       |[4:47..4:48): + => scala/Int#`+`(+4).
        |[5:6..5:7): c <= _empty_/t190.c().
        |[5:10..5:14): List => scala/package.List.
        |[5:18..5:21): map => scala/collection/immutable/List#map().
@@ -1201,7 +1198,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[6:19..6:26): collect => scala/collection/immutable/List#collect().
        |[6:27..6:28): _ <= local20
        |[6:29..6:29):  <= local19
-       |[6:29..6:30): + => local20
+       |[6:29..6:30): + => scala/Int#`+`(+4).
        |[7:6..7:7): d <= _empty_/t190.d().
        |[7:9..7:12): Int => scala/Int#
        |[7:16..7:20): List => scala/package.List#
@@ -1213,7 +1210,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[8:26..8:29): Int => scala/Int#
        |[8:31..8:35): List => scala/package.List#
        |[8:36..8:39): Int => scala/Int#
-       |[8:44..8:48): List => scala/Any#asInstanceOf().
+       |[8:44..8:48): List => scala/package.List.
        |[8:48..8:48):  <= local28
        |[8:49..8:50): _ <= local31
        |[9:6..9:7): e <= _empty_/t190.e().
@@ -1232,7 +1229,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[10:60..10:61): _ <= local41
        |[10:65..10:66): _ <= local39
        |[10:67..10:67):  <= local45
-       |[10:67..10:68): + => local39
+       |[10:67..10:68): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
 
@@ -1255,9 +1252,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:10..2:25): PartialFunction => scala/PartialFunction#
        |[2:26..2:29): Int => scala/Int#
        |[2:31..2:34): Int => scala/Int#
-       |[2:59..2:60): x => scala/Any#asInstanceOf().
+       |[2:59..2:60): x => local4
        |[2:61..2:61):  <= local1
-       |[2:61..2:62): + => local2
+       |[2:61..2:62): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
 
@@ -1279,9 +1276,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:10..2:25): PartialFunction => scala/PartialFunction#
        |[2:26..2:29): Int => scala/Int#
        |[2:31..2:34): Int => scala/Int#
-       |[2:54..2:55): x => scala/Any#asInstanceOf().
+       |[2:54..2:55): x => local4
        |[2:56..2:56):  <= local1
-       |[2:56..2:57): + => local2
+       |[2:56..2:57): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
 
@@ -1308,28 +1305,27 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
        |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
-       |  A1 => local7
+       |  A1 => local6
        |  Int => scala/Int#
-       |  B1 => local6
-       |  x => local4
-       |  default => local5
+       |  B1 => local5
+       |  x => local3
+       |  default => local4
        |  Function1 => scala/Function1#
        |local2 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
-       |  x => local8
+       |  x => local7
        |  Int => scala/Int#
        |  Boolean => scala/Boolean#
-       |local3 => method <local $anonfun>
-       |local4 => synthetic param x: A1
-       |  A1 => local7
-       |local5 => synthetic param default: Function1[A1, B1]
+       |local3 => synthetic param x: A1
+       |  A1 => local6
+       |local4 => synthetic param default: Function1[A1, B1]
        |  Function1 => scala/Function1#
-       |  A1 => local7
-       |  B1 => local6
-       |local6 => typeparam B1 >: Int
+       |  A1 => local6
+       |  B1 => local5
+       |local5 => typeparam B1 >: Int
        |  Int => scala/Int#
-       |local7 => typeparam A1 <: Int
+       |local6 => typeparam A1 <: Int
        |  Int => scala/Int#
-       |local8 => synthetic param x: Int
+       |local7 => synthetic param x: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -1351,7 +1347,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:26..2:29): Int => scala/Int#
        |[2:31..2:34): Int => scala/Int#
        |[2:38..2:38):  <= local0
-       |[2:38..2:41): foo => local3
+       |[2:38..2:41): foo => _empty_/t202.foo().
        |""".stripMargin,
   )
 
@@ -1372,9 +1368,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[1:10..1:25): PartialFunction => scala/PartialFunction#
        |[1:26..1:29): Int => scala/Int#
        |[1:31..1:34): Int => scala/Int#
-       |[1:45..1:46): x => scala/Any#asInstanceOf().
+       |[1:45..1:46): x => local3
        |[1:47..1:47):  <= local0
-       |[1:47..1:48): + => local1
+       |[1:47..1:48): + => scala/Int#`+`(+4).
        |[2:6..2:8): pb <= _empty_/t205.pb.
        |[2:10..2:25): PartialFunction => scala/PartialFunction#
        |[2:26..2:29): Int => scala/Int#
@@ -1423,9 +1419,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:15..2:15):  => _empty_/t208.C#`<init>`().
        |[3:6..3:7): a <= _empty_/t208.a.
        |[3:20..3:21): c => _empty_/t208.c.
-       |[3:29..3:30): x => scala/Any#asInstanceOf().
+       |[3:29..3:30): x => local3
        |[3:31..3:31):  <= local0
-       |[3:31..3:32): + => local1
+       |[3:31..3:32): + => scala/Int#`+`(+4).
        |[4:6..4:7): b <= _empty_/t208.b.
        |[4:9..4:12): Int => scala/Int#
        |[4:16..4:20): List => scala/package.List#
@@ -1433,9 +1429,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[4:28..4:29): _ <= local8
        |[4:30..4:32): :: => scala/collection/immutable/List#`::`().
        |[4:44..4:45): c => _empty_/t208.c.
-       |[4:53..4:54): x => scala/Any#asInstanceOf().
+       |[4:53..4:54): x => local12
        |[4:55..4:55):  <= local9
-       |[4:55..4:56): + => local10
+       |[4:55..4:56): + => scala/Int#`+`(+4).
        |[5:6..5:7): d <= _empty_/t208.d.
        |[5:9..5:12): Int => scala/Int#
        |[5:16..5:20): List => scala/package.List#
@@ -1444,9 +1440,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[5:33..5:34): y => local17
        |[5:35..5:37): :: => scala/collection/immutable/List#`::`().
        |[5:49..5:50): c => _empty_/t208.c.
-       |[5:58..5:59): x => scala/Any#asInstanceOf().
+       |[5:58..5:59): x => local21
        |[5:60..5:60):  <= local18
-       |[5:60..5:61): + => local19
+       |[5:60..5:61): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
 
@@ -1507,10 +1503,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[7:14..7:15): C => _empty_/t215.C#
        |[7:15..7:15):  => _empty_/t215.C#`<init>`().
        |[8:6..8:7): a <= _empty_/t215.a.
-       |[8:15..8:16): x <= scala/Tuple3.
        |[8:20..8:21): c => _empty_/t215.c.
        |[8:23..8:23):  <= local2
-       |[8:23..8:24): y <= local3
+       |[8:23..8:24): y <= local8
        |[8:27..8:28): x => local5
        |[8:29..8:30): + => scala/Int#`+`(+4).
        |[8:34..8:35): z <= local9
@@ -1518,21 +1513,19 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[8:40..8:41): + => scala/Int#`+`(+4).
        |[8:51..8:52): z => local9
        |[9:6..9:7): b <= _empty_/t215.b.
-       |[9:15..9:16): x <= scala/Tuple2.
        |[9:20..9:21): c => _empty_/t215.c.
-       |[9:25..9:26): x => scala/Any#asInstanceOf().
+       |[9:25..9:26): x => local17
        |[9:27..9:27):  <= local14
-       |[9:27..9:28): > => local15
+       |[9:27..9:28): > => scala/Int#`>`(+3).
        |[9:32..9:32):  <= local22
-       |[9:32..9:33): y <= local23
+       |[9:32..9:33): y <= local28
        |[9:36..9:37): x => local25
        |[9:38..9:39): + => scala/Int#`+`(+4).
        |[9:49..9:50): y => local28
        |[10:6..10:7): f <= _empty_/t215.f.
-       |[10:15..10:16): x <= scala/Tuple2.
        |[10:20..10:21): c => _empty_/t215.c.
        |[10:23..10:23):  <= local34
-       |[10:23..10:24): y <= local35
+       |[10:23..10:24): y <= local40
        |[10:27..10:28): x => local37
        |[10:29..10:30): + => scala/Int#`+`(+4).
        |[10:36..10:37): y => local40
@@ -1540,17 +1533,16 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[10:49..10:50): y => local40
        |[11:6..11:7): g <= _empty_/t215.g.
        |[11:20..11:21): c => _empty_/t215.c.
-       |[11:23..11:24): z <= scala/Any#asInstanceOf().
+       |[11:23..11:24): z <= local50
        |[11:25..11:25):  <= local44
        |[11:28..11:32): List => scala/package.List.
        |[11:33..11:34): x => local47
        |[11:37..11:38): y <= local52
        |[11:41..11:42): z => local50
        |[11:50..11:51): y => local52
-       |[12:7..12:8): x <= scala/Tuple2.
        |[12:12..12:13): c => _empty_/t215.c.
        |[12:15..12:15):  <= local56
-       |[12:15..12:16): y <= local57
+       |[12:15..12:16): y <= local62
        |[12:19..12:20): x => local59
        |[12:21..12:22): + => scala/Int#`+`(+4).
        |[12:26..12:33): println => scala/Predef.println(+1).
@@ -1661,54 +1653,53 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |local23 => final method applyOrElse[A1 <: Int, B1 >: A1](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local21
        |  Int => scala/Int#
-       |  B1 => local28
-       |  z => local26
-       |  default => local27
+       |  B1 => local27
+       |  z => local25
+       |  default => local26
        |  Function1 => scala/Function1#
        |local24 => final method isDefinedAt(z: Int): Boolean <: scala/PartialFunction#isDefinedAt().
-       |  z => local29
+       |  z => local28
        |  Int => scala/Int#
        |  Boolean => scala/Boolean#
-       |local25 => method <local $anonfun>
-       |local26 => synthetic param z: A1
+       |local25 => synthetic param z: A1
        |  A1 => local21
-       |local27 => synthetic param default: Function1[A1, B1]
+       |local26 => synthetic param default: Function1[A1, B1]
        |  Function1 => scala/Function1#
        |  A1 => local21
-       |  B1 => local28
-       |local28 => typeparam B1 >: A1
+       |  B1 => local27
+       |local27 => typeparam B1 >: A1
        |  A1 => local21
-       |local29 => synthetic param z: Int
+       |local28 => synthetic param z: Int
        |  Int => scala/Int#
-       |local30 => param x: Int
+       |local29 => param x: Int
        |  Int => scala/Int#
-       |local31 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+       |local30 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
        |  SerialVersionUID => scala/SerialVersionUID#
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local32 => final method applyOrElse[A1 <: Int, B1 >: Int](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
-       |  A1 => local37
+       |local31 => final method applyOrElse[A1 <: Int, B1 >: Int](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local36
        |  Int => scala/Int#
-       |  B1 => local36
-       |  z => local34
-       |  default => local35
+       |  B1 => local35
+       |  z => local33
+       |  default => local34
        |  Function1 => scala/Function1#
-       |local33 => final method isDefinedAt(z: Int): Boolean <: scala/PartialFunction#isDefinedAt().
-       |  z => local38
+       |local32 => final method isDefinedAt(z: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  z => local37
        |  Int => scala/Int#
        |  Boolean => scala/Boolean#
-       |local34 => synthetic param z: A1
-       |  A1 => local37
-       |local35 => synthetic param default: Function1[A1, B1]
+       |local33 => synthetic param z: A1
+       |  A1 => local36
+       |local34 => synthetic param default: Function1[A1, B1]
        |  Function1 => scala/Function1#
-       |  A1 => local37
-       |  B1 => local36
-       |local36 => typeparam B1 >: Int
+       |  A1 => local36
+       |  B1 => local35
+       |local35 => typeparam B1 >: Int
        |  Int => scala/Int#
-       |local37 => typeparam A1 <: Int
+       |local36 => typeparam A1 <: Int
        |  Int => scala/Int#
-       |local38 => synthetic param z: Int
+       |local37 => synthetic param z: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -1729,7 +1720,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[1:28..1:35): collect => scala/collection/immutable/List#collect().
        |[1:36..1:37): _ <= local2
        |[1:38..1:38):  <= local1
-       |[1:38..1:39): + => local2
+       |[1:38..1:39): + => scala/Int#`+`(+4).
        |[1:50..1:51): x => local0
        |[2:6..2:7): b <= _empty_/t224.b.
        |[2:15..2:16): x <= local9
@@ -1738,9 +1729,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:33..2:37): List => scala/package.List.
        |[2:38..2:39): x => local9
        |[2:41..2:48): collect => scala/collection/immutable/List#collect().
-       |[2:54..2:55): z => scala/Any#asInstanceOf().
+       |[2:54..2:55): z => local14
        |[2:56..2:56):  <= local11
-       |[2:56..2:57): + => local12
+       |[2:56..2:57): + => scala/Int#`+`(+4).
        |[2:68..2:69): y => local19
        |[3:6..3:7): c <= _empty_/t224.c.
        |[3:15..3:16): x <= local20
@@ -1753,15 +1744,15 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[3:62..3:70): nonEmpty => scala/collection/IterableOnceOps#nonEmpty().
        |[3:78..3:79): x => local20
        |[4:6..4:7): d <= _empty_/t224.d.
-       |[4:15..4:16): x <= local30
+       |[4:15..4:16): x <= local29
        |[4:20..4:24): List => scala/package.List.
        |[4:35..4:39): List => scala/package.List.
-       |[4:40..4:41): x => local30
+       |[4:40..4:41): x => local29
        |[4:43..4:50): collect => scala/collection/immutable/List#collect().
-       |[4:56..4:57): z => scala/Any#asInstanceOf().
-       |[4:58..4:58):  <= local31
-       |[4:58..4:59): + => local32
-       |[4:60..4:61): x => local30
+       |[4:56..4:57): z => local33
+       |[4:58..4:58):  <= local30
+       |[4:58..4:59): + => scala/Int#`+`(+4).
+       |[4:60..4:61): x => local29
        |""".stripMargin,
   )
 
@@ -1807,9 +1798,9 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[5:42..5:45): Int => scala/Int#
        |[5:48..5:53): scala => scala/
        |[5:54..5:57): Int => scala/Int#
-       |[5:85..5:86): x => scala/Any#asInstanceOf().
+       |[5:85..5:86): x => local11
        |[5:87..5:87):  <= local8
-       |[5:87..5:95): hashCode => local9
+       |[5:87..5:95): hashCode => scala/collection/Seq#hashCode().
        |[6:6..6:7): c <= _empty_/t231.c.
        |[6:9..6:10): o => _empty_/t231.o.
        |[6:11..6:14): Int => _empty_/t231.o.Int#
@@ -1870,16 +1861,16 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[5:25..5:26): p => _empty_/t233.p.
        |[5:27..5:28): B => _empty_/t233.p.B#
        |[5:30..5:33): Int => scala/Int#
-       |[5:47..5:48): x => local20
-       |[5:49..5:49):  <= local17
+       |[5:47..5:48): x => local19
+       |[5:49..5:49):  <= local16
        |[6:6..6:7): d <= _empty_/t233.d.
        |[6:9..6:24): PartialFunction => scala/PartialFunction#
        |[6:25..6:28): Int => scala/Int#
        |[6:30..6:33): Int => scala/Int#
-       |[6:47..6:48): x => local28
-       |[6:49..6:49):  <= local25
-       |[6:62..6:63): y <= local32
-       |[6:67..6:68): y => local32
+       |[6:47..6:48): x => local27
+       |[6:49..6:49):  <= local24
+       |[6:62..6:63): y <= local31
+       |[6:67..6:68): y => local31
        |""".stripMargin,
   )
 
@@ -1910,56 +1901,55 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
        |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
-       |  A1 => local7
+       |  A1 => local6
        |  Int => scala/Int#
-       |  B1 => local6
-       |  x => local4
-       |  default => local5
+       |  B1 => local5
+       |  x => local3
+       |  default => local4
        |  Function1 => scala/Function1#
        |local2 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
-       |  x => local8
+       |  x => local7
        |  Int => scala/Int#
        |  Boolean => scala/Boolean#
-       |local3 => method <local $anonfun>
-       |local4 => synthetic param x: A1
-       |  A1 => local7
-       |local5 => synthetic param default: Function1[A1, B1]
+       |local3 => synthetic param x: A1
+       |  A1 => local6
+       |local4 => synthetic param default: Function1[A1, B1]
        |  Function1 => scala/Function1#
-       |  A1 => local7
-       |  B1 => local6
-       |local6 => typeparam B1 >: Int
+       |  A1 => local6
+       |  B1 => local5
+       |local5 => typeparam B1 >: Int
        |  Int => scala/Int#
-       |local7 => typeparam A1 <: Int
+       |local6 => typeparam A1 <: Int
        |  Int => scala/Int#
-       |local8 => synthetic param x: Int
+       |local7 => synthetic param x: Int
        |  Int => scala/Int#
-       |local9 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+       |local8 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
        |  SerialVersionUID => scala/SerialVersionUID#
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local10 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
-       |  A1 => local15
+       |local9 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local14
        |  Int => scala/Int#
-       |  B1 => local14
-       |  x$1 => local12
-       |  default => local13
+       |  B1 => local13
+       |  x$1 => local11
+       |  default => local12
        |  Function1 => scala/Function1#
-       |local11 => final method isDefinedAt(x$1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
-       |  x$1 => local16
+       |local10 => final method isDefinedAt(x$1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x$1 => local15
        |  Int => scala/Int#
        |  Boolean => scala/Boolean#
-       |local12 => synthetic param x$1: A1
-       |  A1 => local15
-       |local13 => synthetic param default: Function1[A1, B1]
+       |local11 => synthetic param x$1: A1
+       |  A1 => local14
+       |local12 => synthetic param default: Function1[A1, B1]
        |  Function1 => scala/Function1#
-       |  A1 => local15
-       |  B1 => local14
-       |local14 => typeparam B1 >: Int
+       |  A1 => local14
+       |  B1 => local13
+       |local13 => typeparam B1 >: Int
        |  Int => scala/Int#
-       |local15 => typeparam A1 <: Int
+       |local14 => typeparam A1 <: Int
        |  Int => scala/Int#
-       |local16 => synthetic param x$1: Int
+       |local15 => synthetic param x$1: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -1981,14 +1971,14 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |[2:10..2:14): List => scala/package.List.
        |[2:18..2:25): collect => scala/collection/immutable/List#collect().
        |[2:26..2:26):  <= local0
-       |[2:26..2:29): foo => local3
+       |[2:26..2:29): foo => _empty_/t228.foo().
        |[3:6..3:7): b <= _empty_/t228.b.
        |[3:9..3:24): PartialFunction => scala/PartialFunction#
        |[3:25..3:28): Int => scala/Int#
        |[3:30..3:33): Int => scala/Int#
-       |[3:37..3:40): foo => scala/Any#asInstanceOf().
-       |[3:40..3:40):  <= local9
-       |[3:41..3:42): _ <= local12
+       |[3:37..3:40): foo => _empty_/t228.foo().
+       |[3:40..3:40):  <= local8
+       |[3:41..3:42): _ <= local11
        |""".stripMargin,
   )
 
