@@ -96,7 +96,9 @@ trait SymbolInformationOps {
         // marked in javacp (metac emits no SymbolInformation for them). Self parameters
         // carry the synthetic flag even when written in source (`self =>`), but the spec
         // grants them no properties, so exclude them.
-        if (!gsym.isSelfParameter && gsym.isSynthetic || isClassEvidence) flip(p.SYNTHETIC)
+        if (!gsym.isSelfParameter && gsym.isSynthetic &&
+          (!gsym.isPartialFunctionLambdaParam || gsym.isPartialFunctionLambdaParamPlaceholder) ||
+          isClassEvidence) flip(p.SYNTHETIC)
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
           flip(p.ABSTRACT)
           flip(p.OVERRIDE)

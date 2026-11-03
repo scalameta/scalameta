@@ -270,8 +270,42 @@ trait SymbolOps {
      * getter's parameter is a copy of its method's, not an added one */
     def isAddedParameter: Boolean = sym.isValueParameter && {
       val owner = sym.owner
-      (sym.isSynthetic || owner.isSynthetic) && !owner.isAnonymousFunction && !owner.isDefaultGetter
+      (sym.isSynthetic || owner.isSynthetic) && !owner.isAnonymousFunction &&
+      !owner.isDefaultGetter && !isPartialFunctionLambdaParam
     }
+
+    /* Partial functions.
+     * - A simple lambda can be used instead of the `case ...` partial and requires special handling
+     * - A partial function uses the declared type for `isDefinedAt`, and a generic in `applyOrElse`
+     */
+    def isPartialFunctionLambdaAnyParam: Boolean = sym.isSynthetic && sym.isValueParameter && {
+      val method = sym.owner
+      val cls = method.owner
+      cls.isAnonymousClass && (method.firstParam eq sym) && {
+        // param of a `{ case ... }` usually sits at the method, whereas lambda does not
+        val gpos = sym.pos
+        val mpos = method.pos
+        gpos.isDefined && mpos.isDefined && gpos.point != mpos.point
+      } && cls.isSubClass(g.definitions.AbstractPartialFunctionClass)
+    }
+    def partialFunctionParamFromClass: g.Symbol = sym.info.decl(g.nme.isDefinedAt).firstParam
+    def isIsDefinedAt: Boolean = sym.name == g.nme.isDefinedAt
+    def partialFunctionParamFromAnyMethod: g.Symbol = sym.owner.partialFunctionParamFromClass
+    def partialFunctionParamFromAnyParam: g.Symbol = sym.owner.partialFunctionParamFromAnyMethod
+    def isPartialFunctionLambdaParam: Boolean = sym.owner.isIsDefinedAt &&
+      isPartialFunctionLambdaAnyParam
+    def isPartialFunctionLambdaClass: Boolean = sym.isSynthetic && sym.isAnonymousClass &&
+      partialFunctionParamFromClass.isPartialFunctionLambdaAnyParam
+    def isPartialFunctionLambdaParamPlaceholder: Boolean = { // is it `_` in `_ + 1`?
+      val gpos = sym.pos
+      gpos.isDefined && {
+        // `sym` is a param, under its method and the lambda's class
+        val lambdaPos = sym.owner.owner.pos
+        // placeholder is usually at or after its class's start, while parameter is before
+        lambdaPos.isDefined && gpos.point >= lambdaPos.start
+      }
+    }
+
     // scalac binds the pattern of a for value definition to a value like `x$1`
     def isFreshValue: Boolean = !sym.isParameter && !sym.isSynthetic && !sym.isArtifact &&
       hasFreshName

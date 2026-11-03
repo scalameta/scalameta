@@ -199,6 +199,46 @@ trait TextDocumentOps {
         if (null eq menum) None else Some(menum.pos)
       }
 
+      // scalac drops `implicit` from a partial function lambda's parameter
+      def isImplicitPartialFunctionLambdaParam(gs: g.Symbol): Boolean =
+        gs.isPartialFunctionLambdaParam && {
+          val t = mpartialFunctionLambdaParam(gs)
+          (null ne t) && t.mods.exists(_.is[m.Mod.Implicit])
+        }
+      def mpartialFunctionLambdaOf(gparam: g.Symbol): m.Term = {
+        /* we make the following assumptions about `gparam`:
+         * - it points to a position somewhere within the lambda's parameter
+         * - however, if it's a placeholder, it points to the placeholder itself */
+        val point = gparam.pos.pointOrElse(-1)
+        @tailrec
+        def iter(mtree: m.Tree, isPlaceholder: Boolean): m.Term = mtree match {
+          case null => null
+          // a parameter of a `for` has no lambda in the source
+          case _: m.Enumerator if !isPlaceholder => null
+          case t: m.Term.AnonymousFunction if isPlaceholder => t
+          case t: m.Term.Function if (t.paramClause.values match {
+                case p :: Nil => p.contains(point)
+                case _ => false
+              }) => t
+          case t => iter(t.parentOrNull, isPlaceholder)
+        }
+        val mtree = mtrees.mbefore(point)
+        iter(mtree, mtree.isInstanceOf[m.Term.Placeholder])
+      }
+      def mpartialFunctionLambdaParam(gs: g.Symbol): m.Term.Param =
+        mpartialFunctionLambdaOf(gs) match {
+          case t: m.Term.Function => t.paramClause.values.head
+          case _ => null
+        }
+      def partialFunctionLambdaPos(gcls: g.Symbol): m.Position = {
+        val gparam = gcls.partialFunctionParamFromClass
+        if (!gparam.isPartialFunctionLambdaAnyParam) null
+        else mpartialFunctionLambdaOf(gparam) match {
+          case null => null
+          case t => t.pos
+        }
+      }
+
       /*
        * Methods to save symbols, occurrences, etc
        */
@@ -288,7 +328,10 @@ trait TextDocumentOps {
       def saveSymbolDo(gs: g.Symbol): Unit = saveSymbolFromSemantic(gs, gs.toSemantic)
       def saveSymbolFromSemantic(gs: g.Symbol, ssym: String): s.SymbolInformation = {
         val gdecl = if (ssym.isLocal) localDeclaration(ssym, gs) else gs
-        val info = gdecl.toSymbolInfo(SymlinkChildren, ssym)
+        val info0 = gdecl.toSymbolInfo(SymlinkChildren, ssym)
+        val info =
+          if (!isImplicitPartialFunctionLambdaParam(gdecl)) info0
+          else info0.withProperties(info0.properties | s.SymbolInformation.Property.IMPLICIT.value)
         symbols(ssym) = info
         info
       }
@@ -347,8 +390,11 @@ trait TextDocumentOps {
           val symInfo = saveSymbolFromSemantic(gsym, symbol)
 
           if (gsym.isClass && !gsym.isTrait) {
-            if (gsym.isAnonymousClass && gsym.pos.isDefined)
-              addOccurrenceFromSemantic(gsym.pos.focus.toMeta, symbol, Role.DEFINITION)
+            if (gsym.isAnonymousClass && gsym.pos.isDefined) {
+              val mpos = partialFunctionLambdaPos(gsym)
+              val mdef = if (mpos ne null) mpos else gsym.pos.focus.toMeta
+              addOccurrenceFromSemantic(mdef, symbol, Role.DEFINITION)
+            }
             val gprim = gsym.primaryConstructor
             saveSymbol(gprim)
             gprim.info.paramss.flatten.foreach(saveSymbol)
@@ -419,6 +465,7 @@ trait TextDocumentOps {
 
           val gsym =
             if (gsym0.isConstructor && !mtree.isAny[m.Name.Anonymous, m.Name.This]) gsym0.owner
+            else if (gsym0.isPartialFunctionLambdaAnyParam) gsym0.partialFunctionParamFromAnyParam
             else gsym0
 
           val register: String => Unit =
@@ -462,8 +509,12 @@ trait TextDocumentOps {
         // define the symbol that scalac created for an underscore, like in `_ + 1` or `List[_]`
         private def defineUnderscore(gtree: g.Tree): Unit =
           defineUnderscore(findUnderscore(gtree), gtree.symbol)
-        private def defineUnderscore(mpos: m.Position, gsym: g.Symbol): Unit =
-          if (mpos ne null) addOccurrenceFromSemantic(mpos, saveUnderscore(gsym), Role.DEFINITION)
+        private def defineUnderscore(mpos: m.Position, gsym: g.Symbol): Unit = if (mpos ne null) {
+          val gdef =
+            if (gsym.isPartialFunctionLambdaAnyParam) gsym.partialFunctionParamFromAnyParam
+            else gsym
+          addOccurrenceFromSemantic(mpos, saveUnderscore(gdef), Role.DEFINITION)
+        }
         private val munderscore: m.Tree => m.Tree = {
           case t @ (_: m.Name.Placeholder | _: m.Term.Placeholder | _: m.Type.Wildcard) => t
           case t: m.Pat.Wildcard if isWholePat(t) => t
@@ -743,7 +794,9 @@ trait TextDocumentOps {
 
           gtree match {
             case _: g.ValDef if gsym.isSelfParameter => tryMstart(gstart)
-            case _: g.MemberDef if gsym.hasFlag(Flags.SYNTHETIC | Flags.ARTIFACT) =>
+            case _: g.MemberDef
+                if gsym.hasFlag(Flags.SYNTHETIC | Flags.ARTIFACT) &&
+                  !gsym.isPartialFunctionLambdaParam =>
               if (!gsym.isSemanticdbLocal && !gsym.isUseless) saveSymbolDo(gsym)
             case _: g.PackageDef => // NOTE: capture PackageDef.pid instead
             case gtree: g.ModuleDef if gtree.name == g.nme.PACKAGE =>
@@ -761,6 +814,13 @@ trait TextDocumentOps {
                 // resolved to getter symbols both as definition and references.
                 tryMstart(gstart)
                 singleValPat(gsym)
+                if (gsym.isPartialFunctionLambdaParam) mpartialFunctionLambdaParam(gsym) match {
+                  case null =>
+                  case mparam =>
+                    success(mparam.name, gsym)
+                    if (!IsOldBehaviourOnPartialFunctionLambdas) mparam.decltpe
+                      .foreach(tryFindType(_, gsym.info))
+                }
               } else if (genclosing match {
                   // skip if the template of the field contains `ggetter`
                   case _ :: (t: g.Template) :: _ => t.symbol.owner.isSemanticdbLocal &&
@@ -1469,6 +1529,29 @@ trait TextDocumentOps {
             isVisited ++= t.vparamss.flatten
             isVisited += t.rhs
 
+          // skip the parents, the types and the default cases of a lambda's class
+          case t: g.Template if t.symbol.owner.isPartialFunctionLambdaClass =>
+            isVisited ++= t.parents
+            isVisited += t.self
+          case t: g.DefDef if t.symbol.owner.isPartialFunctionLambdaClass =>
+            trySymbolDefinition(t.symbol)
+            isVisited ++= t.tparams
+            isVisited += t.tpt
+            // skip the default case that scalac adds to call `default`
+            t.rhs match {
+              case rhs: g.Match if t.name == g.nme.applyOrElse => isVisited ++= rhs.cases.lastOption
+              case _ =>
+            }
+          case t: g.Bind
+              if t.symbol.isDefaultCaseBinder &&
+                t.symbol.owner.owner.isPartialFunctionLambdaClass =>
+          // skip the cast of a lambda's parameter that scalac adds to the methods of its class
+          case t: g.TypeApply if (t.fun match {
+                case g.Select(q: g.Ident, _) => q.symbol.isPartialFunctionLambdaAnyParam &&
+                  q.pos == t.pos
+                case _ => false
+              }) => isVisited += t.fun
+
           case t: g.Literal if t.tpe != null && t.tpe.typeSymbol == g.definitions.ClassClass =>
             val mpos = t.toMeta
             val mposClassOf = stripClassOf(mpos)
@@ -1927,6 +2010,9 @@ object TextDocumentOps {
   def emptyOccurrenceMap() = mutable.Map.empty[m.Position, Occurrence]
 
   val IsOldBehaviourOnPats = ScalaVersion(BuildInfo.scalaVersion) < ScalaVersion("2.13.17")
+  // scalac before 2.13.17 types a partial function lambda's parameter with the expected type
+  val IsOldBehaviourOnPartialFunctionLambdas = ScalaVersion(BuildInfo.scalaVersion) <
+    ScalaVersion("2.13.17")
 
   // index the trees of a source in `mtrees`
   private[scalac] class MTreeIndexer(mtrees: TreeIndex) extends m.Traverser {
@@ -1977,6 +2063,12 @@ object TextDocumentOps {
     private[scalac] def mend(offset: Int): m.Tree = apply(offset - 1) match {
       case t: m.Tree if t.pos.end == offset => t
       case _ => null
+    }
+
+    // the last tree at `offset` or before it
+    private[scalac] def mbefore(offset: Int): m.Tree = {
+      val i = self.lastIndexWhere(_ ne null, offset)
+      if (i < 0) null else self(i)
     }
   }
 
@@ -2069,6 +2161,7 @@ object TextDocumentOps {
 
   private implicit class ImplicitMetaTreeOps(val self: m.Tree) extends AnyVal {
 
+    def contains(offset: Int): Boolean = containsIncl(offset, offset)
     def containsIncl(beg: Int, endIncl: Int): Boolean = {
       val mpos = self.pos
       mpos.start <= beg && endIncl < mpos.end

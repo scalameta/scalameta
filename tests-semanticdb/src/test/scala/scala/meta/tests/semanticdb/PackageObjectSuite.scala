@@ -887,8 +887,9 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[3:9..3:24): PartialFunction => scala/PartialFunction#
        |[3:25..3:28): Int => scala/Int#
        |[3:30..3:33): Any => scala/Any#
-       |[3:42..3:43): x => local3
-       |[3:44..3:44):  <= local0
+       |[3:37..3:38): x <= local7
+       |[3:37..3:82): x => x match { case _ => classOf[default.C] } <= local0
+       |[3:42..3:43): x => local7
        |[3:62..3:69): classOf => scala/Predef.classOf().
        |[3:70..3:77): default => po22a/o.
        |[3:78..3:79): C => po22a/o.C#
@@ -979,8 +980,9 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[5:9..5:24): PartialFunction => scala/PartialFunction#
        |[5:25..5:28): Int => scala/Int#
        |[5:30..5:33): Any => scala/Any#
-       |[5:48..5:55): default => local4
-       |[5:56..5:56):  <= local1
+       |[5:37..5:44): default <= local8
+       |[5:37..5:88): default => default match { case _ => classOf[q.C] } <= local1
+       |[5:48..5:55): default => local8
        |[5:74..5:81): classOf => scala/Predef.classOf().
        |[5:82..5:83): q => po24p/package.
        |[5:84..5:85): C => po24p/package.C#
@@ -1025,8 +1027,9 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[6:9..6:24): PartialFunction => scala/PartialFunction#
        |[6:25..6:28): Int => scala/Int#
        |[6:30..6:33): Any => scala/Any#
-       |[6:42..6:43): x => local4
-       |[6:44..6:44):  <= local1
+       |[6:37..6:38): x <= local8
+       |[6:37..6:82): x => x match { case _ => classOf[default.C] } <= local1
+       |[6:42..6:43): x => local8
        |[6:62..6:69): classOf => scala/Predef.classOf().
        |[6:70..6:77): default => po25a/po25b/
        |[6:78..6:79): C => po25a/po25b/package.C#
@@ -1109,8 +1112,9 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[2:9..2:24): PartialFunction => scala/PartialFunction#
        |[2:25..2:28): Int => scala/Int#
        |[2:30..2:33): Any => scala/Any#
-       |[2:42..2:43): x => local4
-       |[2:44..2:44):  <= local1
+       |[2:37..2:38): x <= local8
+       |[2:37..2:79): x => x match { case _ => classOf[self.C] } <= local1
+       |[2:42..2:43): x => local8
        |[2:62..2:69): classOf => scala/Predef.classOf().
        |[2:70..2:74): self => local0
        |[2:75..2:76): C => _empty_/po28#C#
