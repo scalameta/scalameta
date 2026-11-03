@@ -2920,4 +2920,21 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("partial function with a placeholder guard") {
+    val code =
+      """|xs.collect:
+         |  case x if _ => x
+         |""".stripMargin
+    val layout =
+      """|xs.collect {
+         |  case x if _ => x
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "collect"),
+      Term.PartialFunction(List(Case(patvar("x"), Some(Term.Placeholder()), tname("x")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }

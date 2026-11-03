@@ -1190,6 +1190,68 @@ class ControlSyntaxSuite extends BaseDottySuite {
     ))
   }
 
+  test("for-case-placeholder") {
+    val code = "for case x <- _ yield x"
+    val output = "for ( case x <- _) yield x"
+    val tree = Term
+      .ForYield(List(Enumerator.CaseGenerator(patvar("x"), Term.Placeholder())), tname("x"))
+    runTestAssert[Stat](code, assertLayout = Some(output))(tree)
+  }
+
+  test("select-match-placeholder") {
+    val code = "_.match { case s => s }"
+    val output =
+      """|_.match {
+         |  case s => s
+         |}
+         |""".stripMargin
+    val tree = Term
+      .AnonymousFunction(tselectmatch(Term.Placeholder(), Case(patvar("s"), None, tname("s"))))
+    runTestAssert[Stat](code, assertLayout = Some(output))(tree)
+  }
+
+  test("select-match-placeholder-select") {
+    val code = "_.toString.match { case s => s }"
+    val output =
+      """|_.toString.match {
+         |  case s => s
+         |}
+         |""".stripMargin
+    val tree =
+      tselectmatch(tselect(Term.Placeholder(), "toString"), Case(patvar("s"), None, tname("s")))
+    runTestAssert[Stat](code, assertLayout = Some(output))(tree)
+  }
+
+  test("select-match-placeholder-guard") {
+    val code = "y.match { case s if _ => s }"
+    val output =
+      """|y.match {
+         |  case s if _ => s
+         |}
+         |""".stripMargin
+    val tree = tselectmatch(tname("y"), Case(patvar("s"), Some(Term.Placeholder()), tname("s")))
+    runTestAssert[Stat](code, assertLayout = Some(output))(tree)
+  }
+
+  test("sub-case: placeholder in a sub-match") {
+    val code =
+      """|d match {
+         |  case m if _ match case c if _ => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = tmatch(
+      tname("d"),
+      Case(
+        patvar("m"),
+        None,
+        tsubmatch(Term.Placeholder(), Case(patvar("c"), Some(Term.Placeholder()), lit(1))),
+      ),
+      Case(patwildcard, None, lit(2)),
+    )
+    runTestAssert[Stat](code, assertLayout = None)(tree)
+  }
+
   test("multiline-for") {
     val code =
       """|for (a,b) <- gen

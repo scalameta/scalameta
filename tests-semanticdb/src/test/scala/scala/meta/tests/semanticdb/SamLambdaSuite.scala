@@ -10418,4 +10418,162 @@ class SamLambdaSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  symbols(
+    "SAM lambdas with a placeholder in an enumerator of a for",
+    """|trait F { def apply(l: List[Int]): List[Int] }
+       |trait G { def apply(i: Int): List[Int] }
+       |abstract class H { def apply(l: List[Int]): List[Int] }
+       |object s1 {
+       |  val xs: List[Int] = null
+       |  val a: F = for (x <- _) yield x + 1
+       |  val b: G = for (x <- xs if x > _) yield x
+       |  val c: G = for (x <- xs; y = _) yield x + y
+       |  val d: H = for (x <- _) yield x + 1
+       |}
+       |""".stripMargin,
+    """|_empty_/F# => trait F extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/F#apply(). => abstract method apply(l: List[Int]): List[Int]
+       |  l => _empty_/F#apply().(l)
+       |  List => scala/package.List#
+       |  Int => scala/Int#
+       |_empty_/F#apply().(l) => param l: List[Int]
+       |  List => scala/package.List#
+       |  Int => scala/Int#
+       |_empty_/G# => trait G extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/G#apply(). => abstract method apply(i: Int): List[Int]
+       |  i => _empty_/G#apply().(i)
+       |  Int => scala/Int#
+       |  List => scala/package.List#
+       |_empty_/G#apply().(i) => param i: Int
+       |  Int => scala/Int#
+       |_empty_/H# => abstract class H extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/H#`<init>`(). => primary ctor <init>()
+       |_empty_/H#apply(). => abstract method apply(l: List[Int]): List[Int]
+       |  l => _empty_/H#apply().(l)
+       |  List => scala/package.List#
+       |  Int => scala/Int#
+       |_empty_/H#apply().(l) => param l: List[Int]
+       |  List => scala/package.List#
+       |  Int => scala/Int#
+       |_empty_/s1. => final object s1 extends AnyRef { +5 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/s1.a. => val method a: F
+       |  F => _empty_/F#
+       |_empty_/s1.b. => val method b: G
+       |  G => _empty_/G#
+       |_empty_/s1.c. => val method c: G
+       |  G => _empty_/G#
+       |_empty_/s1.d. => val method d: H
+       |  H => _empty_/H#
+       |_empty_/s1.xs. => val method xs: List[Int]
+       |  List => scala/package.List#
+       |  Int => scala/Int#
+       |local0 => synthetic param x$1: List[Int]
+       |  List => scala/package.List#
+       |  Int => scala/Int#
+       |local1 => param x: Int
+       |  Int => scala/Int#
+       |local2 => synthetic class $anon extends Object with G { +1 decls }
+       |  Object => java/lang/Object#
+       |  G => _empty_/G#
+       |local3 => synthetic method apply(x$2: Int): List[Int] <: _empty_/G#apply().
+       |  x$2 => local4
+       |  Int => scala/Int#
+       |  List => scala/package.List#
+       |local4 => synthetic param x$2: Int
+       |  Int => scala/Int#
+       |local5 => param x: Int
+       |  Int => scala/Int#
+       |local6 => synthetic param x$3: Int
+       |  Int => scala/Int#
+       |local7 => val local x: Int
+       |  Int => scala/Int#
+       |local8 => synthetic param x$4: Tuple2[Int, Int]
+       |  Tuple2 => scala/Tuple2#
+       |  Int => scala/Int#
+       |local9 => val local y: Int
+       |  Int => scala/Int#
+       |local10 => synthetic param x$5: List[Int]
+       |  List => scala/package.List#
+       |  Int => scala/Int#
+       |local11 => param x: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "SAM lambdas with a placeholder in an enumerator of a for",
+    """|trait F { def apply(l: List[Int]): List[Int] }
+       |trait G { def apply(i: Int): List[Int] }
+       |abstract class H { def apply(l: List[Int]): List[Int] }
+       |object s1 {
+       |  val xs: List[Int] = null
+       |  val a: F = for (x <- _) yield x + 1
+       |  val b: G = for (x <- xs if x > _) yield x
+       |  val c: G = for (x <- xs; y = _) yield x + y
+       |  val d: H = for (x <- _) yield x + 1
+       |}
+       |""".stripMargin,
+    """|[0:6..0:7): F <= _empty_/F#
+       |[0:14..0:19): apply <= _empty_/F#apply().
+       |[0:20..0:21): l <= _empty_/F#apply().(l)
+       |[0:23..0:27): List => scala/package.List#
+       |[0:28..0:31): Int => scala/Int#
+       |[0:35..0:39): List => scala/package.List#
+       |[0:40..0:43): Int => scala/Int#
+       |[1:6..1:7): G <= _empty_/G#
+       |[1:14..1:19): apply <= _empty_/G#apply().
+       |[1:20..1:21): i <= _empty_/G#apply().(i)
+       |[1:23..1:26): Int => scala/Int#
+       |[1:29..1:33): List => scala/package.List#
+       |[1:34..1:37): Int => scala/Int#
+       |[2:15..2:16): H <= _empty_/H#
+       |[2:17..2:17):  <= _empty_/H#`<init>`().
+       |[2:23..2:28): apply <= _empty_/H#apply().
+       |[2:29..2:30): l <= _empty_/H#apply().(l)
+       |[2:32..2:36): List => scala/package.List#
+       |[2:37..2:40): Int => scala/Int#
+       |[2:44..2:48): List => scala/package.List#
+       |[2:49..2:52): Int => scala/Int#
+       |[3:7..3:9): s1 <= _empty_/s1.
+       |[4:6..4:8): xs <= _empty_/s1.xs.
+       |[4:10..4:14): List => scala/package.List#
+       |[4:15..4:18): Int => scala/Int#
+       |[5:6..5:7): a <= _empty_/s1.a.
+       |[5:9..5:10): F => _empty_/F#
+       |[5:18..5:19): x <= local1
+       |[5:23..5:24): _ <= local0
+       |[5:32..5:33): x => local1
+       |[5:34..5:35): + => scala/Int#`+`(+4).
+       |[6:6..6:7): b <= _empty_/s1.b.
+       |[6:9..6:10): G => _empty_/G#
+       |[6:13..6:43): for (x <- xs if x > _) yield x <= local2
+       |[6:13..6:43): for (x <- xs if x > _) yield x <= local3
+       |[6:18..6:19): x <= local5
+       |[6:23..6:25): xs => _empty_/s1.xs.
+       |[6:29..6:30): x => local5
+       |[6:31..6:32): > => scala/Int#`>`(+3).
+       |[6:33..6:34): _ <= local4
+       |[6:42..6:43): x => local5
+       |[7:6..7:7): c <= _empty_/s1.c.
+       |[7:9..7:10): G => _empty_/G#
+       |[7:18..7:19): x <= local7
+       |[7:23..7:25): xs => _empty_/s1.xs.
+       |[7:27..7:28): y <= local9
+       |[7:31..7:32): _ <= local6
+       |[7:40..7:41): x => local7
+       |[7:42..7:43): + => scala/Int#`+`(+4).
+       |[7:44..7:45): y => local9
+       |[8:6..8:7): d <= _empty_/s1.d.
+       |[8:9..8:10): H => _empty_/H#
+       |[8:18..8:19): x <= local11
+       |[8:23..8:24): _ <= local10
+       |[8:32..8:33): x => local11
+       |[8:34..8:35): + => scala/Int#`+`(+4).
+       |""".stripMargin,
+  )
+
 }

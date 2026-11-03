@@ -672,6 +672,301 @@ class TermSuite extends ParseSuite {
     AnonymousFunction(ApplyInfix(Placeholder(), tname("+"), Nil, List(int(1)))),
   ))))
 
+  test("anonymous-function-for-generator") {
+    val code = "for (x <- _) yield x"
+    val tree = ForYield(List(Enumerator.Generator(patvar("x"), Placeholder())), tname("x"))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-generator-select") {
+    val code = "for (x <- _.y) yield x"
+    val tree = ForYield(
+      List(Enumerator.Generator(patvar("x"), AnonymousFunction(tselect(Placeholder(), "y")))),
+      tname("x"),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-guard") {
+    val code = "for (x <- xs if x > _) yield x"
+    val tree = ForYield(
+      List(
+        Enumerator.Generator(patvar("x"), tname("xs")),
+        Enumerator.Guard(tinfix(tname("x"), ">", Placeholder())),
+      ),
+      tname("x"),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-guard-apply") {
+    val code = "for (x <- xs if f(_)) yield x"
+    val tree = ForYield(
+      List(
+        Enumerator.Generator(patvar("x"), tname("xs")),
+        Enumerator.Guard(tapply(tname("f"), Placeholder())),
+      ),
+      tname("x"),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-value") {
+    val code = "for (x <- xs; y = _) yield y"
+    val tree = ForYield(
+      List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Val(patvar("y"), Placeholder())),
+      tname("y"),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-value-infix") {
+    val code = "for (x <- xs; y = _ + x) yield y"
+    val tree = ForYield(
+      List(
+        Enumerator.Generator(patvar("x"), tname("xs")),
+        Enumerator.Val(patvar("y"), AnonymousFunction(tinfix(Placeholder(), "+", tname("x")))),
+      ),
+      tname("y"),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-yield") {
+    val code = "for (x <- xs) yield _ + x"
+    val tree = ForYield(
+      List(Enumerator.Generator(patvar("x"), tname("xs"))),
+      AnonymousFunction(tinfix(Placeholder(), "+", tname("x"))),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-match") {
+    val code = "_ match { case s => s }"
+    val tree = AnonymousFunction(Match(Placeholder(), List(Case(patvar("s"), None, tname("s")))))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-match-select") {
+    val code = "_.toString match { case s => s }"
+    val tree = Match(tselect(Placeholder(), "toString"), List(Case(patvar("s"), None, tname("s"))))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-match-infix") {
+    val code = "_ + 1 match { case s => s }"
+    val tree = Match(tinfix(Placeholder(), "+", int(1)), List(Case(patvar("s"), None, tname("s"))))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-match-apply") {
+    val code = "f(_) match { case s => s }"
+    val tree = Match(tapply(tname("f"), Placeholder()), List(Case(patvar("s"), None, tname("s"))))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-body") {
+    val code = "for (x <- _) f(x)"
+    val tree =
+      For(List(Enumerator.Generator(patvar("x"), Placeholder())), tapply(tname("f"), tname("x")))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-generator-typed") {
+    val code = "for (x <- (_: T)) yield x"
+    val tree = ForYield(
+      List(Enumerator.Generator(patvar("x"), Ascribe(Placeholder(), pname("T")))),
+      tname("x"),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-generator-apply") {
+    val code = "for (x <- f(_)) yield x"
+    val tree = ForYield(
+      List(Enumerator.Generator(patvar("x"), AnonymousFunction(tapply(tname("f"), Placeholder())))),
+      tname("x"),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-guard-alone") {
+    val code = "for (x <- xs if _) yield x"
+    val tree = ForYield(
+      List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Guard(Placeholder())),
+      tname("x"),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-guard-parens") {
+    val code = "for (x <- xs if (_ > 1)) yield x"
+    val tree = ForYield(
+      List(
+        Enumerator.Generator(patvar("x"), tname("xs")),
+        Enumerator.Guard(AnonymousFunction(tinfix(Placeholder(), ">", int(1)))),
+      ),
+      tname("x"),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-generator-after-guard") {
+    val code = "for (x <- xs if p; y <- _) yield y"
+    val tree = ForYield(
+      List(
+        Enumerator.Generator(patvar("x"), tname("xs")),
+        Enumerator.Guard(tname("p")),
+        Enumerator.Generator(patvar("y"), Placeholder()),
+      ),
+      tname("y"),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-for-in-parens") {
+    val code = "(for (x <- _) yield x).size"
+    val tree =
+      tselect(ForYield(List(Enumerator.Generator(patvar("x"), Placeholder())), tname("x")), "size")
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-match-typed") {
+    val code = "(_: T) match { case s => s }"
+    val tree = AnonymousFunction(
+      Match(Ascribe(Placeholder(), pname("T")), List(Case(patvar("s"), None, tname("s")))),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-match-parens") {
+    val code = "(_ + 1) match { case s => s }"
+    val tree = Match(
+      AnonymousFunction(tinfix(Placeholder(), "+", int(1))),
+      List(Case(patvar("s"), None, tname("s"))),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-match-case-guard") {
+    val code = "y match { case x if _ => x }"
+    val tree = Match(tname("y"), List(Case(patvar("x"), Some(Placeholder()), tname("x"))))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-assign-select") {
+    val code = "_.x = 1"
+    val tree = Assign(tselect(Placeholder(), "x"), int(1))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-ascribe-select") {
+    val code = "_.x: T"
+    val tree = Ascribe(tselect(Placeholder(), "x"), pname("T"))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-ascribe-infix") {
+    val code = "_ + 1: T"
+    val tree = Ascribe(tinfix(Placeholder(), "+", int(1)), pname("T"))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-annotate-select") {
+    val code = "_.x: @a"
+    val tree = Annotate(tselect(Placeholder(), "x"), Mod.Annot(init("a")) :: Nil)
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-partial-function-guard-arg") {
+    val code = "xs.collect { case x if _ => x }"
+    val tree = tapply(
+      tselect("xs", "collect"),
+      PartialFunction(List(Case(patvar("x"), Some(Placeholder()), tname("x")))),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-partial-function-guard-infix") {
+    val code = "xs collect { case x if _ => x }"
+    val tree = tinfix(
+      tname("xs"),
+      "collect",
+      PartialFunction(List(Case(patvar("x"), Some(Placeholder()), tname("x")))),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-partial-function-guard-parens") {
+    val code = "xs.collect({ case x if _ => x })"
+    val tree = tapply(
+      tselect("xs", "collect"),
+      PartialFunction(List(Case(patvar("x"), Some(Placeholder()), tname("x")))),
+    )
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-partial-function-guard") {
+    val code = "{ case x if _.p => x }"
+    val tree = PartialFunction(List(Case(patvar("x"), Some(tselect(Placeholder(), "p")), tname("x"))))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-match-case-guard-select") {
+    val code = "y match { case x if _.p => x }"
+    val tree = Match(tname("y"), List(Case(patvar("x"), Some(tselect(Placeholder(), "p")), tname("x"))))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-match-case-body") {
+    val code = "y match { case x => _ }"
+    val tree = Match(tname("y"), List(Case(patvar("x"), None, Placeholder())))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-assign-both") {
+    val code = "_.x = _"
+    val tree = AnonymousFunction(Assign(tselect(Placeholder(), "x"), Placeholder()))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-annotate-placeholder") {
+    val code = "(_: @a) + 1"
+    val tree =
+      tinfix(AnonymousFunction(Annotate(Placeholder(), Mod.Annot(init("a")) :: Nil)), "+", int(1))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-postfix-select") {
+    val code = "_.x toString"
+    val tree = SelectPostfix(tselect(Placeholder(), "x"), tname("toString"))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-lambda-placeholder-param") {
+    val code = "(_: Int) => 1"
+    val tree = tfunc(tparam("_", "Int"))(int(1))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-lambda-placeholder-second-param") {
+    val code = "(x: Int, _: Int) => x"
+    val tree = tfunc(tparam("x", "Int"), tparam("_", "Int"))(tname("x"))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-ascribe-infix-parens") {
+    val code = "(x op _: Int)"
+    val tree = Ascribe(tinfix(tname("x"), "op", Placeholder()), pname("Int"))
+    assertTerm(code)(tree)
+  }
+
+  test("anonymous-function-lambda-placeholder-infix-param") {
+    val code = "(x op _: Int) => 1"
+    val error = intercept[ParseException](term(code))
+    assertNoDiff(error.shortMessage, "`end of file` expected but `=>` found")
+  }
+
   test("anonymous-function-scalafmt-1")(
     assertTerm("foo >>= (_.http(registry, port).map(Option.apply(_)).catchSome { bar })")(ApplyInfix(
       tname("foo"),
