@@ -10603,4 +10603,99 @@ class SamLambdaSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  symbols(
+    "SAM lambdas of an AbstractPartialFunction",
+    """|import scala.runtime.AbstractPartialFunction
+       |object s2 {
+       |  val a: AbstractPartialFunction[Int, Int] = x => x > 0
+       |  val b: AbstractPartialFunction[Int, Int] = (x: Int) => x match { case 1 => true; case _ => false }
+       |  val c: AbstractPartialFunction[Int, Int] = _ > 0
+       |}
+       |""".stripMargin,
+    """|_empty_/s2. => final object s2 extends AnyRef { +3 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/s2.a. => val method a: AbstractPartialFunction[Int, Int]
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |_empty_/s2.b. => val method b: AbstractPartialFunction[Int, Int]
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |_empty_/s2.c. => val method c: AbstractPartialFunction[Int, Int]
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |local0 => synthetic class $anon extends Object with AbstractPartialFunction[Int, Int] { +1 decls }
+       |  Object => java/lang/Object#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |local1 => synthetic method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local2
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local2 => param x: Int
+       |  Int => scala/Int#
+       |local3 => synthetic class $anon extends Object with AbstractPartialFunction[Int, Int] { +1 decls }
+       |  Object => java/lang/Object#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |local4 => synthetic method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local5
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local5 => param x: Int
+       |  Int => scala/Int#
+       |local6 => synthetic class $anon extends Object with AbstractPartialFunction[Int, Int] { +1 decls }
+       |  Object => java/lang/Object#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |local7 => synthetic method isDefinedAt(x$1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x$1 => local8
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local8 => synthetic param x$1: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "SAM lambdas of an AbstractPartialFunction",
+    """|import scala.runtime.AbstractPartialFunction
+       |object s2 {
+       |  val a: AbstractPartialFunction[Int, Int] = x => x > 0
+       |  val b: AbstractPartialFunction[Int, Int] = (x: Int) => x match { case 1 => true; case _ => false }
+       |  val c: AbstractPartialFunction[Int, Int] = _ > 0
+       |}
+       |""".stripMargin,
+    """|[0:7..0:12): scala => scala/
+       |[0:13..0:20): runtime => scala/runtime/
+       |[0:21..0:44): AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |[1:7..1:9): s2 <= _empty_/s2.
+       |[2:6..2:7): a <= _empty_/s2.a.
+       |[2:9..2:32): AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |[2:33..2:36): Int => scala/Int#
+       |[2:38..2:41): Int => scala/Int#
+       |[2:45..2:46): x <= local2
+       |[2:45..2:55): x => x > 0 <= local0
+       |[2:45..2:55): x => x > 0 <= local1
+       |[2:50..2:51): x => local2
+       |[2:52..2:53): > => scala/Int#`>`(+3).
+       |[3:6..3:7): b <= _empty_/s2.b.
+       |[3:9..3:32): AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |[3:33..3:36): Int => scala/Int#
+       |[3:38..3:41): Int => scala/Int#
+       |[3:45..3:100): (x: Int) => x match { case 1 => true; case _ => false } <= local3
+       |[3:45..3:100): (x: Int) => x match { case 1 => true; case _ => false } <= local4
+       |[3:46..3:47): x <= local5
+       |[3:49..3:52): Int => scala/Int#
+       |[3:57..3:58): x => local5
+       |[4:6..4:7): c <= _empty_/s2.c.
+       |[4:9..4:32): AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |[4:33..4:36): Int => scala/Int#
+       |[4:38..4:41): Int => scala/Int#
+       |[4:45..4:46): _ <= local8
+       |[4:45..4:50): _ > 0 <= local6
+       |[4:45..4:50): _ > 0 <= local7
+       |[4:47..4:48): > => scala/Int#`>`(+3).
+       |""".stripMargin,
+  )
+
 }

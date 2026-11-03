@@ -13,6 +13,7 @@ object ScalaVersion {
   case object Scala212 extends Version
   case object Scala213 extends Version
   case class Full(ver: String) extends Version
+  case class AtMost213(patch: Int) extends Version
 
   def isLatest212Or213: Boolean = version == BuildInfo.latestScala212Version ||
     version == BuildInfo.latestScala213Version
@@ -40,6 +41,7 @@ object ScalaVersion {
 
   def getExpected(compat: Seq[(Version, String)], expected: String) = compat.collectFirst {
     case (Full(`version`), expected) => expected
+    case (AtMost213(patch), expected) if is(2, 13) && !isSupported(0, patch + 1) => expected
     case (Scala213, expected) if is(2, 13) => expected
     case (Scala212, expected) if is(2, 12) => expected
     case (Scala211, expected) if is(2, 11) => expected
