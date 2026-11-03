@@ -18,6 +18,7 @@ import scala.{meta => m}
 trait TextDocumentOps {
   self: SemanticdbOps =>
 
+  import m.internal.trees._
   import TextDocumentOps._
 
   def validateCompilerState(): Unit = {
@@ -376,6 +377,24 @@ trait TextDocumentOps {
           else gsym.owner.primaryConstructor.info.paramss.flatten
             .find(_.symbolName == gsym.symbolName)
             .fold(ssym)(gparam => Symbols.Multi(List(ssym, gparam.toSemantic)))
+        /* if scalac builds a tree of its own at a name, such as the tuple of a `for` at a binder,
+         * the tree has another name. If the language rewrites a name, such as `x = 1` into `x_=`,
+         * scalac derives the new name from the written one */
+        private def isWrittenName(
+            mname: m.Name, // the name in the source
+            gsym: g.Symbol, // the symbol that scalac pairs with `mname`
+            gname: g.Name, // the name of scalac's tree, or of `gsym`
+        ): Boolean = g.nme.isSetterName(gname) || {
+          val name = gname.decoded
+          val mvalue = mname.value
+          def isConcat(outer: String, prefix: String, suffix: String): Boolean = outer.length ==
+            prefix.length + suffix.length && outer.startsWith(prefix) && outer.endsWith(suffix)
+          name == mvalue ||
+          mvalue.length == name.length + 1 && mvalue.startsWith(name) && mvalue.isAssignmentOp ||
+          isConcat(name, "unary_", mvalue) ||
+          !gsym.isMethod && isConcat(name, mvalue, g.nme.LOCAL_SUFFIX_STRING) ||
+          gsym.isClass && mname.isInstanceOf[m.Term.Name] && gsym.thisSym.nameString == mvalue
+        }
         private def success(mtree: m.Name, gsym0: g.Symbol): Unit = {
           // We cannot be guaranteed that all symbols have a position, see
           // https://github.com/scalameta/scalameta/issues/665
@@ -632,12 +651,23 @@ trait TextDocumentOps {
           val gpoint = gpos.point
           val gend = gpos.end
 
-          def tryMstart(pos: Int): Unit = success(mnameAt(pos), gsym)
-          def tryMend(pos: Int): Unit = success(mnameEndingAt(pos), gsym)
+          def isWritten(mname: m.Name, gsym: g.Symbol): Boolean = (null eq mname) ||
+            (null eq gsym) || gsym == g.NoSymbol || gsym.isConstructor || isWrittenName(
+              mname,
+              gsym,
+              gtree match {
+                case t: g.NameTree if t.symbol eq gsym => t.name
+                case _ => gsym.name
+              },
+            )
+          def claim(mname: m.Name, gsym: g.Symbol): Unit =
+            if (isWritten(mname, gsym)) success(mname, gsym)
+          def tryMstart(pos: Int): Unit = claim(mnameAt(pos), gsym)
+          def tryMend(pos: Int): Unit = claim(mnameEndingAt(pos), gsym)
 
           def singleValPat(sym: g.Symbol): Unit = {
             val mvar = mvalPatVarAt(gpoint)
-            success(if (null ne mvar) mvar else mnameAt(gpoint), sym)
+            claim(if (null ne mvar) mvar else mnameAt(gpoint), sym)
           }
 
           gtree match {
@@ -704,7 +734,7 @@ trait TextDocumentOps {
           val gstartMtree = mnameAt(gstart)
           gstartMtree match {
             case mtree: m.Name if mtree.pos.end == gend =>
-              success(mtree, gsym)
+              claim(mtree, gsym)
               return
             case _ =>
           }
@@ -717,8 +747,8 @@ trait TextDocumentOps {
             case gtree: g.ModuleDef if gtree.name == g.nme.PACKAGE =>
               // NOTE: if a package object comes first in the compilation unit
               // then its positions are completely mental, so we just hack around
-              tryMstart(gpoint + 7)
-              tryMstart(gpoint)
+              success(mnameAt(gpoint + 7), gsym)
+              success(mnameAt(gpoint), gsym)
             case _: g.DefDef if gsym.isGetter => singleValPat(gsym)
             case _: g.ValDef =>
               val ggetter = gsym.getterForValDef
@@ -772,9 +802,22 @@ trait TextDocumentOps {
               }
             case gtree: g.Select if gtree.symbol == g.definitions.NilModule =>
               // NOTE: List() gets desugared into mkAttributedRef(NilModule)
-              tryMstart(gstart)
+              // scalac puts that `Nil` at the call, and a written `Nil` at its name
+              val mfun = mstartOf[m.Term](gstart) {
+                case t: m.Term.Apply if t.pos.end == gend => t.fun
+                case _ => null
+              }
+              (mfun match {
+                case t: m.Term.ApplyType => t.fun
+                case t => t
+              }) match {
+                case null => tryMstart(gpoint)
+                case t: m.Term.Name => success(t, gsym)
+                case t: m.Term.Select => success(t.name, gsym)
+                case _ =>
+              }
               // the type arguments of `List[T]()` remain only in the type of `Nil`
-              if (gtree.tpe ne null) mnameAt(gstart).parentOrNull match {
+              if (gtree.tpe ne null) mfun match {
                 case p: m.Term.ApplyType => tryFindTypes(p.targClause.values, gtree.tpe.typeArgs)
                 case _ =>
               }

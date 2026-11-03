@@ -58,11 +58,8 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:17..3:25): FunSuite => munit/FunSuite#
        |[3:25..3:25):  => munit/FunSuite#`<init>`().
        |[4:6..4:7): x <= e/x.x.
-       |[4:10..4:11): q => scala/meta/internal/quasiquotes/Unlift.
        |[5:6..5:7): y <= e/x.y.
-       |[5:10..5:11): q => scala/meta/internal/quasiquotes/Unlift.
        |[6:6..6:7): z <= e/x.z.
-       |[6:10..6:11): q => scala/meta/internal/quasiquotes/Unlift.
        |[6:13..6:14): x => e/x.x.
        |[6:18..6:19): y => e/x.y.
        |[7:6..7:7): k <= e/x.k.
