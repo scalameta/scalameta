@@ -8005,6 +8005,69 @@ class PatternDesugaringSuite extends SemanticdbSuite {
         |""".stripMargin,
   )
 
+  occurrences(
+    "extractors through their names and renamed imports",
+    """|object pd1 {
+       |  case class P(a: Int)
+       |  object E { def unapply(i: Int): Option[Int] = Some(i) }
+       |  P(1) match { case P(a) => a }
+       |  val P(b) = P(2)
+       |  1 match { case E(c) => c }
+       |  val E(d) = 1
+       |  val xs: List[Int] = null
+       |  xs match { case h :: _ => h }
+       |  import pd1.{E => F, P => R}
+       |  1 match { case F(f) => f }
+       |  R(1) match { case R(g) => g }
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): pd1 <= _empty_/pd1.
+       |[1:13..1:14): P <= _empty_/pd1.P#
+       |[1:14..1:14):  <= _empty_/pd1.P#`<init>`().
+       |[1:15..1:16): a <= _empty_/pd1.P#`<init>`().(a)
+       |[1:15..1:16): a <= _empty_/pd1.P#a.
+       |[1:18..1:21): Int => scala/Int#
+       |[2:9..2:10): E <= _empty_/pd1.E.
+       |[2:17..2:24): unapply <= _empty_/pd1.E.unapply().
+       |[2:25..2:26): i <= _empty_/pd1.E.unapply().(i)
+       |[2:28..2:31): Int => scala/Int#
+       |[2:34..2:40): Option => scala/Option#
+       |[2:41..2:44): Int => scala/Int#
+       |[2:48..2:52): Some => scala/Some.
+       |[2:53..2:54): i => _empty_/pd1.E.unapply().(i)
+       |[3:2..3:3): P => _empty_/pd1.P.
+       |[3:20..3:21): P => _empty_/pd1.P.
+       |[3:22..3:23): a <= local0
+       |[3:28..3:29): a => local0
+       |[4:6..4:7): P => _empty_/pd1.P.
+       |[4:8..4:9): b <= _empty_/pd1.b.
+       |[4:13..4:14): P => _empty_/pd1.P.
+       |[5:17..5:18): E => _empty_/pd1.E.
+       |[5:19..5:20): c <= local1
+       |[5:25..5:26): c => local1
+       |[6:6..6:7): E => _empty_/pd1.E.
+       |[6:8..6:9): d <= _empty_/pd1.d.
+       |[7:6..7:8): xs <= _empty_/pd1.xs.
+       |[7:10..7:14): List => scala/package.List#
+       |[7:15..7:18): Int => scala/Int#
+       |[8:2..8:4): xs => _empty_/pd1.xs.
+       |[8:18..8:19): h <= local2
+       |[8:20..8:22): :: => scala/package.`::`.
+       |[8:28..8:29): h => local2
+       |[9:9..9:12): pd1 => _empty_/pd1.
+       |[9:14..9:15): E => _empty_/pd1.E.
+       |[9:22..9:23): P => _empty_/pd1.P#
+       |[9:22..9:23): P => _empty_/pd1.P.
+       |[10:17..10:18): F => _empty_/pd1.E.
+       |[10:19..10:20): f <= local3
+       |[10:25..10:26): f => local3
+       |[11:2..11:3): R => _empty_/pd1.P.
+       |[11:20..11:21): R => _empty_/pd1.P.
+       |[11:22..11:23): g <= local4
+       |[11:28..11:29): g => local4
+       |""".stripMargin,
+  )
+
   private def checkPatOwner(name: String, code: String, expected: String)(implicit
       loc: munit.Location,
   ): Unit = test(s"patOwner: $name") {
