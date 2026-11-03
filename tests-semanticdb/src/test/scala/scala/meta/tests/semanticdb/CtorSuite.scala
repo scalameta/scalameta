@@ -2146,4 +2146,61 @@ class CtorSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  // parents and constructors through renamed imports
+  occurrences(
+    """|package c1
+       |object n { class P(x: Int); class Q[T](x: T) }
+       |import n.{P => RP, Q => RQ}
+       |class D1 extends RP(1)
+       |class D2 extends RQ(1)
+       |object o {
+       |  val v1 = new RP(1)
+       |  val v2 = new RP(1) {}
+       |  val v3 = new RQ[Int](1)
+       |  val v4 = new RQ(1) {}
+       |}
+       |""".stripMargin,
+    """|[0:8..0:10): c1 <= c1/
+       |[1:7..1:8): n <= c1/n.
+       |[1:17..1:18): P <= c1/n.P#
+       |[1:18..1:18):  <= c1/n.P#`<init>`().
+       |[1:19..1:20): x <= c1/n.P#`<init>`().(x)
+       |[1:19..1:20): x <= c1/n.P#x.
+       |[1:22..1:25): Int => scala/Int#
+       |[1:34..1:35): Q <= c1/n.Q#
+       |[1:36..1:37): T <= c1/n.Q#[T]
+       |[1:38..1:38):  <= c1/n.Q#`<init>`().
+       |[1:39..1:40): x <= c1/n.Q#`<init>`().(x)
+       |[1:39..1:40): x <= c1/n.Q#x.
+       |[1:42..1:43): T => c1/n.Q#[T]
+       |[2:7..2:8): n => c1/n.
+       |[2:10..2:11): P => c1/n.P#
+       |[2:19..2:20): Q => c1/n.Q#
+       |[3:6..3:8): D1 <= c1/D1#
+       |[3:9..3:9):  <= c1/D1#`<init>`().
+       |[3:17..3:19): RP => c1/n.P#
+       |[3:19..3:19):  => c1/n.P#`<init>`().
+       |[4:6..4:8): D2 <= c1/D2#
+       |[4:9..4:9):  <= c1/D2#`<init>`().
+       |[4:17..4:19): RQ => c1/n.Q#
+       |[4:19..4:19):  => c1/n.Q#`<init>`().
+       |[5:7..5:8): o <= c1/o.
+       |[6:6..6:8): v1 <= c1/o.v1.
+       |[6:15..6:17): RP => c1/n.P#
+       |[6:17..6:17):  => c1/n.P#`<init>`().
+       |[7:6..7:8): v2 <= c1/o.v2.
+       |[7:15..7:15):  <= local0
+       |[7:15..7:17): RP => c1/n.P#
+       |[7:17..7:17):  => c1/n.P#`<init>`().
+       |[8:6..8:8): v3 <= c1/o.v3.
+       |[8:15..8:17): RQ => c1/n.Q#
+       |[8:18..8:21): Int => scala/Int#
+       |[8:22..8:22):  => c1/n.Q#`<init>`().
+       |[9:6..9:8): v4 <= c1/o.v4.
+       |[9:15..9:15):  <= local1
+       |[9:15..9:17): RQ => c1/n.Q#
+       |[9:17..9:17):  => c1/n.Q#`<init>`().
+       |""".stripMargin,
+  )
+
 }

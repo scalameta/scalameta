@@ -421,4 +421,123 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     "_empty_/c#`x$$+`. => x$$+",
   )
 
+  occurrences(
+    "operators in infix and prefix position",
+    """|object o1 {
+       |  val i = 1
+       |  i + 2
+       |  -i
+       |  +i
+       |  ~i
+       |  i.unary_-
+       |  val b = true
+       |  !b
+       |  class L { def ::(i: Int) = this; def :::(l: L) = this }
+       |  val l = new L
+       |  1 :: l
+       |  l ::: l
+       |  class V { def unary_! : V = this; def +(v: V) = v }
+       |  val v = new V
+       |  !v + v
+       |  val t = 1 -> 2
+       |}
+       |""".stripMargin,
+    """|[0:7..0:9): o1 <= _empty_/o1.
+       |[1:6..1:7): i <= _empty_/o1.i.
+       |[2:2..2:3): i => _empty_/o1.i.
+       |[2:4..2:5): + => scala/Int#`+`(+4).
+       |[3:2..3:3): - => scala/Int#`unary_-`().
+       |[3:3..3:4): i => _empty_/o1.i.
+       |[4:2..4:3): + => scala/Int#`unary_+`().
+       |[4:3..4:4): i => _empty_/o1.i.
+       |[5:2..5:3): ~ => scala/Int#`unary_~`().
+       |[5:3..5:4): i => _empty_/o1.i.
+       |[6:2..6:3): i => _empty_/o1.i.
+       |[6:4..6:11): unary_- => scala/Int#`unary_-`().
+       |[7:6..7:7): b <= _empty_/o1.b.
+       |[8:2..8:3): ! => scala/Boolean#`unary_!`().
+       |[8:3..8:4): b => _empty_/o1.b.
+       |[9:8..9:9): L <= _empty_/o1.L#
+       |[9:10..9:10):  <= _empty_/o1.L#`<init>`().
+       |[9:16..9:18): :: <= _empty_/o1.L#`::`().
+       |[9:19..9:20): i <= _empty_/o1.L#`::`().(i)
+       |[9:22..9:25): Int => scala/Int#
+       |[9:39..9:42): ::: <= _empty_/o1.L#`:::`().
+       |[9:43..9:44): l <= _empty_/o1.L#`:::`().(l)
+       |[9:46..9:47): L => _empty_/o1.L#
+       |[10:6..10:7): l <= _empty_/o1.l.
+       |[10:14..10:15): L => _empty_/o1.L#
+       |[10:15..10:15):  => _empty_/o1.L#`<init>`().
+       |[11:4..11:6): :: => _empty_/o1.L#`::`().
+       |[11:7..11:8): l => _empty_/o1.l.
+       |[12:2..12:3): l => _empty_/o1.l.
+       |[12:4..12:7): ::: => _empty_/o1.L#`:::`().
+       |[12:8..12:9): l => _empty_/o1.l.
+       |[13:8..13:9): V <= _empty_/o1.V#
+       |[13:10..13:10):  <= _empty_/o1.V#`<init>`().
+       |[13:16..13:23): unary_! <= _empty_/o1.V#`unary_!`().
+       |[13:26..13:27): V => _empty_/o1.V#
+       |[13:40..13:41): + <= _empty_/o1.V#`+`().
+       |[13:42..13:43): v <= _empty_/o1.V#`+`().(v)
+       |[13:45..13:46): V => _empty_/o1.V#
+       |[13:50..13:51): v => _empty_/o1.V#`+`().(v)
+       |[14:6..14:7): v <= _empty_/o1.v.
+       |[14:14..14:15): V => _empty_/o1.V#
+       |[14:15..14:15):  => _empty_/o1.V#`<init>`().
+       |[15:2..15:3): ! => _empty_/o1.V#`unary_!`().
+       |[15:3..15:4): v => _empty_/o1.v.
+       |[15:5..15:6): + => _empty_/o1.V#`+`().
+       |[15:7..15:8): v => _empty_/o1.v.
+       |[16:6..16:7): t <= _empty_/o1.t.
+       |[16:12..16:14): -> => scala/Predef.ArrowAssoc#`->`().
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "references to backquoted names",
+    """|object o2 {
+       |  val `my x` = 1
+       |  `my x` + 1
+       |  val `type` = 2
+       |  `type`
+       |  def `+++`(i: Int) = i
+       |  `+++`(1)
+       |  this `+++` 2
+       |  val `a ` = 3
+       |  `a ` + 1
+       |  private[this] val `b ` = 4
+       |  `b ` + 1
+       |  val `a$+` = 5
+       |  `a$+` + 1
+       |  def `x$$+` = 6
+       |  `x$$+` + 1
+       |}
+       |""".stripMargin,
+    """|[0:7..0:9): o2 <= _empty_/o2.
+       |[1:6..1:12): `my x` <= _empty_/o2.`my x`.
+       |[2:2..2:8): `my x` => _empty_/o2.`my x`.
+       |[2:9..2:10): + => scala/Int#`+`(+4).
+       |[3:6..3:12): `type` <= _empty_/o2.type.
+       |[4:2..4:8): `type` => _empty_/o2.type.
+       |[5:6..5:11): `+++` <= _empty_/o2.`+++`().
+       |[5:12..5:13): i <= _empty_/o2.`+++`().(i)
+       |[5:15..5:18): Int => scala/Int#
+       |[5:22..5:23): i => _empty_/o2.`+++`().(i)
+       |[6:2..6:7): `+++` => _empty_/o2.`+++`().
+       |[7:7..7:12): `+++` => _empty_/o2.`+++`().
+       |[8:6..8:10): `a ` <= _empty_/o2.`a `.
+       |[9:2..9:6): `a ` => _empty_/o2.`a `.
+       |[9:7..9:8): + => scala/Int#`+`(+4).
+       |[10:20..10:24): `b ` <= _empty_/o2.`b `.
+       |[11:2..11:6): `b ` => _empty_/o2.`b `.
+       |[11:7..11:8): + => scala/Int#`+`(+4).
+       |[12:6..12:11): `a$+` <= _empty_/o2.`a$+`.
+       |[13:2..13:7): `a$+` => _empty_/o2.`a$+`.
+       |[13:8..13:9): + => scala/Int#`+`(+4).
+       |[14:6..14:12): `x$$+` <= _empty_/o2.`x$$+`().
+       |[15:2..15:8): `x$$+` => _empty_/o2.`x$$+`().
+       |[15:9..15:10): + => scala/Int#`+`(+4).
+       |""".stripMargin,
+  )
+
 }

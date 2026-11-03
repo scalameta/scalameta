@@ -211,4 +211,63 @@ class Source3Suite extends FunSuite {
        |""".stripMargin,
   )
 
+  check(
+    """|package b
+       |object r { def x = 1; class B; var v = 1 }
+       |object s {
+       |  import r.{x as y, B as D, v as w}
+       |  y
+       |  new D
+       |  w = 2
+       |}
+       |""".stripMargin,
+    """|interactive.scala
+       |-----------------
+       |
+       |Summary:
+       |Schema => SemanticDB v4
+       |Uri => interactive.scala
+       |Text => non-empty
+       |Language => Scala
+       |Symbols => 8 entries
+       |Occurrences => 15 entries
+       |
+       |Symbols:
+       |b/r. => final object r extends AnyRef { +4 decls }
+       |  AnyRef => scala/AnyRef#
+       |b/r.B# => class B extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |b/r.B#`<init>`(). => primary ctor <init>()
+       |b/r.`v_=`(). => var method v_=(x$1: Int): Unit
+       |  x$1 => b/r.`v_=`().(x$1)
+       |  Int => scala/Int#
+       |  Unit => scala/Unit#
+       |b/r.`v_=`().(x$1) => synthetic param x$1: Int
+       |  Int => scala/Int#
+       |b/r.v(). => var method v: Int
+       |  Int => scala/Int#
+       |b/r.x(). => method x: Int
+       |  Int => scala/Int#
+       |b/s. => final object s extends AnyRef
+       |  AnyRef => scala/AnyRef#
+       |
+       |Occurrences:
+       |[0:8..0:9): b <= b/
+       |[1:7..1:8): r <= b/r.
+       |[1:15..1:16): x <= b/r.x().
+       |[1:28..1:29): B <= b/r.B#
+       |[1:29..1:29):  <= b/r.B#`<init>`().
+       |[1:35..1:36): v <= b/r.v().
+       |[2:7..2:8): s <= b/s.
+       |[3:9..3:10): r => b/r.
+       |[3:12..3:13): x => b/r.x().
+       |[3:20..3:21): B => b/r.B#
+       |[3:28..3:29): v => b/r.v().
+       |[4:2..4:3): y => b/r.x().
+       |[5:6..5:7): D => b/r.B#
+       |[5:7..5:7):  => b/r.B#`<init>`().
+       |[6:2..6:3): w => b/r.`v_=`().
+       |""".stripMargin,
+  )
+
 }
