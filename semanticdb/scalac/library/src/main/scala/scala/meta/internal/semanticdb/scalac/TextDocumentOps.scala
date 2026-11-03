@@ -1274,7 +1274,7 @@ trait TextDocumentOps {
           // the `map`, `flatMap`, `foreach` or `withFilter` that scalac calls for a `for`, or null
           @tailrec
           private def forMethod(gfun: g.Tree): g.Select = gfun match {
-            case t: g.Select => if (t.hasAttachment[g.ForAttachment.type]) t else null
+            case t: g.Select => if (hasFor(t)) t else null
             case t: g.TypeApply => forMethod(t.fun)
             case _ => null
           }
