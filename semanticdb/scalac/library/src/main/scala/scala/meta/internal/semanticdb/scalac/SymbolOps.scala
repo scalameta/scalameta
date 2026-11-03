@@ -331,6 +331,9 @@ trait SymbolOps {
 
   }
 
+  // `qual.map(f)` of a `for` has `ForAttachment` on `qual.map`; scalac 2.13 marks tuples too
+  private[scalac] def hasFor(tree: g.Tree): Boolean = tree.hasAttachment[g.ForAttachment.type]
+
   // the source does not have the whole name written at `at`, maybe in backquotes
   private def notWrittenAt(text: Array[Char], at: Int, name: String): Boolean = {
     val quoted = at < text.length && text(at) == '`'
@@ -608,8 +611,6 @@ trait SymbolOps {
       /* the synthetic definitions and the `for` combinations around the tree: scalac puts each copy
        * in more of them than its original */
       private var syntheticDepth = 0
-      // `qual.map(f)` of a `for` has `ForAttachment` on `qual.map`; scalac 2.13 marks tuples too
-      private def hasFor(tree: g.Tree) = tree.hasAttachment[g.ForAttachment.type]
       // a binder that stands for a value, or an early definition's copy, is not a declaration
       private def add(sym: g.Symbol): Unit = add(declarationsOf(sym), sym, isPatternValue = false)
       private def add(decls: Declarations, sym: g.Symbol, isPatternValue: Boolean): Unit =
