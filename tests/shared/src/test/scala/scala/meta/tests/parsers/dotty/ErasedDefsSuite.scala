@@ -133,6 +133,110 @@ class ErasedDefsSuite extends BaseDottySuite {
     ))
   }
 
+  test("anonymous-method: using erased placeholder without type") {
+    val code = "val fun = (using erased _) => ctx.open"
+    runTestError[Stat](code, "`;` expected but `=>` found")
+  }
+
+  test("anonymous-method: using placeholder") {
+    val code = "val fun = (using _: Context) => ctx.open"
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("fun")),
+      None,
+      tfunc(tparam(List(Mod.Using()), "_", "Context"))(tselect("ctx", "open")),
+    )
+    runTestAssert[Stat](code)(tree)
+  }
+
+  test("anonymous-method: erased placeholder") {
+    val code = "val fun = (erased _: Context) => ctx.open"
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("fun")),
+      None,
+      tfunc(tparam(List(Mod.Erased()), "_", "Context"))(tselect("ctx", "open")),
+    )
+    runTestAssert[Stat](code)(tree)
+  }
+
+  test("anonymous-method: using erased placeholder, then a param") {
+    val code = "val fun = (using erased _: Context, x: Int) => x"
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("fun")),
+      None,
+      tfunc(tparam(List(Mod.Using(), Mod.Erased()), "_", "Context"), tparam("x", "Int"))(tname("x")),
+    )
+    runTestAssert[Stat](code)(tree)
+  }
+
+  test("anonymous-method: erased param, then a placeholder") {
+    val code = "val fun = (erased x: Context, _: Int) => x"
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("fun")),
+      None,
+      tfunc(tparam(List(Mod.Erased()), "x", "Context"), tparam("_", "Int"))(tname("x")),
+    )
+    runTestAssert[Stat](code)(tree)
+  }
+
+  test("context function: using erased placeholder") {
+    val code = "val fun = (using erased _: Context) ?=> ctx.open"
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("fun")),
+      None,
+      tctxfunc(tparam(List(Mod.Using(), Mod.Erased()), "_", "Context"))(tselect("ctx", "open")),
+    )
+    runTestAssert[Stat](code)(tree)
+  }
+
+  test("lambda argument in braces: using erased placeholder") {
+    val code =
+      """|xs.map {
+         |  (using erased _: Context) => 1
+         |}""".stripMargin
+    val tree = tapply(
+      tselect("xs", "map"),
+      blk(tfunc(tparam(List(Mod.Using(), Mod.Erased()), "_", "Context"))(int(1))),
+    )
+    runTestAssert[Stat](code)(tree)
+  }
+
+  test("using erased placeholder in parens") {
+    val code = "(using erased _: Context)"
+    val tree = Term.Ascribe(tinfix(tname("using"), "erased", Term.Placeholder()), pname("Context"))
+    runTestAssert[Stat](code, assertLayout = None)(tree)
+  }
+
+  test("using erased placeholder without type in parens") {
+    val code = "(using erased _)"
+    val tree = Term.AnonymousFunction(tinfix(tname("using"), "erased", Term.Placeholder()))
+    runTestAssert[Stat](code, assertLayout = None)(tree)
+  }
+
+  test("lambda argument in parens: using erased placeholder") {
+    val code = "xs.map((using erased _: Context) => 1)"
+    val tree = tapply(
+      tselect("xs", "map"),
+      tfunc(tparam(List(Mod.Using(), Mod.Erased()), "_", "Context"))(int(1)),
+    )
+    parseAndCheckTree[Stat](code, "xs.map { (using erased _: Context) => 1 }")(tree)
+  }
+
+  test("lambda argument after colon: using erased placeholder") {
+    val code = "xs.map: (using erased _: Context) => 1"
+    runTestError[Stat](code, "`;` expected but `=>` found")
+  }
+
+  test("anonymous-method: using erased placeholder in double parens") {
+    val code = "((using erased _: Context)) => 1"
+    val tree = tfunc(tparam(List(Mod.Using(), Mod.Erased()), "_", "Context"))(int(1))
+    runTestAssert[Stat](code, assertLayout = None)(tree)
+  }
+
   test("lambda-method-parameter") {
     val code =
       """|LazyBody {
