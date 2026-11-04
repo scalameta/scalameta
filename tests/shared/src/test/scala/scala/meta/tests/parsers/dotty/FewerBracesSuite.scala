@@ -2930,10 +2930,10 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case x if _ => x
          |}
          |""".stripMargin
-    val tree = tapply(
+    val tree = Term.AnonymousFunction(tapply(
       tselect("xs", "collect"),
       Term.PartialFunction(List(Case(patvar("x"), Some(Term.Placeholder()), tname("x")))),
-    )
+    ))
     runTestAssert[Stat](code, layout)(tree)
   }
 

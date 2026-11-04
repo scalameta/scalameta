@@ -674,7 +674,8 @@ class TermSuite extends ParseSuite {
 
   test("anonymous-function-for-generator") {
     val code = "for (x <- _) yield x"
-    val tree = ForYield(List(Enumerator.Generator(patvar("x"), Placeholder())), tname("x"))
+    val tree =
+      AnonymousFunction(ForYield(List(Enumerator.Generator(patvar("x"), Placeholder())), tname("x")))
     assertTerm(code)(tree)
   }
 
@@ -689,34 +690,34 @@ class TermSuite extends ParseSuite {
 
   test("anonymous-function-for-guard") {
     val code = "for (x <- xs if x > _) yield x"
-    val tree = ForYield(
+    val tree = AnonymousFunction(ForYield(
       List(
         Enumerator.Generator(patvar("x"), tname("xs")),
         Enumerator.Guard(tinfix(tname("x"), ">", Placeholder())),
       ),
       tname("x"),
-    )
+    ))
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-for-guard-apply") {
     val code = "for (x <- xs if f(_)) yield x"
-    val tree = ForYield(
+    val tree = AnonymousFunction(ForYield(
       List(
         Enumerator.Generator(patvar("x"), tname("xs")),
         Enumerator.Guard(tapply(tname("f"), Placeholder())),
       ),
       tname("x"),
-    )
+    ))
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-for-value") {
     val code = "for (x <- xs; y = _) yield y"
-    val tree = ForYield(
+    val tree = AnonymousFunction(ForYield(
       List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Val(patvar("y"), Placeholder())),
       tname("y"),
-    )
+    ))
     assertTerm(code)(tree)
   }
 
@@ -749,35 +750,42 @@ class TermSuite extends ParseSuite {
 
   test("anonymous-function-match-select") {
     val code = "_.toString match { case s => s }"
-    val tree = Match(tselect(Placeholder(), "toString"), List(Case(patvar("s"), None, tname("s"))))
+    val tree = AnonymousFunction(
+      Match(tselect(Placeholder(), "toString"), List(Case(patvar("s"), None, tname("s")))),
+    )
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-match-infix") {
     val code = "_ + 1 match { case s => s }"
-    val tree = Match(tinfix(Placeholder(), "+", int(1)), List(Case(patvar("s"), None, tname("s"))))
+    val tree = AnonymousFunction(
+      Match(tinfix(Placeholder(), "+", int(1)), List(Case(patvar("s"), None, tname("s")))),
+    )
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-match-apply") {
     val code = "f(_) match { case s => s }"
-    val tree = Match(tapply(tname("f"), Placeholder()), List(Case(patvar("s"), None, tname("s"))))
+    val tree = AnonymousFunction(
+      Match(tapply(tname("f"), Placeholder()), List(Case(patvar("s"), None, tname("s")))),
+    )
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-for-body") {
     val code = "for (x <- _) f(x)"
-    val tree =
-      For(List(Enumerator.Generator(patvar("x"), Placeholder())), tapply(tname("f"), tname("x")))
+    val tree = AnonymousFunction(
+      For(List(Enumerator.Generator(patvar("x"), Placeholder())), tapply(tname("f"), tname("x"))),
+    )
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-for-generator-typed") {
     val code = "for (x <- (_: T)) yield x"
-    val tree = ForYield(
+    val tree = AnonymousFunction(ForYield(
       List(Enumerator.Generator(patvar("x"), Ascribe(Placeholder(), pname("T")))),
       tname("x"),
-    )
+    ))
     assertTerm(code)(tree)
   }
 
@@ -792,10 +800,10 @@ class TermSuite extends ParseSuite {
 
   test("anonymous-function-for-guard-alone") {
     val code = "for (x <- xs if _) yield x"
-    val tree = ForYield(
+    val tree = AnonymousFunction(ForYield(
       List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Guard(Placeholder())),
       tname("x"),
-    )
+    ))
     assertTerm(code)(tree)
   }
 
@@ -813,21 +821,23 @@ class TermSuite extends ParseSuite {
 
   test("anonymous-function-for-generator-after-guard") {
     val code = "for (x <- xs if p; y <- _) yield y"
-    val tree = ForYield(
+    val tree = AnonymousFunction(ForYield(
       List(
         Enumerator.Generator(patvar("x"), tname("xs")),
         Enumerator.Guard(tname("p")),
         Enumerator.Generator(patvar("y"), Placeholder()),
       ),
       tname("y"),
-    )
+    ))
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-for-in-parens") {
     val code = "(for (x <- _) yield x).size"
-    val tree =
-      tselect(ForYield(List(Enumerator.Generator(patvar("x"), Placeholder())), tname("x")), "size")
+    val tree = tselect(
+      AnonymousFunction(ForYield(List(Enumerator.Generator(patvar("x"), Placeholder())), tname("x"))),
+      "size",
+    )
     assertTerm(code)(tree)
   }
 
@@ -850,50 +860,51 @@ class TermSuite extends ParseSuite {
 
   test("anonymous-function-match-case-guard") {
     val code = "y match { case x if _ => x }"
-    val tree = Match(tname("y"), List(Case(patvar("x"), Some(Placeholder()), tname("x"))))
+    val tree =
+      AnonymousFunction(Match(tname("y"), List(Case(patvar("x"), Some(Placeholder()), tname("x")))))
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-assign-select") {
     val code = "_.x = 1"
-    val tree = Assign(tselect(Placeholder(), "x"), int(1))
+    val tree = AnonymousFunction(Assign(tselect(Placeholder(), "x"), int(1)))
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-ascribe-select") {
     val code = "_.x: T"
-    val tree = Ascribe(tselect(Placeholder(), "x"), pname("T"))
+    val tree = AnonymousFunction(Ascribe(tselect(Placeholder(), "x"), pname("T")))
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-ascribe-infix") {
     val code = "_ + 1: T"
-    val tree = Ascribe(tinfix(Placeholder(), "+", int(1)), pname("T"))
+    val tree = AnonymousFunction(Ascribe(tinfix(Placeholder(), "+", int(1)), pname("T")))
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-annotate-select") {
     val code = "_.x: @a"
-    val tree = Annotate(tselect(Placeholder(), "x"), Mod.Annot(init("a")) :: Nil)
+    val tree = AnonymousFunction(Annotate(tselect(Placeholder(), "x"), Mod.Annot(init("a")) :: Nil))
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-partial-function-guard-arg") {
     val code = "xs.collect { case x if _ => x }"
-    val tree = tapply(
+    val tree = AnonymousFunction(tapply(
       tselect("xs", "collect"),
       PartialFunction(List(Case(patvar("x"), Some(Placeholder()), tname("x")))),
-    )
+    ))
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-partial-function-guard-infix") {
     val code = "xs collect { case x if _ => x }"
-    val tree = tinfix(
+    val tree = AnonymousFunction(tinfix(
       tname("xs"),
       "collect",
       PartialFunction(List(Case(patvar("x"), Some(Placeholder()), tname("x")))),
-    )
+    ))
     assertTerm(code)(tree)
   }
 
@@ -901,20 +912,24 @@ class TermSuite extends ParseSuite {
     val code = "xs.collect({ case x if _ => x })"
     val tree = tapply(
       tselect("xs", "collect"),
-      PartialFunction(List(Case(patvar("x"), Some(Placeholder()), tname("x")))),
+      AnonymousFunction(PartialFunction(List(Case(patvar("x"), Some(Placeholder()), tname("x"))))),
     )
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-partial-function-guard") {
     val code = "{ case x if _.p => x }"
-    val tree = PartialFunction(List(Case(patvar("x"), Some(tselect(Placeholder(), "p")), tname("x"))))
+    val tree = AnonymousFunction(
+      PartialFunction(List(Case(patvar("x"), Some(tselect(Placeholder(), "p")), tname("x")))),
+    )
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-match-case-guard-select") {
     val code = "y match { case x if _.p => x }"
-    val tree = Match(tname("y"), List(Case(patvar("x"), Some(tselect(Placeholder(), "p")), tname("x"))))
+    val tree = AnonymousFunction(
+      Match(tname("y"), List(Case(patvar("x"), Some(tselect(Placeholder(), "p")), tname("x")))),
+    )
     assertTerm(code)(tree)
   }
 
@@ -933,13 +948,13 @@ class TermSuite extends ParseSuite {
   test("anonymous-function-annotate-placeholder") {
     val code = "(_: @a) + 1"
     val tree =
-      tinfix(AnonymousFunction(Annotate(Placeholder(), Mod.Annot(init("a")) :: Nil)), "+", int(1))
+      AnonymousFunction(tinfix(Annotate(Placeholder(), Mod.Annot(init("a")) :: Nil), "+", int(1)))
     assertTerm(code)(tree)
   }
 
   test("anonymous-function-postfix-select") {
     val code = "_.x toString"
-    val tree = SelectPostfix(tselect(Placeholder(), "x"), tname("toString"))
+    val tree = AnonymousFunction(SelectPostfix(tselect(Placeholder(), "x"), tname("toString")))
     assertTerm(code)(tree)
   }
 
@@ -957,7 +972,7 @@ class TermSuite extends ParseSuite {
 
   test("anonymous-function-ascribe-infix-parens") {
     val code = "(x op _: Int)"
-    val tree = Ascribe(tinfix(tname("x"), "op", Placeholder()), pname("Int"))
+    val tree = AnonymousFunction(Ascribe(tinfix(tname("x"), "op", Placeholder()), pname("Int")))
     assertTerm(code)(tree)
   }
 

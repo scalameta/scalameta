@@ -1193,8 +1193,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
   test("for-case-placeholder") {
     val code = "for case x <- _ yield x"
     val output = "for ( case x <- _) yield x"
-    val tree = Term
-      .ForYield(List(Enumerator.CaseGenerator(patvar("x"), Term.Placeholder())), tname("x"))
+    val tree = Term.AnonymousFunction(
+      Term.ForYield(List(Enumerator.CaseGenerator(patvar("x"), Term.Placeholder())), tname("x")),
+    )
     runTestAssert[Stat](code, assertLayout = Some(output))(tree)
   }
 
@@ -1217,8 +1218,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  case s => s
          |}
          |""".stripMargin
-    val tree =
-      tselectmatch(tselect(Term.Placeholder(), "toString"), Case(patvar("s"), None, tname("s")))
+    val tree = Term.AnonymousFunction(
+      tselectmatch(tselect(Term.Placeholder(), "toString"), Case(patvar("s"), None, tname("s"))),
+    )
     runTestAssert[Stat](code, assertLayout = Some(output))(tree)
   }
 
@@ -1229,7 +1231,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  case s if _ => s
          |}
          |""".stripMargin
-    val tree = tselectmatch(tname("y"), Case(patvar("s"), Some(Term.Placeholder()), tname("s")))
+    val tree = Term.AnonymousFunction(
+      tselectmatch(tname("y"), Case(patvar("s"), Some(Term.Placeholder()), tname("s"))),
+    )
     runTestAssert[Stat](code, assertLayout = Some(output))(tree)
   }
 
@@ -1240,7 +1244,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  case _ => 2
          |}
          |""".stripMargin
-    val tree = tmatch(
+    val tree = Term.AnonymousFunction(tmatch(
       tname("d"),
       Case(
         patvar("m"),
@@ -1248,7 +1252,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         tsubmatch(Term.Placeholder(), Case(patvar("c"), Some(Term.Placeholder()), lit(1))),
       ),
       Case(patwildcard, None, lit(2)),
-    )
+    ))
     runTestAssert[Stat](code, assertLayout = None)(tree)
   }
 
