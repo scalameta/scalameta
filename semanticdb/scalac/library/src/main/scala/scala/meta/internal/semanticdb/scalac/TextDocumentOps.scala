@@ -125,6 +125,7 @@ trait TextDocumentOps {
       val mexpansions = mutable.LongMap.empty[m.Member]
       val mcolons = mutable.LongMap.empty[m.Pat] // the colon after a whole pattern -> the pattern
       val mfors = mutable.ArrayBuffer.empty[m.Term.ForClause] // outer first
+      val mrenames = mutable.HashSet.empty[String] // the names that an import renames to
 
       // Occurrences for names in val patterns, like `val (a, b) =`. Unlike the `occurrences` map, val pattern
       // occurrences uses "last occurrence wins" instead of "first occurrences wins" when disambiguating between
@@ -323,6 +324,7 @@ trait TextDocumentOps {
               if (colon >= 0) mcolons(colon) = mtree
             }
           case mtree: m.Term.ForClause => mfors += mtree
+          case mtree: m.Importee.Rename => mrenames += mtree.rename.value
           case _ =>
         }
       }
@@ -848,10 +850,14 @@ trait TextDocumentOps {
         private def tryFindQualifier(mqual: m.Term.Ref, gpre: g.Type): Unit = mqual match {
           case mqual: m.Term.Select => mqual.qual match {
               case mq: m.Term.Ref => gpre match {
-                  case gpre: g.SingleType =>
+                  // scalac selects `p.T` through the package object: `p.package.T`
+                  case gpre: g.SingleType
+                      if gpre.sym.isPackageObject && !refersTo(mqual, gpre.sym) =>
+                    tryFindQualifier(mqual, gpre.pre)
+                  case gpre: g.SingleType if refersTo(mqual, gpre.sym) =>
                     success(mqual.name, gpre.sym)
                     tryFindQualifier(mq, gpre.pre)
-                  case gpre: g.ThisType =>
+                  case gpre: g.ThisType if refersTo(mqual, gpre.sym) =>
                     success(mqual.name, gpre.sym)
                     tryFindQualifier(mq, gpre.sym.owner.thisType)
                   case _ =>
@@ -859,14 +865,50 @@ trait TextDocumentOps {
               case _ =>
             }
           case mname: m.Term.Name => gpre match {
-              case gpre: g.SingleType => success(mname, gpre.sym)
-              case gpre: g.ThisType => success(mname, gpre.sym)
+              case gpre: g.SingleType =>
+                if (refersTo(mname, gpre.sym)) success(mname, gpre.sym)
+                else if (gpre.sym.isPackageObject) tryFindQualifier(mname, gpre.pre)
+              case gpre: g.ThisType if refersTo(mname, gpre.sym) => success(mname, gpre.sym)
               case gpre: g.TypeRef if isExistentialValueType(gpre.sym) =>
                 success(mname, asExistentialValue(gpre.sym))
               case _ =>
             }
           case _ =>
         }
+        // a selection has the name of its member; an import or a self alias may rename an identifier
+        private def refersTo(mqual: m.Term.Ref, gsym: g.Symbol): Boolean = mqual match {
+          case mqual: m.Term.Select => mqual.name.value == gsym.decodedName
+          case mname: m.Term.Name =>
+            val name = mname.value
+            if (name == "_root_") gsym.isRoot || gsym.isRootPackage
+            else name == gsym.decodedName || gsym.thisSym.decodedName == name ||
+            isRenamedTo(mname, gsym)
+          case _ => false
+        }
+        // an import before the name, in a tree around it, renames the symbol to the name
+        private def isRenamedTo(mname: m.Term.Name, gsym: g.Symbol): Boolean =
+          mrenames(mname.value) && {
+            val gname = g.TermName(mname.value).encode
+            val start = mname.pos.start
+            def renames(gstats: List[g.Tree]) = gstats.exists {
+              case t: g.Import => t.pos.isDefined && t.pos.start < start && {
+                  val gtpe = t.expr.tpe
+                  (gtpe ne null) && t.selectors.exists(sel =>
+                    sel.rename == gname && {
+                      val gtarget = gtpe.member(sel.name)
+                      gtarget == gsym || gtarget.moduleClass == gsym
+                    },
+                  )
+                }
+              case _ => false
+            }
+            genclosing.exists {
+              case t: g.Block => renames(t.stats)
+              case t: g.Template => renames(t.body)
+              case t: g.PackageDef => renames(t.stats)
+              case _ => false
+            }
+          }
 
         /* scalac dealiased the parent, so its type and prefix may not be what the source names:
          * resolve the names from the scope around the class instead, and keep them if they
@@ -1820,7 +1862,9 @@ object TextDocumentOps {
       index(mtree)
       mtree match {
         // NOTE: ignore mrename for now, we may decide to make it a binder
-        case mtree: m.Importee.Rename => index(mtree.name)
+        case mtree: m.Importee.Rename =>
+          visit(mtree)
+          index(mtree.name)
         case _ =>
           visit(mtree)
           super.apply(mtree)
