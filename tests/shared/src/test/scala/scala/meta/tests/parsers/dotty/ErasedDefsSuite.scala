@@ -135,7 +135,13 @@ class ErasedDefsSuite extends BaseDottySuite {
 
   test("anonymous-method: using erased placeholder without type") {
     val code = "val fun = (using erased _) => ctx.open"
-    runTestError[Stat](code, "`;` expected but `=>` found")
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("fun")),
+      None,
+      tfunc(tparam(List(Mod.Using(), Mod.Erased()), "_"))(tselect("ctx", "open")),
+    )
+    runTestAssert[Stat](code)(tree)
   }
 
   test("anonymous-method: using placeholder") {
@@ -207,7 +213,9 @@ class ErasedDefsSuite extends BaseDottySuite {
 
   test("using erased placeholder in parens") {
     val code = "(using erased _: Context)"
-    val tree = Term.Ascribe(tinfix(tname("using"), "erased", Term.Placeholder()), pname("Context"))
+    val tree = Term.AnonymousFunction(
+      Term.Ascribe(tinfix(tname("using"), "erased", Term.Placeholder()), pname("Context")),
+    )
     runTestAssert[Stat](code, assertLayout = None)(tree)
   }
 

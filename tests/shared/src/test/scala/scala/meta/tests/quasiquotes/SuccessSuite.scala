@@ -533,7 +533,7 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("5 q\"expr match { ..case cases }\"") {
     val term = q"_.toString match { case s => s }"
-    val q"$expr match { ..case $casez }" = term
+    val q"$expr match { ..case $casez }" = term.asInstanceOf[Term.AnonymousFunction].body
     assertTree(expr)(tselect(Term.Placeholder(), "toString"))
     assertTrees(casez: _*)(Case(patvar("s"), None, tname("s")))
   }
@@ -718,7 +718,7 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("3 q\"for (..enumerators) yield expr\"") {
     val term = q"for (x <- _) yield x"
-    val q"for (..$enumerators) yield $expr" = term
+    val q"for (..$enumerators) yield $expr" = term.asInstanceOf[Term.AnonymousFunction].body
     assertTrees(enumerators: _*)(Enumerator.Generator(patvar("x"), Term.Placeholder()))
     assertTree(expr)(tname("x"))
   }
@@ -733,10 +733,10 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("5 q\"for (..enumerators) yield expr\"") {
     val ab = List(enumerator"a <- as")
-    val tree = Term.ForYield(
+    val tree = Term.AnonymousFunction(Term.ForYield(
       List(Enumerator.Generator(patvar("a"), tname("as")), Enumerator.Guard(Term.Placeholder())),
       tname("a"),
-    )
+    ))
     assertTree(q"for (..$ab; if _) yield a")(tree)
   }
 

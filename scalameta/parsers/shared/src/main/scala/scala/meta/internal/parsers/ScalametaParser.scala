@@ -1328,12 +1328,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     case _ => autoEndPos(lpPos)(tuple(body))
   }
 
-  private def getTupleSingleTerm(single: Term): Either[List[Term], Term] = {
-    val force = single match {
+  private def getTupleSingleTerm(
+      single: Term,
+      needParens: Boolean = false,
+  ): Either[List[Term], Term] = {
+    val force = needParens || (single match {
       // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
       case _: Term.Assign => dialect.allowNamedTuples
       case _ => false
-    }
+    })
     if (force) Left(single :: Nil) else Right(single)
   }
 
@@ -1343,7 +1346,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     makeTuple(lpPos, body, Lit.Unit(), Term.Tuple.apply)(single)
 
   private def makeTupleTerm(lpPos: Int, body: List[Term]): Term =
-    makeTupleTerm(getTupleSingleTerm)(lpPos, body)
+    makeTupleTerm(getTupleSingleTerm(_))(lpPos, body)
 
   private def keepTupleType(single: Type): Boolean = single match {
     case t: Type.TypedParam => dialect.allowNamedTuples
@@ -2608,6 +2611,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
     tree.becomeOr[Term.Param] {
       case _: Lit.Unit => null
+      // we took the `_` of a parameter for a placeholder before we saw the arrow
+      case t: Term.AnonymousFunction => convertToParam(t.body)
       case t: Term.Ascribe => getNameAndMod(t.expr) match {
           case null => null
           case (name, mod) => copyPos(t)(Term.Param(mod, name, Some(t.tpe), None))
@@ -3107,8 +3112,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         case _: EOL if !isBrace && !dialect.allowSignificantIndentation && tryAhead[LeftBrace] =>
           getRest()
         case _ => makeTupleTerm { arg =>
-            val res = maybeAnonymousFunction(arg)
-            if (isBrace) getTupleSingleTerm(res) else Left(res :: Nil)
+            val res = arg match {
+              case _: Term.PartialFunction if isBrace => arg // leave `_` in `{ case … }` to the caller
+              case _ => maybeAnonymousFunction(arg)
+            }
+            getTupleSingleTerm(res, !isBrace)
           }(lpPos, args)
       }
     }
