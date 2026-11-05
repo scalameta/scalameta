@@ -361,10 +361,12 @@ trait SymbolOps {
         i += 1
       }
     }
-    def addDeclaration(decl: g.Symbol): String = {
+    def addDeclaration(decl: g.Symbol, sym: g.Symbol): String = {
       val number = declarations.length
       val stored = locals.getOrElseUpdate(decl, number)
-      if (stored == number) declarations += decl
+      val declToStore = if (hasRebuildCopyOf(sym)) sym else decl
+      if (stored == number) declarations += declToStore
+      else if (declToStore ne decl) declarations(stored) = declToStore
       Symbols.Local(stored)
     }
     def getDeclaration(local: String): g.Symbol = getDeclaration(localNumber(local))
@@ -415,7 +417,7 @@ trait SymbolOps {
         if (!source.hasInput) return Symbols.None
         namespaces.getOrElseUpdate(source, new Namespace)
       }
-    namespace.addDeclaration(decl)
+    namespace.addDeclaration(decl, sym)
   }
 
   // the declaration of a local of the document, or `sym`
@@ -456,6 +458,9 @@ trait SymbolOps {
   }
 
   private def findDeclaration(sym: g.Symbol): g.Symbol = {
+    val rebuildOrig = getRebuildCopyOf(sym)
+    if (g.NoSymbol ne rebuildOrig) return declarationOf(rebuildOrig)
+
     // a parameter of a copy
     if (sym.isParameter) {
       val owner = sym.owner
@@ -524,6 +529,18 @@ trait SymbolOps {
       case _ => g.NoSymbol
     }
   }
+
+  // a symbol that differs from `original` only in what the subst of a `forSome` rebuild replaced
+  private final class RebuildCopyOf(val original: g.Symbol)
+
+  private[scalac] def getRebuildCopyOf(sym: g.Symbol): g.Symbol =
+    sym.attachments.get[RebuildCopyOf] match {
+      case Some(copy) => copy.original
+      case _ => g.NoSymbol
+    }
+  private[scalac] def hasRebuildCopyOf(sym: g.Symbol): Boolean = sym.hasAttachment[RebuildCopyOf]
+  private[scalac] def setRebuildCopyOf(sym: g.Symbol, orig: g.Symbol): Unit =
+    if (sym ne orig) sym.updateAttachment(new RebuildCopyOf(orig))
 
   private case class DeclarationKey(point: Int, name: g.Name)
   private object DeclarationKey {
