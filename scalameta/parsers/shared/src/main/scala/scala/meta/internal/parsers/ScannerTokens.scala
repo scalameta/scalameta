@@ -11,7 +11,9 @@ import scala.meta.tokens.{Token, TokenExtensions, Tokens}
 
 import scala.annotation.tailrec
 
-private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
+private[meta] final class ScannerTokens(val input: Input, val tokens: Tokens)(implicit
+    val dialect: Dialect,
+) {
 
   import ScannerTokens._
 
@@ -1017,7 +1019,7 @@ private[meta] object ScannerTokens {
   }
 
   def apply(input: Input)(implicit dialect: Dialect, tokenize: Tokenize): ScannerTokens =
-    new ScannerTokens(tokenize(input, dialect).get)
+    new ScannerTokens(input, tokenize(input, dialect).get)
 
   case class OutdentInfo(outdent: SepRegionIndented, regions: List[SepRegion], done: Boolean = false)
 

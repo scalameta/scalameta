@@ -25,13 +25,11 @@ import scala.language.implicitConversions
 import scala.reflect.{ClassTag, classTag}
 import scala.util.{Success, Try}
 
-class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOptions) {
+class ScalametaParser private (scannerTokens: ScannerTokens)(implicit options: ParserOptions) {
   parser =>
 
   import ScalametaParser._
   import ScannerTokens._
-
-  private val scannerTokens: ScannerTokens = ScannerTokens(input)
   import scannerTokens._
 
   /* ------------- NESTED CONTEXT OBJECTS ----------------------------------------- */
@@ -47,13 +45,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
-  def parseRule[T <: Tree](rule: this.type => T): T = parseRule(rule(this))
-
-  def parseRule[T <: Tree](rule: => T): T = {
+  private def parseRule[T <: Tree](rule: this.type => T): T = {
     // NOTE: can't require in.tokenPos to be at -1, because TokIterator auto-rewinds when created
     // require(in.tokenPos == -1 && debug(in.tokenPos))
     accept[BOF]
-    parseRuleAfterBOF(rule)
+    parseRuleAfterBOF(rule(this))
   }
 
   private def parseRuleAfterBOF[T <: Tree](rule: => T): T = {
@@ -67,54 +63,52 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   // Entry points for Parse[T]
-  def parseStat(): Stat = parseRule(if (dialect.allowUnquotes) quasiquoteStat() else entrypointStat())
+  def parseStat(): Stat = if (dialect.allowUnquotes) quasiquoteStat() else entrypointStat()
 
-  def parseTerm(): Term = parseRule(if (dialect.allowUnquotes) quasiquoteExpr() else entrypointExpr())
+  def parseTerm(): Term = if (dialect.allowUnquotes) quasiquoteExpr() else entrypointExpr()
 
-  def parseUnquoteTerm(): Term = parseRule(unquoteExpr())
+  def parseUnquoteTerm(): Term = unquoteExpr()
 
   def parseTermParam(): Term.Param =
-    parseRule(if (dialect.allowUnquotes) quasiquoteTermParam() else entrypointTermParam())
+    if (dialect.allowUnquotes) quasiquoteTermParam() else entrypointTermParam()
 
-  def parseType(): Type = parseRule(if (dialect.allowUnquotes) quasiquoteType() else entrypointType())
+  def parseType(): Type = if (dialect.allowUnquotes) quasiquoteType() else entrypointType()
 
   def parseTypeParam(): Type.Param =
-    parseRule(if (dialect.allowUnquotes) quasiquoteTypeParam() else entrypointTypeParam())
+    if (dialect.allowUnquotes) quasiquoteTypeParam() else entrypointTypeParam()
 
-  def parsePat(): Pat =
-    parseRule(if (dialect.allowUnquotes) quasiquotePattern() else entrypointPattern())
+  def parsePat(): Pat = if (dialect.allowUnquotes) quasiquotePattern() else entrypointPattern()
 
-  def parseUnquotePat(): Pat = parseRule(unquotePattern())
+  def parseUnquotePat(): Pat = unquotePattern()
 
-  def parseCase(): Case = parseRule(if (dialect.allowUnquotes) quasiquoteCase() else entrypointCase())
+  def parseCase(): Case = if (dialect.allowUnquotes) quasiquoteCase() else entrypointCase()
 
-  def parseCtor(): Ctor = parseRule(if (dialect.allowUnquotes) quasiquoteCtor() else entrypointCtor())
+  def parseCtor(): Ctor = if (dialect.allowUnquotes) quasiquoteCtor() else entrypointCtor()
 
-  def parseInit(): Init = parseRule(if (dialect.allowUnquotes) quasiquoteInit() else entrypointInit())
+  def parseInit(): Init = if (dialect.allowUnquotes) quasiquoteInit() else entrypointInit()
 
-  def parseSelf(): Self = parseRule(if (dialect.allowUnquotes) quasiquoteSelf() else entrypointSelf())
+  def parseSelf(): Self = if (dialect.allowUnquotes) quasiquoteSelf() else entrypointSelf()
 
   def parseTemplate(): Template =
-    parseRule(if (dialect.allowUnquotes) quasiquoteTemplate() else entrypointTemplate())
+    if (dialect.allowUnquotes) quasiquoteTemplate() else entrypointTemplate()
 
-  def parseMod(): Mod =
-    parseRule(if (dialect.allowUnquotes) quasiquoteModifier() else entrypointModifier())
+  def parseMod(): Mod = if (dialect.allowUnquotes) quasiquoteModifier() else entrypointModifier()
 
   def parseEnumerator(): Enumerator =
-    parseRule(if (dialect.allowUnquotes) quasiquoteEnumerator() else entrypointEnumerator())
+    if (dialect.allowUnquotes) quasiquoteEnumerator() else entrypointEnumerator()
 
   def parseImporter(): Importer =
-    parseRule(if (dialect.allowUnquotes) quasiquoteImporter() else entrypointImporter())
+    if (dialect.allowUnquotes) quasiquoteImporter() else entrypointImporter()
 
   def parseImportee(): Importee =
-    parseRule(if (dialect.allowUnquotes) quasiquoteImportee() else entrypointImportee())
+    if (dialect.allowUnquotes) quasiquoteImportee() else entrypointImportee()
 
-  def parseSource(): Source = parseRule(parseSourceImpl())
+  def parseSource(): Source = parseSourceImpl()
 
   private def parseSourceImpl(): Source =
     if (dialect.allowUnquotes) quasiquoteSource() else entrypointSource()
 
-  def parseAmmonite(): MultiSource = parseRule(entryPointAmmonite())
+  def parseAmmonite(): MultiSource = entryPointAmmonite()
 
   def entryPointAmmonite(): MultiSource = {
     assert(input.isInstanceOf[Input.Ammonite], s"Expected Input.Ammonite, not ${input.getClass}")
@@ -1249,17 +1243,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     if (null eq unquoteDialect) syntaxError(s"$dialect doesn't support unquotes", at = unquote)
     // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
     // but then such positions wouldn't be usable with Input.Slice.chars.
-    val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
+    def parseUnquote(rule: ScalametaParser => Tree): Tree = {
+      implicit val dialect: Dialect = unquoteDialect
+      try parse(Input.Slice(input, unquote.start + 1, unquote.end), rule)
+      catch { case ex: Exception => throw ex.absolutize }
+    }
     val parsed =
-      try {
-        val unquoteParser = {
-          implicit val dialect: Dialect = unquoteDialect
-          new ScalametaParser(unquoteInput)
-        }
-        if (dialect.allowTermUnquotes) unquoteParser.parseUnquoteTerm()
-        else if (dialect.allowPatUnquotes) unquoteParser.parseUnquotePat()
-        else unreachable
-      } catch { case ex: Exception => throw ex.absolutize }
+      if (dialect.allowTermUnquotes) parseUnquote(_.parseUnquoteTerm())
+      else if (dialect.allowPatUnquotes) parseUnquote(_.parseUnquotePat())
+      else unreachable
     // the unquote's own parser attached its comments; here it takes only its position
     parsed.privateSetOrigin(asOrigin(idx))
     copyPos(parsed)(quasi[T](0, parsed))
@@ -5177,6 +5169,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 }
 
 object ScalametaParser {
+
+  def parse[T <: Tree](input: Input, rule: ScalametaParser => T)(implicit
+      dialect: Dialect,
+      options: ParserOptions,
+  ): T = new ScalametaParser(ScannerTokens(input)).parseRule(rule)
 
   implicit def intToIndexPos(index: Int): Pos = new IndexPos(index)
   implicit def treeToTreePos(tree: Tree): Pos = new TreePos(tree)
