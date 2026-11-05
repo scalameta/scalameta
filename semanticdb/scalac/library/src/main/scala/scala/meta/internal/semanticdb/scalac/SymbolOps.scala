@@ -123,43 +123,38 @@ trait SymbolOps {
         if (sym.isJavaDefined) sym.companionClass.semanticdbDecls
         else sym.moduleClass.semanticdbDecls
       else if (sym.isModuleClass && sym.isJavaDefined) sym.companionClass.semanticdbDecls
-      else {
-        @tailrec
-        def loop(info: g.Type): SemanticdbDecls = info match {
-          case info: g.PolyType => loop(info.resultType)
-          case info: g.ClassInfoType =>
-            /* Reorder companion objects to their source position (#1544): the namer enters an
-             * eagerly-created companion right after its class, so an explicit `object` declared
-             * later keeps that early slot. Only these modules move; other members keep scalac's
-             * scope order.
-             */
-            def isReorderable(gsym: g.Symbol): Boolean = gsym.isModule && !gsym.isSynthetic &&
-              !gsym.isJavaDefined && gsym.pos.isDefined
-            val gbuf = List.newBuilder[g.Symbol]
-            val gmod = List.newBuilder[g.Symbol]
-            info.decls.sorted.foreach(x =>
-              if (x.isUsefulSymbolInformation) if (isReorderable(x)) gmod += x else gbuf += x,
-            )
-            if (sym.isJavaDefined) sym.companionModule.info.decls.filter(_.isUseful).foreach(gbuf.+=)
-            val others = gbuf.result()
-            val modules = gmod.result()
-            if (modules.isEmpty) SemanticdbDecls(others)
-            else {
-              // merge the modules into the other members by source offset
-              val rest = others.iterator.buffered
-              val result = List.newBuilder[g.Symbol]
-              modules.sortBy(_.pos.start).foreach { module =>
-                def precedes(other: g.Symbol) = !other.pos.isDefined ||
-                  other.pos.start <= module.pos.start
-                while (rest.hasNext && precedes(rest.head)) result += rest.next()
-                result += module
-              }
-              result ++= rest
-              SemanticdbDecls(result.result())
+      else sym.info.flatten match {
+        case info: g.ClassInfoType =>
+          /* Reorder companion objects to their source position (#1544): the namer enters an
+           * eagerly-created companion right after its class, so an explicit `object` declared
+           * later keeps that early slot. Only these modules move; other members keep scalac's
+           * scope order.
+           */
+          def isReorderable(gsym: g.Symbol): Boolean = gsym.isModule && !gsym.isSynthetic &&
+            !gsym.isJavaDefined && gsym.pos.isDefined
+          val gbuf = List.newBuilder[g.Symbol]
+          val gmod = List.newBuilder[g.Symbol]
+          info.decls.sorted.foreach(x =>
+            if (x.isUsefulSymbolInformation) if (isReorderable(x)) gmod += x else gbuf += x,
+          )
+          if (sym.isJavaDefined) sym.companionModule.info.decls.filter(_.isUseful).foreach(gbuf.+=)
+          val others = gbuf.result()
+          val modules = gmod.result()
+          if (modules.isEmpty) SemanticdbDecls(others)
+          else {
+            // merge the modules into the other members by source offset
+            val rest = others.iterator.buffered
+            val result = List.newBuilder[g.Symbol]
+            modules.sortBy(_.pos.start).foreach { module =>
+              def precedes(other: g.Symbol) = !other.pos.isDefined ||
+                other.pos.start <= module.pos.start
+              while (rest.hasNext && precedes(rest.head)) result += rest.next()
+              result += module
             }
-          case _ => SemanticdbDecls(Nil)
-        }
-        loop(sym.info)
+            result ++= rest
+            SemanticdbDecls(result.result())
+          }
+        case _ => SemanticdbDecls(Nil)
       }
   }
 
