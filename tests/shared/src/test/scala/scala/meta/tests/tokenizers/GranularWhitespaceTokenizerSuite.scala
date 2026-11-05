@@ -1,6 +1,7 @@
 package scala.meta.tests.tokenizers
 
 import scala.meta._
+import scala.meta.parsers.Parse
 import scala.meta.tests.parsers.MoreHelpers._
 import scala.meta.tokenizers.TokenizerOptions
 import scala.meta.tokens.Token._
@@ -1000,7 +1001,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
          |Expected ("{{" | "}}" | "&" | "&#" | "&#x" | "{" | "<xml:unparsed" | "<![CDATA[" | "<!--" | "</"):3:29, found "<?\n"
          |  val b = <baz qux="...">cde<?
          |                            ^""".stripMargin.lf2nl,
-    )(code.asInput.parseRule(_.entrypointStat()))
+    )(code.parseRule(Parse.parseStat))
   }
 
   test("unsupported xml literal - 1 BOF") {
@@ -1010,7 +1011,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       """|<input>:1: error: xml literals are not supported
          |<foo>bar</foo>
          |^""".stripMargin.lf2nl,
-    )(code.asInput.parseRule(_.entrypointStat()))
+    )(code.parseRule(Parse.parseStat))
   }
 
   test("unsupported xml literal - 2 after space") {
@@ -1020,7 +1021,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       """|<input>:1: error: xml literals are not supported
          |val a = <foo>bar</foo>
          |        ^""".stripMargin.lf2nl,
-    )(code.asInput.parseRule(_.entrypointStat()))
+    )(code.parseRule(Parse.parseStat))
   }
 
   testTokenizedStructLines(
@@ -1358,7 +1359,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
   ).foreach { case (value, error) =>
     test(s"numeric literal separator fail scala213: $value") {
       implicit val dialect: Dialect = dialects.Scala213
-      interceptMessage[ParseException](error.lf2nl)(value.parseRule(_.entrypointExpr()))
+      interceptMessage[ParseException](error.lf2nl)(value.parseRule(Parse.parseTerm))
     }
   }
 
@@ -1370,7 +1371,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
   )).foreach { case (value, error) =>
     test(s"numeric literal separator fail scala212: $value") {
       implicit val dialect: Dialect = dialects.Scala212
-      interceptMessage[ParseException](error.lf2nl)(value.parseRule(_.entrypointExpr()))
+      interceptMessage[ParseException](error.lf2nl)(value.parseRule(Parse.parseTerm))
     }
   }
 
@@ -1752,7 +1753,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
   ).foreach { case (code, error) =>
     test(s"numeric literal fail scala213: $code") {
       implicit val dialect: Dialect = dialects.Scala213
-      interceptMessage[ParseException](error.lf2nl)(code.parseRule(_.entrypointExpr()))
+      interceptMessage[ParseException](error.lf2nl)(code.parseRule(Parse.parseTerm))
     }
   }
 

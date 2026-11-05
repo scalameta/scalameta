@@ -33,17 +33,15 @@ object Parse {
   implicit lazy val parseSource: Parse[Source] = toParse(_.parseSource())
   implicit lazy val parseAmmonite: Parse[MultiSource] = toParse(_.parseAmmonite())
 
-  private def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
+  private[meta] def toParse[T <: Tree](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
     def apply(input: Input, dialect: Dialect): Parsed[T] = {
       implicit val implicitDialect: Dialect = dialect
       apply(input)
     }
 
     override def apply(input: Input)(implicit dialect: Dialect, options: ParserOptions): Parsed[T] =
-      try {
-        val parser = new ScalametaParser(input)
-        Parsed.Success(fn(parser))
-      } catch { case e: InputException => Parsed.Error(e.getPos, e.getShortMessage, e) }
+      try Parsed.Success(ScalametaParser.parse(input, fn))
+      catch { case e: InputException => Parsed.Error(e.getPos, e.getShortMessage, e) }
   }
 
 }

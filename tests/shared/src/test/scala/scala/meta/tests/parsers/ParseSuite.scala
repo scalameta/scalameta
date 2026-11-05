@@ -4,6 +4,7 @@ package parsers
 import org.scalameta.logger
 import scala.meta._
 import scala.meta.internal.parsers._
+import scala.meta.parsers.Parse
 
 import scala.language.implicitConversions
 
@@ -26,24 +27,23 @@ abstract class ParseSuite extends TreeSuiteBase with CommonTrees {
     assertEquals(actualLines, expectedLines)
   }
 
-  def stat(code: String)(implicit dialect: Dialect) = code.applyRule(_.parseStat())
+  def stat(code: String)(implicit dialect: Dialect) = code.parseRule(Parse.parseStat)
 
-  def parseRule[T <: Tree](code: String, f: ScalametaParser => T)(implicit dialect: Dialect) = code
-    .parseRule(f)
-  def term(code: String)(implicit dialect: Dialect) = parseRule(code, _.expr())
-  def pat(code: String)(implicit dialect: Dialect) = parseRule(code, _.pattern())
-  def patternTyp(code: String)(implicit dialect: Dialect) = parseRule(code, _.patternTyp())
-  def tpe(code: String)(implicit dialect: Dialect) = parseRule(code, _.typ())
-  def topStat(code: String)(implicit dialect: Dialect) =
-    parseRule(code, p => p.statSeq(p.topStat).head)
+  def parseRule[T <: Tree](code: String, f: Parse[T])(implicit dialect: Dialect) = code.parseRule(f)
+  def term(code: String)(implicit dialect: Dialect) = parseRule(code, TestEntryPoints.Expr)
+  def pat(code: String)(implicit dialect: Dialect) = parseRule(code, TestEntryPoints.Pattern)
+  def patternTyp(code: String)(implicit dialect: Dialect) =
+    parseRule(code, TestEntryPoints.PatternTyp)
+  def tpe(code: String)(implicit dialect: Dialect) = parseRule(code, TestEntryPoints.Typ)
+  def topStat(code: String)(implicit dialect: Dialect) = parseRule(code, TestEntryPoints.TopStat)
   def templStat(code: String)(implicit dialect: Dialect) =
-    parseRule(code, p => p.statSeq(p.templateStat).head)
-  def blockStat(code: String)(implicit dialect: Dialect) = parseRule(code, _.blockStatSeq().head)
-  def parseCase(code: String)(implicit dialect: Dialect) = code.applyRule(_.parseCase())
-  def source(code: String)(implicit dialect: Dialect) = parseRule(code, _.source())
+    parseRule(code, TestEntryPoints.TemplateStat)
+  def blockStat(code: String)(implicit dialect: Dialect) = parseRule(code, TestEntryPoints.BlockStat)
+  def parseCase(code: String)(implicit dialect: Dialect) = code.parseRule(Parse.parseCase)
+  def source(code: String)(implicit dialect: Dialect) = parseRule(code, TestEntryPoints.Source)
 
   def ammonite(code: String)(implicit dialect: Dialect) = code.asAmmoniteInput
-    .parseRule(_.entryPointAmmonite())
+    .parseRule(Parse.parseAmmonite)
 
   def testParseErrors(stats: String*)(implicit loc: munit.Location, dialect: Dialect) = stats
     .foreach(x => test(x)(interceptParseError(x)))
@@ -73,17 +73,15 @@ abstract class ParseSuite extends TreeSuiteBase with CommonTrees {
     checkOK(stat, syntax)
   }
 
-  protected def checkParsedTree[T <: Tree](
-      code: String,
-      f: ScalametaParser => T,
-      syntax: String = null,
-  )(tree: Tree)(implicit loc: munit.Location, dialect: Dialect): Unit =
+  protected def checkParsedTree[T <: Tree](code: String, f: Parse[T], syntax: String = null)(
+      tree: Tree,
+  )(implicit loc: munit.Location, dialect: Dialect): Unit =
     checkTree(parseRule(code, f), TestHelpers.getSyntax(code, syntax))(tree)
 
   protected def checkStat(code: String, syntax: String = null)(
       tree: Tree,
   )(implicit loc: munit.Location, dialect: Dialect): Unit =
-    checkParsedTree(code, _.entrypointStat(), syntax)(tree)
+    checkParsedTree(code, Parse.parseStat, syntax)(tree)
 
   /* Parse the code and check the owners of its comments: each group once, with the kinds of the
    * trees that hold it or a part of it, outermost first. Reprint it: without a layout, the reprint
