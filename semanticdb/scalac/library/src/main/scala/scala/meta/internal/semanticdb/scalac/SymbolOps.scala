@@ -53,6 +53,9 @@ trait SymbolOps {
   private var documentNamespace: Namespace = _
   private var documentAnnotations: mutable.HashMap[g.Position, g.Tree] = _
 
+  // the declaration of each local symbol that we looked up in this run
+  private lazy val declarationCache = new mutable.HashMap[g.Symbol, g.Symbol]
+
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     private[semanticdb] def toSemanticUncached: String = {
       if (sym == null || sym == g.NoSymbol) return Symbols.None
@@ -341,24 +344,32 @@ trait SymbolOps {
   private def freshSymbol(sym: g.Symbol): String = {
     val gval = sym.standsFor(sourceIndex(sym))
     if (gval.exists) return gval.toSemantic
-    localSymbol(declarationOf(sym))
+    localSymbol(sym)
   }
 
   /* A local stands for a declaration. A document numbers the locals that it meets in a namespace
    * of its own. Outside a document, a local takes its number in the namespace of its source. */
   private final class Namespace {
-    val locals = new mutable.HashMap[g.Symbol, String]
+    private val locals = new mutable.HashMap[g.Symbol, Int]
     // the declaration of each local, by its number
-    val declarations = new mutable.ArrayBuffer[g.Symbol]
+    private val declarations = new mutable.ArrayBuffer[g.Symbol]
     def foreach(f: (String, g.Symbol) => Unit): Unit = {
       var i = 0
       while (i < declarations.length) {
         val decl = declarations(i)
-        f(locals(decl), decl)
+        f(Symbols.Local(i), decl)
         i += 1
       }
-
     }
+    def addDeclaration(decl: g.Symbol): String = {
+      val number = declarations.length
+      val stored = locals.getOrElseUpdate(decl, number)
+      if (stored == number) declarations += decl
+      Symbols.Local(stored)
+    }
+    def getDeclaration(local: String): g.Symbol = getDeclaration(localNumber(local))
+    def getDeclaration(idx: Int): g.Symbol =
+      if (idx < 0 || idx >= declarations.length) null else declarations(idx)
   }
 
   def startDocument(unit: g.CompilationUnit): Unit = {
@@ -395,7 +406,8 @@ trait SymbolOps {
     documentAnnotations.getOrElse(pos, g.EmptyTree)
   }
 
-  private def localSymbol(decl: g.Symbol): String = {
+  private def localSymbol(sym: g.Symbol): String = {
+    val decl = declarationOf(sym)
     val namespace =
       if (null ne documentNamespace) documentNamespace
       else {
@@ -403,23 +415,14 @@ trait SymbolOps {
         if (!source.hasInput) return Symbols.None
         namespaces.getOrElseUpdate(source, new Namespace)
       }
-    namespace.locals.getOrElseUpdate(
-      decl, {
-        val declarations = namespace.declarations
-        try Symbols.Local(declarations.length)
-        finally declarations += decl
-      },
-    )
+    namespace.addDeclaration(decl)
   }
 
   // the declaration of a local of the document, or `sym`
   private[scalac] def localDeclaration(local: String, sym: g.Symbol): g.Symbol = {
     if (null ne documentNamespace) {
-      val number = localNumber(local)
-      if (number >= 0) {
-        val declarations = documentNamespace.declarations
-        if (number < declarations.length) return declarations(number)
-      }
+      val decl = documentNamespace.getDeclaration(local)
+      if (decl ne null) return decl
     }
     sym
   }
@@ -436,8 +439,6 @@ trait SymbolOps {
       case src => src
     }
 
-  // the declaration of each local symbol that we looked up in this run
-  private lazy val declarationCache = new mutable.HashMap[g.Symbol, g.Symbol]
   private def declarationOf(sym: g.Symbol): g.Symbol = declarationCache.getOrElse(
     sym, {
       // a symbol whose declaration depends on itself is its own declaration
