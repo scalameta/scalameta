@@ -1243,14 +1243,14 @@ class ScalametaParser private (scannerTokens: ScannerTokens)(implicit options: P
     if (null eq unquoteDialect) syntaxError(s"$dialect doesn't support unquotes", at = unquote)
     // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
     // but then such positions wouldn't be usable with Input.Slice.chars.
-    def parseUnquote(rule: ScalametaParser => Tree): Tree = {
+    def parseUnquote(treeType: Class[_ <: Tree], rule: ScalametaParser => Tree): Tree = {
       implicit val dialect: Dialect = unquoteDialect
-      try parse(Input.Slice(input, unquote.start + 1, unquote.end), rule)
+      try parse(Input.Slice(input, unquote.start + 1, unquote.end), treeType, rule)
       catch { case ex: Exception => throw ex.absolutize }
     }
     val parsed =
-      if (dialect.allowTermUnquotes) parseUnquote(_.parseUnquoteTerm())
-      else if (dialect.allowPatUnquotes) parseUnquote(_.parseUnquotePat())
+      if (dialect.allowTermUnquotes) parseUnquote(classOf[Term], _.parseUnquoteTerm())
+      else if (dialect.allowPatUnquotes) parseUnquote(classOf[Pat], _.parseUnquotePat())
       else unreachable
     // the unquote's own parser attached its comments; here it takes only its position
     parsed.privateSetOrigin(asOrigin(idx))
@@ -5170,10 +5170,11 @@ class ScalametaParser private (scannerTokens: ScannerTokens)(implicit options: P
 
 object ScalametaParser {
 
-  def parse[T <: Tree](input: Input, rule: ScalametaParser => T)(implicit
+  def parse[T <: Tree](input: Input, treeType: Class[_ <: Tree], rule: ScalametaParser => T)(
+      implicit
       dialect: Dialect,
       options: ParserOptions,
-  ): T = new ScalametaParser(ScannerTokens(input)).parseRule(rule)
+  ): T = new ScalametaParser(ScannerTokens(input, treeType)).parseRule(rule)
 
   implicit def intToIndexPos(index: Int): Pos = new IndexPos(index)
   implicit def treeToTreePos(tree: Tree): Pos = new TreePos(tree)

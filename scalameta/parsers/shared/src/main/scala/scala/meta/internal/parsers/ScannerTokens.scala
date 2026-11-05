@@ -1,6 +1,6 @@
 package scala.meta.internal.parsers
 
-import scala.meta.Dialect
+import scala.meta._
 import scala.meta.classifiers._
 import scala.meta.inputs.Input
 import scala.meta.internal.trees._
@@ -11,9 +11,11 @@ import scala.meta.tokens.{Token, TokenExtensions, Tokens}
 
 import scala.annotation.tailrec
 
-private[meta] final class ScannerTokens(val input: Input, val tokens: Tokens)(implicit
-    val dialect: Dialect,
-) {
+private[meta] final class ScannerTokens(
+    val input: Input,
+    val tokens: Tokens,
+    val treeType: Class[_ <: Tree],
+)(implicit val dialect: Dialect) {
 
   import ScannerTokens._
 
@@ -1018,8 +1020,10 @@ private[meta] object ScannerTokens {
     object InvalidArg extends LeadingInfix
   }
 
-  def apply(input: Input)(implicit dialect: Dialect, tokenize: Tokenize): ScannerTokens =
-    new ScannerTokens(input, tokenize(input, dialect).get)
+  def apply(input: Input, treeType: Class[_ <: Tree])(implicit
+      dialect: Dialect,
+      tokenize: Tokenize,
+  ): ScannerTokens = new ScannerTokens(input, tokenize(input, dialect).get, treeType)
 
   case class OutdentInfo(outdent: SepRegionIndented, regions: List[SepRegion], done: Boolean = false)
 

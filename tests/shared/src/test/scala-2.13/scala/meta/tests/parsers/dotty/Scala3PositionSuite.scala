@@ -3327,6 +3327,7 @@ class Scala3PositionSuite extends BasePositionSuite {
          |Indentation.Outdent [35..35)
          |EOF [36..36)
          |""".stripMargin,
+      classOf[Stat],
     )
   }
 

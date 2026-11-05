@@ -4358,7 +4358,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(e) [79..80)
          |EOF [81..81)
          |""".stripMargin.nl2lf
-    assertTokenizedAsStructureLines(code, struct)
+    assertTokenizedAsStructureLines(code, struct, classOf[Stat])
 
     val layout =
       """|for (_ <- if (a) {
@@ -4424,7 +4424,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(e) [79..80)
          |EOF [81..81)
          |""".stripMargin.nl2lf
-    assertTokenizedAsStructureLines(code, struct)
+    assertTokenizedAsStructureLines(code, struct, classOf[Stat])
 
     val layout =
       """|for (_ <- if (a) {
@@ -4459,7 +4459,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val options = new TokenizerOptions(groupWhitespace = true)
     val tokenize: TestHelpers.Tokenize = new TestHelpers.Tokenize {
       override def apply(code: String)(implicit dialect: Dialect): Iterable[Token] = {
-        val ti = LazyTokenIterator(ScannerTokens(Input.String(code).withTokenizerOptions(options)))
+        val ti = LazyTokenIterator(
+          ScannerTokens(Input.String(code).withTokenizerOptions(options), classOf[Stat]),
+        )
         val tokens = List.newBuilder[Token]
         while (ti.hasCurr) {
           tokens += ti.currToken
@@ -4545,7 +4547,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [72..73)
          |EOF [75..75)
          |""".stripMargin.nl2lf
-    assertTokenizedAsStructureLines(code, struct)
+    assertTokenizedAsStructureLines(code, struct, classOf[Stat])
 
     val layout =
       """|for (_ <- Option(42).map {

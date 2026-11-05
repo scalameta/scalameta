@@ -773,7 +773,7 @@ class InfixSuite extends BaseDottySuite {
          |RightBrace [62..63)
          |EOF [64..64)
          |""".stripMargin
-    assertTokenizedAsStructureLines(code, tokenized)
+    assertTokenizedAsStructureLines(code, tokenized, classOf[Stat])
     val layout = "object Hello { buffer += (new Object()) += (new Object) }"
     val tree = Defn.Object(
       Nil,
@@ -828,7 +828,7 @@ class InfixSuite extends BaseDottySuite {
          |RightBrace [108..109)
          |EOF [110..110)
          |""".stripMargin
-    assertTokenizedAsStructureLines(code, tokenized)
+    assertTokenizedAsStructureLines(code, tokenized, classOf[Stat])
     val layout =
       """object Hello { buffer += (new Object() with Foo { def toString() = "foo" }) += (new Object) }"""
     val tree = Defn.Object(
