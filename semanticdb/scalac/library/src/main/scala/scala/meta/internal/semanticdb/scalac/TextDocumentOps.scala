@@ -778,8 +778,8 @@ trait TextDocumentOps {
                 case p: m.Term.ApplyType => tryFindTypes(p.targClause.values, gtree.tpe.typeArgs)
                 case _ =>
               }
-            case g.Select(g.Ident(qualTerm), _) // transformNamedApplication blockWithQualifier case
-                if qualTerm.decoded.startsWith(g.nme.QUAL_PREFIX) => tryMend(gend)
+            case g.Select(q: g.Ident, _) // transformNamedApplication blockWithQualifier case
+                if q.name.decoded.startsWith(g.nme.QUAL_PREFIX) => tryMend(gend)
             case _: g.RefTree => if (!gsym.isDefaultGetter) tryMstart(gpoint)
             case gtree: g.Import if gtree.expr != null && gtree.expr.tpe != null =>
               gtree.selectors.foreach { sel =>
@@ -802,17 +802,26 @@ trait TextDocumentOps {
         }
 
         @tailrec
-        private def tryFindQualifier(mqual: m.Term.Ref, gpre: g.Type): Unit = (mqual, gpre) match {
-          case (m.Term.Select(mq: m.Term.Ref, mname), g.SingleType(gp, gsym)) =>
-            success(mname, gsym)
-            tryFindQualifier(mq, gp)
-          case (m.Term.Select(mq: m.Term.Ref, mname), g.ThisType(gsym)) =>
-            success(mname, gsym)
-            tryFindQualifier(mq, gsym.owner.thisType)
-          case (mname: m.Term.Name, g.SingleType(_, gsym)) => success(mname, gsym)
-          case (mname: m.Term.Name, g.ThisType(gsym)) => success(mname, gsym)
-          case (mname: m.Term.Name, gpre: g.TypeRef) if isExistentialValueType(gpre.sym) =>
-            success(mname, asExistentialValue(gpre.sym))
+        private def tryFindQualifier(mqual: m.Term.Ref, gpre: g.Type): Unit = mqual match {
+          case mqual: m.Term.Select => mqual.qual match {
+              case mq: m.Term.Ref => gpre match {
+                  case gpre: g.SingleType =>
+                    success(mqual.name, gpre.sym)
+                    tryFindQualifier(mq, gpre.pre)
+                  case gpre: g.ThisType =>
+                    success(mqual.name, gpre.sym)
+                    tryFindQualifier(mq, gpre.sym.owner.thisType)
+                  case _ =>
+                }
+              case _ =>
+            }
+          case mname: m.Term.Name => gpre match {
+              case gpre: g.SingleType => success(mname, gpre.sym)
+              case gpre: g.ThisType => success(mname, gpre.sym)
+              case gpre: g.TypeRef if isExistentialValueType(gpre.sym) =>
+                success(mname, asExistentialValue(gpre.sym))
+              case _ =>
+            }
           case _ =>
         }
 
@@ -858,23 +867,23 @@ trait TextDocumentOps {
             }
           case _ => null
         }
+        private def encoded(name: m.Term.Name) = g.TermName(name.value).encode
         // the type of a stable path and the symbols of its names, if scalac would accept it
         private def resolvePath(
-            mqual: m.Term.Ref,
+            mqual: m.Term,
             gscope: List[g.Tree],
             start: Int,
         ): (g.Type, List[(m.Name, g.Symbol)]) = mqual match {
-          case m.Term.Select(mq: m.Term.Ref, mname) => resolvePath(mq, gscope, start) match {
+          case mqual: m.Term.Select => resolvePath(mqual.qual, gscope, start) match {
               case null => null
-              case (gpre, gquals) => stablePath(gpre.member(g.TermName(mname.value).encode)) match {
+              case (gpre, gquals) => stablePath(gpre.member(encoded(mqual.name))) match {
                   case null => null
-                  case (gtpe, gsym) => (gtpe, (mname -> gsym) :: gquals)
+                  case (gtpe, gsym) => (gtpe, (mqual.name -> gsym) :: gquals)
                 }
             }
           case mname: m.Term.Name if mname.value == "_root_" =>
             (g.rootMirror.RootClass.tpe, (mname -> g.rootMirror.RootPackage) :: Nil)
-          case mname: m.Term.Name =>
-            stablePath(lookupName(g.TermName(mname.value).encode, gscope, start)) match {
+          case mname: m.Term.Name => stablePath(lookupName(encoded(mname), gscope, start)) match {
               case null => null
               case (gtpe, gsym) => (gtpe, (mname -> gsym) :: Nil)
             }
@@ -1316,7 +1325,7 @@ trait TextDocumentOps {
             val isGuard = (gfor ne null) && gfor.name == g.nme.withFilter
             // a for matches the parameter of its closure on the pattern
             val gpat = t.body match {
-              case g.Match(_, g.CaseDef(gpat, _, _) :: Nil) => gpat
+              case g.Match(_, cd :: Nil) => cd.pat
               case _ => g.EmptyTree
             }
             /* a for unpacks `y` of `y = x; _ <- ys` with a tuple pattern that has no range;
@@ -1337,7 +1346,7 @@ trait TextDocumentOps {
             t.body match {
               /* skip the match of a pattern on the parameter.
                * Its position can be the name after `yield`. */
-              case g.Match(g.Typed(sel, _), cases) if t.vparams.exists(_.symbol == sel.symbol) =>
+              case g.Match(sel: g.Typed, cases) if t.vparams.exists(_.symbol == sel.expr.symbol) =>
                 cases.foreach(traverse)
               case body => traverse(body)
             }
@@ -1617,8 +1626,8 @@ trait TextDocumentOps {
         ): Option[s.Synthetic] = cachedForApplyFun(gt.fun).filter(_.range.isEmpty).flatMap { x =>
           // a pattern binds through a match on the parameter; its range spans the generator
           val body = farg.body match {
-            case g.Match(g.Typed(sel, _), cd :: Nil)
-                if farg.vparams.exists(_.symbol == sel.symbol) => cd.body
+            case g.Match(sel: g.Typed, cd :: Nil)
+                if farg.vparams.exists(_.symbol == sel.expr.symbol) => cd.body
             case body => body
           }
           val arg = s.FunctionTree(farg.vparams.map(toParamId), cachedForOrOrig(body))
