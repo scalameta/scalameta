@@ -3,13 +3,15 @@ package scala.meta.tests.parsers
 import scala.meta.Dialect
 import scala.meta.parsers.Parse
 
+import scala.reflect.{ClassTag, classTag}
+
 import munit.{Location, TestOptions}
 
 abstract class BasePositionSuite extends ParseSuite {
   import scala.meta._
   import scala.meta.tests.parsers.MoreHelpers._
 
-  def checkPositions[T <: Tree: Parse](
+  def checkPositions[T <: Tree: Parse: ClassTag](
       code: TestOptions,
   )(implicit loc: Location, dialect: Dialect): Unit = checkPositions[T](code, "")
 
@@ -46,14 +48,18 @@ abstract class BasePositionSuite extends ParseSuite {
    * encloses the `{` token. The correct output should be
    * {{{Name.Anonymous trait A @@{ self: B =>}}}.
    */
-  def checkPositions[T <: Tree: Parse](
+  def checkPositions[T <: Tree: Parse: ClassTag](
       code: TestOptions,
       expected: String,
       expectedTokens: String = "",
       showPosition: Boolean = false,
       showFieldName: Boolean = false,
   )(implicit loc: Location, dialect: Dialect): Unit = test(code) {
-    if (expectedTokens.nonEmpty) assertTokenizedAsStructureLines(code.name, expectedTokens)
+    if (expectedTokens.nonEmpty) assertTokenizedAsStructureLines(
+      code.name,
+      expectedTokens,
+      classTag[T].runtimeClass.asInstanceOf[Class[_ <: Tree]],
+    )
     val tree = code.name.asInput.parse[T]
       .fold(x => fail("parse failure", x.details), MoreHelpers.requireNonEmptyOrigin(_))
     assertPositions(tree, expected, showPosition = showPosition, showFieldName = showFieldName)

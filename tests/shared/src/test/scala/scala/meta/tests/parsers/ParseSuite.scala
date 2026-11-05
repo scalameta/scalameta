@@ -259,8 +259,10 @@ abstract class ParseSuite extends TreeSuiteBase with CommonTrees {
     } else runTestAssert[T](original, reprinted)(tree)
   }
 
-  protected def scannerTokens(code: String)(implicit dialect: Dialect): Iterable[Token] = {
-    val st = ScannerTokens(code.asInput)
+  protected def scannerTokens(code: String, treeType: Class[_ <: Tree])(implicit
+      dialect: Dialect,
+  ): Iterable[Token] = {
+    val st = ScannerTokens(code.asInput, treeType)
     class MyIter extends Iterator[Token] {
       private val ti = LazyTokenIterator(st)
       override def hasNext: Boolean = ti.hasCurr
@@ -273,9 +275,11 @@ abstract class ParseSuite extends TreeSuiteBase with CommonTrees {
     }
   }
 
-  implicit val implicitTokenize: TestHelpers.Tokenize = new TestHelpers.Tokenize {
-    override def apply(code: String)(implicit dialect: Dialect): Iterable[Token] =
-      scannerTokens(code)
-  }
+  protected def assertTokenizedAsStructureLines(
+      code: String,
+      expected: String,
+      treeType: Class[_ <: Tree],
+  )(implicit loc: munit.Location, dialect: Dialect): Unit =
+    assertTokensAsStructureLines(scannerTokens(code, treeType), expected)
 
 }

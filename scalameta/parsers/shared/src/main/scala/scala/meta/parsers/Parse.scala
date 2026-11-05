@@ -15,32 +15,35 @@ trait Parse[T] {
 
 object Parse {
 
-  implicit lazy val parseStat: Parse[Stat] = toParse(_.parseStat())
-  implicit lazy val parseTerm: Parse[Term] = toParse(_.parseTerm())
-  implicit lazy val parseTermParam: Parse[Term.Param] = toParse(_.parseTermParam())
-  implicit lazy val parseType: Parse[Type] = toParse(_.parseType())
-  implicit lazy val parseTypeParam: Parse[Type.Param] = toParse(_.parseTypeParam())
-  implicit lazy val parsePat: Parse[Pat] = toParse(_.parsePat())
-  implicit lazy val parseCase: Parse[Case] = toParse(_.parseCase())
-  implicit lazy val parseCtor: Parse[Ctor] = toParse(_.parseCtor())
-  implicit lazy val parseInit: Parse[Init] = toParse(_.parseInit())
-  implicit lazy val parseSelf: Parse[Self] = toParse(_.parseSelf())
-  implicit lazy val parseTemplate: Parse[Template] = toParse(_.parseTemplate())
-  implicit lazy val parseMod: Parse[Mod] = toParse(_.parseMod())
-  implicit lazy val parseEnumerator: Parse[Enumerator] = toParse(_.parseEnumerator())
-  implicit lazy val parseImporter: Parse[Importer] = toParse(_.parseImporter())
-  implicit lazy val parseImportee: Parse[Importee] = toParse(_.parseImportee())
-  implicit lazy val parseSource: Parse[Source] = toParse(_.parseSource())
-  implicit lazy val parseAmmonite: Parse[MultiSource] = toParse(_.parseAmmonite())
+  implicit val parseStat: Parse[Stat] = toParse(classOf[Stat], _.parseStat())
+  implicit val parseTerm: Parse[Term] = toParse(classOf[Term], _.parseTerm())
+  implicit val parseTermParam: Parse[Term.Param] = toParse(classOf[Term.Param], _.parseTermParam())
+  implicit val parseType: Parse[Type] = toParse(classOf[Type], _.parseType())
+  implicit val parseTypeParam: Parse[Type.Param] = toParse(classOf[Type.Param], _.parseTypeParam())
+  implicit val parsePat: Parse[Pat] = toParse(classOf[Pat], _.parsePat())
+  implicit val parseCase: Parse[Case] = toParse(classOf[Case], _.parseCase())
+  implicit val parseCtor: Parse[Ctor] = toParse(classOf[Ctor], _.parseCtor())
+  implicit val parseInit: Parse[Init] = toParse(classOf[Init], _.parseInit())
+  implicit val parseSelf: Parse[Self] = toParse(classOf[Self], _.parseSelf())
+  implicit val parseTemplate: Parse[Template] = toParse(classOf[Template], _.parseTemplate())
+  implicit val parseMod: Parse[Mod] = toParse(classOf[Mod], _.parseMod())
+  implicit val parseEnumerator: Parse[Enumerator] = toParse(classOf[Enumerator], _.parseEnumerator())
+  implicit val parseImporter: Parse[Importer] = toParse(classOf[Importer], _.parseImporter())
+  implicit val parseImportee: Parse[Importee] = toParse(classOf[Importee], _.parseImportee())
+  implicit val parseSource: Parse[Source] = toParse(classOf[Source], _.parseSource())
+  implicit val parseAmmonite: Parse[MultiSource] = toParse(classOf[MultiSource], _.parseAmmonite())
 
-  private[meta] def toParse[T <: Tree](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
+  private[meta] def toParse[T <: Tree](
+      treeType: Class[_ <: Tree], // for ScannerTokens
+      rule: ScalametaParser => T,
+  ): Parse[T] = new Parse[T] {
     def apply(input: Input, dialect: Dialect): Parsed[T] = {
       implicit val implicitDialect: Dialect = dialect
       apply(input)
     }
 
     override def apply(input: Input)(implicit dialect: Dialect, options: ParserOptions): Parsed[T] =
-      try Parsed.Success(ScalametaParser.parse(input, fn))
+      try Parsed.Success(ScalametaParser.parse(input, treeType, rule))
       catch { case e: InputException => Parsed.Error(e.getPos, e.getShortMessage, e) }
   }
 

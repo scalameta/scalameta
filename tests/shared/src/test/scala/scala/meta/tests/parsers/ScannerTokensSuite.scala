@@ -9,12 +9,16 @@ class ScannerTokensSuite extends ParseSuite {
 
   private def tokensOf(code: String): ScannerTokens = {
     implicit val dialect: Dialect = dialects.Scala213
-    ScannerTokens(code.asInput)
+    ScannerTokens(code.asInput, classOf[Stat])
   }
 
   // the text of the token at `idx`, or a marker past either end
   private def at(st: ScannerTokens, idx: Int): String =
     if (idx < 0) "<before>" else if (idx >= st.tokens.length) "<after>" else st.tokens(idx).text
+
+  test("tree type of the tokens")(
+    assertEquals[Class[_], Class[_]](tokensOf("a").treeType, classOf[Stat]),
+  )
 
   test("next and previous tokens past trivia") {
     val st = tokensOf(
@@ -46,6 +50,7 @@ class ScannerTokensSuite extends ParseSuite {
          |  val x = 1
          |val y = 2
          |""".stripMargin.asInput,
+      classOf[Source],
     )
     val iter = LazyTokenIterator(st)
     while (iter.hasCurr) iter.next()
