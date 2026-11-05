@@ -166,5 +166,12 @@ trait TypeOps {
     }
     private def checkTrivialPrefix(gpre: g.Type, gsym: g.Symbol): Boolean = gpre =:=
       gsym.owner.thisType
+
+    @tailrec
+    final def flatten: g.Type = gtpe match {
+      case gtpe: g.PolyType => gtpe.resultType.flatten
+      case _ => gtpe
+    }
+
   }
 }
