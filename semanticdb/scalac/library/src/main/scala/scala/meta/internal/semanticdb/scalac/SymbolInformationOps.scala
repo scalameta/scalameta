@@ -185,7 +185,7 @@ trait SymbolInformationOps {
         else if (gsym.hasFlag(gf.JAVA) && kind == k.TYPE_PARAMETER) ssig match {
           case ssig: s.TypeSignature =>
             val upperBound1 = ssig.upperBound match {
-              case s.StructuralType(s.WithType(tpes), _) => s.IntersectionType(tpes)
+              case s.StructuralType(t: s.WithType, _) => s.IntersectionType(t.types)
               case s.TypeRef(s.NoType, ks.Any, Nil) => s.TypeRef(s.NoType, ks.Object, Nil)
               case sother => sother
             }
