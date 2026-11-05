@@ -869,8 +869,6 @@ trait TextDocumentOps {
                 if (refersTo(mname, gpre.sym)) success(mname, gpre.sym)
                 else if (gpre.sym.isPackageObject) tryFindQualifier(mname, gpre.pre)
               case gpre: g.ThisType if refersTo(mname, gpre.sym) => success(mname, gpre.sym)
-              case gpre: g.TypeRef if isExistentialValueType(gpre.sym) =>
-                success(mname, asExistentialValue(gpre.sym))
               case _ =>
             }
           case _ =>
@@ -1102,15 +1100,15 @@ trait TextDocumentOps {
               case (n, _) => n
             })
             val gsyms = gquantified.map(gq =>
-              if (isExistentialValueType(gq)) asExistentialValue(gq)
-              else {
-                val gqinfo = gq.info
-                val ginfo = existentialValueRefs(gqinfo)
-                if (ginfo eq gqinfo) gq else gq.cloneSymbol.setInfo(ginfo)
-              },
+              if (gq.hasFlag(gf.EXISTENTIAL) && g.nme.isSingletonName(gq.name)) gq.owner
+                .newValue(g.tpnme.dropSingletonName(gq.name).toTermName, gq.pos, gf.EXISTENTIAL)
+              else gq.cloneSymbol,
             )
+            val gtpes = gsyms.map(x => if (x.isTerm) g.singleType(g.NoPrefix, x) else x.tpeHK)
+            setWrittenInfos(mtpe.stats, gquantified, gsyms, gtpes)
             tryFindDecls(mtpe.stats, gsyms)
-            tryFindType(mtpe.tpe, g.newExistentialType(ginner, gtpe.underlying))
+            val gbody = g.newExistentialType(ginner, gtpe.underlying)
+            tryFindType(mtpe.tpe, substQuantifiers(gbody, gquantified, gtpes))
           case (_, gtpe: g.ExistentialType) => tryFindType(mtpe, gtpe.underlying)
           case (mtpe: m.Type.Wildcard, gtpe: g.TypeRef) if gtpe.sym.isExistentiallyBound =>
             defineUnderscore(findUnderscore(mtpe.pos.start), gtpe.sym)
@@ -1287,33 +1285,6 @@ trait TextDocumentOps {
           tryFindTypeDecl(mtparam.name, mtparam.tparamClause.values, mtparam.bounds, gtparam)
         }
 
-        private def isExistentialValueType(gsym: g.Symbol): Boolean = gsym
-          .hasFlag(gf.EXISTENTIAL) && g.nme.isSingletonName(gsym.name)
-        // quantified type -> value
-        private val existentialValues = mutable.HashMap.empty[g.Symbol, g.Symbol]
-        /* scalac quantifies `val x: T` as `type x.type <: T with Singleton`, and in `classOf` it
-         * keeps no symbol of the value: make one at its point, to pair with any copy by name */
-        private def asExistentialValue(gtype: g.Symbol): g.Symbol = existentialValues
-          .getOrElseUpdate(
-            gtype, {
-              val gtpe = gtype.info.bounds.hi match {
-                case gtpe: g.RefinedType => gtpe.parents.headOption.getOrElse(gtpe)
-                case gtpe => gtpe
-              }
-              val gname = g.tpnme.dropSingletonName(gtype.name).toTermName
-              gtype.owner.newValue(gname, gtype.pos, gf.EXISTENTIAL)
-                .setInfo(existentialValueRefs(gtpe))
-            },
-          )
-        // a quantified type refers to `x.type`: refer to the value instead
-        private object existentialValueRefs extends g.TypeMap {
-          def apply(gtpe: g.Type): g.Type = gtpe match {
-            case gtpe: g.TypeRef if isExistentialValueType(gtpe.sym) =>
-              g.singleType(g.NoPrefix, asExistentialValue(gtpe.sym))
-            case _ => mapOver(gtpe)
-          }
-        }
-
         @tailrec
         private def tryFindMacroAnnotation( // scalac keeps no tree of a macro annotation: resolve its name in the scope around it
             mtpe: m.Type,
@@ -1342,6 +1313,116 @@ trait TextDocumentOps {
           traverseAnnotations(gtree)
           tryFindMtree(gtree)
         }
+
+        /* mark each refinement member that the subst copied with its original: the subst keeps the
+         * shape of the type, so the members of both types are in the same order */
+        private def substQuantifiers(
+            gtpe: g.Type,
+            gquantified: List[g.Symbol],
+            gtpes: List[g.Type],
+        ): g.Type = {
+          val gres = gtpe.subst(gquantified, gtpes)
+          if (gres ne gtpe) {
+            val gorigs = refinementMembers(gtpe)
+            val gcopies = refinementMembers(gres)
+            if (gorigs.corresponds(gcopies)((x, y) => x.name == y.name && x.pos.point == y.pos.point))
+              g.foreach2(gorigs, gcopies)((gorig, gcopy) => setRebuildCopyOf(gcopy, gorig))
+          }
+          gres
+        }
+        private def refinementMembers(gtpe: g.Type): List[g.Symbol] = {
+          val gmembers = List.newBuilder[g.Symbol]
+          gtpe.foreach {
+            case gtpe: g.RefinedType => gmembers ++= gtpe.decls
+            case _ =>
+          }
+          gmembers.result()
+        }
+
+        /* scalac replaces a quantifier at the top of another one's upper bound, or at the top of a
+         * part of a `with` or a refinement there, with the first one's bound (`val v: T` as
+         * `type v.type <: AnyRef with Singleton`): give each copy of a quantifier the bound
+         * that the source writes */
+        private def setWrittenInfos(
+            mstats: List[m.Stat],
+            gquantified: List[g.Symbol],
+            gsyms: List[g.Symbol],
+            gtpes: List[g.Type],
+        ): Unit = {
+          def quantifierType(name: m.Name, isTerm: Boolean): g.Type = {
+            val idx = gsyms.indexWhere(isNamed(name.value, isTerm))
+            if (0 > idx) null else gtpes(idx)
+          }
+          def written(mtpe: m.Type, gtpe: g.Type): g.Type = {
+            val gquantifier = mtpe match {
+              case mname: m.Type.Name => quantifierType(mname, isTerm = false)
+              case mtpe: m.Type.Singleton => mtpe.ref match {
+                  case mname: m.Term.Name => quantifierType(mname, isTerm = true)
+                  case _ => null
+                }
+              case _ => null
+            }
+            if (gquantifier ne null) gquantifier
+            else (mtpe, gtpe) match {
+              case (mtpe: m.Type.With, gtpe: g.RefinedType) => writtenParents(mtpe, gtpe)
+              case (mtpe: m.Type.Refine, gtpe: g.RefinedType) => mtpe.tpe
+                  .fold[g.Type](gtpe)(writtenParents(_, gtpe))
+              case _ => gtpe
+            }
+          }
+          def writtenParents(mtpe: m.Type, gtpe: g.RefinedType): g.Type = {
+            val gparents = gtpe.parents
+            val mparts = withParts(mtpe, gparents.length, Nil)
+            if (mparts.lengthCompare(gparents.length) != 0) gtpe
+            // share the declarations: copyRefinedType clones them into extra locals
+            else g.RefinedType(g.map2(mparts, gparents)(written), gtpe.decls, gtpe.typeSymbol)
+          }
+          def writtenInfo(gq: g.Symbol, gs: g.Symbol): g.Type = {
+            val ginfo = substQuantifiers(gq.info, gquantified, gtpes)
+            val mtpe = writtenBound(mstats, gs.decodedName, gs.isTerm)
+            if (gs.isTerm) {
+              val gtpe = ginfo.bounds.hi match {
+                case g.RefinedType(gparent :: _, _) => gparent // without `with Singleton`
+                case ghi => ghi
+              }
+              if (mtpe eq null) gtpe else written(mtpe, gtpe)
+            } else ginfo match {
+              case ginfo: g.TypeBounds if mtpe ne null =>
+                g.TypeBounds(ginfo.lo, written(mtpe, ginfo.hi))
+              case _ => ginfo
+            }
+          }
+          // a bound may refer to a value declared later: set the value's info when it is first read
+          g.foreach2(gquantified, gsyms)((gq, gs) =>
+            if (gs.isTerm) gs.setInfo(new g.LazyType {
+              override def complete(sym: g.Symbol): Unit = sym.setInfo(writtenInfo(gq, gs))
+            }),
+          )
+          // a type with a lazy info has no type parameters: set it now
+          g.foreach2(gquantified, gsyms)((gq, gs) => if (!gs.isTerm) gs.setInfo(writtenInfo(gq, gs)))
+        }
+        // scalac keeps `(B with C)` on the right as one parent: `A with (B with C)` has two
+        @tailrec
+        private def withParts(mtpe: m.Type, nparents: Int, mparts: List[m.Type]): List[m.Type] =
+          mtpe match {
+            case mtpe: m.Type.With if nparents > 1 =>
+              withParts(mtpe.lhs, nparents - 1, mtpe.rhs :: mparts)
+            case _ => mtpe :: mparts
+          }
+        /* the type of a value or the upper bound of a type, as a `forSome` declares it; null for a
+         * type with type parameters, which may shadow another quantifier */
+        @tailrec
+        private def writtenBound(mstats: List[m.Stat], name: String, isTerm: Boolean): m.Type =
+          mstats match {
+            case (mstat: m.Decl.Val) :: _ if isTerm && mstat.pats.exists {
+                  case mpat: m.Pat.Var => mpat.name.value == name
+                  case _ => false
+                } => mstat.decltpe
+            case (mstat: m.Decl.Type) :: _ if !isTerm && mstat.name.value == name =>
+              if (mstat.tparamClause.values.isEmpty) mstat.bounds.hi.orNull else null
+            case _ :: mstats => writtenBound(mstats, name, isTerm)
+            case Nil => null
+          }
 
         override protected def enter(gtree: g.Tree): Unit = genclosing = gtree :: genclosing
         override protected def leave(gtree: g.Tree): Unit = {
