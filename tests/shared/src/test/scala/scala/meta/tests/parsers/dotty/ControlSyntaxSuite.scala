@@ -1,6 +1,8 @@
 package scala.meta.tests.parsers.dotty
 
 import scala.meta._
+import scala.meta.internal.parsers.{LazyTokenIterator, ScannerTokens}
+import scala.meta.tests.TestHelpers
 import scala.meta.tokenizers.TokenizerOptions
 
 class ControlSyntaxSuite extends BaseDottySuite {
@@ -4439,6 +4441,66 @@ class ControlSyntaxSuite extends BaseDottySuite {
       tname("e"),
     )
     runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3979 w/ grouped whitespace in the input") {
+    val code =
+      """|for {
+         |  _ <-
+         |    if (a) {
+         |      b
+         |    } else {
+         |      c
+         |    }
+         |
+         |  _ <- d
+         |} yield e
+         |""".stripMargin
+    val options = new TokenizerOptions(groupWhitespace = true)
+    val tokenize: TestHelpers.Tokenize = new TestHelpers.Tokenize {
+      override def apply(code: String)(implicit dialect: Dialect): Iterable[Token] = {
+        val ti = LazyTokenIterator(ScannerTokens(Input.String(code).withTokenizerOptions(options)))
+        val tokens = List.newBuilder[Token]
+        while (ti.hasCurr) {
+          tokens += ti.currToken
+          ti.next()
+        }
+        tokens.result()
+      }
+    }
+
+    val struct =
+      """|BOF [0..0)
+         |KwFor [0..3)
+         |LeftBrace [4..5)
+         |Underscore [8..9)
+         |LeftArrow [10..12)
+         |Indentation.Indent [12..12)
+         |KwIf [17..19)
+         |LeftParen [20..21)
+         |Ident(a) [21..22)
+         |RightParen [22..23)
+         |LeftBrace [24..25)
+         |Ident(b) [32..33)
+         |LF [33..34)
+         |RightBrace [38..39)
+         |KwElse [40..44)
+         |LeftBrace [45..46)
+         |Ident(c) [53..54)
+         |LF [54..55)
+         |RightBrace [59..60)
+         |Indentation.Outdent [60..60)
+         |MultiNL(2) [60..62)
+         |Underscore [64..65)
+         |LeftArrow [66..68)
+         |Ident(d) [69..70)
+         |LF [70..71)
+         |RightBrace [71..72)
+         |KwYield [73..78)
+         |Ident(e) [79..80)
+         |EOF [81..81)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, dialect)(implicitly, tokenize)
   }
 
   test("#4008") {
