@@ -21,6 +21,7 @@ class SemanticdbPlugin(val global: Global) extends Plugin with SemanticdbPipelin
       case _: SemanticdbReporter => // do nothing, already hijacked
       case r => if (isSupportedCompiler) g.reporter = new SemanticdbReporter(r)
     }
+    if (isSupportedCompiler) g.analyzer.addAnalyzerPlugin(TyperRecorder)
     true
   }
 

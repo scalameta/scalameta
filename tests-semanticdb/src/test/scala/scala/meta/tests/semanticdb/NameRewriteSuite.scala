@@ -1,5 +1,7 @@
 package scala.meta.tests.semanticdb
 
+import scala.meta.internal.semanticdb.scalac.TyperOps
+
 class NameRewriteSuite extends SemanticdbSuite {
 
   private def occurrences(name: String, code: String, expected: String)(implicit
@@ -856,9 +858,12 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[5:14..5:15): R => _empty_/n21.R#
          |[5:15..5:15):  => _empty_/n21.R#`<init>`().
          |[6:6..6:7): a <= _empty_/n21.a.
+         |[6:10..6:11): K => _empty_/n21.K.
          |[6:12..6:14): :: => scala/collection/immutable/List#`::`().
          |[6:15..6:18): Nil => scala/package.Nil.
          |[7:6..7:7): b <= _empty_/n21.b.
+         |[7:11..7:12): K => _empty_/n21.K.
+         |[7:13..7:14): + => scala/Int#`+`(+4).
          |[7:18..7:20): :: => scala/collection/immutable/List#`::`().
          |[7:21..7:24): Nil => scala/package.Nil.
          |[8:6..8:7): c <= _empty_/n21.c.
@@ -869,15 +874,20 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[9:12..9:14): :: => scala/collection/immutable/List#`::`().
          |[9:15..9:18): Nil => scala/package.Nil.
          |[10:6..10:7): e <= _empty_/n21.e.
+         |[10:10..10:11): S => _empty_/n21.S.
          |[10:12..10:14): +: => scala/collection/SeqOps#`+:`().
          |[10:15..10:18): Seq => scala/package.Seq.
          |[11:6..11:7): f <= _empty_/n21.f.
+         |[11:10..11:13): Int => scala/Int.
+         |[11:14..11:22): MaxValue => scala/Int.MaxValue.
          |[11:23..11:25): :: => scala/collection/immutable/List#`::`().
          |[11:26..11:29): Nil => scala/package.Nil.
          |[12:6..12:7): g <= _empty_/n21.g.
+         |[12:10..12:11): K => _empty_/n21.K.
          |[12:12..12:14): +: => _empty_/n21.R#`+:`().
          |[12:15..12:16): r => _empty_/n21.r.
          |[13:6..13:7): h <= _empty_/n21.h.
+         |[13:10..13:11): K => _empty_/n21.K.
          |[13:12..13:14): :: => _empty_/n21.R#`::`().
          |[13:15..13:16): r => _empty_/n21.r.
          |[14:6..14:7): i <= _empty_/n21.i.
@@ -890,13 +900,19 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[15:19..15:21): :: => scala/collection/immutable/List#`::`().
          |[15:22..15:25): Nil => scala/package.Nil.
          |[16:6..16:7): k <= _empty_/n21.k.
+         |[16:10..16:11): - => scala/Int#`unary_-`().
+         |[16:11..16:12): K => _empty_/n21.K.
          |[16:13..16:15): :: => scala/collection/immutable/List#`::`().
          |[16:16..16:19): Nil => scala/package.Nil.
          |[17:6..17:7): l <= _empty_/n21.l.
+         |[17:10..17:13): n21 => _empty_/n21.
+         |[17:14..17:15): K => _empty_/n21.K.
          |[17:16..17:18): :: => scala/collection/immutable/List#`::`().
          |[17:19..17:22): Nil => scala/package.Nil.
          |[18:6..18:7): m <= _empty_/n21.m.
+         |[18:10..18:11): K => _empty_/n21.K.
          |[18:12..18:14): :: => scala/collection/immutable/List#`::`().
+         |[18:15..18:16): K => _empty_/n21.K.
          |[18:17..18:19): :: => scala/collection/immutable/List#`::`().
          |[18:20..18:23): Nil => scala/package.Nil.
          |""".stripMargin,
@@ -916,6 +932,7 @@ class NameRewriteSuite extends SemanticdbSuite {
        |[1:12..1:13): K <= _empty_/n22.K.
        |[2:6..2:7): x <= _empty_/n22.x.
        |[3:6..3:7): a <= _empty_/n22.a.
+       |[3:10..3:11): K => _empty_/n22.K.
        |[3:12..3:15): #:: => scala/collection/immutable/LazyList.Deferrer#`#::`().
        |[3:16..3:24): LazyList => scala/package.LazyList.
        |[3:25..3:30): empty => scala/collection/immutable/LazyList.empty().
@@ -3397,9 +3414,12 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[6:12..6:13): C <= _empty_/n53.C.
          |[7:12..7:13): T <= _empty_/n53.T.
          |[8:6..8:7): a <= _empty_/n53.a.
+         |[8:10..8:11): O => _empty_/n53.O.
+         |[8:12..8:13): K => _empty_/n53.O.K.
          |[8:14..8:16): :: => scala/collection/immutable/List#`::`().
          |[8:17..8:20): Nil => scala/package.Nil.
          |[9:6..9:7): b <= _empty_/n53.b.
+         |[9:10..9:11): J => _empty_/n53.O.K.
          |[9:12..9:14): :: => scala/collection/immutable/List#`::`().
          |[9:15..9:18): Nil => scala/package.Nil.
          |[10:6..10:7): c <= _empty_/n53.c.
@@ -3407,15 +3427,24 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[10:12..10:14): :: => scala/collection/immutable/List#`::`().
          |[10:15..10:18): Nil => scala/package.Nil.
          |[11:6..11:7): d <= _empty_/n53.d.
+         |[11:11..11:12): K => _empty_/n53.K.
          |[11:14..11:16): :: => scala/collection/immutable/List#`::`().
          |[11:17..11:20): Nil => scala/package.Nil.
          |[12:6..12:7): e <= _empty_/n53.e.
+         |[12:12..12:13): K => _empty_/n53.K.
+         |[12:14..12:15): + => scala/Int#`+`(+4).
          |[12:20..12:22): :: => scala/collection/immutable/List#`::`().
          |[12:23..12:26): Nil => scala/package.Nil.
          |[13:6..13:7): f <= _empty_/n53.f.
+         |[13:10..13:17): classOf => scala/Predef.classOf().
+         |[13:18..13:24): String => scala/Predef.String#
          |[13:26..13:28): :: => scala/collection/immutable/List#`::`().
          |[13:29..13:32): Nil => scala/package.Nil.
          |[14:6..14:7): g <= _empty_/n53.g.
+         |[14:10..14:14): java => java/
+         |[14:15..14:19): lang => java/lang/
+         |[14:20..14:27): Integer => java/lang/Integer#
+         |[14:28..14:37): MAX_VALUE => java/lang/Integer#MAX_VALUE.
          |[14:38..14:40): :: => scala/collection/immutable/List#`::`().
          |[14:41..14:44): Nil => scala/package.Nil.
          |[15:6..15:7): h <= _empty_/n53.h.
@@ -3424,15 +3453,22 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[15:18..15:20): :: => scala/collection/immutable/List#`::`().
          |[15:21..15:24): Nil => scala/package.Nil.
          |[16:6..16:7): i <= _empty_/n53.i.
+         |[16:10..16:11): K => _empty_/n53.K.
+         |[16:12..16:18): toLong => scala/Int#toLong().
          |[16:19..16:21): :: => scala/collection/immutable/List#`::`().
          |[16:22..16:25): Nil => scala/package.Nil.
          |[17:6..17:7): j <= _empty_/n53.j.
+         |[17:10..17:11): O => _empty_/n53.O.
+         |[17:12..17:13): S => _empty_/n53.O.S.
          |[17:14..17:16): +: => scala/collection/SeqOps#`+:`().
          |[17:17..17:20): Seq => scala/package.Seq.
          |[18:6..18:7): k <= _empty_/n53.k.
+         |[18:10..18:11): C => _empty_/n53.C.
          |[18:12..18:14): :: => scala/collection/immutable/List#`::`().
          |[18:15..18:18): Nil => scala/package.Nil.
          |[19:6..19:7): l <= _empty_/n53.l.
+         |[19:10..19:11): ! => scala/Boolean#`unary_!`().
+         |[19:11..19:12): T => _empty_/n53.T.
          |[19:13..19:15): :: => scala/collection/immutable/List#`::`().
          |[19:16..19:19): Nil => scala/package.Nil.
          |""".stripMargin,
@@ -3546,6 +3582,7 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[4:48..4:53): empty => scala/collection/mutable/ListBuffer.empty().
          |[4:54..4:57): Int => scala/Int#
          |[5:6..5:7): a <= _empty_/n54.a.
+         |[5:11..5:12): K => _empty_/n54.K.
          |[5:13..5:15): :: => scala/collection/immutable/List#`::`().
          |[5:16..5:19): Nil => scala/package.Nil.
          |[5:21..5:24): ::: => scala/collection/immutable/List#`:::`().
@@ -3556,16 +3593,20 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[6:18..6:21): ::: => scala/collection/immutable/List#`:::`().
          |[6:22..6:25): Nil => scala/package.Nil.
          |[7:6..7:7): c <= _empty_/n54.c.
+         |[7:10..7:11): K => _empty_/n54.K.
          |[7:12..7:15): +=: => scala/collection/mutable/Buffer#`+=:`().
          |[7:16..7:19): buf => _empty_/n54.buf.
          |[8:6..8:7): d <= _empty_/n54.d.
+         |[8:10..8:11): K => _empty_/n54.K.
          |[8:12..8:15): ->: => _empty_/n54.R#`->:`().
          |[8:16..8:17): r => _empty_/n54.r.
          |[9:6..9:7): e <= _empty_/n54.e.
+         |[9:10..9:11): K => _empty_/n54.K.
          |[9:12..9:15): ->: => _empty_/n54.R#`->:`().
          |[9:16..9:19): Int => scala/Int#
          |[9:21..9:22): r => _empty_/n54.r.
          |[10:6..10:7): f <= _empty_/n54.f.
+         |[10:10..10:11): K => _empty_/n54.K.
          |[10:12..10:14): *: => _empty_/n54.R#`*:`().
          |[10:15..10:16): r => _empty_/n54.r.
          |[11:6..11:7): g <= _empty_/n54.g.
@@ -3573,10 +3614,12 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[11:14..11:16): :: => scala/collection/immutable/List#`::`().
          |[11:17..11:18): K => _empty_/n54.K.
          |[12:6..12:7): h <= _empty_/n54.h.
+         |[12:10..12:11): K => _empty_/n54.K.
          |[12:12..12:14): :: => scala/collection/immutable/List#`::`().
          |[12:15..12:18): Int => scala/Int#
          |[12:20..12:23): Nil => scala/package.Nil.
          |[13:6..13:7): i <= _empty_/n54.i.
+         |[13:10..13:11): K => _empty_/n54.K.
          |[13:12..13:14): +: => scala/collection/SeqOps#`+:`().
          |[13:15..13:21): Vector => scala/package.Vector.
          |""".stripMargin,
@@ -3702,17 +3745,21 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[2:16..2:19): Int => scala/Int#
          |[2:24..2:25): l => _empty_/n55.f().(l)
          |[3:6..3:7): g <= _empty_/n55.g().
+         |[3:12..3:13): K => _empty_/n55.K.
          |[3:14..3:16): :: => scala/collection/immutable/List#`::`().
          |[3:17..3:20): Nil => scala/package.Nil.
+         |[3:22..3:23): K => _empty_/n55.K.
          |[3:24..3:26): +: => scala/collection/SeqOps#`+:`().
          |[3:27..3:33): Vector => scala/package.Vector.
          |[4:6..4:7): a <= _empty_/n55.a.
          |[4:10..4:11): f => _empty_/n55.f().
+         |[4:12..4:13): K => _empty_/n55.K.
          |[4:14..4:16): :: => scala/collection/immutable/List#`::`().
          |[4:17..4:20): Nil => scala/package.Nil.
          |[5:6..5:7): b <= _empty_/n55.b.
          |[5:10..5:11): f => _empty_/n55.f().
          |[5:12..5:13): l => _empty_/n55.f().(l)
+         |[5:16..5:17): K => _empty_/n55.K.
          |[5:18..5:20): :: => scala/collection/immutable/List#`::`().
          |[5:21..5:24): Nil => scala/package.Nil.
          |[6:6..6:7): l <= _empty_/n55.l().
@@ -3731,21 +3778,26 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[8:33..8:34): K => _empty_/n55.K.
          |[8:35..8:37): :: => scala/package.`::`.
          |[9:6..9:7): c <= _empty_/n55.c.
+         |[9:20..9:21): K => _empty_/n55.K.
          |[9:22..9:24): :: => scala/collection/immutable/List#`::`().
          |[9:25..9:28): Nil => scala/package.Nil.
          |[9:34..9:37): Nil => scala/package.Nil.
          |[10:6..10:7): d <= _empty_/n55.d.
          |[10:10..10:14): List => scala/package.List.
+         |[10:15..10:16): K => _empty_/n55.K.
          |[10:17..10:19): :: => scala/collection/immutable/List#`::`().
          |[10:20..10:23): Nil => scala/package.Nil.
          |[11:6..11:7): n <= _empty_/n55.n().
+         |[11:10..11:11): K => _empty_/n55.K.
          |[11:12..11:14): :: => scala/collection/immutable/List#`::`().
          |[11:15..11:18): Nil => scala/package.Nil.
          |[12:11..12:12): e <= _empty_/n55.e.
+         |[12:15..12:16): K => _empty_/n55.K.
          |[12:17..12:19): :: => scala/collection/immutable/List#`::`().
          |[12:20..12:23): Nil => scala/package.Nil.
          |[13:6..13:7): o <= _empty_/n55.o.
          |[13:15..13:16): i <= local0
+         |[13:20..13:21): K => _empty_/n55.K.
          |[13:22..13:24): :: => scala/collection/immutable/List#`::`().
          |[13:25..13:28): Nil => scala/package.Nil.
          |[13:36..13:37): i => local0
@@ -3759,12 +3811,14 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[15:10..15:10):  <= _empty_/n55.D#`<init>`().
          |[15:18..15:19): B => _empty_/n55.B#
          |[15:19..15:19):  => _empty_/n55.B#`<init>`().
+         |[15:20..15:21): K => _empty_/n55.K.
          |[15:22..15:24): :: => scala/collection/immutable/List#`::`().
          |[15:25..15:28): Nil => scala/package.Nil.
          |[16:6..16:7): p <= _empty_/n55.p().
          |[16:8..16:9): l <= _empty_/n55.p().(l)
          |[16:11..16:15): List => scala/package.List#
          |[16:16..16:19): Int => scala/Int#
+         |[16:23..16:24): K => _empty_/n55.K.
          |[16:25..16:27): :: => scala/collection/immutable/List#`::`().
          |[16:28..16:31): Nil => scala/package.Nil.
          |[16:35..16:36): l => _empty_/n55.p().(l)
@@ -3957,32 +4011,43 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[2:12..2:13): K <= _empty_/n58.K.
          |[3:12..3:13): S <= _empty_/n58.S.
          |[4:6..4:7): a <= _empty_/n58.a.
+         |[4:14..4:15): + => java/lang/String#`+`().
+         |[4:16..4:17): S => _empty_/n58.S.
          |[4:18..4:20): :: => scala/collection/immutable/List#`::`().
          |[4:21..4:24): Nil => scala/package.Nil.
          |[5:6..5:7): b <= _empty_/n58.b.
+         |[5:10..5:11): K => _empty_/n58.K.
+         |[5:12..5:13): + => scala/Int#`+`(+5).
          |[5:17..5:19): :: => scala/collection/immutable/List#`::`().
          |[5:20..5:23): Nil => scala/package.Nil.
          |[6:6..6:7): c <= _empty_/n58.c.
+         |[6:10..6:11): K => _empty_/n58.K.
          |[6:12..6:14): :: => scala/collection/immutable/List#`::`().
          |[6:16..6:19): Nil => scala/package.Nil.
          |[6:21..6:25): List => scala/package.List#
          |[6:26..6:30): Long => scala/Long#
          |[7:6..7:7): d <= _empty_/n58.d.
+         |[7:12..7:13): K => _empty_/n58.K.
          |[7:16..7:18): :: => scala/collection/immutable/List#`::`().
          |[7:19..7:22): Nil => scala/package.Nil.
          |[8:6..8:7): e <= _empty_/n58.e.
+         |[8:12..8:13): + => scala/Int#`+`(+4).
          |[8:16..8:18): :: => scala/collection/immutable/List#`::`().
          |[8:19..8:22): Nil => scala/package.Nil.
          |[9:6..9:7): f <= _empty_/n58.f.
          |[9:10..9:11): s => scala/StringContext#s().
+         |[9:14..9:15): K => _empty_/n58.K.
          |[9:16..9:18): :: => scala/collection/immutable/List#`::`().
          |[9:19..9:22): Nil => scala/package.Nil.
          |[10:3..10:4): A => _empty_/n58.A#
          |[10:4..10:4):  => _empty_/n58.A#`<init>`().
+         |[10:5..10:6): K => _empty_/n58.K.
          |[10:7..10:9): :: => scala/collection/immutable/List#`::`().
          |[10:10..10:13): Nil => scala/package.Nil.
          |[10:19..10:20): g <= _empty_/n58.g.
          |[11:6..11:7): h <= _empty_/n58.h.
+         |[11:10..11:11): S => _empty_/n58.S.
+         |[11:12..11:13): + => java/lang/String#`+`().
          |[11:18..11:20): :: => scala/collection/immutable/List#`::`().
          |[11:21..11:24): Nil => scala/package.Nil.
          |""".stripMargin,
@@ -4043,11 +4108,13 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[1:12..1:13): K <= _empty_/n60.K.
          |[2:7..2:8): p <= _empty_/n60.p.
          |[2:10..2:11): q <= _empty_/n60.q.
+         |[2:16..2:17): K => _empty_/n60.K.
          |[2:18..2:20): :: => scala/collection/immutable/List#`::`().
          |[2:21..2:24): Nil => scala/package.Nil.
          |[3:6..3:7): m <= _empty_/n60.m().
          |[3:17..3:18): r <= local0
          |[3:20..3:21): s <= local1
+         |[3:26..3:27): K => _empty_/n60.K.
          |[3:28..3:30): :: => scala/collection/immutable/List#`::`().
          |[3:31..3:34): Nil => scala/package.Nil.
          |[3:40..3:41): r => local0
@@ -4121,6 +4188,7 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[4:6..4:7): a <= _empty_/n62.a.
          |[4:10..4:11): f => _empty_/n62.f().
          |[4:12..4:13): b => _empty_/n62.f().(b)
+         |[4:16..4:17): K => _empty_/n62.K.
          |[4:18..4:20): :: => scala/collection/immutable/List#`::`().
          |[4:21..4:24): Nil => scala/package.Nil.
          |[4:26..4:27): a => _empty_/n62.f().(a)
@@ -4130,6 +4198,7 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[5:18..5:19): l <= local1
          |[5:21..5:25): List => scala/package.List#
          |[5:26..5:29): Int => scala/Int#
+         |[5:33..5:34): K => _empty_/n62.K.
          |[5:35..5:37): :: => scala/collection/immutable/List#`::`().
          |[5:38..5:41): Nil => scala/package.Nil.
          |[5:45..5:46): l => local1
@@ -4140,6 +4209,7 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[6:10..6:11): l <= _empty_/n62.C#l.
          |[6:13..6:17): List => scala/package.List#
          |[6:18..6:21): Int => scala/Int#
+         |[6:25..6:26): K => _empty_/n62.K.
          |[6:27..6:29): :: => scala/collection/immutable/List#`::`().
          |[6:30..6:33): Nil => scala/package.Nil.
          |""".stripMargin,
@@ -4199,12 +4269,14 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[2:65..2:65):  => scala/annotation/Annotation#`<init>`().
          |[3:3..3:4): A => _empty_/n63.A#
          |[3:4..3:4):  => _empty_/n63.A#`<init>`().
+         |[3:5..3:6): K => _empty_/n63.K.
          |[3:7..3:9): :: => scala/collection/immutable/List#`::`().
          |[3:10..3:13): Nil => scala/package.Nil.
          |[3:21..3:22): C <= _empty_/n63.C#
          |[3:22..3:22):  <= _empty_/n63.C#`<init>`().
          |[4:3..4:4): A => _empty_/n63.A#
          |[4:4..4:4):  => _empty_/n63.A#`<init>`().
+         |[4:5..4:6): K => _empty_/n63.K.
          |[4:7..4:9): :: => scala/collection/immutable/List#`::`().
          |[4:10..4:13): Nil => scala/package.Nil.
          |[4:19..4:20): m <= _empty_/n63.m().
@@ -4333,6 +4405,7 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[4:14..4:15): R => _empty_/n65.R#
          |[4:15..4:15):  => _empty_/n65.R#`<init>`().
          |[5:6..5:7): a <= _empty_/n65.a.
+         |[5:10..5:11): K => _empty_/n65.K.
          |[5:12..5:14): +: => _empty_/n65.R#`+:`().
          |[5:15..5:16): r => _empty_/n65.r.
          |[6:6..6:7): b <= _empty_/n65.b.
@@ -4341,6 +4414,7 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[6:30..6:33): Int => scala/Int#
          |[6:37..6:37):  <= local0
          |[6:44..6:45): x <= local7
+         |[6:50..6:51): K => _empty_/n65.K.
          |[6:52..6:54): :: => scala/collection/immutable/List#`::`().
          |[6:55..6:58): Nil => scala/package.Nil.
          |[6:60..6:68): nonEmpty => scala/collection/IterableOnceOps#nonEmpty().
@@ -4349,6 +4423,7 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[7:10..7:14): List => scala/package.List.
          |[7:18..7:21): map => scala/collection/immutable/List#map().
          |[7:22..7:23): _ <= local9
+         |[7:27..7:28): K => _empty_/n65.K.
          |[7:29..7:31): :: => scala/collection/immutable/List#`::`().
          |[7:32..7:35): Nil => scala/package.Nil.
          |""".stripMargin,
@@ -4389,6 +4464,7 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[2:11..2:15): List => scala/package.List#
          |[2:16..2:19): Int => scala/Int#
          |[2:30..2:31): a <= local0
+         |[2:34..2:35): K => _empty_/n66.K.
          |[2:36..2:38): :: => scala/collection/immutable/List#`::`().
          |[2:39..2:42): Nil => scala/package.Nil.
          |[2:44..2:45): l => _empty_/n66.m().(l)
@@ -4424,6 +4500,10 @@ class NameRewriteSuite extends SemanticdbSuite {
       """|[0:7..0:10): n67 <= _empty_/n67.
          |[1:12..1:13): K <= _empty_/n67.K.
          |[2:6..2:7): a <= _empty_/n67.a.
+         |[2:10..2:17): example => example/
+         |[2:18..2:35): ConstantExpansion => example/ConstantExpansion.
+         |[2:36..2:39): one => example/ConstantExpansion.one().
+         |[2:40..2:41): K => _empty_/n67.K.
          |[2:43..2:45): :: => scala/collection/immutable/List#`::`().
          |[2:46..2:49): Nil => scala/package.Nil.
          |""".stripMargin,
@@ -4541,6 +4621,10 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[9:30..9:31): J => _empty_/n68.O.J.
          |[9:33..9:34): J => _empty_/n68.O.J.
          |[10:6..10:7): m <= _empty_/n68.m.
+         |[10:10..10:17): example => example/
+         |[10:18..10:35): ConstantExpansion => example/ConstantExpansion.
+         |[10:36..10:39): one => example/ConstantExpansion.one().
+         |[10:40..10:41): K => _empty_/n68.K.
          |[10:43..10:45): :: => scala/collection/immutable/List#`::`().
          |[10:46..10:49): Nil => scala/package.Nil.
          |""".stripMargin,
@@ -4672,6 +4756,8 @@ class NameRewriteSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |[9:10..9:18): identity => *[Int]
          |  Int => scala/Int#
+         |[10:10..10:39): example.ConstantExpansion.one => *[Int]
+         |  Int => scala/Int#
          |[10:43..10:49): :: Nil => *[Int]
          |  Int => scala/Int#
          |""".stripMargin,
@@ -4750,6 +4836,7 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[4:15..4:15):  => _empty_/n69.R#`<init>`().
          |[5:6..5:7): x <= _empty_/n69.x.
          |[6:6..6:7): a <= _empty_/n69.a.
+         |[6:10..6:11): K => _empty_/n69.K.
          |[6:12..6:14): +: => _empty_/n69.R#`+:`().
          |[6:15..6:16): r => _empty_/n69.r.
          |[7:6..7:7): b <= _empty_/n69.b.
@@ -4840,14 +4927,30 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[1:9..1:10): O <= _empty_/n70.O.
          |[1:23..1:24): K <= _empty_/n70.O.K.
          |[2:6..2:7): a <= _empty_/n70.a.
+         |[2:10..2:17): example => example/
+         |[2:18..2:35): ConstantExpansion => example/ConstantExpansion.
+         |[2:36..2:39): one => example/ConstantExpansion.one().
+         |[2:46..2:47): q <= local1
+         |[2:53..2:54): q => local1
          |[2:58..2:60): :: => scala/collection/immutable/List#`::`().
          |[2:67..2:68): w <= local0
          |[2:74..2:78): List => scala/package.List.
          |[2:79..2:80): w => local0
          |[3:6..3:7): b <= _empty_/n70.b.
+         |[3:10..3:17): example => example/
+         |[3:18..3:35): ConstantExpansion => example/ConstantExpansion.
+         |[3:36..3:39): one => example/ConstantExpansion.one().
+         |[3:46..3:47): q <= local2
+         |[3:53..3:54): q => local2
          |[3:58..3:60): :: => scala/collection/immutable/List#`::`().
          |[3:61..3:64): Nil => scala/package.Nil.
          |[4:6..4:7): c <= _empty_/n70.c.
+         |[4:10..4:17): example => example/
+         |[4:18..4:35): ConstantExpansion => example/ConstantExpansion.
+         |[4:36..4:39): one => example/ConstantExpansion.one().
+         |[4:49..4:50): O => _empty_/n70.O.
+         |[4:52..4:53): K => _empty_/n70.O.K.
+         |[4:61..4:62): J => _empty_/n70.O.K.
          |[4:66..4:68): :: => scala/collection/immutable/List#`::`().
          |[4:69..4:72): Nil => scala/package.Nil.
          |""".stripMargin,
@@ -4898,6 +5001,10 @@ class NameRewriteSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local0 => val local w: Int
          |  Int => scala/Int#
+         |local1 => val local q: Int
+         |  Int => scala/Int#
+         |local2 => val local q: Int
+         |  Int => scala/Int#
          |""".stripMargin,
     ),
   )
@@ -4925,12 +5032,18 @@ class NameRewriteSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |""".stripMargin
       },
-      """|[2:58..2:83): :: { val w = 1; List(w) } => *[Int]
+      """|[2:10..2:39): example.ConstantExpansion.one => *[Int]
+         |  Int => scala/Int#
+         |[2:58..2:83): :: { val w = 1; List(w) } => *[Int]
          |  Int => scala/Int#
          |[2:74..2:78): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
+         |[3:10..3:39): example.ConstantExpansion.one => *[Int]
+         |  Int => scala/Int#
          |[3:58..3:64): :: Nil => *[Int]
+         |  Int => scala/Int#
+         |[4:10..4:39): example.ConstantExpansion.one => *[Int]
          |  Int => scala/Int#
          |[4:66..4:72): :: Nil => *[Int]
          |  Int => scala/Int#
@@ -4989,6 +5102,10 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[2:8..2:9): a <= _empty_/n71.m().(a)
          |[2:11..2:15): List => scala/package.List#
          |[2:16..2:19): Int => scala/Int#
+         |[2:23..2:30): example => example/
+         |[2:31..2:48): ConstantExpansion => example/ConstantExpansion.
+         |[2:49..2:52): one => example/ConstantExpansion.one().
+         |[2:53..2:54): K => _empty_/n71.K.
          |[2:56..2:58): :: => scala/collection/immutable/List#`::`().
          |[2:59..2:62): Nil => scala/package.Nil.
          |[2:66..2:67): a => _empty_/n71.m().(a)
@@ -4998,6 +5115,10 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[3:30..3:33): Int => scala/Int#
          |[3:37..3:37):  <= local0
          |[4:9..4:10): x <= local7
+         |[4:15..4:22): example => example/
+         |[4:23..4:40): ConstantExpansion => example/ConstantExpansion.
+         |[4:41..4:44): one => example/ConstantExpansion.one().
+         |[4:45..4:46): K => _empty_/n71.K.
          |[4:48..4:50): :: => scala/collection/immutable/List#`::`().
          |[4:51..4:54): Nil => scala/package.Nil.
          |[4:56..4:64): nonEmpty => scala/collection/IterableOnceOps#nonEmpty().
@@ -5026,16 +5147,34 @@ class NameRewriteSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |""".stripMargin
       },
-      """|[2:56..2:62): :: Nil => *[Int]
+      """|[2:23..2:52): example.ConstantExpansion.one => *[Int]
+         |  Int => scala/Int#
+         |[2:56..2:62): :: Nil => *[Int]
          |  Int => scala/Int#
          |[3:37..5:3): {
          |    case x if (example.ConstantExpansion.one(K) :: Nil).nonEmpty => x
          |  } => *.apply
          |  apply => scala/Function1#apply().
+         |[4:15..4:44): example.ConstantExpansion.one => *[Int]
+         |  Int => scala/Int#
          |[4:48..4:54): :: Nil => *[Int]
          |  Int => scala/Int#
          |""".stripMargin,
     ),
   )
+
+  test("synthetic locals of a match after patmat") {
+    computeDatabaseFromSnippet(
+      """|object n72 {
+         |  def m(x: Any) = x match { case i: Int => i }
+         |}
+         |""".stripMargin,
+    )
+    val unit = g.currentRun.units.toList.last
+    g.currentRun.phaseNamed("patmat").asInstanceOf[g.GlobalPhase].apply(unit)
+    val locals = unit.body.collect { case t: g.ValDef if t.symbol.isSynthetic => t.symbol }
+    assertNotEquals(locals, Nil)
+    assertEquals(locals.filter(_.attachments.contains[TyperOps#ValDefRhs]), Nil)
+  }
 
 }

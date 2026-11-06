@@ -1590,6 +1590,34 @@ trait TextDocumentOps {
           }
         }
 
+        // traverse the recorded right side of `gsym` if scalac dropped its definition
+        private def tryRecoverValDefRhs(gsym: g.Symbol): Boolean =
+          gsym.attachments.get(ValDefRhsTag) match {
+            case Some(r) if !isVisited(r.tree) && !isDefinedInBlock(gsym, genclosing) =>
+              val savedEnclosing = genclosing
+              val savedRenames = grenames
+              try traverse(r.tree)
+              catch {
+                case NonFatal(_) =>
+                  genclosing = savedEnclosing
+                  grenames = savedRenames
+              }
+              true
+            case _ => false
+          }
+
+        @tailrec
+        private def isDefinedInBlock(gsym: g.Symbol, gtrees: List[g.Tree]): Boolean = gtrees match {
+          case head :: rest => head match {
+              case t: g.Block if t.stats.exists {
+                    case s: g.ValDef => s.symbol eq gsym
+                    case _ => false
+                  } => true
+              case _ => isDefinedInBlock(gsym, rest)
+            }
+          case _ => false
+        }
+
         override protected def visit(gtree: g.Tree, hasOriginal: Boolean): Unit =
           if (!hasOriginal) traverseNoOriginal(gtree)
 
@@ -1698,12 +1726,16 @@ trait TextDocumentOps {
             }
             tryFindMtree(t)
           case t: g.ValDef =>
-            if (t.hasSyntheticSymbol) traverse(t.tpt)
+            if (t.hasSyntheticSymbol) {
+              traverse(t.tpt)
+              t.symbol.removeAttachment(ValDefRhsTag)
+            }
             traverse(t.rhs)
             processMemberDef(t)
           case t: g.MemberDef => processMemberDef(t)
           case t: g.Ident => t.pos match {
               case p: gu.RangePosition if p.start >= p.end => // do nothing, empty identifier (such as empty package)
+              case _ if t.hasSyntheticSymbol && tryRecoverValDefRhs(t.symbol) =>
               case _ => tryFindMtree(t)
             }
           case _: g.GenericApply =>
