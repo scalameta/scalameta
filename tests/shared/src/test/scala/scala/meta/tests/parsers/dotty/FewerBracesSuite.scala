@@ -3266,4 +3266,304 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Source](code, layout)(tree)
   }
 
+  test("colon lambda in an if condition, `if` with parentheses, `;` and an identifier in the body on the next line, `then` and `else` on the same line, next statements") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if xs.exists: x =>
+         |        if (a) b; c then d else e
+         |    g
+         |    h
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |Ident(xs) [27..29)
+         |Dot [29..30)
+         |Ident(exists) [30..36)
+         |Colon [36..37)
+         |Ident(x) [38..39)
+         |RightArrow [40..42)
+         |Indentation.Indent [42..42)
+         |KwIf [51..53)
+         |LeftParen [54..55)
+         |Ident(a) [55..56)
+         |RightParen [56..57)
+         |Ident(b) [58..59)
+         |Semicolon [59..60)
+         |Ident(c) [61..62)
+         |KwThen [63..67)
+         |Ident(d) [68..69)
+         |KwElse [70..74)
+         |Ident(e) [75..76)
+         |Indentation.Outdent [76..76)
+         |LF [76..77)
+         |Ident(g) [81..82)
+         |LF [82..83)
+         |Ident(h) [87..88)
+         |Indentation.Outdent [88..88)
+         |Indentation.Outdent [88..88)
+         |EOF [89..89)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: `identifier` expected but `if` found
+         |        if (a) b; c then d else e
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("colon lambda in an indented if condition, `match` with an `if` with `&&` after the parentheses in the first case, leading `||` on the next line with `then` and `else`, outer `then` and `else` on the line of the last case, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      xs.forall: x =>
+         |        x match
+         |          case 1 => if (a) && b
+         |            || c then true else false
+         |          case _ => false then d else e
+         |    k
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |Indentation.Indent [26..26)
+         |Ident(xs) [33..35)
+         |Dot [35..36)
+         |Ident(forall) [36..42)
+         |Colon [42..43)
+         |Ident(x) [44..45)
+         |RightArrow [46..48)
+         |Indentation.Indent [48..48)
+         |Ident(x) [57..58)
+         |KwMatch [59..64)
+         |Indentation.Indent [64..64)
+         |KwCase [75..79)
+         |Constant.Int(1) [80..81)
+         |RightArrow [82..84)
+         |KwIf [85..87)
+         |LeftParen [88..89)
+         |Ident(a) [89..90)
+         |RightParen [90..91)
+         |Ident(&&) [92..94)
+         |Ident(b) [95..96)
+         |InfixLF [96..97)
+         |Ident(||) [109..111)
+         |Ident(c) [112..113)
+         |KwThen [114..118)
+         |KwTrue [119..123)
+         |KwElse [124..128)
+         |KwFalse [129..134)
+         |LF [134..135)
+         |KwCase [145..149)
+         |Underscore [150..151)
+         |RightArrow [152..154)
+         |KwFalse [155..160)
+         |KwThen [161..165)
+         |Ident(d) [166..167)
+         |KwElse [168..172)
+         |Ident(e) [173..174)
+         |Indentation.Outdent [174..174)
+         |Indentation.Outdent [174..174)
+         |Indentation.Outdent [174..174)
+         |LF [174..175)
+         |Ident(k) [179..180)
+         |Indentation.Outdent [180..180)
+         |Indentation.Outdent [180..180)
+         |EOF [181..181)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: `outdent` expected but `=>` found
+         |      xs.forall: x =>
+         |                   ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("colon lambda, `if` with `&&` after the parentheses in the body, `then` and `else` on the next line at the column of the lambda, next definition") {
+    val code =
+      """|object A:
+         |  def f =
+         |    xs.map: x =>
+         |      if (x) && b
+         |    then 1 else 2
+         |  def k = 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |Ident(xs) [24..26)
+         |Dot [26..27)
+         |Ident(map) [27..30)
+         |Colon [30..31)
+         |Ident(x) [32..33)
+         |RightArrow [34..36)
+         |Indentation.Indent [36..36)
+         |KwIf [43..45)
+         |LeftParen [46..47)
+         |Ident(x) [47..48)
+         |RightParen [48..49)
+         |Ident(&&) [50..52)
+         |Ident(b) [53..54)
+         |Indentation.Outdent [54..54)
+         |KwThen [59..63)
+         |Constant.Int(1) [64..65)
+         |KwElse [66..70)
+         |Constant.Int(2) [71..72)
+         |Indentation.Outdent [72..72)
+         |LF [72..73)
+         |KwDef [75..78)
+         |Ident(k) [79..80)
+         |Equals [81..82)
+         |Constant.Int(1) [83..84)
+         |Indentation.Outdent [84..84)
+         |EOF [85..85)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:5: error: `outdent` expected but `then` found
+         |    then 1 else 2
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("colon lambda, `if` without parentheses with `&&` in the body, `then` and `else` on the next line at the column of the lambda, next definition") {
+    val code =
+      """|object A:
+         |  def f =
+         |    xs.map: x =>
+         |      if x && b
+         |    then 1 else 2
+         |  def k = 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |Ident(xs) [24..26)
+         |Dot [26..27)
+         |Ident(map) [27..30)
+         |Colon [30..31)
+         |Ident(x) [32..33)
+         |RightArrow [34..36)
+         |Indentation.Indent [36..36)
+         |KwIf [43..45)
+         |Ident(x) [46..47)
+         |Ident(&&) [48..50)
+         |Ident(b) [51..52)
+         |Indentation.Outdent [52..52)
+         |KwThen [57..61)
+         |Constant.Int(1) [62..63)
+         |KwElse [64..68)
+         |Constant.Int(2) [69..70)
+         |Indentation.Outdent [70..70)
+         |LF [70..71)
+         |KwDef [73..76)
+         |Ident(k) [77..78)
+         |Equals [79..80)
+         |Constant.Int(1) [81..82)
+         |Indentation.Outdent [82..82)
+         |EOF [83..83)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    xs.map: x =>
+         |              ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("colon lambda in an indented if condition, `if` with `&&` after the parentheses in the body, `then` and `else` on the next line at the column of the lambda, outer `then` and `else` on the next line, next definition") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      xs.exists: x =>
+         |        if (x) && b
+         |      then true else false
+         |    then 1 else 2
+         |  def k = 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |Indentation.Indent [26..26)
+         |Ident(xs) [33..35)
+         |Dot [35..36)
+         |Ident(exists) [36..42)
+         |Colon [42..43)
+         |Ident(x) [44..45)
+         |RightArrow [46..48)
+         |Indentation.Indent [48..48)
+         |KwIf [57..59)
+         |LeftParen [60..61)
+         |Ident(x) [61..62)
+         |RightParen [62..63)
+         |Ident(&&) [64..66)
+         |Ident(b) [67..68)
+         |Indentation.Outdent [68..68)
+         |Indentation.Outdent [68..68)
+         |KwThen [75..79)
+         |KwTrue [80..84)
+         |KwElse [85..89)
+         |KwFalse [90..95)
+         |KwThen [100..104)
+         |Constant.Int(1) [105..106)
+         |KwElse [107..111)
+         |Constant.Int(2) [112..113)
+         |Indentation.Outdent [113..113)
+         |LF [113..114)
+         |KwDef [116..119)
+         |Ident(k) [120..121)
+         |Equals [122..123)
+         |Constant.Int(1) [124..125)
+         |Indentation.Outdent [125..125)
+         |EOF [126..126)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:7: error: `outdent` expected but `then` found
+         |    then 1 else 2
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
 }
