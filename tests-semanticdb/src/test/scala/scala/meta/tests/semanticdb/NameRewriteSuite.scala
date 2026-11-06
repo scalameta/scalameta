@@ -946,10 +946,13 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[3:6..3:7): c <= _empty_/n23.c.
              |[3:10..3:13): Nil => scala/collection/immutable/Nil.
              |[4:6..4:7): d <= _empty_/n23.d.
+             |[4:10..4:15): scala => scala/
              |[4:16..4:20): List => scala/collection/immutable/List.
              |[5:6..5:7): e <= _empty_/n23.e.
+             |[5:10..5:15): scala => scala/
              |[5:16..5:19): Seq => scala/collection/Seq.
              |[6:6..6:7): f <= _empty_/n23.f.
+             |[6:10..6:15): scala => scala/
              |[6:16..6:19): Nil => scala/collection/immutable/Nil.
              |[7:6..7:7): g <= _empty_/n23.g.
              |[7:10..7:14): List => scala/collection/immutable/List.
@@ -1234,14 +1237,18 @@ class NameRewriteSuite extends SemanticdbSuite {
         ScalaVersion.Scala212 ->
           """|[0:7..0:10): n27 <= _empty_/n27.
              |[1:6..1:7): a <= _empty_/n27.a.
+             |[1:17..1:22): scala => scala/
              |[1:23..1:27): List => scala/collection/immutable/List.
              |[2:6..2:7): b <= _empty_/n27.b.
+             |[2:17..2:22): scala => scala/
              |[2:23..2:26): Seq => scala/collection/Seq.
              |[3:6..3:7): c <= _empty_/n27.c.
+             |[3:17..3:22): scala => scala/
              |[3:23..3:26): Nil => scala/collection/immutable/Nil.
              |[4:6..4:7): d <= _empty_/n27.d.
              |[4:23..4:27): List => scala/collection/immutable/Nil.
              |[5:6..5:7): e <= _empty_/n27.e.
+             |[5:10..5:15): scala => scala/
              |[5:16..5:19): Seq => scala/collection/Seq.
              |[6:6..6:7): f <= _empty_/n27.f.
              |[6:10..6:15): scala => scala/
@@ -1367,10 +1374,15 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[1:27..1:30): Seq => scala/package.Seq.
              |[1:37..1:40): Nil => scala/package.Nil.
              |[2:6..2:7): a <= _empty_/n28.a.
+             |[2:10..2:11): L => scala/collection/immutable/List.
              |[3:6..3:7): b <= _empty_/n28.b.
+             |[3:10..3:11): S => scala/collection/Seq.
              |[4:6..4:7): c <= _empty_/n28.c.
+             |[4:10..4:11): N => scala/collection/immutable/Nil.
              |[5:6..5:7): d <= _empty_/n28.d.
+             |[5:10..5:11): L => scala/collection/immutable/List.
              |[6:6..6:7): e <= _empty_/n28.e.
+             |[6:10..6:11): L => scala/collection/immutable/List.
              |[6:12..6:17): empty => scala/collection/immutable/List.empty().
              |[6:18..6:21): Int => scala/Int#
              |[7:6..7:7): f <= _empty_/n28.f.
@@ -1380,10 +1392,13 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[8:12..8:16): List => scala/package.List#
              |[8:17..8:20): Int => scala/Int#
              |[8:25..8:27): xs => _empty_/n28.g().(xs)
+             |[9:9..9:10): L => scala/collection/immutable/List.
              |[9:11..9:12): x <= local0
              |[9:17..9:18): x => local0
+             |[10:9..10:10): N => scala/collection/immutable/Nil.
              |[11:9..11:10): x <= local1
              |[11:11..11:13): :: => scala/package.`::`.
+             |[11:14..11:15): N => scala/collection/immutable/Nil.
              |[11:19..11:20): x => local1
              |""".stripMargin
       },
@@ -1577,6 +1592,7 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[2:10..2:13): Nil => scala/collection/immutable/Nil.
              |[2:14..2:20): length => scala/collection/LinearSeqOptimized#length().
              |[3:6..3:7): c <= _empty_/n31.c.
+             |[3:10..3:15): scala => scala/
              |[3:16..3:20): List => scala/collection/immutable/List.
              |[3:21..3:26): empty => scala/collection/immutable/List.empty().
              |[3:27..3:30): Int => scala/Int#
@@ -1596,6 +1612,7 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[8:10..8:13): Nil => scala/collection/immutable/Nil.
              |[8:14..8:16): :: => scala/collection/immutable/List#`::`().
              |[9:6..9:7): i <= _empty_/n31.i.
+             |[9:10..9:15): scala => scala/
              |[9:16..9:19): Nil => scala/collection/immutable/Nil.
              |[9:20..9:27): isEmpty => scala/collection/immutable/Nil.isEmpty().
              |""".stripMargin
@@ -1673,11 +1690,14 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[4:11..4:13): :: => scala/package.`::`.
              |[4:14..4:17): Nil => scala/collection/immutable/Nil.
              |[4:21..4:22): h => local1
+             |[5:9..5:14): scala => scala/
              |[5:15..5:19): List => scala/collection/immutable/List.
              |[5:20..5:21): x <= local2
              |[5:29..5:30): x => local2
              |[6:11..6:13): :: => scala/package.`::`.
+             |[6:14..6:19): scala => scala/
              |[6:20..6:23): Nil => scala/collection/immutable/Nil.
+             |[7:9..7:14): scala => scala/
              |[7:15..7:18): Nil => scala/collection/immutable/Nil.
              |[10:6..10:7): g <= _empty_/n32.g().
              |[10:8..10:10): xs <= _empty_/n32.g().(xs)
@@ -1687,6 +1707,7 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[11:9..11:12): Seq => scala/collection/Seq.
              |[11:13..11:14): x <= local3
              |[11:19..11:20): x => local3
+             |[12:9..12:14): scala => scala/
              |[12:15..12:18): Seq => scala/collection/Seq.
              |[12:19..12:20): x <= local4
              |[12:28..12:29): x => local4
@@ -1759,7 +1780,9 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[3:9..3:12): Nil => scala/collection/immutable/Nil.
              |[3:20..3:23): Nil => scala/collection/immutable/Nil.
              |[4:6..4:7): d <= _empty_/n33.d.
+             |[4:9..4:14): scala => scala/
              |[4:15..4:18): Nil => scala/collection/immutable/Nil.
+             |[4:26..4:31): scala => scala/
              |[4:32..4:35): Nil => scala/collection/immutable/Nil.
              |[5:6..5:7): e <= _empty_/n33.e.
              |[5:9..5:13): List => scala/package.List#
@@ -1840,6 +1863,7 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[3:6..3:7): b <= _empty_/n34.b.
              |[3:10..3:17): classOf => scala/Predef.classOf().
              |[3:18..3:21): Seq => scala/package.Seq#
+             |[3:22..3:27): scala => scala/
              |[3:28..3:31): Nil => scala/collection/immutable/Nil.
              |[4:6..4:7): c <= _empty_/n34.c().
              |[4:8..4:9): A <= _empty_/n34.c().[A]
@@ -1967,8 +1991,10 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[3:6..3:7): c <= _empty_/n36.c.
              |[3:10..3:15): `Nil` => scala/collection/immutable/Nil.
              |[4:6..4:7): d <= _empty_/n36.d.
+             |[4:10..4:15): scala => scala/
              |[4:16..4:21): `Nil` => scala/collection/immutable/Nil.
              |[5:6..5:7): e <= _empty_/n36.e.
+             |[5:10..5:15): scala => scala/
              |[5:16..5:22): `List` => scala/collection/immutable/List.
              |""".stripMargin
       },
@@ -2011,6 +2037,7 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[4:6..4:7): c <= scala/n37.c.
              |[4:10..4:13): Nil => scala/collection/immutable/Nil.
              |[5:6..5:7): d <= scala/n37.d.
+             |[5:10..5:15): scala => scala/
              |[5:16..5:20): List => scala/collection/immutable/List.
              |""".stripMargin
       },
@@ -2050,11 +2077,16 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[1:37..1:40): Nil => scala/package.Nil.
              |[2:9..2:11): i1 <= _empty_/n38.i1.
              |[2:18..2:19): a <= _empty_/n38.i1.a.
+             |[2:22..2:23): L => scala/collection/immutable/List.
              |[2:32..2:33): b <= _empty_/n38.i1.b.
+             |[2:36..2:37): S => scala/collection/Seq.
              |[2:46..2:47): c <= _empty_/n38.i1.c.
+             |[2:50..2:51): N => scala/collection/immutable/Nil.
              |[3:6..3:7): f <= _empty_/n38.f().
              |[3:16..3:17): a <= local0
+             |[3:20..3:21): L => scala/collection/immutable/List.
              |[3:32..3:33): b <= local1
+             |[3:36..3:37): N => scala/collection/immutable/Nil.
              |[3:39..3:40): b => local1
              |[4:8..4:9): C <= _empty_/n38.C#
              |[4:10..4:10):  <= _empty_/n38.C#`<init>`().
@@ -2063,6 +2095,7 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[4:26..4:30): List => scala/package.List.
              |[4:42..4:43): g <= _empty_/n38.C#g().
              |[4:52..4:53): a <= local2
+             |[4:56..4:57): M => scala/collection/immutable/List.
              |[4:62..4:63): a => local2
              |""".stripMargin
       },
@@ -2118,6 +2151,7 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[1:41..1:46): empty => scala/collection/immutable/List.empty().
              |[1:47..1:50): Int => scala/Int#
              |[2:9..2:11): i2 <= _empty_/n39.i2.
+             |[2:21..2:26): scala => scala/
              |[2:27..2:30): Seq => scala/collection/Seq.
              |[2:38..2:39): a <= _empty_/n39.i2.a.
              |[2:42..2:46): fill => scala/collection/generic/GenTraversableFactory#fill().
@@ -2173,7 +2207,9 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[3:8..3:9): a <= _empty_/n40.i1.a.
              |[3:12..3:19): classOf => scala/Predef.classOf().
              |[3:20..3:23): Seq => scala/package.Seq#
+             |[3:24..3:25): N => scala/collection/immutable/Nil.
              |[4:10..4:11): E <= _empty_/n40.i1.E#
+             |[4:20..4:21): N => scala/collection/immutable/Nil.
              |[6:9..6:11): i2 <= _empty_/n40.i2.
              |[7:11..7:16): scala => scala/
              |[7:17..7:27): collection => scala/collection/
@@ -2225,14 +2261,18 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[1:6..1:7): a <= _empty_/n41.a.
              |[1:10..1:17): classOf => scala/Predef.classOf().
              |[1:18..1:21): Seq => scala/package.Seq#
+             |[1:22..1:27): scala => scala/
              |[1:28..1:32): List => scala/collection/immutable/List.
              |[2:6..2:7): b <= _empty_/n41.b.
              |[2:10..2:17): classOf => scala/Predef.classOf().
              |[2:18..2:21): Seq => scala/package.Seq#
+             |[2:22..2:27): scala => scala/
              |[2:28..2:31): Seq => scala/collection/Seq.
              |[3:6..3:7): c <= _empty_/n41.c.
              |[3:10..3:17): classOf => scala/Predef.classOf().
              |[3:18..3:21): Seq => scala/package.Seq#
+             |[3:22..3:28): _root_ => _root_/
+             |[3:29..3:34): scala => scala/
              |[3:35..3:38): Nil => scala/collection/immutable/Nil.
              |[4:6..4:7): d <= _empty_/n41.d.
              |[4:10..4:17): classOf => scala/Predef.classOf().
@@ -2403,19 +2443,28 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[6:22..6:25): Seq => scala/package.Seq#
              |[6:26..6:27): N => scala/collection/immutable/Nil.
              |[7:10..7:11): b <= _empty_/n44.o1.i.b.
+             |[7:13..7:14): N => scala/collection/immutable/Nil.
+             |[7:22..7:23): N => scala/collection/immutable/Nil.
              |[8:10..8:11): c <= _empty_/n44.o1.i.c.
+             |[8:14..8:15): N => scala/collection/immutable/Nil.
              |[9:10..9:11): d <= _empty_/n44.o1.i.d.
              |[9:14..9:21): classOf => scala/Predef.classOf().
              |[9:22..9:25): Seq => scala/package.Seq#
              |[9:26..9:27): L => scala/collection/immutable/List.
              |[10:10..10:11): e <= _empty_/n44.o1.i.e.
+             |[10:13..10:14): L => scala/collection/immutable/List.
+             |[10:22..10:23): L => scala/collection/immutable/List.
              |[11:10..11:11): f <= _empty_/n44.o1.i.f.
+             |[11:14..11:15): L => scala/collection/immutable/List.
              |[12:10..12:11): g <= _empty_/n44.o1.i.g.
              |[12:14..12:21): classOf => scala/Predef.classOf().
              |[12:22..12:25): Seq => scala/package.Seq#
              |[12:26..12:27): S => scala/collection/Seq.
              |[13:10..13:11): h <= _empty_/n44.o1.i.h.
+             |[13:13..13:14): S => scala/collection/Seq.
+             |[13:22..13:23): S => scala/collection/Seq.
              |[14:10..14:11): k <= _empty_/n44.o1.i.k.
+             |[14:14..14:15): S => scala/collection/Seq.
              |[17:9..17:11): o2 <= _empty_/n44.o2.
              |[18:11..18:16): scala => scala/
              |[18:18..18:22): List => scala/package.List#
@@ -2579,6 +2628,7 @@ class NameRewriteSuite extends SemanticdbSuite {
     """|[0:7..0:10): n45 <= _empty_/n45.
        |[1:6..1:7): a <= _empty_/n45.a.
        |[1:10..1:17): classOf => scala/Predef.classOf().
+       |[1:18..1:23): scala => scala/
        |[1:24..1:28): List => scala/collection/immutable/List.
        |[1:29..1:48): GenericCanBuildFrom => scala/collection/generic/GenTraversableFactory#GenericCanBuildFrom#
        |[1:49..1:52): Int => scala/Int#
@@ -2589,6 +2639,7 @@ class NameRewriteSuite extends SemanticdbSuite {
        |[2:43..2:46): Int => scala/Int#
        |[3:6..3:7): c <= _empty_/n45.c.
        |[3:10..3:17): classOf => scala/Predef.classOf().
+       |[3:18..3:23): scala => scala/
        |[3:24..3:27): Seq => scala/collection/Seq.
        |[3:28..3:47): GenericCanBuildFrom => scala/collection/generic/GenTraversableFactory#GenericCanBuildFrom#
        |[3:48..3:51): Int => scala/Int#
@@ -2598,6 +2649,7 @@ class NameRewriteSuite extends SemanticdbSuite {
        |[4:22..4:41): GenericCanBuildFrom => scala/collection/generic/GenTraversableFactory#GenericCanBuildFrom#
        |[4:42..4:45): Int => scala/Int#
        |[5:6..5:7): e <= _empty_/n45.e.
+       |[5:9..5:14): scala => scala/
        |[5:15..5:19): List => scala/collection/immutable/List.
        |[5:20..5:39): GenericCanBuildFrom => scala/collection/generic/GenTraversableFactory#GenericCanBuildFrom#
        |[5:40..5:43): Int => scala/Int#
@@ -2625,9 +2677,11 @@ class NameRewriteSuite extends SemanticdbSuite {
        |[10:29..10:32): Seq => scala/package.Seq.
        |[11:8..11:9): a <= _empty_/n45.i.a.
        |[11:12..11:19): classOf => scala/Predef.classOf().
+       |[11:20..11:21): L => scala/collection/immutable/List.
        |[11:22..11:41): GenericCanBuildFrom => scala/collection/generic/GenTraversableFactory#GenericCanBuildFrom#
        |[11:42..11:45): Int => scala/Int#
        |[12:8..12:9): b <= _empty_/n45.i.b.
+       |[12:11..12:12): S => scala/collection/Seq.
        |[12:13..12:32): GenericCanBuildFrom => scala/collection/generic/GenTraversableFactory#GenericCanBuildFrom#
        |[12:33..12:36): Int => scala/Int#
        |""".stripMargin,
@@ -2726,16 +2780,22 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[2:18..2:21): Seq => scala/package.Seq#
              |[2:18..2:21): Seq => scala/package.Seq.
              |[3:8..3:9): a <= _empty_/n47.o1.a.
+             |[3:12..3:16): List => scala/collection/Seq.
              |[4:8..4:9): b <= _empty_/n47.o1.b.
+             |[4:12..4:16): List => scala/collection/Seq.
              |[4:17..4:22): empty => scala/collection/generic/GenericCompanion#empty().
              |[5:8..5:9): c <= _empty_/n47.o1.c.
              |[5:12..5:19): classOf => scala/Predef.classOf().
              |[5:20..5:23): Seq => scala/package.Seq#
+             |[5:24..5:28): List => scala/collection/Seq.
              |[6:8..6:9): d <= _empty_/n47.o1.d.
+             |[6:11..6:15): List => scala/collection/Seq.
+             |[6:23..6:27): List => scala/collection/Seq.
              |[7:8..7:9): f <= _empty_/n47.o1.f().
              |[7:10..7:11): x <= _empty_/n47.o1.f().(x)
              |[7:13..7:16): Any => scala/Any#
              |[7:20..7:21): x => _empty_/n47.o1.f().(x)
+             |[7:35..7:39): List => scala/collection/Seq.
              |[7:40..7:41): y <= local1
              |[7:46..7:47): y => local1
              |[9:9..9:11): o2 <= _empty_/n47.o2.
@@ -2744,14 +2804,19 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[10:31..10:35): List => scala/package.List#
              |[10:31..10:35): List => scala/package.List.
              |[11:8..11:9): a <= _empty_/n47.o2.a.
+             |[11:12..11:16): List => scala/collection/immutable/Nil.
              |[12:8..12:9): b <= _empty_/n47.o2.b.
+             |[12:12..12:15): Seq => scala/collection/immutable/List.
              |[13:8..13:9): c <= _empty_/n47.o2.c.
              |[13:12..13:19): classOf => scala/Predef.classOf().
              |[13:20..13:23): Seq => scala/package.List#
+             |[13:24..13:28): List => scala/collection/immutable/Nil.
              |[14:8..14:9): f <= _empty_/n47.o2.f().
              |[14:10..14:11): x <= _empty_/n47.o2.f().(x)
              |[14:13..14:16): Any => scala/Any#
              |[14:20..14:21): x => _empty_/n47.o2.f().(x)
+             |[14:35..14:39): List => scala/collection/immutable/Nil.
+             |[14:51..14:54): Seq => scala/collection/immutable/List.
              |[14:55..14:56): y <= local3
              |[14:61..14:62): y => local3
              |""".stripMargin
@@ -2842,11 +2907,16 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[2:29..2:32): Seq => scala/package.Seq.
              |[2:39..2:42): Nil => scala/package.Nil.
              |[3:8..3:9): a <= local0
+             |[3:12..3:13): L => scala/collection/immutable/List.
              |[4:8..4:9): b <= local1
+             |[4:12..4:13): S => scala/collection/Seq.
              |[4:14..4:19): empty => scala/collection/generic/GenericCompanion#empty().
              |[5:8..5:9): c <= local2
+             |[5:11..5:12): N => scala/collection/immutable/Nil.
+             |[5:20..5:21): N => scala/collection/immutable/Nil.
              |[6:4..6:11): classOf => scala/Predef.classOf().
              |[6:12..6:15): Seq => scala/package.Seq#
+             |[6:16..6:17): N => scala/collection/immutable/Nil.
              |[8:9..8:14): scala => scala/
              |[8:15..8:25): collection => scala/collection/
              |[8:26..8:35): immutable => scala/collection/immutable/
@@ -2889,7 +2959,10 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[19:8..19:9): f <= _empty_/n48.i.f().
              |[19:10..19:11): a <= _empty_/n48.i.f().(a)
              |[19:13..19:16): Any => scala/Any#
+             |[19:19..19:20): L => scala/collection/immutable/List.
              |[19:25..19:26): b <= _empty_/n48.i.f().(b)
+             |[19:28..19:29): N => scala/collection/immutable/Nil.
+             |[19:37..19:38): N => scala/collection/immutable/Nil.
              |[19:42..19:43): a => _empty_/n48.i.f().(a)
              |""".stripMargin
       },
@@ -3021,6 +3094,8 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[3:9..3:13): List => scala/package.List#
              |[3:14..3:15): T => local0
              |[3:32..3:33): T <= local0
+             |[3:37..3:38): N => scala/collection/immutable/Nil.
+             |[3:48..3:49): N => scala/collection/immutable/Nil.
              |[4:6..4:7): b <= _empty_/n50.b.
              |[4:9..4:13): List => scala/package.List#
              |[4:14..4:15): T => local1
@@ -3085,6 +3160,7 @@ class NameRewriteSuite extends SemanticdbSuite {
        |[2:42..2:45): Int => scala/Int#
        |[3:8..3:9): C <= _empty_/n51.C#
        |[3:10..3:10):  <= _empty_/n51.C#`<init>`().
+       |[3:18..3:23): scala => scala/
        |[3:24..3:28): List => scala/collection/immutable/List.
        |[3:29..3:48): GenericCanBuildFrom => scala/collection/generic/GenTraversableFactory#GenericCanBuildFrom#
        |[3:49..3:52): Int => scala/Int#
@@ -3096,6 +3172,7 @@ class NameRewriteSuite extends SemanticdbSuite {
        |[4:42..4:45): Int => scala/Int#
        |[4:46..4:46):  => scala/collection/generic/GenTraversableFactory#GenericCanBuildFrom#`<init>`().
        |[5:6..5:7): e <= _empty_/n51.e.
+       |[5:14..5:19): scala => scala/
        |[5:20..5:23): Seq => scala/collection/Seq.
        |[5:24..5:43): GenericCanBuildFrom => scala/collection/generic/GenTraversableFactory#GenericCanBuildFrom#
        |[5:44..5:47): Int => scala/Int#
@@ -3105,10 +3182,12 @@ class NameRewriteSuite extends SemanticdbSuite {
        |[7:18..7:22): List => scala/package.List#
        |[7:18..7:22): List => scala/package.List.
        |[8:10..8:11): A <= _empty_/n51.i.A#
+       |[8:20..8:21): L => scala/collection/immutable/List.
        |[8:22..8:41): GenericCanBuildFrom => scala/collection/generic/GenTraversableFactory#GenericCanBuildFrom#
        |[8:42..8:45): Int => scala/Int#
        |[9:10..9:11): C <= _empty_/n51.i.C#
        |[9:12..9:12):  <= _empty_/n51.i.C#`<init>`().
+       |[9:20..9:21): L => scala/collection/immutable/List.
        |[9:22..9:41): GenericCanBuildFrom => scala/collection/generic/GenTraversableFactory#GenericCanBuildFrom#
        |[9:42..9:45): Int => scala/Int#
        |[9:46..9:46):  => scala/collection/generic/GenTraversableFactory#GenericCanBuildFrom#`<init>`().
@@ -3155,11 +3234,15 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[1:8..1:9): x <= _empty_/n52.f().(x)
              |[1:11..1:14): Any => scala/Any#
              |[1:18..1:19): x => _empty_/n52.f().(x)
+             |[2:16..2:21): scala => scala/
              |[2:22..2:25): Nil => scala/collection/immutable/Nil.
+             |[3:16..3:21): scala => scala/
              |[3:22..3:26): List => scala/collection/immutable/List.
              |[3:27..3:28): y <= local1
              |[4:11..4:13): :: => scala/package.`::`.
+             |[4:21..4:26): scala => scala/
              |[4:27..4:30): Nil => scala/collection/immutable/Nil.
+             |[5:16..5:21): scala => scala/
              |[5:22..5:25): Seq => scala/collection/Seq.
              |[5:26..5:27): y <= local3
              |[6:16..6:21): scala => scala/

@@ -82,8 +82,9 @@ class InteractiveSuite extends FunSuite {
   )
 
   val expectedPrevious = expected(
-    10,
-    "[3:23..3:27): List => scala/collection/immutable/List.",
+    11,
+    """|[3:17..3:22): scala => scala/
+       |[3:23..3:27): List => scala/collection/immutable/List.""".stripMargin,
     "apply => scala/collection/immutable/List.apply().",
   )
 
@@ -95,8 +96,6 @@ class InteractiveSuite extends FunSuite {
        |  x + "string"
        |}
        |""".stripMargin,
-    // Note that scala don't resolve to a symbol, this is a sign that the
-    // typer hijacking is not working as expected with interactive.Global.
     expectedPrevious,
     compat = List(ScalaVersion.Scala213 -> expectedLatest),
   )

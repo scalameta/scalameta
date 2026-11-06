@@ -21,6 +21,8 @@ trait TextDocumentOps {
   import m.internal.trees._
   import TextDocumentOps._
 
+  private lazy val gscalaPackageObject = g.definitions.ScalaPackageClass.packageObject
+
   def validateCompilerState(): Unit = {
     if (!g.settings.Yrangepos.value) sys.error("the compiler instance must have -Yrangepos enabled")
     if (g.useOffsetPositions) sys.error("the compiler instance must use range positions")
@@ -709,15 +711,18 @@ trait TextDocumentOps {
           val gpoint = gpos.point
           val gend = gpos.end
 
-          def isWritten(mname: m.Name, gsym: g.Symbol): Boolean = (null eq mname) ||
-            (null eq gsym) || gsym == g.NoSymbol || gsym.isConstructor || isWrittenName(
-              mname,
-              gsym,
-              gtree match {
+          def isWritten(mname: m.Name, gsym: g.Symbol): Boolean = (null eq gsym) ||
+            gsym == g.NoSymbol || gsym.isConstructor ||
+            (mname match {
+              case mname: m.Term.Name => isRenamedTo(mname, gsym)
+              case mname => null eq mname
+            }) || {
+              val gname = gtree match {
                 case t: g.NameTree if t.symbol eq gsym => t.name
                 case _ => gsym.name
-              },
-            )
+              }
+              isWrittenName(mname, gsym, gname)
+            }
           def claim(mname: m.Name, gsym: g.Symbol): Unit =
             if (isWritten(mname, gsym)) success(mname, gsym)
           def tryMstart(pos: Int): Unit = claim(mnameAt(pos), gsym)
@@ -783,7 +788,12 @@ trait TextDocumentOps {
           }).foreach(success(mctorAt(gstart), _))
 
           gtree match {
-            case g.Select(_, g.nme.CONSTRUCTOR) => success(mctorRefAt(gpoint), gsym)
+            case gtree: g.Select =>
+              if (gtree.name == g.nme.CONSTRUCTOR) success(mctorRefAt(gpoint), gsym)
+              else if (isDealiased(gtree)) {
+                val mname = mnameAt(gpoint)
+                if ((null ne mname) && mname.pos.end == gend) tryFindScalaQualifier(mname)
+              }
             case _ =>
           }
 
@@ -921,7 +931,11 @@ trait TextDocumentOps {
                     tryFindQualifier(mqual, gpre.pre)
                   case gpre: g.SingleType if refersTo(mqual, gpre.sym) =>
                     success(mqual.name, gpre.sym)
-                    tryFindQualifier(mq, gpre.pre)
+                    // scalac 2.12 replaced the `scala` of `scala.Nil.type` with `Nil`'s package
+                    val gqpre =
+                      if (!isScalaAlias(gpre.sym) || refersTo(mq, gpre.pre.typeSymbol)) gpre.pre
+                      else g.definitions.ScalaPackageClass.thisType
+                    tryFindQualifier(mq, gqpre)
                   case gpre: g.ThisType if refersTo(mqual, gpre.sym) =>
                     success(mqual.name, gpre.sym)
                     tryFindQualifier(mq, gpre.sym.owner.thisType)
@@ -994,9 +1008,37 @@ trait TextDocumentOps {
             val start = mname.pos.start
             grenames.exists(r =>
               r.name == gname && r.start < start &&
-                (r.target == gsym || r.target.moduleClass == gsym),
+                (r.target == gsym || r.target.moduleClass == gsym || isAliasOf(r.target, gsym)),
             )
           }
+        // the term holds the object, such as `val Nil = scala.collection.immutable.Nil`
+        private def isAliasOf(galias: g.Symbol, gobj: g.Symbol): Boolean = gobj.isModule &&
+          !gobj.hasPackageFlag && galias.exists && !galias.isModule && !galias.isOverloaded &&
+          galias.info.resultType.typeSymbol == gobj.moduleClass
+        private def isScalaAlias(gobj: g.Symbol): Boolean = (null ne gobj) && gobj.isModule &&
+          isAliasOf(gscalaPackageObject.info.decl(gobj.name), gobj)
+        // scalac 2.12 replaced a reference to a member of the scala package object with its value
+        private def isDealiased(gtree: g.Select): Boolean = {
+          val gqpos = gtree.qualifier.pos
+          gqpos.isTransparent && {
+            val gpos = gtree.pos
+            gqpos.start == gpos.start && gqpos.end == gpos.end && isScalaAlias(gtree.symbol)
+          }
+        }
+        // find the written `scala` of `scala.List`: scalac 2.12 dropped it
+        private def tryFindScalaQualifier(mname: m.Name): Unit = mname.parent match {
+          case Some(p: m.Term.Select) if p.name eq mname =>
+            val mq = p.qual match {
+              case q: m.Term.Select => q.name
+              case q: m.Term.Name => q
+              case _ => null
+            }
+            if (null ne mq) {
+              val gscala = g.definitions.ScalaPackage
+              if (refersTo(mq, gscala)) success(mq, gscala)
+            }
+          case _ =>
+        }
         private def enterRenames(gtree: g.Tree, gstats: List[g.Tree]): Unit = gstats.foreach {
           case t: g.Import if t.pos.isDefined =>
             val gtpe = t.expr.tpe
