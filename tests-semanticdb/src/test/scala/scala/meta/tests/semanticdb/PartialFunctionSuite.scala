@@ -2362,6 +2362,1100 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  if (ScalaVersion.is213) symbols(
+    "partial function literals before a lambda",
+    """|object t191 {
+       |  def a = List(1).collect(x => x)
+       |  def b = List(1).collect(x => x).map(y => y)
+       |  def c = List(1).collect((x: Int) => x).map(y => y)
+       |  def d = List(1).collect(identity(_)).map(y => y)
+       |  def e: List[Int] = List(1).collect(x => x)
+       |  def f = List(1).map(x => x).map(y => y)
+       |}
+       |""".stripMargin,
+    """|_empty_/t191. => final object t191 extends AnyRef { +6 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t191.a(). => method a: List[Int]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |_empty_/t191.b(). => method b: List[Int]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |_empty_/t191.c(). => method c: List[Int]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |_empty_/t191.d(). => method d: List[Int]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |_empty_/t191.e(). => method e: List[Int]
+       |  List => scala/package.List#
+       |  Int => scala/Int#
+       |_empty_/t191.f(). => method f: List[Int]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |local0 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  A1 => local0
+       |  Serializable => java/io/Serializable#
+       |local2 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local0
+       |  Int => scala/Int#
+       |  B1 => local6
+       |  x => local4
+       |  default => local5
+       |  Function1 => scala/Function1#
+       |local3 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local7
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local4 => synthetic param x: A1
+       |  A1 => local0
+       |local5 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local0
+       |  B1 => local6
+       |local6 => typeparam B1 >: A1
+       |  A1 => local0
+       |local7 => param x: Int
+       |  Int => scala/Int#
+       |local8 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local9 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  A1 => local8
+       |  Serializable => java/io/Serializable#
+       |local10 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local8
+       |  Int => scala/Int#
+       |  B1 => local14
+       |  x => local12
+       |  default => local13
+       |  Function1 => scala/Function1#
+       |local11 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local15
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local12 => synthetic param x: A1
+       |  A1 => local8
+       |local13 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local8
+       |  B1 => local14
+       |local14 => typeparam B1 >: A1
+       |  A1 => local8
+       |local15 => param x: Int
+       |  Int => scala/Int#
+       |local16 => param y: A1
+       |  A1 => local8
+       |local17 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local18 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  A1 => local17
+       |  Serializable => java/io/Serializable#
+       |local19 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local17
+       |  Int => scala/Int#
+       |  B1 => local23
+       |  x => local21
+       |  default => local22
+       |  Function1 => scala/Function1#
+       |local20 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local24
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local21 => synthetic param x: A1
+       |  A1 => local17
+       |local22 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local17
+       |  B1 => local23
+       |local23 => typeparam B1 >: A1
+       |  A1 => local17
+       |local24 => param x: Int
+       |  Int => scala/Int#
+       |local25 => param y: A1
+       |  A1 => local17
+       |local26 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local27 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  A1 => local26
+       |  Serializable => java/io/Serializable#
+       |local28 => final method applyOrElse[A1 <: Int, B1 >: A1](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local26
+       |  Int => scala/Int#
+       |  B1 => local32
+       |  x$1 => local30
+       |  default => local31
+       |  Function1 => scala/Function1#
+       |local29 => final method isDefinedAt(x$1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x$1 => local33
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local30 => synthetic param x$1: A1
+       |  A1 => local26
+       |local31 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local26
+       |  B1 => local32
+       |local32 => typeparam B1 >: A1
+       |  A1 => local26
+       |local33 => synthetic param x$1: Int
+       |  Int => scala/Int#
+       |local34 => param y: A1
+       |  A1 => local26
+       |local35 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  Serializable => java/io/Serializable#
+       |local36 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local41
+       |  Int => scala/Int#
+       |  B1 => local40
+       |  x => local38
+       |  default => local39
+       |  Function1 => scala/Function1#
+       |local37 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local42
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local38 => synthetic param x: A1
+       |  A1 => local41
+       |local39 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local41
+       |  B1 => local40
+       |local40 => typeparam B1 >: Int
+       |  Int => scala/Int#
+       |local41 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local42 => param x: Int
+       |  Int => scala/Int#
+       |local43 => param x: Int
+       |  Int => scala/Int#
+       |local44 => param y: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) synthetics(
+    "partial function literals before a lambda",
+    """|object t191 {
+       |  def a = List(1).collect(x => x)
+       |  def b = List(1).collect(x => x).map(y => y)
+       |  def c = List(1).collect((x: Int) => x).map(y => y)
+       |  def d = List(1).collect(identity(_)).map(y => y)
+       |  def e: List[Int] = List(1).collect(x => x)
+       |  def f = List(1).map(x => x).map(y => y)
+       |}
+       |""".stripMargin,
+    """|[1:10..1:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[1:10..1:25): List(1).collect => *[A1]
+       |  A1 => local0
+       |[2:10..2:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[2:10..2:25): List(1).collect => *[A1]
+       |  A1 => local8
+       |[2:10..2:37): List(1).collect(x => x).map => *[A1]
+       |  A1 => local8
+       |[3:10..3:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[3:10..3:25): List(1).collect => *[A1]
+       |  A1 => local17
+       |[3:10..3:44): List(1).collect((x: Int) => x).map => *[A1]
+       |  A1 => local17
+       |[4:10..4:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[4:10..4:25): List(1).collect => *[A1]
+       |  A1 => local26
+       |[4:10..4:42): List(1).collect(identity(_)).map => *[A1]
+       |  A1 => local26
+       |[4:26..4:34): identity => *[A1]
+       |  A1 => local26
+       |[5:21..5:25): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[5:21..5:36): List(1).collect => *[Int]
+       |  Int => scala/Int#
+       |[6:10..6:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[6:10..6:21): List(1).map => *[Int]
+       |  Int => scala/Int#
+       |[6:10..6:33): List(1).map(x => x).map => *[Int]
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) symbols(
+    "partial function literals with an expected type",
+    """|object t192 {
+       |  val f: Int => List[Int] = x => List(x).map(y => y + 1)
+       |  val k: PartialFunction[Int, List[Int]] = x => List(x).map(y => y + 1)
+       |  val l: PartialFunction[Int, Int] = x => { val y = x; def z = x; y + z }
+       |  val g: Int => (Int, Int) = x => x -> 1
+       |  val m: PartialFunction[Int, (Int, Int)] = x => x -> 1
+       |  val n: PartialFunction[Int, Int] = x => identity(x)
+       |  val o: PartialFunction[Int, Int] = x => { val y: x.type = x; y }
+       |}
+       |""".stripMargin,
+    """|_empty_/t192. => final object t192 extends AnyRef { +7 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t192.f. => val method f: Function1[Int, List[Int]]
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |  List => scala/package.List#
+       |_empty_/t192.g. => val method g: Function1[Int, Tuple2[Int, Int]]
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |  Tuple2 => scala/Tuple2#
+       |_empty_/t192.k. => val method k: PartialFunction[Int, List[Int]]
+       |  PartialFunction => scala/PartialFunction#
+       |  Int => scala/Int#
+       |  List => scala/package.List#
+       |_empty_/t192.l. => val method l: PartialFunction[Int, Int]
+       |  PartialFunction => scala/PartialFunction#
+       |  Int => scala/Int#
+       |_empty_/t192.m. => val method m: PartialFunction[Int, Tuple2[Int, Int]]
+       |  PartialFunction => scala/PartialFunction#
+       |  Int => scala/Int#
+       |  Tuple2 => scala/Tuple2#
+       |_empty_/t192.n. => val method n: PartialFunction[Int, Int]
+       |  PartialFunction => scala/PartialFunction#
+       |  Int => scala/Int#
+       |_empty_/t192.o. => val method o: PartialFunction[Int, Int]
+       |  PartialFunction => scala/PartialFunction#
+       |  Int => scala/Int#
+       |local0 => param x: Int
+       |  Int => scala/Int#
+       |local1 => param y: Int
+       |  Int => scala/Int#
+       |local2 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, List[Int]] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  List => scala/package.List#
+       |  Serializable => java/io/Serializable#
+       |local3 => final method applyOrElse[A1 <: Int, B1 >: List[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local8
+       |  Int => scala/Int#
+       |  B1 => local7
+       |  List => scala/package.List#
+       |  x => local5
+       |  default => local6
+       |  Function1 => scala/Function1#
+       |local4 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local9
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local5 => synthetic param x: A1
+       |  A1 => local8
+       |local6 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local8
+       |  B1 => local7
+       |local7 => typeparam B1 >: List[Int]
+       |  List => scala/package.List#
+       |  Int => scala/Int#
+       |local8 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local9 => param x: Int
+       |  Int => scala/Int#
+       |local10 => param y: A1
+       |  A1 => local8
+       |local11 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  Serializable => java/io/Serializable#
+       |local12 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local17
+       |  Int => scala/Int#
+       |  B1 => local16
+       |  x => local14
+       |  default => local15
+       |  Function1 => scala/Function1#
+       |local13 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local18
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local14 => synthetic param x: A1
+       |  A1 => local17
+       |local15 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local17
+       |  B1 => local16
+       |local16 => typeparam B1 >: Int
+       |  Int => scala/Int#
+       |local17 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local18 => param x: Int
+       |  Int => scala/Int#
+       |local19 => val local y: A1
+       |  A1 => local17
+       |local20 => method z: A1
+       |  A1 => local17
+       |local21 => param x: Int
+       |  Int => scala/Int#
+       |local22 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Tuple2[Int, Int]] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  Tuple2 => scala/Tuple2#
+       |  Serializable => java/io/Serializable#
+       |local23 => final method applyOrElse[A1 <: Int, B1 >: Tuple2[Int, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local28
+       |  Int => scala/Int#
+       |  B1 => local27
+       |  Tuple2 => scala/Tuple2#
+       |  x => local25
+       |  default => local26
+       |  Function1 => scala/Function1#
+       |local24 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local29
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local25 => synthetic param x: A1
+       |  A1 => local28
+       |local26 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local28
+       |  B1 => local27
+       |local27 => typeparam B1 >: Tuple2[Int, Int]
+       |  Tuple2 => scala/Tuple2#
+       |  Int => scala/Int#
+       |local28 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local29 => param x: Int
+       |  Int => scala/Int#
+       |local30 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  Serializable => java/io/Serializable#
+       |local31 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local36
+       |  Int => scala/Int#
+       |  B1 => local35
+       |  x => local33
+       |  default => local34
+       |  Function1 => scala/Function1#
+       |local32 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local37
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local33 => synthetic param x: A1
+       |  A1 => local36
+       |local34 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local36
+       |  B1 => local35
+       |local35 => typeparam B1 >: Int
+       |  Int => scala/Int#
+       |local36 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local37 => param x: Int
+       |  Int => scala/Int#
+       |local38 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  Serializable => java/io/Serializable#
+       |local39 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local44
+       |  Int => scala/Int#
+       |  B1 => local43
+       |  x => local41
+       |  default => local42
+       |  Function1 => scala/Function1#
+       |local40 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local45
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local41 => synthetic param x: A1
+       |  A1 => local44
+       |local42 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local44
+       |  B1 => local43
+       |local43 => typeparam B1 >: Int
+       |  Int => scala/Int#
+       |local44 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local45 => param x: Int
+       |  Int => scala/Int#
+       |local46 => val local y: x.type
+       |  x => local41
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) synthetics(
+    "partial function literals with an expected type",
+    """|object t192 {
+       |  val f: Int => List[Int] = x => List(x).map(y => y + 1)
+       |  val k: PartialFunction[Int, List[Int]] = x => List(x).map(y => y + 1)
+       |  val l: PartialFunction[Int, Int] = x => { val y = x; def z = x; y + z }
+       |  val g: Int => (Int, Int) = x => x -> 1
+       |  val m: PartialFunction[Int, (Int, Int)] = x => x -> 1
+       |  val n: PartialFunction[Int, Int] = x => identity(x)
+       |  val o: PartialFunction[Int, Int] = x => { val y: x.type = x; y }
+       |}
+       |""".stripMargin,
+    """|[1:33..1:37): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[1:33..1:44): List(x).map => *[Int]
+       |  Int => scala/Int#
+       |[2:48..2:52): List => *.apply[A1]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  A1 => local8
+       |[2:48..2:59): List(x).map => *[Int]
+       |  Int => scala/Int#
+       |[4:34..4:35): x => Predef.ArrowAssoc[Int](*)
+       |  Predef => scala/Predef.
+       |  ArrowAssoc => scala/Predef.ArrowAssoc().
+       |  Int => scala/Int#
+       |[4:34..4:38): x -> => *[Int]
+       |  Int => scala/Int#
+       |[5:49..5:50): x => Predef.ArrowAssoc[A1](*)
+       |  Predef => scala/Predef.
+       |  ArrowAssoc => scala/Predef.ArrowAssoc().
+       |  A1 => local28
+       |[5:49..5:53): x -> => *[Int]
+       |  Int => scala/Int#
+       |[6:42..6:50): identity => *[A1]
+       |  A1 => local36
+       |""".stripMargin,
+  )
+
+  symbols(
+    "written partial functions before a lambda",
+    """|object t193 {
+       |  def a = List(1).collect { case x => x }.map(y => y)
+       |  def b = List(1).collect { case x: Int => x }.map(y => y)
+       |  val k: PartialFunction[Int, List[Int]] = { case x => List(x).map(y => y + 1) }
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/t193. => final object t193 extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t193.a(). => method a: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/t193.b(). => method b: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/t193.k. => val method k: PartialFunction[Int, List[Int]]
+         |  PartialFunction => scala/PartialFunction#
+         |  Int => scala/Int#
+         |  List => scala/package.List#
+         |local0 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Serializable => scala/Serializable#
+         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local6
+         |  Int => scala/Int#
+         |  B1 => local5
+         |  x1 => local3
+         |  default => local4
+         |  Function1 => scala/Function1#
+         |local2 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x1 => local8
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local3 => synthetic param x1: A1
+         |  A1 => local6
+         |local4 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local6
+         |  B1 => local5
+         |local5 => typeparam B1 >: Int
+         |  Int => scala/Int#
+         |local6 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local7 => val local x: Int
+         |  Int => scala/Int#
+         |local8 => synthetic param x1: Int
+         |  Int => scala/Int#
+         |local9 => param y: Int
+         |  Int => scala/Int#
+         |local10 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Serializable => scala/Serializable#
+         |local11 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local16
+         |  Int => scala/Int#
+         |  B1 => local15
+         |  x1 => local13
+         |  default => local14
+         |  Function1 => scala/Function1#
+         |local12 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x1 => local18
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local13 => synthetic param x1: A1
+         |  A1 => local16
+         |local14 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local16
+         |  B1 => local15
+         |local15 => typeparam B1 >: Int
+         |  Int => scala/Int#
+         |local16 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local17 => val local x: Int
+         |  Int => scala/Int#
+         |local18 => synthetic param x1: Int
+         |  Int => scala/Int#
+         |local19 => param y: Int
+         |  Int => scala/Int#
+         |local20 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, List[Int]] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  List => scala/package.List#
+         |  Serializable => scala/Serializable#
+         |local21 => final method applyOrElse[A1 <: Int, B1 >: List[Int]](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local26
+         |  Int => scala/Int#
+         |  B1 => local25
+         |  List => scala/package.List#
+         |  x1 => local23
+         |  default => local24
+         |  Function1 => scala/Function1#
+         |local22 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x1 => local29
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local23 => synthetic param x1: A1
+         |  A1 => local26
+         |local24 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local26
+         |  B1 => local25
+         |local25 => typeparam B1 >: List[Int]
+         |  List => scala/package.List#
+         |  Int => scala/Int#
+         |local26 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local27 => val local x: Int
+         |  Int => scala/Int#
+         |local28 => param y: Int
+         |  Int => scala/Int#
+         |local29 => synthetic param x1: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|_empty_/t193. => final object t193 extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t193.a(). => method a: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/t193.b(). => method b: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/t193.k. => val method k: PartialFunction[Int, List[Int]]
+         |  PartialFunction => scala/PartialFunction#
+         |  Int => scala/Int#
+         |  List => scala/package.List#
+         |local0 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Serializable => java/io/Serializable#
+         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local6
+         |  Int => scala/Int#
+         |  B1 => local5
+         |  x1 => local3
+         |  default => local4
+         |  Function1 => scala/Function1#
+         |local2 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x1 => local8
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local3 => synthetic param x1: A1
+         |  A1 => local6
+         |local4 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local6
+         |  B1 => local5
+         |local5 => typeparam B1 >: Int
+         |  Int => scala/Int#
+         |local6 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local7 => val local x: Int
+         |  Int => scala/Int#
+         |local8 => synthetic param x1: Int
+         |  Int => scala/Int#
+         |local9 => param y: Int
+         |  Int => scala/Int#
+         |local10 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Serializable => java/io/Serializable#
+         |local11 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local16
+         |  Int => scala/Int#
+         |  B1 => local15
+         |  x1 => local13
+         |  default => local14
+         |  Function1 => scala/Function1#
+         |local12 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x1 => local18
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local13 => synthetic param x1: A1
+         |  A1 => local16
+         |local14 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local16
+         |  B1 => local15
+         |local15 => typeparam B1 >: Int
+         |  Int => scala/Int#
+         |local16 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local17 => val local x: Int
+         |  Int => scala/Int#
+         |local18 => synthetic param x1: Int
+         |  Int => scala/Int#
+         |local19 => param y: Int
+         |  Int => scala/Int#
+         |local20 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, List[Int]] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  List => scala/package.List#
+         |  Serializable => java/io/Serializable#
+         |local21 => final method applyOrElse[A1 <: Int, B1 >: List[Int]](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local26
+         |  Int => scala/Int#
+         |  B1 => local25
+         |  List => scala/package.List#
+         |  x1 => local23
+         |  default => local24
+         |  Function1 => scala/Function1#
+         |local22 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x1 => local29
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local23 => synthetic param x1: A1
+         |  A1 => local26
+         |local24 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local26
+         |  B1 => local25
+         |local25 => typeparam B1 >: List[Int]
+         |  List => scala/package.List#
+         |  Int => scala/Int#
+         |local26 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local27 => val local x: Int
+         |  Int => scala/Int#
+         |local28 => param y: Int
+         |  Int => scala/Int#
+         |local29 => synthetic param x1: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  synthetics(
+    "written partial functions before a lambda",
+    """|object t193 {
+       |  def a = List(1).collect { case x => x }.map(y => y)
+       |  def b = List(1).collect { case x: Int => x }.map(y => y)
+       |  val k: PartialFunction[Int, List[Int]] = { case x => List(x).map(y => y + 1) }
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[1:10..1:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[1:10..1:25): List(1).collect => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[1:10..1:41): List(1).collect { case x => x } => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[1:10..1:45): List(1).collect { case x => x }.map => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[1:10..1:53): List(1).collect { case x => x }.map(y => y) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[1:26..1:41): { case x => x } => *.apply
+         |  apply => scala/Function1#apply().
+         |[2:10..2:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[2:10..2:25): List(1).collect => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[2:10..2:46): List(1).collect { case x: Int => x } => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[2:10..2:50): List(1).collect { case x: Int => x }.map => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[2:10..2:58): List(1).collect { case x: Int => x }.map(y => y) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[2:26..2:46): { case x: Int => x } => *.apply
+         |  apply => scala/Function1#apply().
+         |[3:43..3:80): { case x => List(x).map(y => y + 1) } => *.apply
+         |  apply => scala/Function1#apply().
+         |[3:55..3:59): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[3:55..3:66): List(x).map => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/package.List#
+         |[3:55..3:78): List(x).map(y => y + 1) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|[1:10..1:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[1:10..1:25): List(1).collect => *[Int]
+         |  Int => scala/Int#
+         |[1:10..1:45): List(1).collect { case x => x }.map => *[Int]
+         |  Int => scala/Int#
+         |[1:26..1:41): { case x => x } => *.apply
+         |  apply => scala/Function1#apply().
+         |[2:10..2:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[2:10..2:25): List(1).collect => *[Int]
+         |  Int => scala/Int#
+         |[2:10..2:50): List(1).collect { case x: Int => x }.map => *[Int]
+         |  Int => scala/Int#
+         |[2:26..2:46): { case x: Int => x } => *.apply
+         |  apply => scala/Function1#apply().
+         |[3:43..3:80): { case x => List(x).map(y => y + 1) } => *.apply
+         |  apply => scala/Function1#apply().
+         |[3:55..3:59): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[3:55..3:66): List(x).map => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) symbols(
+    "partial function literals inside partial function literals",
+    """|object t194 {
+       |  def a = List(1).collect(x => List(x).collect(y => y)).map(z => z)
+       |  def b = List(1).collect(x => List(x).collect(_ + 1))
+       |}
+       |""".stripMargin,
+    """|_empty_/t194. => final object t194 extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t194.a(). => method a: List[List[Int]]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |_empty_/t194.b(). => method b: List[List[Int]]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |local0 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, List[A1]] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  List => scala/collection/immutable/List#
+       |  A1 => local0
+       |  Serializable => java/io/Serializable#
+       |local2 => final method applyOrElse[A1 <: Int, B1 >: List[A1]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local0
+       |  Int => scala/Int#
+       |  B1 => local6
+       |  List => scala/collection/immutable/List#
+       |  x => local4
+       |  default => local5
+       |  Function1 => scala/Function1#
+       |local3 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local8
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local4 => synthetic param x: A1
+       |  A1 => local0
+       |local5 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local0
+       |  B1 => local6
+       |local6 => typeparam B1 >: List[A1]
+       |  List => scala/collection/immutable/List#
+       |  A1 => local0
+       |local7 => typeparam A1 <: A1
+       |  A1 => local0
+       |local8 => param x: Int
+       |  Int => scala/Int#
+       |local9 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[A1, A1] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  A1 => local0
+       |  A1 => local7
+       |  Serializable => java/io/Serializable#
+       |local10 => final method applyOrElse[A1 <: A1, B1 >: A1](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local7
+       |  A1 => local0
+       |  B1 => local14
+       |  y => local12
+       |  default => local13
+       |  Function1 => scala/Function1#
+       |local11 => final method isDefinedAt(y: A1): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  y => local15
+       |  A1 => local0
+       |  Boolean => scala/Boolean#
+       |local12 => synthetic param y: A1
+       |  A1 => local7
+       |local13 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local7
+       |  B1 => local14
+       |local14 => typeparam B1 >: A1
+       |  A1 => local7
+       |local15 => param y: A1
+       |  A1 => local0
+       |local16 => param z: List[A1]
+       |  List => scala/collection/immutable/List#
+       |  A1 => local0
+       |local17 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, List[Int]] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  List => scala/collection/immutable/List#
+       |  Serializable => java/io/Serializable#
+       |local18 => final method applyOrElse[A1 <: Int, B1 >: List[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local23
+       |  Int => scala/Int#
+       |  B1 => local22
+       |  List => scala/collection/immutable/List#
+       |  x => local20
+       |  default => local21
+       |  Function1 => scala/Function1#
+       |local19 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local24
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local20 => synthetic param x: A1
+       |  A1 => local23
+       |local21 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local23
+       |  B1 => local22
+       |local22 => typeparam B1 >: List[Int]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |local23 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local24 => param x: Int
+       |  Int => scala/Int#
+       |local25 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[A1, Int] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  A1 => local23
+       |  Int => scala/Int#
+       |  Serializable => java/io/Serializable#
+       |local26 => final method applyOrElse[A1 <: A1, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local31
+       |  A1 => local23
+       |  B1 => local30
+       |  Int => scala/Int#
+       |  x$1 => local28
+       |  default => local29
+       |  Function1 => scala/Function1#
+       |local27 => final method isDefinedAt(x$1: A1): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x$1 => local32
+       |  A1 => local23
+       |  Boolean => scala/Boolean#
+       |local28 => synthetic param x$1: A1
+       |  A1 => local31
+       |local29 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local31
+       |  B1 => local30
+       |local30 => typeparam B1 >: Int
+       |  Int => scala/Int#
+       |local31 => typeparam A1 <: A1
+       |  A1 => local23
+       |local32 => synthetic param x$1: A1
+       |  A1 => local23
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) symbols(
+    "partial function literals with a pattern and a structural type",
+    """|object t195 {
+       |  val f: Int => Int = x => x match { case y => y }
+       |  val k: PartialFunction[Int, Int] = x => x match { case y => y }
+       |  val l: PartialFunction[Int, Any] = x => { val o = new { def v = x }; o }
+       |}
+       |""".stripMargin,
+    """|_empty_/t195. => final object t195 extends AnyRef { +3 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t195.f. => val method f: Function1[Int, Int]
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |_empty_/t195.k. => val method k: PartialFunction[Int, Int]
+       |  PartialFunction => scala/PartialFunction#
+       |  Int => scala/Int#
+       |_empty_/t195.l. => val method l: PartialFunction[Int, Any]
+       |  PartialFunction => scala/PartialFunction#
+       |  Int => scala/Int#
+       |  Any => scala/Any#
+       |local0 => param x: Int
+       |  Int => scala/Int#
+       |local1 => val local y: Int
+       |  Int => scala/Int#
+       |local2 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  Serializable => java/io/Serializable#
+       |local3 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local8
+       |  Int => scala/Int#
+       |  B1 => local7
+       |  x => local5
+       |  default => local6
+       |  Function1 => scala/Function1#
+       |local4 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local9
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local5 => synthetic param x: A1
+       |  A1 => local8
+       |local6 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local8
+       |  B1 => local7
+       |local7 => typeparam B1 >: Int
+       |  Int => scala/Int#
+       |local8 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local9 => param x: Int
+       |  Int => scala/Int#
+       |local10 => val local y: A1
+       |  A1 => local8
+       |local11 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Any] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  Any => scala/Any#
+       |  Serializable => java/io/Serializable#
+       |local12 => final method applyOrElse[A1 <: Int, B1 = Any](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local17
+       |  Int => scala/Int#
+       |  B1 => local16
+       |  Any => scala/Any#
+       |  x => local14
+       |  default => local15
+       |  Function1 => scala/Function1#
+       |local13 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local20
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local14 => synthetic param x: A1
+       |  A1 => local17
+       |local15 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local17
+       |  B1 => local16
+       |local16 => typeparam B1 = Any
+       |  Any => scala/Any#
+       |local17 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local18 => final class $anon extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |local19 => method v: A1
+       |  A1 => local17
+       |local20 => param x: Int
+       |  Int => scala/Int#
+       |local21 => val local o: AnyRef { def v: A1 }
+       |  AnyRef => scala/AnyRef#
+       |  v => local19
+       |  A1 => local17
+       |""".stripMargin,
+  )
+
+  symbols(
+    "a written anonymous AbstractPartialFunction",
+    """|object t203 {
+       |  val p = new scala.runtime.AbstractPartialFunction[Int, Int] {
+       |    def isDefinedAt(x: Int) = true
+       |    override def applyOrElse[A1 <: Int, B1 >: Int](x: A1, d: A1 => B1): B1 = {
+       |      val y: A1 = x
+       |      d(y)
+       |    }
+       |  }
+       |}
+       |""".stripMargin,
+    """|_empty_/t203. => final object t203 extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t203.p. => val method p: AbstractPartialFunction[Int, Int]
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |local0 => final class $anon extends AbstractPartialFunction[Int, Int] { +2 decls }
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |local1 => method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local3
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local2 => method applyOrElse[A1 <: Int, B1 >: Int](x: A1, d: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local7
+       |  Int => scala/Int#
+       |  B1 => local6
+       |  x => local4
+       |  d => local5
+       |  Function1 => scala/Function1#
+       |local3 => param x: Int
+       |  Int => scala/Int#
+       |local4 => param x: A1
+       |  A1 => local7
+       |local5 => param d: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local7
+       |  B1 => local6
+       |local6 => typeparam B1 >: Int
+       |  Int => scala/Int#
+       |local7 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local8 => val local y: A1
+       |  A1 => local7
+       |""".stripMargin,
+  )
+
   symbols(
     "partial function literals with a match on the parameter",
     """|object t196 {
@@ -21630,6 +22724,3249 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  T => local29
          |local29 => abstract type T <: AnyRef
          |  AnyRef => scala/AnyRef#
+         |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) symbols(
+    "getClass in partial function lambdas and plain lambdas",
+    """|object t253 {
+       |  def a = List(1).collect(x => { val c = x.getClass; c })
+       |  def b = List(1).map(x => { val c = x.getClass; c })
+       |  def c = List("").collect(x => { val c = x.getClass; c })
+       |  def d = List("").map(x => { val c = x.getClass; c })
+       |}
+       |""".stripMargin,
+    """|_empty_/t253. => final object t253 extends AnyRef { +4 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t253.a(). => method a: List[Class[T] forSome { type T <: Int }]
+       |  List => scala/collection/immutable/List#
+       |  Class => java/lang/Class#
+       |  T => local0
+       |  Int => scala/Int#
+       |_empty_/t253.b(). => method b: List[Class[Int]]
+       |  List => scala/collection/immutable/List#
+       |  Class => java/lang/Class#
+       |  Int => scala/Int#
+       |_empty_/t253.c(). => method c: List[Class[T] forSome { type T <: String }]
+       |  List => scala/collection/immutable/List#
+       |  Class => java/lang/Class#
+       |  T => local14
+       |  String => java/lang/String#
+       |_empty_/t253.d(). => method d: List[Class[T] forSome { type T <: String }]
+       |  List => scala/collection/immutable/List#
+       |  Class => java/lang/Class#
+       |  T => local26
+       |  String => java/lang/String#
+       |local2 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local3 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Class[T] forSome { type T <: A1 }] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  Class => java/lang/Class#
+       |  T => local1
+       |  A1 => local2
+       |  Serializable => java/io/Serializable#
+       |local4 => final method applyOrElse[A1 <: Int, B1 >: Class[T] forSome { type T <: A1 }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local2
+       |  Int => scala/Int#
+       |  B1 => local8
+       |  Class => java/lang/Class#
+       |  T => local1
+       |  x => local6
+       |  default => local7
+       |  Function1 => scala/Function1#
+       |local5 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local9
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local6 => synthetic param x: A1
+       |  A1 => local2
+       |local7 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local2
+       |  B1 => local8
+       |local8 => typeparam B1 >: Class[T] forSome { type T <: A1 }
+       |  Class => java/lang/Class#
+       |  T => local1
+       |  A1 => local2
+       |local9 => param x: Int
+       |  Int => scala/Int#
+       |local10 => val local c: Class[T] forSome { type T <: A1 }
+       |  Class => java/lang/Class#
+       |  T => local11
+       |  A1 => local2
+       |local12 => param x: Int
+       |  Int => scala/Int#
+       |local13 => val local c: Class[Int]
+       |  Class => java/lang/Class#
+       |  Int => scala/Int#
+       |local16 => typeparam A1 <: String
+       |  String => java/lang/String#
+       |local17 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[String, Class[T] forSome { type T <: A1 }] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  String => java/lang/String#
+       |  Class => java/lang/Class#
+       |  T => local15
+       |  A1 => local16
+       |  Serializable => java/io/Serializable#
+       |local18 => final method applyOrElse[A1 <: String, B1 >: Class[T] forSome { type T <: A1 }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local16
+       |  String => java/lang/String#
+       |  B1 => local22
+       |  Class => java/lang/Class#
+       |  T => local15
+       |  x => local20
+       |  default => local21
+       |  Function1 => scala/Function1#
+       |local19 => final method isDefinedAt(x: String): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local23
+       |  String => java/lang/String#
+       |  Boolean => scala/Boolean#
+       |local20 => synthetic param x: A1
+       |  A1 => local16
+       |local21 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local16
+       |  B1 => local22
+       |local22 => typeparam B1 >: Class[T] forSome { type T <: A1 }
+       |  Class => java/lang/Class#
+       |  T => local15
+       |  A1 => local16
+       |local23 => param x: String
+       |  String => java/lang/String#
+       |local24 => val local c: Class[T] forSome { type T <: A1 }
+       |  Class => java/lang/Class#
+       |  T => local25
+       |  A1 => local16
+       |local27 => param x: String
+       |  String => java/lang/String#
+       |local28 => val local c: Class[T] forSome { type T <: String }
+       |  Class => java/lang/Class#
+       |  T => local29
+       |  String => java/lang/String#
+       |""".stripMargin,
+  )
+
+  symbols(
+    "getClass in a match on the parameter of a partial function lambda and a plain lambda",
+    """|object t254 {
+       |  def a = List(1).collect(x => x match { case y => val c = y.getClass; c })
+       |  def b = List(1).map(x => x match { case y => val c = y.getClass; c })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/t254. => final object t254 extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t254.a(). => method a: List[Class[T] forSome { type T <: Int }]
+         |  List => scala/collection/immutable/List#
+         |  Class => java/lang/Class#
+         |  T => local0
+         |  Int => scala/Int#
+         |_empty_/t254.b(). => method b: List[Class[Int]]
+         |  List => scala/collection/immutable/List#
+         |  Class => java/lang/Class#
+         |  Int => scala/Int#
+         |local2 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local3 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Class[T] forSome { type T <: A1 }] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Class => java/lang/Class#
+         |  T => local1
+         |  A1 => local2
+         |  Serializable => scala/Serializable#
+         |local4 => final method applyOrElse[A1 <: Int, B1 >: Class[T] forSome { type T <: A1 }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local2
+         |  Int => scala/Int#
+         |  B1 => local8
+         |  Class => java/lang/Class#
+         |  T => local1
+         |  x => local6
+         |  default => local7
+         |  Function1 => scala/Function1#
+         |local5 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local9
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local6 => synthetic param x: A1
+         |  A1 => local2
+         |local7 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local2
+         |  B1 => local8
+         |local8 => typeparam B1 >: Class[T] forSome { type T <: A1 }
+         |  Class => java/lang/Class#
+         |  T => local1
+         |  A1 => local2
+         |local9 => param x: Int
+         |  Int => scala/Int#
+         |local10 => val local y: A1
+         |  A1 => local2
+         |local11 => val local c: Class[T] forSome { type T <: A1 }
+         |  Class => java/lang/Class#
+         |  T => local12
+         |  A1 => local2
+         |local13 => param x: Int
+         |  Int => scala/Int#
+         |local14 => val local y: Int
+         |  Int => scala/Int#
+         |local15 => val local c: Class[Int]
+         |  Class => java/lang/Class#
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|_empty_/t254. => final object t254 extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t254.a(). => method a: List[Class[T] forSome { type T <: Int }]
+         |  List => scala/collection/immutable/List#
+         |  Class => java/lang/Class#
+         |  T => local0
+         |  Int => scala/Int#
+         |_empty_/t254.b(). => method b: List[Class[Int]]
+         |  List => scala/collection/immutable/List#
+         |  Class => java/lang/Class#
+         |  Int => scala/Int#
+         |local2 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local3 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Class[T] forSome { type T <: A1 }] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Class => java/lang/Class#
+         |  T => local1
+         |  A1 => local2
+         |  Serializable => java/io/Serializable#
+         |local4 => final method applyOrElse[A1 <: Int, B1 >: Class[T] forSome { type T <: A1 }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local2
+         |  Int => scala/Int#
+         |  B1 => local8
+         |  Class => java/lang/Class#
+         |  T => local1
+         |  x => local6
+         |  default => local7
+         |  Function1 => scala/Function1#
+         |local5 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local9
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local6 => synthetic param x: A1
+         |  A1 => local2
+         |local7 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local2
+         |  B1 => local8
+         |local8 => typeparam B1 >: Class[T] forSome { type T <: A1 }
+         |  Class => java/lang/Class#
+         |  T => local1
+         |  A1 => local2
+         |local9 => param x: Int
+         |  Int => scala/Int#
+         |local10 => val local y: A1
+         |  A1 => local2
+         |local11 => val local c: Class[T] forSome { type T <: A1 }
+         |  Class => java/lang/Class#
+         |  T => local12
+         |  A1 => local2
+         |local13 => param x: Int
+         |  Int => scala/Int#
+         |local14 => val local y: Int
+         |  Int => scala/Int#
+         |local15 => val local c: Class[Int]
+         |  Class => java/lang/Class#
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) synthetics(
+    "sorted in partial function lambdas and a plain lambda",
+    """|object t255 {
+       |  def a = List(1).collect(x => List(x).sorted)
+       |  def b = List(1).map(x => List(x).sorted)
+       |  def c = List(1).collect(x => x match { case y => List(y).sorted })
+       |}
+       |""".stripMargin,
+    """|[1:10..1:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[1:10..1:25): List(1).collect => *[List[A1]]
+       |  List => scala/collection/immutable/List#
+       |  A1 => local0
+       |[1:31..1:35): List => *.apply[A1]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  A1 => local0
+       |[1:31..1:45): List(x).sorted => *(ordered(<?>))
+       |  ordered => scala/math/LowPriorityOrderingImplicits#ordered().
+       |[1:31..1:45): List(x).sorted => *[A1]
+       |  A1 => local0
+       |[2:10..2:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[2:10..2:21): List(1).map => *[List[Int]]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |[2:27..2:31): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[2:27..2:41): List(x).sorted => *(Int)
+       |  Int => scala/math/Ordering.Int.
+       |[2:27..2:41): List(x).sorted => *[Int]
+       |  Int => scala/Int#
+       |[3:10..3:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[3:10..3:25): List(1).collect => *[List[A1]]
+       |  List => scala/collection/immutable/List#
+       |  A1 => local9
+       |[3:51..3:55): List => *.apply[A1]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  A1 => local9
+       |[3:51..3:65): List(y).sorted => *(ordered(<?>))
+       |  ordered => scala/math/LowPriorityOrderingImplicits#ordered().
+       |[3:51..3:65): List(y).sorted => *[A1]
+       |  A1 => local9
+       |""".stripMargin,
+  )
+
+  symbols(
+    "a guard and a binder in a match on the parameter of partial function lambdas",
+    """|object t256 {
+       |  def a = List(1).collect(x => x match { case y if { val g = y; g > 0 } => y })
+       |  def b = List(Option(1)).collect(x => x match { case y @ Some(z) => y })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/t256. => final object t256 extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t256.a(). => method a: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/t256.b(). => method b: List[Some[Int]]
+         |  List => scala/collection/immutable/List#
+         |  Some => scala/Some#
+         |  Int => scala/Int#
+         |local0 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  A1 => local0
+         |  Serializable => scala/Serializable#
+         |local2 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local0
+         |  Int => scala/Int#
+         |  B1 => local6
+         |  x => local4
+         |  default => local5
+         |  Function1 => scala/Function1#
+         |local3 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local7
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local4 => synthetic param x: A1
+         |  A1 => local0
+         |local5 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local0
+         |  B1 => local6
+         |local6 => typeparam B1 >: A1
+         |  A1 => local0
+         |local7 => param x: Int
+         |  Int => scala/Int#
+         |local8 => val local y: A1
+         |  A1 => local0
+         |local9 => val local g: A1
+         |  A1 => local0
+         |local10 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Option[Int], Some[Int]] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |  Some => scala/Some#
+         |  Serializable => scala/Serializable#
+         |local11 => final method applyOrElse[A1 <: Option[Int], B1 >: Some[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local16
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |  B1 => local15
+         |  Some => scala/Some#
+         |  x => local13
+         |  default => local14
+         |  Function1 => scala/Function1#
+         |local12 => final method isDefinedAt(x: Option[Int]): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local17
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local13 => synthetic param x: A1
+         |  A1 => local16
+         |local14 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local16
+         |  B1 => local15
+         |local15 => typeparam B1 >: Some[Int]
+         |  Some => scala/Some#
+         |  Int => scala/Int#
+         |local16 => typeparam A1 <: Option[Int]
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |local17 => param x: Option[Int]
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |local18 => val local y: Some[Int]
+         |  Some => scala/Some#
+         |  Int => scala/Int#
+         |local19 => val local z: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|_empty_/t256. => final object t256 extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t256.a(). => method a: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/t256.b(). => method b: List[Some[Int]]
+         |  List => scala/collection/immutable/List#
+         |  Some => scala/Some#
+         |  Int => scala/Int#
+         |local0 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  A1 => local0
+         |  Serializable => java/io/Serializable#
+         |local2 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local0
+         |  Int => scala/Int#
+         |  B1 => local6
+         |  x => local4
+         |  default => local5
+         |  Function1 => scala/Function1#
+         |local3 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local7
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local4 => synthetic param x: A1
+         |  A1 => local0
+         |local5 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local0
+         |  B1 => local6
+         |local6 => typeparam B1 >: A1
+         |  A1 => local0
+         |local7 => param x: Int
+         |  Int => scala/Int#
+         |local8 => val local y: A1
+         |  A1 => local0
+         |local9 => val local g: A1
+         |  A1 => local0
+         |local10 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Option[Int], Some[Int]] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |  Some => scala/Some#
+         |  Serializable => java/io/Serializable#
+         |local11 => final method applyOrElse[A1 <: Option[Int], B1 >: Some[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local16
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |  B1 => local15
+         |  Some => scala/Some#
+         |  x => local13
+         |  default => local14
+         |  Function1 => scala/Function1#
+         |local12 => final method isDefinedAt(x: Option[Int]): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local17
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local13 => synthetic param x: A1
+         |  A1 => local16
+         |local14 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local16
+         |  B1 => local15
+         |local15 => typeparam B1 >: Some[Int]
+         |  Some => scala/Some#
+         |  Int => scala/Int#
+         |local16 => typeparam A1 <: Option[Int]
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |local17 => param x: Option[Int]
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |local18 => val local y: Some[Int]
+         |  Some => scala/Some#
+         |  Int => scala/Int#
+         |local19 => val local z: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) synthetics(
+    "an empty collection as the body of a partial function lambda",
+    """|object t257 {
+       |  val a: PartialFunction[Int, Set[Int]] = x => Set.empty
+       |}
+       |""".stripMargin,
+    """|[1:47..1:56): Set.empty => *[Int]
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  synthetics(
+    "an empty collection in a match on the parameter of a partial function lambda",
+    """|object t258 {
+       |  val a: PartialFunction[Int, Set[Int]] = x => x match { case y => Set.empty }
+       |}
+       |""".stripMargin,
+    """|[1:67..1:76): Set.empty => *[Int]
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) symbols(
+    "weak conformance with a Long in partial function lambdas and plain lambdas",
+    """|object t260 {
+       |  def a = List(1).collect(x => List(x, 1L))
+       |  def b = List(1).map(x => List(x, 1L))
+       |  def c(b: Boolean) = List(1).collect(x => if (b) x else 1L)
+       |  def d(b: Boolean) = List(1).map(x => if (b) x else 1L)
+       |}
+       |""".stripMargin,
+    """|_empty_/t260. => final object t260 extends AnyRef { +4 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t260.a(). => method a: List[List[AnyVal]]
+       |  List => scala/collection/immutable/List#
+       |  AnyVal => scala/AnyVal#
+       |_empty_/t260.b(). => method b: List[List[Long]]
+       |  List => scala/collection/immutable/List#
+       |  Long => scala/Long#
+       |_empty_/t260.c(). => method c(b: Boolean): List[AnyVal]
+       |  b => _empty_/t260.c().(b)
+       |  Boolean => scala/Boolean#
+       |  List => scala/collection/immutable/List#
+       |  AnyVal => scala/AnyVal#
+       |_empty_/t260.c().(b) => param b: Boolean
+       |  Boolean => scala/Boolean#
+       |_empty_/t260.d(). => method d(b: Boolean): List[Long]
+       |  b => _empty_/t260.d().(b)
+       |  Boolean => scala/Boolean#
+       |  List => scala/collection/immutable/List#
+       |  Long => scala/Long#
+       |_empty_/t260.d().(b) => param b: Boolean
+       |  Boolean => scala/Boolean#
+       |local0 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, List[AnyVal]] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  List => scala/collection/immutable/List#
+       |  AnyVal => scala/AnyVal#
+       |  Serializable => java/io/Serializable#
+       |local1 => final method applyOrElse[A1 <: Int, B1 >: List[AnyVal]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local6
+       |  Int => scala/Int#
+       |  B1 => local5
+       |  List => scala/collection/immutable/List#
+       |  AnyVal => scala/AnyVal#
+       |  x => local3
+       |  default => local4
+       |  Function1 => scala/Function1#
+       |local2 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local7
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local3 => synthetic param x: A1
+       |  A1 => local6
+       |local4 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local6
+       |  B1 => local5
+       |local5 => typeparam B1 >: List[AnyVal]
+       |  List => scala/collection/immutable/List#
+       |  AnyVal => scala/AnyVal#
+       |local6 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local7 => param x: Int
+       |  Int => scala/Int#
+       |local8 => param x: Int
+       |  Int => scala/Int#
+       |local9 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, AnyVal] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  AnyVal => scala/AnyVal#
+       |  Serializable => java/io/Serializable#
+       |local10 => final method applyOrElse[A1 <: Int, B1 >: AnyVal](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local15
+       |  Int => scala/Int#
+       |  B1 => local14
+       |  AnyVal => scala/AnyVal#
+       |  x => local12
+       |  default => local13
+       |  Function1 => scala/Function1#
+       |local11 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local16
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local12 => synthetic param x: A1
+       |  A1 => local15
+       |local13 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local15
+       |  B1 => local14
+       |local14 => typeparam B1 >: AnyVal
+       |  AnyVal => scala/AnyVal#
+       |local15 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local16 => param x: Int
+       |  Int => scala/Int#
+       |local17 => param x: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) synthetics(
+    "weak conformance with a Long in partial function lambdas and plain lambdas",
+    """|object t260 {
+       |  def a = List(1).collect(x => List(x, 1L))
+       |  def b = List(1).map(x => List(x, 1L))
+       |  def c(b: Boolean) = List(1).collect(x => if (b) x else 1L)
+       |  def d(b: Boolean) = List(1).map(x => if (b) x else 1L)
+       |}
+       |""".stripMargin,
+    """|[1:10..1:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[1:10..1:25): List(1).collect => *[List[AnyVal]]
+       |  List => scala/collection/immutable/List#
+       |  AnyVal => scala/AnyVal#
+       |[1:31..1:35): List => *.apply[AnyVal]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  AnyVal => scala/AnyVal#
+       |[2:10..2:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[2:10..2:21): List(1).map => *[List[Long]]
+       |  List => scala/collection/immutable/List#
+       |  Long => scala/Long#
+       |[2:27..2:31): List => *.apply[Long]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Long => scala/Long#
+       |[3:22..3:26): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[3:22..3:37): List(1).collect => *[AnyVal]
+       |  AnyVal => scala/AnyVal#
+       |[4:22..4:26): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[4:22..4:33): List(1).map => *[Long]
+       |  Long => scala/Long#
+       |""".stripMargin,
+  )
+
+  symbols(
+    "weak conformance with a Long in a match on the parameter of partial function lambdas and plain lambdas",
+    """|object t261 {
+       |  def a = List(1).collect(x => x match { case y => List(x, 1L) })
+       |  def b = List(1).map(x => x match { case y => List(x, 1L) })
+       |  def c(b: Boolean) = List(1).collect(x => x match { case y => if (b) x else 1L })
+       |  def d(b: Boolean) = List(1).map(x => x match { case y => if (b) x else 1L })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/t261. => final object t261 extends AnyRef { +4 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t261.a(). => method a: List[List[AnyVal]]
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |_empty_/t261.b(). => method b: List[List[Long]]
+         |  List => scala/collection/immutable/List#
+         |  Long => scala/Long#
+         |_empty_/t261.c(). => method c(b: Boolean): List[AnyVal]
+         |  b => _empty_/t261.c().(b)
+         |  Boolean => scala/Boolean#
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |_empty_/t261.c().(b) => param b: Boolean
+         |  Boolean => scala/Boolean#
+         |_empty_/t261.d(). => method d(b: Boolean): List[Long]
+         |  b => _empty_/t261.d().(b)
+         |  Boolean => scala/Boolean#
+         |  List => scala/collection/immutable/List#
+         |  Long => scala/Long#
+         |_empty_/t261.d().(b) => param b: Boolean
+         |  Boolean => scala/Boolean#
+         |local0 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, List[AnyVal]] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |  Serializable => scala/Serializable#
+         |local1 => final method applyOrElse[A1 <: Int, B1 >: List[AnyVal]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local6
+         |  Int => scala/Int#
+         |  B1 => local5
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |  x => local3
+         |  default => local4
+         |  Function1 => scala/Function1#
+         |local2 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local7
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local3 => synthetic param x: A1
+         |  A1 => local6
+         |local4 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local6
+         |  B1 => local5
+         |local5 => typeparam B1 >: List[AnyVal]
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |local6 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local7 => param x: Int
+         |  Int => scala/Int#
+         |local8 => val local y: A1
+         |  A1 => local6
+         |local9 => param x: Int
+         |  Int => scala/Int#
+         |local10 => val local y: Int
+         |  Int => scala/Int#
+         |local11 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, AnyVal] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  AnyVal => scala/AnyVal#
+         |  Serializable => scala/Serializable#
+         |local12 => final method applyOrElse[A1 <: Int, B1 >: AnyVal](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local17
+         |  Int => scala/Int#
+         |  B1 => local16
+         |  AnyVal => scala/AnyVal#
+         |  x => local14
+         |  default => local15
+         |  Function1 => scala/Function1#
+         |local13 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local18
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local14 => synthetic param x: A1
+         |  A1 => local17
+         |local15 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local17
+         |  B1 => local16
+         |local16 => typeparam B1 >: AnyVal
+         |  AnyVal => scala/AnyVal#
+         |local17 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local18 => param x: Int
+         |  Int => scala/Int#
+         |local19 => val local y: A1
+         |  A1 => local17
+         |local20 => param x: Int
+         |  Int => scala/Int#
+         |local21 => val local y: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|_empty_/t261. => final object t261 extends AnyRef { +4 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t261.a(). => method a: List[List[AnyVal]]
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |_empty_/t261.b(). => method b: List[List[Long]]
+         |  List => scala/collection/immutable/List#
+         |  Long => scala/Long#
+         |_empty_/t261.c(). => method c(b: Boolean): List[AnyVal]
+         |  b => _empty_/t261.c().(b)
+         |  Boolean => scala/Boolean#
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |_empty_/t261.c().(b) => param b: Boolean
+         |  Boolean => scala/Boolean#
+         |_empty_/t261.d(). => method d(b: Boolean): List[Long]
+         |  b => _empty_/t261.d().(b)
+         |  Boolean => scala/Boolean#
+         |  List => scala/collection/immutable/List#
+         |  Long => scala/Long#
+         |_empty_/t261.d().(b) => param b: Boolean
+         |  Boolean => scala/Boolean#
+         |local0 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, List[AnyVal]] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |  Serializable => java/io/Serializable#
+         |local1 => final method applyOrElse[A1 <: Int, B1 >: List[AnyVal]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local6
+         |  Int => scala/Int#
+         |  B1 => local5
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |  x => local3
+         |  default => local4
+         |  Function1 => scala/Function1#
+         |local2 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local7
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local3 => synthetic param x: A1
+         |  A1 => local6
+         |local4 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local6
+         |  B1 => local5
+         |local5 => typeparam B1 >: List[AnyVal]
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |local6 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local7 => param x: Int
+         |  Int => scala/Int#
+         |local8 => val local y: A1
+         |  A1 => local6
+         |local9 => param x: Int
+         |  Int => scala/Int#
+         |local10 => val local y: Int
+         |  Int => scala/Int#
+         |local11 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, AnyVal] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  AnyVal => scala/AnyVal#
+         |  Serializable => java/io/Serializable#
+         |local12 => final method applyOrElse[A1 <: Int, B1 >: AnyVal](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local17
+         |  Int => scala/Int#
+         |  B1 => local16
+         |  AnyVal => scala/AnyVal#
+         |  x => local14
+         |  default => local15
+         |  Function1 => scala/Function1#
+         |local13 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local18
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local14 => synthetic param x: A1
+         |  A1 => local17
+         |local15 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local17
+         |  B1 => local16
+         |local16 => typeparam B1 >: AnyVal
+         |  AnyVal => scala/AnyVal#
+         |local17 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local18 => param x: Int
+         |  Int => scala/Int#
+         |local19 => val local y: A1
+         |  A1 => local17
+         |local20 => param x: Int
+         |  Int => scala/Int#
+         |local21 => val local y: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  synthetics(
+    "weak conformance with a Long in a match on the parameter of partial function lambdas and plain lambdas",
+    """|object t261 {
+       |  def a = List(1).collect(x => x match { case y => List(x, 1L) })
+       |  def b = List(1).map(x => x match { case y => List(x, 1L) })
+       |  def c(b: Boolean) = List(1).collect(x => x match { case y => if (b) x else 1L })
+       |  def d(b: Boolean) = List(1).map(x => x match { case y => if (b) x else 1L })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[1:10..1:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[1:10..1:25): List(1).collect => *[List[AnyVal], List[List[AnyVal]]]
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |[1:10..1:65): List(1).collect(x => x match { case y => List(x, 1L) }) => *(List.canBuildFrom[List[AnyVal]])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |[1:51..1:55): List => *.apply[AnyVal]
+         |  apply => scala/collection/immutable/List.apply().
+         |  AnyVal => scala/AnyVal#
+         |[2:10..2:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[2:10..2:21): List(1).map => *[List[Long], List[List[Long]]]
+         |  List => scala/collection/immutable/List#
+         |  Long => scala/Long#
+         |[2:10..2:61): List(1).map(x => x match { case y => List(x, 1L) }) => *(List.canBuildFrom[List[Long]])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  List => scala/collection/immutable/List#
+         |  Long => scala/Long#
+         |[2:47..2:51): List => *.apply[Long]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Long => scala/Long#
+         |[3:22..3:26): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[3:22..3:37): List(1).collect => *[AnyVal, List[AnyVal]]
+         |  AnyVal => scala/AnyVal#
+         |  List => scala/collection/immutable/List#
+         |[3:22..3:82): List(1).collect(x => x match { case y => if (b) x else 1L }) => *(List.canBuildFrom[AnyVal])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  AnyVal => scala/AnyVal#
+         |[4:22..4:26): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[4:22..4:33): List(1).map => *[Long, List[Long]]
+         |  Long => scala/Long#
+         |  List => scala/collection/immutable/List#
+         |[4:22..4:78): List(1).map(x => x match { case y => if (b) x else 1L }) => *(List.canBuildFrom[Long])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Long => scala/Long#
+         |""".stripMargin
+    else
+      """|[1:10..1:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[1:10..1:25): List(1).collect => *[List[AnyVal]]
+         |  List => scala/collection/immutable/List#
+         |  AnyVal => scala/AnyVal#
+         |[1:51..1:55): List => *.apply[AnyVal]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  AnyVal => scala/AnyVal#
+         |[2:10..2:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[2:10..2:21): List(1).map => *[List[Long]]
+         |  List => scala/collection/immutable/List#
+         |  Long => scala/Long#
+         |[2:47..2:51): List => *.apply[Long]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Long => scala/Long#
+         |[3:22..3:26): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[3:22..3:37): List(1).collect => *[AnyVal]
+         |  AnyVal => scala/AnyVal#
+         |[4:22..4:26): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[4:22..4:33): List(1).map => *[Long]
+         |  Long => scala/Long#
+         |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) symbols(
+    "a written existential result applied in partial function lambdas and plain lambdas",
+    """|object t262 {
+       |  def f[T](t: T): Class[_ <: T] = ???
+       |  def a = List(1).collect(x => f(x))
+       |  def b = List(1).map(x => f(x))
+       |}
+       |""".stripMargin,
+    """|_empty_/t262. => final object t262 extends AnyRef { +3 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t262.a(). => method a: List[Class[_] forSome { type _ <: T }]
+       |  List => scala/collection/immutable/List#
+       |  Class => java/lang/Class#
+       |  _ => local0
+       |  T => _empty_/t262.f().[T]
+       |_empty_/t262.b(). => method b: List[Class[_] forSome { type _ <: T }]
+       |  List => scala/collection/immutable/List#
+       |  Class => java/lang/Class#
+       |  _ => local0
+       |  T => _empty_/t262.f().[T]
+       |_empty_/t262.f(). => method f[T](t: T): Class[_] forSome { type _ <: T }
+       |  T => _empty_/t262.f().[T]
+       |  t => _empty_/t262.f().(t)
+       |  Class => scala/Predef.Class#
+       |  _ => local0
+       |_empty_/t262.f().(t) => param t: T
+       |  T => _empty_/t262.f().[T]
+       |_empty_/t262.f().[T] => typeparam T
+       |local0 => synthetic abstract type _ <: T
+       |  T => _empty_/t262.f().[T]
+       |local1 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local2 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Class[_] forSome { type _ <: T }] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  Class => java/lang/Class#
+       |  _ => local0
+       |  T => _empty_/t262.f().[T]
+       |  Serializable => java/io/Serializable#
+       |local3 => final method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: T }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local1
+       |  Int => scala/Int#
+       |  B1 => local7
+       |  Class => java/lang/Class#
+       |  _ => local0
+       |  T => _empty_/t262.f().[T]
+       |  x => local5
+       |  default => local6
+       |  Function1 => scala/Function1#
+       |local4 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local8
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local5 => synthetic param x: A1
+       |  A1 => local1
+       |local6 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local1
+       |  B1 => local7
+       |local7 => typeparam B1 >: Class[_] forSome { type _ <: T }
+       |  Class => java/lang/Class#
+       |  _ => local0
+       |  T => _empty_/t262.f().[T]
+       |local8 => param x: Int
+       |  Int => scala/Int#
+       |local9 => param x: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) synthetics(
+    "a written existential result applied in partial function lambdas and plain lambdas",
+    """|object t262 {
+       |  def f[T](t: T): Class[_ <: T] = ???
+       |  def a = List(1).collect(x => f(x))
+       |  def b = List(1).map(x => f(x))
+       |}
+       |""".stripMargin,
+    """|[2:10..2:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[2:10..2:25): List(1).collect => *[Class[_] forSome { type _ <: T }]
+       |  Class => java/lang/Class#
+       |  _ => local0
+       |  T => _empty_/t262.f().[T]
+       |[2:31..2:32): f => *[A1]
+       |  A1 => local1
+       |[3:10..3:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[3:10..3:21): List(1).map => *[Class[_] forSome { type _ <: T }]
+       |  Class => java/lang/Class#
+       |  _ => local0
+       |  T => _empty_/t262.f().[T]
+       |[3:27..3:28): f => *[Int]
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  symbols(
+    "a written existential result applied in a match on the parameter of partial function lambdas and plain lambdas",
+    """|object t263 {
+       |  def f[T](t: T): Class[_ <: T] = ???
+       |  def a = List(1).collect(x => x match { case y => f(x) })
+       |  def b = List(1).map(x => x match { case y => f(x) })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/t263. => final object t263 extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t263.a(). => method a: List[Class[_] forSome { type _ <: T }]
+         |  List => scala/collection/immutable/List#
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |_empty_/t263.b(). => method b: List[Class[_] forSome { type _ <: T }]
+         |  List => scala/collection/immutable/List#
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |_empty_/t263.f(). => method f[T](t: T): Class[_] forSome { type _ <: T }
+         |  T => _empty_/t263.f().[T]
+         |  t => _empty_/t263.f().(t)
+         |  Class => scala/Predef.Class#
+         |  _ => local0
+         |_empty_/t263.f().(t) => param t: T
+         |  T => _empty_/t263.f().[T]
+         |_empty_/t263.f().[T] => typeparam T
+         |local0 => synthetic abstract type _ <: T
+         |  T => _empty_/t263.f().[T]
+         |local1 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local2 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Class[_] forSome { type _ <: T }] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |  Serializable => scala/Serializable#
+         |local3 => final method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: T }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local1
+         |  Int => scala/Int#
+         |  B1 => local7
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |  x => local5
+         |  default => local6
+         |  Function1 => scala/Function1#
+         |local4 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local8
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local5 => synthetic param x: A1
+         |  A1 => local1
+         |local6 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local1
+         |  B1 => local7
+         |local7 => typeparam B1 >: Class[_] forSome { type _ <: T }
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |local8 => param x: Int
+         |  Int => scala/Int#
+         |local9 => val local y: A1
+         |  A1 => local1
+         |local10 => param x: Int
+         |  Int => scala/Int#
+         |local11 => val local y: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|_empty_/t263. => final object t263 extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t263.a(). => method a: List[Class[_] forSome { type _ <: T }]
+         |  List => scala/collection/immutable/List#
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |_empty_/t263.b(). => method b: List[Class[_] forSome { type _ <: T }]
+         |  List => scala/collection/immutable/List#
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |_empty_/t263.f(). => method f[T](t: T): Class[_] forSome { type _ <: T }
+         |  T => _empty_/t263.f().[T]
+         |  t => _empty_/t263.f().(t)
+         |  Class => scala/Predef.Class#
+         |  _ => local0
+         |_empty_/t263.f().(t) => param t: T
+         |  T => _empty_/t263.f().[T]
+         |_empty_/t263.f().[T] => typeparam T
+         |local0 => synthetic abstract type _ <: T
+         |  T => _empty_/t263.f().[T]
+         |local1 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local2 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Class[_] forSome { type _ <: T }] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |  Serializable => java/io/Serializable#
+         |local3 => final method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: T }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local1
+         |  Int => scala/Int#
+         |  B1 => local7
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |  x => local5
+         |  default => local6
+         |  Function1 => scala/Function1#
+         |local4 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local8
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local5 => synthetic param x: A1
+         |  A1 => local1
+         |local6 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local1
+         |  B1 => local7
+         |local7 => typeparam B1 >: Class[_] forSome { type _ <: T }
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |local8 => param x: Int
+         |  Int => scala/Int#
+         |local9 => val local y: A1
+         |  A1 => local1
+         |local10 => param x: Int
+         |  Int => scala/Int#
+         |local11 => val local y: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  synthetics(
+    "a written existential result applied in a match on the parameter of partial function lambdas and plain lambdas",
+    """|object t263 {
+       |  def f[T](t: T): Class[_ <: T] = ???
+       |  def a = List(1).collect(x => x match { case y => f(x) })
+       |  def b = List(1).map(x => x match { case y => f(x) })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[2:10..2:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[2:10..2:25): List(1).collect => *[Class[_] forSome { type _ <: T }, List[Class[_] forSome { type _ <: T }]]
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |  List => scala/collection/immutable/List#
+         |[2:10..2:58): List(1).collect(x => x match { case y => f(x) }) => *(List.canBuildFrom[Class[_] forSome { type _ <: T }])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |[2:51..2:52): f => *[A1]
+         |  A1 => local1
+         |[3:10..3:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[3:10..3:21): List(1).map => *[Class[_] forSome { type _ <: T }, List[Class[_] forSome { type _ <: T }]]
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |  List => scala/collection/immutable/List#
+         |[3:10..3:54): List(1).map(x => x match { case y => f(x) }) => *(List.canBuildFrom[Class[_] forSome { type _ <: T }])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |[3:47..3:48): f => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|[2:10..2:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[2:10..2:25): List(1).collect => *[Class[_] forSome { type _ <: T }]
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |[2:51..2:52): f => *[A1]
+         |  A1 => local1
+         |[3:10..3:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[3:10..3:21): List(1).map => *[Class[_] forSome { type _ <: T }]
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t263.f().[T]
+         |[3:47..3:48): f => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) symbols(
+    "a local class A1 in partial function lambdas and plain lambdas",
+    """|object t264 {
+       |  def a = Set(1).collect(x => { class A1; new A1 })
+       |  def b = Set(1).map(x => { class A1; new A1 })
+       |  def c = Set(1).collect(x => { class A1; Set(new A1) })
+       |  def d = Set(1).map(x => { class A1; Set(new A1) })
+       |}
+       |""".stripMargin,
+    """|_empty_/t264. => final object t264 extends AnyRef { +4 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t264.a(). => method a: Set[AnyRef]
+       |  Set => scala/collection/immutable/Set#
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t264.b(). => method b: Set[AnyRef]
+       |  Set => scala/collection/immutable/Set#
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t264.c(). => method c: Set[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }]
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local13
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t264.d(). => method d: Set[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }]
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local23
+       |  AnyRef => scala/AnyRef#
+       |local0 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, AnyRef] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  AnyRef => scala/AnyRef#
+       |  Serializable => java/io/Serializable#
+       |local1 => final method applyOrElse[A1 <: Int, B1 >: AnyRef](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local6
+       |  Int => scala/Int#
+       |  B1 => local5
+       |  AnyRef => scala/AnyRef#
+       |  x => local3
+       |  default => local4
+       |  Function1 => scala/Function1#
+       |local2 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local9
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local3 => synthetic param x: A1
+       |  A1 => local6
+       |local4 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local6
+       |  B1 => local5
+       |local5 => typeparam B1 >: AnyRef
+       |  AnyRef => scala/AnyRef#
+       |local6 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local7 => class A1 extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |local8 => primary ctor <init>()
+       |local9 => param x: Int
+       |  Int => scala/Int#
+       |local10 => param x: Int
+       |  Int => scala/Int#
+       |local11 => class A1 extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |local12 => primary ctor <init>()
+       |local13 => class A1 extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |local14 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Set[A1] forSome { class A1 extends AnyRef { +1 decls } }] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local13
+       |  AnyRef => scala/AnyRef#
+       |  Serializable => java/io/Serializable#
+       |local15 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { class A1 extends AnyRef { +1 decls } }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local20
+       |  Int => scala/Int#
+       |  B1 => local19
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local13
+       |  AnyRef => scala/AnyRef#
+       |  x => local17
+       |  default => local18
+       |  Function1 => scala/Function1#
+       |local16 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local22
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local17 => synthetic param x: A1
+       |  A1 => local20
+       |local18 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local20
+       |  B1 => local19
+       |local19 => typeparam B1 >: Set[A1] forSome { class A1 extends AnyRef { +1 decls } }
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local13
+       |  AnyRef => scala/AnyRef#
+       |local20 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local21 => primary ctor <init>()
+       |local22 => param x: Int
+       |  Int => scala/Int#
+       |local23 => class A1 extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |local24 => param x: Int
+       |  Int => scala/Int#
+       |local25 => primary ctor <init>()
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) synthetics(
+    "a local class A1 in partial function lambdas and plain lambdas",
+    """|object t264 {
+       |  def a = Set(1).collect(x => { class A1; new A1 })
+       |  def b = Set(1).map(x => { class A1; new A1 })
+       |  def c = Set(1).collect(x => { class A1; Set(new A1) })
+       |  def d = Set(1).map(x => { class A1; Set(new A1) })
+       |}
+       |""".stripMargin,
+    """|[1:10..1:13): Set => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[1:10..1:24): Set(1).collect => *[AnyRef]
+       |  AnyRef => scala/AnyRef#
+       |[2:10..2:13): Set => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[2:10..2:20): Set(1).map => *[AnyRef]
+       |  AnyRef => scala/AnyRef#
+       |[3:10..3:13): Set => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[3:10..3:24): Set(1).collect => *[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }]
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local13
+       |  AnyRef => scala/AnyRef#
+       |[3:42..3:45): Set => *.apply[A1]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  A1 => local13
+       |[4:10..4:13): Set => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[4:10..4:20): Set(1).map => *[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }]
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local23
+       |  AnyRef => scala/AnyRef#
+       |[4:38..4:41): Set => *.apply[A1]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  A1 => local23
+       |""".stripMargin,
+  )
+
+  symbols(
+    "a local class A1 in a match on the parameter of partial function lambdas and plain lambdas",
+    """|object t265 {
+       |  def a = Set(1).collect(x => x match { case y => class A1; Set(new A1) })
+       |  def b = Set(1).map(x => x match { case y => class A1; Set(new A1) })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/t265. => final object t265 extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t265.a(). => method a: Set[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t265.b(). => method b: Set[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local11
+         |  AnyRef => scala/AnyRef#
+         |local0 => class A1 extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Set[A1] forSome { class A1 extends AnyRef { +1 decls } }] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  AnyRef => scala/AnyRef#
+         |  Serializable => scala/Serializable#
+         |local2 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { class A1 extends AnyRef { +1 decls } }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local7
+         |  Int => scala/Int#
+         |  B1 => local6
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  AnyRef => scala/AnyRef#
+         |  x => local4
+         |  default => local5
+         |  Function1 => scala/Function1#
+         |local3 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local8
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local4 => synthetic param x: A1
+         |  A1 => local7
+         |local5 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local7
+         |  B1 => local6
+         |local6 => typeparam B1 >: Set[A1] forSome { class A1 extends AnyRef { +1 decls } }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  AnyRef => scala/AnyRef#
+         |local7 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local8 => param x: Int
+         |  Int => scala/Int#
+         |local9 => val local y: A1
+         |  A1 => local7
+         |local10 => primary ctor <init>()
+         |local11 => class A1 extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local12 => param x: Int
+         |  Int => scala/Int#
+         |local13 => val local y: Int
+         |  Int => scala/Int#
+         |local14 => primary ctor <init>()
+         |""".stripMargin
+    else
+      """|_empty_/t265. => final object t265 extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t265.a(). => method a: Set[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t265.b(). => method b: Set[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local11
+         |  AnyRef => scala/AnyRef#
+         |local0 => class A1 extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Set[A1] forSome { class A1 extends AnyRef { +1 decls } }] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  AnyRef => scala/AnyRef#
+         |  Serializable => java/io/Serializable#
+         |local2 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { class A1 extends AnyRef { +1 decls } }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local7
+         |  Int => scala/Int#
+         |  B1 => local6
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  AnyRef => scala/AnyRef#
+         |  x => local4
+         |  default => local5
+         |  Function1 => scala/Function1#
+         |local3 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local8
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local4 => synthetic param x: A1
+         |  A1 => local7
+         |local5 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local7
+         |  B1 => local6
+         |local6 => typeparam B1 >: Set[A1] forSome { class A1 extends AnyRef { +1 decls } }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  AnyRef => scala/AnyRef#
+         |local7 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local8 => param x: Int
+         |  Int => scala/Int#
+         |local9 => val local y: A1
+         |  A1 => local7
+         |local10 => primary ctor <init>()
+         |local11 => class A1 extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local12 => param x: Int
+         |  Int => scala/Int#
+         |local13 => val local y: Int
+         |  Int => scala/Int#
+         |local14 => primary ctor <init>()
+         |""".stripMargin,
+  )
+
+  synthetics(
+    "a local class A1 in a match on the parameter of partial function lambdas and plain lambdas",
+    """|object t265 {
+       |  def a = Set(1).collect(x => x match { case y => class A1; Set(new A1) })
+       |  def b = Set(1).map(x => x match { case y => class A1; Set(new A1) })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[1:10..1:13): Set => *.apply[Int]
+         |  apply => scala/collection/generic/GenericCompanion#apply().
+         |  Int => scala/Int#
+         |[1:10..1:24): Set(1).collect => *[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }, Set[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }]]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  AnyRef => scala/AnyRef#
+         |[1:10..1:74): Set(1).collect(x => x match { case y => class A1; Set(new A1) }) => *(Set.canBuildFrom[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }])
+         |  Set => scala/collection/immutable/Set.
+         |  canBuildFrom => scala/collection/immutable/Set.canBuildFrom().
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  AnyRef => scala/AnyRef#
+         |[1:60..1:63): Set => *.apply[A1]
+         |  apply => scala/collection/generic/GenericCompanion#apply().
+         |  A1 => local0
+         |[2:10..2:13): Set => *.apply[Int]
+         |  apply => scala/collection/generic/GenericCompanion#apply().
+         |  Int => scala/Int#
+         |[2:10..2:20): Set(1).map => *[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }, Set[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }]]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local11
+         |  AnyRef => scala/AnyRef#
+         |[2:10..2:70): Set(1).map(x => x match { case y => class A1; Set(new A1) }) => *(Set.canBuildFrom[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }])
+         |  Set => scala/collection/immutable/Set.
+         |  canBuildFrom => scala/collection/immutable/Set.canBuildFrom().
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local11
+         |  AnyRef => scala/AnyRef#
+         |[2:56..2:59): Set => *.apply[A1]
+         |  apply => scala/collection/generic/GenericCompanion#apply().
+         |  A1 => local11
+         |""".stripMargin
+    else
+      """|[1:10..1:13): Set => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[1:10..1:24): Set(1).collect => *[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  AnyRef => scala/AnyRef#
+         |[1:60..1:63): Set => *.apply[A1]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  A1 => local0
+         |[2:10..2:13): Set => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[2:10..2:20): Set(1).map => *[Set[A1] forSome { class A1 extends AnyRef { +1 decls } }]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local11
+         |  AnyRef => scala/AnyRef#
+         |[2:56..2:59): Set => *.apply[A1]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  A1 => local11
+         |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) symbols(
+    "partial function lambdas and plain lambdas over a Set",
+    """|object t266 {
+       |  def a = Set(1).collect(x => x)
+       |  def b = Set(1).map(x => x)
+       |}
+       |""".stripMargin,
+    """|_empty_/t266. => final object t266 extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t266.a(). => method a: Set[A1] forSome { type A1 <: Int }
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local0
+       |  Int => scala/Int#
+       |_empty_/t266.b(). => method b: Set[Int]
+       |  Set => scala/collection/immutable/Set#
+       |  Int => scala/Int#
+       |local1 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local2 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  A1 => local1
+       |  Serializable => java/io/Serializable#
+       |local3 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local1
+       |  Int => scala/Int#
+       |  B1 => local7
+       |  x => local5
+       |  default => local6
+       |  Function1 => scala/Function1#
+       |local4 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local8
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local5 => synthetic param x: A1
+       |  A1 => local1
+       |local6 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local1
+       |  B1 => local7
+       |local7 => typeparam B1 >: A1
+       |  A1 => local1
+       |local8 => param x: Int
+       |  Int => scala/Int#
+       |local9 => param x: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) synthetics(
+    "partial function lambdas and plain lambdas over a Set",
+    """|object t266 {
+       |  def a = Set(1).collect(x => x)
+       |  def b = Set(1).map(x => x)
+       |}
+       |""".stripMargin,
+    """|[1:10..1:13): Set => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[1:10..1:24): Set(1).collect => *[A1]
+       |  A1 => local1
+       |[2:10..2:13): Set => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[2:10..2:20): Set(1).map => *[Int]
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  symbols(
+    "a match on the parameter of partial function lambdas and plain lambdas over a Set and to a Set",
+    """|object t267 {
+       |  def f[T](t: T): Set[T] = ???
+       |  def a = Set(1).collect(x => x match { case y => x })
+       |  def b = Set(1).map(x => x match { case y => x })
+       |  def c = List(1).collect(x => x match { case y => f(x) })
+       |  def d = List(1).map(x => x match { case y => f(x) })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/t267. => final object t267 extends AnyRef { +5 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t267.a(). => method a: Set[A1] forSome { type A1 <: Int }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  Int => scala/Int#
+         |_empty_/t267.b(). => method b: Set[Int]
+         |  Set => scala/collection/immutable/Set#
+         |  Int => scala/Int#
+         |_empty_/t267.c(). => method c: List[Set[A1]] forSome { type A1 <: Int }
+         |  List => scala/collection/immutable/List#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local12
+         |  Int => scala/Int#
+         |_empty_/t267.d(). => method d: List[Set[Int]]
+         |  List => scala/collection/immutable/List#
+         |  Set => scala/Predef.Set#
+         |  Int => scala/Int#
+         |_empty_/t267.f(). => method f[T](t: T): Set[T]
+         |  T => _empty_/t267.f().[T]
+         |  t => _empty_/t267.f().(t)
+         |  Set => scala/Predef.Set#
+         |_empty_/t267.f().(t) => param t: T
+         |  T => _empty_/t267.f().[T]
+         |_empty_/t267.f().[T] => typeparam T
+         |local1 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local2 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  A1 => local1
+         |  Serializable => scala/Serializable#
+         |local3 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local1
+         |  Int => scala/Int#
+         |  B1 => local7
+         |  x => local5
+         |  default => local6
+         |  Function1 => scala/Function1#
+         |local4 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local8
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local5 => synthetic param x: A1
+         |  A1 => local1
+         |local6 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local1
+         |  B1 => local7
+         |local7 => typeparam B1 >: A1
+         |  A1 => local1
+         |local8 => param x: Int
+         |  Int => scala/Int#
+         |local9 => val local y: A1
+         |  A1 => local1
+         |local10 => param x: Int
+         |  Int => scala/Int#
+         |local11 => val local y: Int
+         |  Int => scala/Int#
+         |local13 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local14 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Set[A1]] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Set => scala/Predef.Set#
+         |  A1 => local13
+         |  Serializable => scala/Serializable#
+         |local15 => final method applyOrElse[A1 <: Int, B1 >: Set[A1]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local13
+         |  Int => scala/Int#
+         |  B1 => local19
+         |  Set => scala/Predef.Set#
+         |  x => local17
+         |  default => local18
+         |  Function1 => scala/Function1#
+         |local16 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local20
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local17 => synthetic param x: A1
+         |  A1 => local13
+         |local18 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local13
+         |  B1 => local19
+         |local19 => typeparam B1 >: Set[A1]
+         |  Set => scala/Predef.Set#
+         |  A1 => local13
+         |local20 => param x: Int
+         |  Int => scala/Int#
+         |local21 => val local y: A1
+         |  A1 => local13
+         |local22 => param x: Int
+         |  Int => scala/Int#
+         |local23 => val local y: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|_empty_/t267. => final object t267 extends AnyRef { +5 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t267.a(). => method a: Set[A1] forSome { type A1 <: Int }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  Int => scala/Int#
+         |_empty_/t267.b(). => method b: Set[Int]
+         |  Set => scala/collection/immutable/Set#
+         |  Int => scala/Int#
+         |_empty_/t267.c(). => method c: List[Set[A1]] forSome { type A1 <: Int }
+         |  List => scala/collection/immutable/List#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local12
+         |  Int => scala/Int#
+         |_empty_/t267.d(). => method d: List[Set[Int]]
+         |  List => scala/collection/immutable/List#
+         |  Set => scala/Predef.Set#
+         |  Int => scala/Int#
+         |_empty_/t267.f(). => method f[T](t: T): Set[T]
+         |  T => _empty_/t267.f().[T]
+         |  t => _empty_/t267.f().(t)
+         |  Set => scala/Predef.Set#
+         |_empty_/t267.f().(t) => param t: T
+         |  T => _empty_/t267.f().[T]
+         |_empty_/t267.f().[T] => typeparam T
+         |local1 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local2 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  A1 => local1
+         |  Serializable => java/io/Serializable#
+         |local3 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local1
+         |  Int => scala/Int#
+         |  B1 => local7
+         |  x => local5
+         |  default => local6
+         |  Function1 => scala/Function1#
+         |local4 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local8
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local5 => synthetic param x: A1
+         |  A1 => local1
+         |local6 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local1
+         |  B1 => local7
+         |local7 => typeparam B1 >: A1
+         |  A1 => local1
+         |local8 => param x: Int
+         |  Int => scala/Int#
+         |local9 => val local y: A1
+         |  A1 => local1
+         |local10 => param x: Int
+         |  Int => scala/Int#
+         |local11 => val local y: Int
+         |  Int => scala/Int#
+         |local13 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local14 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Set[A1]] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Set => scala/Predef.Set#
+         |  A1 => local13
+         |  Serializable => java/io/Serializable#
+         |local15 => final method applyOrElse[A1 <: Int, B1 >: Set[A1]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local13
+         |  Int => scala/Int#
+         |  B1 => local19
+         |  Set => scala/Predef.Set#
+         |  x => local17
+         |  default => local18
+         |  Function1 => scala/Function1#
+         |local16 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local20
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local17 => synthetic param x: A1
+         |  A1 => local13
+         |local18 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local13
+         |  B1 => local19
+         |local19 => typeparam B1 >: Set[A1]
+         |  Set => scala/Predef.Set#
+         |  A1 => local13
+         |local20 => param x: Int
+         |  Int => scala/Int#
+         |local21 => val local y: A1
+         |  A1 => local13
+         |local22 => param x: Int
+         |  Int => scala/Int#
+         |local23 => val local y: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  synthetics(
+    "a match on the parameter of partial function lambdas and plain lambdas over a Set and to a Set",
+    """|object t267 {
+       |  def f[T](t: T): Set[T] = ???
+       |  def a = Set(1).collect(x => x match { case y => x })
+       |  def b = Set(1).map(x => x match { case y => x })
+       |  def c = List(1).collect(x => x match { case y => f(x) })
+       |  def d = List(1).map(x => x match { case y => f(x) })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[2:10..2:13): Set => *.apply[Int]
+         |  apply => scala/collection/generic/GenericCompanion#apply().
+         |  Int => scala/Int#
+         |[2:10..2:24): Set(1).collect => *[A1, Set[A1]]
+         |  A1 => local1
+         |  Set => scala/collection/immutable/Set#
+         |[2:10..2:54): Set(1).collect(x => x match { case y => x }) => *(Set.canBuildFrom[A1])
+         |  Set => scala/collection/immutable/Set.
+         |  canBuildFrom => scala/collection/immutable/Set.canBuildFrom().
+         |  A1 => local1
+         |[3:10..3:13): Set => *.apply[Int]
+         |  apply => scala/collection/generic/GenericCompanion#apply().
+         |  Int => scala/Int#
+         |[3:10..3:20): Set(1).map => *[Int, Set[Int]]
+         |  Int => scala/Int#
+         |  Set => scala/collection/immutable/Set#
+         |[3:10..3:50): Set(1).map(x => x match { case y => x }) => *(Set.canBuildFrom[Int])
+         |  Set => scala/collection/immutable/Set.
+         |  canBuildFrom => scala/collection/immutable/Set.canBuildFrom().
+         |  Int => scala/Int#
+         |[4:10..4:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[4:10..4:25): List(1).collect => *[Set[A1], List[Set[A1]]]
+         |  Set => scala/Predef.Set#
+         |  A1 => local13
+         |  List => scala/collection/immutable/List#
+         |[4:10..4:58): List(1).collect(x => x match { case y => f(x) }) => *(List.canBuildFrom[Set[A1]])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Set => scala/Predef.Set#
+         |  A1 => local13
+         |[4:51..4:52): f => *[A1]
+         |  A1 => local13
+         |[5:10..5:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[5:10..5:21): List(1).map => *[Set[Int], List[Set[Int]]]
+         |  Set => scala/Predef.Set#
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[5:10..5:54): List(1).map(x => x match { case y => f(x) }) => *(List.canBuildFrom[Set[Int]])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Set => scala/Predef.Set#
+         |  Int => scala/Int#
+         |[5:47..5:48): f => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|[2:10..2:13): Set => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[2:10..2:24): Set(1).collect => *[A1]
+         |  A1 => local1
+         |[3:10..3:13): Set => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[3:10..3:20): Set(1).map => *[Int]
+         |  Int => scala/Int#
+         |[4:10..4:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[4:10..4:25): List(1).collect => *[Set[A1]]
+         |  Set => scala/Predef.Set#
+         |  A1 => local13
+         |[4:51..4:52): f => *[A1]
+         |  A1 => local13
+         |[5:10..5:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[5:10..5:21): List(1).map => *[Set[Int]]
+         |  Set => scala/Predef.Set#
+         |  Int => scala/Int#
+         |[5:47..5:48): f => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  if (ScalaVersion.is212) symbols(
+    "a match on the parameter of partial function lambdas and plain lambdas over an Array",
+    """|object t268 {
+       |  def a = Array(1).collect(x => x match { case y => x })
+       |  def b = Array(1).map(x => x match { case y => x })
+       |}
+       |""".stripMargin,
+    """|_empty_/t268. => final object t268 extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t268.a(). => method a: ArraySeq[A1] forSome { type A1 <: Int }
+       |  ArraySeq => scala/collection/mutable/ArraySeq#
+       |  A1 => local0
+       |  Int => scala/Int#
+       |_empty_/t268.b(). => method b: Array[Int]
+       |  Array => scala/Array#
+       |  Int => scala/Int#
+       |local1 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local2 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  A1 => local1
+       |  Serializable => scala/Serializable#
+       |local3 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local1
+       |  Int => scala/Int#
+       |  B1 => local7
+       |  x => local5
+       |  default => local6
+       |  Function1 => scala/Function1#
+       |local4 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local8
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local5 => synthetic param x: A1
+       |  A1 => local1
+       |local6 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local1
+       |  B1 => local7
+       |local7 => typeparam B1 >: A1
+       |  A1 => local1
+       |local8 => param x: Int
+       |  Int => scala/Int#
+       |local9 => val local y: A1
+       |  A1 => local1
+       |local10 => param x: Int
+       |  Int => scala/Int#
+       |local11 => val local y: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is212) synthetics(
+    "a match on the parameter of partial function lambdas and plain lambdas over an Array",
+    """|object t268 {
+       |  def a = Array(1).collect(x => x match { case y => x })
+       |  def b = Array(1).map(x => x match { case y => x })
+       |}
+       |""".stripMargin,
+    """|[1:10..1:15): Array => *.apply
+       |  apply => scala/Array.apply(+5).
+       |[1:10..1:18): Array(1) => intArrayOps(*)
+       |  intArrayOps => scala/Predef.intArrayOps().
+       |[1:10..1:26): Array(1).collect => *[A1, ArraySeq[A1]]
+       |  A1 => local1
+       |  ArraySeq => scala/collection/mutable/ArraySeq#
+       |[1:10..1:56): Array(1).collect(x => x match { case y => x }) => *(fallbackCanBuildFrom(dummyImplicit))
+       |  fallbackCanBuildFrom => scala/FallbackArrayBuilding#fallbackCanBuildFrom().
+       |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+       |[2:10..2:15): Array => *.apply
+       |  apply => scala/Array.apply(+5).
+       |[2:10..2:18): Array(1) => intArrayOps(*)
+       |  intArrayOps => scala/Predef.intArrayOps().
+       |[2:10..2:22): Array(1).map => *[Int, Array[Int]]
+       |  Int => scala/Int#
+       |  Array => scala/Array#
+       |[2:10..2:52): Array(1).map(x => x match { case y => x }) => *(canBuildFrom((`macro-expandee` : ClassTag[Int])))
+       |  canBuildFrom => scala/Array.canBuildFrom().
+       |  ClassTag => scala/reflect/ClassTag#
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) symbols(
+    "a plain lambda over a member typed by a partial function lambda over a Set",
+    """|object t269 {
+       |  val s = Set(1).collect(x => x)
+       |  def t = s.map(y => y)
+       |  val u = Set(1).map(x => x)
+       |  def v = u.map(y => y)
+       |}
+       |""".stripMargin,
+    """|_empty_/t269. => final object t269 extends AnyRef { +4 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t269.s. => val method s: Set[A1] forSome { type A1 <: Int }
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local8
+       |  Int => scala/Int#
+       |_empty_/t269.t(). => method t: Set[A1] forSome { type A1 <: Int }
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local9
+       |  Int => scala/Int#
+       |_empty_/t269.u. => val method u: Set[Int]
+       |  Set => scala/collection/immutable/Set#
+       |  Int => scala/Int#
+       |_empty_/t269.v(). => method v: Set[Int]
+       |  Set => scala/collection/immutable/Set#
+       |  Int => scala/Int#
+       |local0 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  A1 => local0
+       |  Serializable => java/io/Serializable#
+       |local2 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local0
+       |  Int => scala/Int#
+       |  B1 => local6
+       |  x => local4
+       |  default => local5
+       |  Function1 => scala/Function1#
+       |local3 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local7
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local4 => synthetic param x: A1
+       |  A1 => local0
+       |local5 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local0
+       |  B1 => local6
+       |local6 => typeparam B1 >: A1
+       |  A1 => local0
+       |local7 => param x: Int
+       |  Int => scala/Int#
+       |local10 => abstract covariant type A1 <: Int
+       |  Int => scala/Int#
+       |local11 => param y: A1
+       |  A1 => local10
+       |local12 => param x: Int
+       |  Int => scala/Int#
+       |local13 => param y: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) synthetics(
+    "a plain lambda over a member typed by a partial function lambda over a Set",
+    """|object t269 {
+       |  val s = Set(1).collect(x => x)
+       |  def t = s.map(y => y)
+       |  val u = Set(1).map(x => x)
+       |  def v = u.map(y => y)
+       |}
+       |""".stripMargin,
+    """|[1:10..1:13): Set => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[1:10..1:24): Set(1).collect => *[A1]
+       |  A1 => local0
+       |[2:10..2:15): s.map => *[A1]
+       |  A1 => local10
+       |[3:10..3:13): Set => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[3:10..3:20): Set(1).map => *[Int]
+       |  Int => scala/Int#
+       |[4:10..4:15): u.map => *[Int]
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  symbols(
+    "a plain lambda over a member typed by a match on the parameter of a partial function lambda over a Set",
+    """|object t270 {
+       |  val s = Set(1).collect(x => x match { case y => x })
+       |  def t = s.map(z => z)
+       |  val u = Set(1).map(x => x match { case y => x })
+       |  def v = u.map(z => z)
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/t270. => final object t270 extends AnyRef { +4 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t270.s. => val method s: Set[A1] forSome { type A1 <: Int }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local9
+         |  Int => scala/Int#
+         |_empty_/t270.t(). => method t: Set[A1] forSome { type A1 <: Int }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  Int => scala/Int#
+         |_empty_/t270.u. => val method u: Set[Int]
+         |  Set => scala/collection/immutable/Set#
+         |  Int => scala/Int#
+         |_empty_/t270.v(). => method v: Set[Int]
+         |  Set => scala/collection/immutable/Set#
+         |  Int => scala/Int#
+         |local0 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  A1 => local0
+         |  Serializable => scala/Serializable#
+         |local2 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local0
+         |  Int => scala/Int#
+         |  B1 => local6
+         |  x => local4
+         |  default => local5
+         |  Function1 => scala/Function1#
+         |local3 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local7
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local4 => synthetic param x: A1
+         |  A1 => local0
+         |local5 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local0
+         |  B1 => local6
+         |local6 => typeparam B1 >: A1
+         |  A1 => local0
+         |local7 => param x: Int
+         |  Int => scala/Int#
+         |local8 => val local y: A1
+         |  A1 => local0
+         |local11 => abstract covariant type A1 <: Int
+         |  Int => scala/Int#
+         |local12 => param z: A1
+         |  A1 => local11
+         |local13 => param x: Int
+         |  Int => scala/Int#
+         |local14 => val local y: Int
+         |  Int => scala/Int#
+         |local15 => param z: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|_empty_/t270. => final object t270 extends AnyRef { +4 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t270.s. => val method s: Set[A1] forSome { type A1 <: Int }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local9
+         |  Int => scala/Int#
+         |_empty_/t270.t(). => method t: Set[A1] forSome { type A1 <: Int }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  Int => scala/Int#
+         |_empty_/t270.u. => val method u: Set[Int]
+         |  Set => scala/collection/immutable/Set#
+         |  Int => scala/Int#
+         |_empty_/t270.v(). => method v: Set[Int]
+         |  Set => scala/collection/immutable/Set#
+         |  Int => scala/Int#
+         |local0 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, A1] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  A1 => local0
+         |  Serializable => java/io/Serializable#
+         |local2 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local0
+         |  Int => scala/Int#
+         |  B1 => local6
+         |  x => local4
+         |  default => local5
+         |  Function1 => scala/Function1#
+         |local3 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local7
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local4 => synthetic param x: A1
+         |  A1 => local0
+         |local5 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local0
+         |  B1 => local6
+         |local6 => typeparam B1 >: A1
+         |  A1 => local0
+         |local7 => param x: Int
+         |  Int => scala/Int#
+         |local8 => val local y: A1
+         |  A1 => local0
+         |local11 => abstract covariant type A1 <: Int
+         |  Int => scala/Int#
+         |local12 => param z: A1
+         |  A1 => local11
+         |local13 => param x: Int
+         |  Int => scala/Int#
+         |local14 => val local y: Int
+         |  Int => scala/Int#
+         |local15 => param z: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  synthetics(
+    "a plain lambda over a member typed by a match on the parameter of a partial function lambda over a Set",
+    """|object t270 {
+       |  val s = Set(1).collect(x => x match { case y => x })
+       |  def t = s.map(z => z)
+       |  val u = Set(1).map(x => x match { case y => x })
+       |  def v = u.map(z => z)
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[1:10..1:13): Set => *.apply[Int]
+         |  apply => scala/collection/generic/GenericCompanion#apply().
+         |  Int => scala/Int#
+         |[1:10..1:24): Set(1).collect => *[A1, Set[A1]]
+         |  A1 => local0
+         |  Set => scala/collection/immutable/Set#
+         |[1:10..1:54): Set(1).collect(x => x match { case y => x }) => *(Set.canBuildFrom[A1])
+         |  Set => scala/collection/immutable/Set.
+         |  canBuildFrom => scala/collection/immutable/Set.canBuildFrom().
+         |  A1 => local0
+         |[2:10..2:15): s.map => *[A1, Set[A1]]
+         |  A1 => local11
+         |  Set => scala/collection/immutable/Set#
+         |[2:10..2:23): s.map(z => z) => *(Set.canBuildFrom[A1])
+         |  Set => scala/collection/immutable/Set.
+         |  canBuildFrom => scala/collection/immutable/Set.canBuildFrom().
+         |  A1 => local11
+         |[3:10..3:13): Set => *.apply[Int]
+         |  apply => scala/collection/generic/GenericCompanion#apply().
+         |  Int => scala/Int#
+         |[3:10..3:20): Set(1).map => *[Int, Set[Int]]
+         |  Int => scala/Int#
+         |  Set => scala/collection/immutable/Set#
+         |[3:10..3:50): Set(1).map(x => x match { case y => x }) => *(Set.canBuildFrom[Int])
+         |  Set => scala/collection/immutable/Set.
+         |  canBuildFrom => scala/collection/immutable/Set.canBuildFrom().
+         |  Int => scala/Int#
+         |[4:10..4:15): u.map => *[Int, Set[Int]]
+         |  Int => scala/Int#
+         |  Set => scala/collection/immutable/Set#
+         |[4:10..4:23): u.map(z => z) => *(Set.canBuildFrom[Int])
+         |  Set => scala/collection/immutable/Set.
+         |  canBuildFrom => scala/collection/immutable/Set.canBuildFrom().
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|[1:10..1:13): Set => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[1:10..1:24): Set(1).collect => *[A1]
+         |  A1 => local0
+         |[2:10..2:15): s.map => *[A1]
+         |  A1 => local11
+         |[3:10..3:13): Set => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[3:10..3:20): Set(1).map => *[Int]
+         |  Int => scala/Int#
+         |[4:10..4:15): u.map => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) symbols(
+    "a member typed by a partial function lambda over a Set of String, the result of partial function lambdas and plain lambdas",
+    """|object t271 {
+       |  val s = Set("").collect(x => x)
+       |  def t = List(1).collect(x => s)
+       |  def u = List(1).map(x => s)
+       |}
+       |""".stripMargin,
+    """|_empty_/t271. => final object t271 extends AnyRef { +3 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t271.s. => val method s: Set[A1] forSome { type A1 <: String }
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local8
+       |  String => java/lang/String#
+       |_empty_/t271.t(). => method t: List[Set[A1] forSome { type A1 <: String }]
+       |  List => scala/collection/immutable/List#
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local9
+       |  String => java/lang/String#
+       |_empty_/t271.u(). => method u: List[Set[A1] forSome { type A1 <: String }]
+       |  List => scala/collection/immutable/List#
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local18
+       |  String => java/lang/String#
+       |local0 => typeparam A1 <: String
+       |  String => java/lang/String#
+       |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[String, A1] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  String => java/lang/String#
+       |  A1 => local0
+       |  Serializable => java/io/Serializable#
+       |local2 => final method applyOrElse[A1 <: String, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local0
+       |  String => java/lang/String#
+       |  B1 => local6
+       |  x => local4
+       |  default => local5
+       |  Function1 => scala/Function1#
+       |local3 => final method isDefinedAt(x: String): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local7
+       |  String => java/lang/String#
+       |  Boolean => scala/Boolean#
+       |local4 => synthetic param x: A1
+       |  A1 => local0
+       |local5 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local0
+       |  B1 => local6
+       |local6 => typeparam B1 >: A1
+       |  A1 => local0
+       |local7 => param x: String
+       |  String => java/lang/String#
+       |local10 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Set[A1] forSome { type A1 <: String }] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local9
+       |  String => java/lang/String#
+       |  Serializable => java/io/Serializable#
+       |local11 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: String }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local16
+       |  Int => scala/Int#
+       |  B1 => local15
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local9
+       |  String => java/lang/String#
+       |  x => local13
+       |  default => local14
+       |  Function1 => scala/Function1#
+       |local12 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local17
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local13 => synthetic param x: A1
+       |  A1 => local16
+       |local14 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local16
+       |  B1 => local15
+       |local15 => typeparam B1 >: Set[A1] forSome { type A1 <: String }
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local9
+       |  String => java/lang/String#
+       |local16 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local17 => param x: Int
+       |  Int => scala/Int#
+       |local19 => param x: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) synthetics(
+    "a member typed by a partial function lambda over a Set of String, the result of partial function lambdas and plain lambdas",
+    """|object t271 {
+       |  val s = Set("").collect(x => x)
+       |  def t = List(1).collect(x => s)
+       |  def u = List(1).map(x => s)
+       |}
+       |""".stripMargin,
+    """|[1:10..1:13): Set => *.apply[String]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  String => java/lang/String#
+       |[1:10..1:25): Set("").collect => *[A1]
+       |  A1 => local0
+       |[2:10..2:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[2:10..2:25): List(1).collect => *[Set[A1] forSome { type A1 <: String }]
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local9
+       |  String => java/lang/String#
+       |[3:10..3:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[3:10..3:21): List(1).map => *[Set[A1] forSome { type A1 <: String }]
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local18
+       |  String => java/lang/String#
+       |""".stripMargin,
+  )
+
+  symbols(
+    "a member typed by a match on the parameter of a partial function lambda over a Set of String, the result of a match on the parameter of partial function lambdas and plain lambdas",
+    """|object t272 {
+       |  val s = Set("").collect(x => x match { case y => x })
+       |  def t = List(1).collect(x => x match { case y => s })
+       |  def u = List(1).map(x => x match { case y => s })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/t272. => final object t272 extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t272.s. => val method s: Set[A1] forSome { type A1 <: String }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local9
+         |  String => java/lang/String#
+         |_empty_/t272.t(). => method t: List[Set[A1] forSome { type A1 <: String }]
+         |  List => scala/collection/immutable/List#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  String => java/lang/String#
+         |_empty_/t272.u(). => method u: List[Set[A1] forSome { type A1 <: String }]
+         |  List => scala/collection/immutable/List#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local20
+         |  String => java/lang/String#
+         |local0 => typeparam A1 <: String
+         |  String => java/lang/String#
+         |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[String, A1] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  String => java/lang/String#
+         |  A1 => local0
+         |  Serializable => scala/Serializable#
+         |local2 => final method applyOrElse[A1 <: String, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local0
+         |  String => java/lang/String#
+         |  B1 => local6
+         |  x => local4
+         |  default => local5
+         |  Function1 => scala/Function1#
+         |local3 => final method isDefinedAt(x: String): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local7
+         |  String => java/lang/String#
+         |  Boolean => scala/Boolean#
+         |local4 => synthetic param x: A1
+         |  A1 => local0
+         |local5 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local0
+         |  B1 => local6
+         |local6 => typeparam B1 >: A1
+         |  A1 => local0
+         |local7 => param x: String
+         |  String => java/lang/String#
+         |local8 => val local y: A1
+         |  A1 => local0
+         |local11 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Set[A1] forSome { type A1 <: String }] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  String => java/lang/String#
+         |  Serializable => scala/Serializable#
+         |local12 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: String }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local17
+         |  Int => scala/Int#
+         |  B1 => local16
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  String => java/lang/String#
+         |  x => local14
+         |  default => local15
+         |  Function1 => scala/Function1#
+         |local13 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local18
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local14 => synthetic param x: A1
+         |  A1 => local17
+         |local15 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local17
+         |  B1 => local16
+         |local16 => typeparam B1 >: Set[A1] forSome { type A1 <: String }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  String => java/lang/String#
+         |local17 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local18 => param x: Int
+         |  Int => scala/Int#
+         |local19 => val local y: A1
+         |  A1 => local17
+         |local21 => param x: Int
+         |  Int => scala/Int#
+         |local22 => val local y: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|_empty_/t272. => final object t272 extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t272.s. => val method s: Set[A1] forSome { type A1 <: String }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local9
+         |  String => java/lang/String#
+         |_empty_/t272.t(). => method t: List[Set[A1] forSome { type A1 <: String }]
+         |  List => scala/collection/immutable/List#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  String => java/lang/String#
+         |_empty_/t272.u(). => method u: List[Set[A1] forSome { type A1 <: String }]
+         |  List => scala/collection/immutable/List#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local20
+         |  String => java/lang/String#
+         |local0 => typeparam A1 <: String
+         |  String => java/lang/String#
+         |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[String, A1] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  String => java/lang/String#
+         |  A1 => local0
+         |  Serializable => java/io/Serializable#
+         |local2 => final method applyOrElse[A1 <: String, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local0
+         |  String => java/lang/String#
+         |  B1 => local6
+         |  x => local4
+         |  default => local5
+         |  Function1 => scala/Function1#
+         |local3 => final method isDefinedAt(x: String): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local7
+         |  String => java/lang/String#
+         |  Boolean => scala/Boolean#
+         |local4 => synthetic param x: A1
+         |  A1 => local0
+         |local5 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local0
+         |  B1 => local6
+         |local6 => typeparam B1 >: A1
+         |  A1 => local0
+         |local7 => param x: String
+         |  String => java/lang/String#
+         |local8 => val local y: A1
+         |  A1 => local0
+         |local11 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Set[A1] forSome { type A1 <: String }] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  String => java/lang/String#
+         |  Serializable => java/io/Serializable#
+         |local12 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: String }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local17
+         |  Int => scala/Int#
+         |  B1 => local16
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  String => java/lang/String#
+         |  x => local14
+         |  default => local15
+         |  Function1 => scala/Function1#
+         |local13 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local18
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local14 => synthetic param x: A1
+         |  A1 => local17
+         |local15 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local17
+         |  B1 => local16
+         |local16 => typeparam B1 >: Set[A1] forSome { type A1 <: String }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  String => java/lang/String#
+         |local17 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local18 => param x: Int
+         |  Int => scala/Int#
+         |local19 => val local y: A1
+         |  A1 => local17
+         |local21 => param x: Int
+         |  Int => scala/Int#
+         |local22 => val local y: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  synthetics(
+    "a member typed by a match on the parameter of a partial function lambda over a Set of String, the result of a match on the parameter of partial function lambdas and plain lambdas",
+    """|object t272 {
+       |  val s = Set("").collect(x => x match { case y => x })
+       |  def t = List(1).collect(x => x match { case y => s })
+       |  def u = List(1).map(x => x match { case y => s })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[1:10..1:13): Set => *.apply[String]
+         |  apply => scala/collection/generic/GenericCompanion#apply().
+         |  String => java/lang/String#
+         |[1:10..1:25): Set("").collect => *[A1, Set[A1]]
+         |  A1 => local0
+         |  Set => scala/collection/immutable/Set#
+         |[1:10..1:55): Set("").collect(x => x match { case y => x }) => *(Set.canBuildFrom[A1])
+         |  Set => scala/collection/immutable/Set.
+         |  canBuildFrom => scala/collection/immutable/Set.canBuildFrom().
+         |  A1 => local0
+         |[2:10..2:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[2:10..2:25): List(1).collect => *[Set[A1] forSome { type A1 <: String }, List[Set[A1] forSome { type A1 <: String }]]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  String => java/lang/String#
+         |  List => scala/collection/immutable/List#
+         |[2:10..2:55): List(1).collect(x => x match { case y => s }) => *(List.canBuildFrom[Set[A1] forSome { type A1 <: String }])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  String => java/lang/String#
+         |[3:10..3:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[3:10..3:21): List(1).map => *[Set[A1] forSome { type A1 <: String }, List[Set[A1] forSome { type A1 <: String }]]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local20
+         |  String => java/lang/String#
+         |  List => scala/collection/immutable/List#
+         |[3:10..3:51): List(1).map(x => x match { case y => s }) => *(List.canBuildFrom[Set[A1] forSome { type A1 <: String }])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local20
+         |  String => java/lang/String#
+         |""".stripMargin
+    else
+      """|[1:10..1:13): Set => *.apply[String]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  String => java/lang/String#
+         |[1:10..1:25): Set("").collect => *[A1]
+         |  A1 => local0
+         |[2:10..2:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[2:10..2:25): List(1).collect => *[Set[A1] forSome { type A1 <: String }]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local10
+         |  String => java/lang/String#
+         |[3:10..3:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[3:10..3:21): List(1).map => *[Set[A1] forSome { type A1 <: String }]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local20
+         |  String => java/lang/String#
+         |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) symbols(
+    "a library's existential result named A1 applied in partial function lambdas and plain lambdas",
+    """|import example.ExistentialResult.lib
+       |object t273 {
+       |  def a = lib(1)
+       |  def t = List(1).collect(x => lib(x))
+       |  def u = List(1).map(x => lib(x))
+       |}
+       |""".stripMargin,
+    """|_empty_/t273. => final object t273 extends AnyRef { +3 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/t273.a(). => method a: Set[A1] forSome { type A1 <: Int }
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local0
+       |  Int => scala/Int#
+       |_empty_/t273.t(). => method t: List[Set[A1] forSome { type A1 <: Int }]
+       |  List => scala/collection/immutable/List#
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local1
+       |  Int => scala/Int#
+       |_empty_/t273.u(). => method u: List[Set[A1] forSome { type A1 <: Int }]
+       |  List => scala/collection/immutable/List#
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local11
+       |  Int => scala/Int#
+       |local3 => typeparam A1 <: Int
+       |  Int => scala/Int#
+       |local4 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Set[A1] forSome { type A1 <: A1 }] with Serializable { +2 decls }
+       |  SerialVersionUID => scala/SerialVersionUID#
+       |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+       |  Int => scala/Int#
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local2
+       |  A1 => local3
+       |  Serializable => java/io/Serializable#
+       |local5 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: A1 }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |  A1 => local3
+       |  Int => scala/Int#
+       |  B1 => local9
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local2
+       |  x => local7
+       |  default => local8
+       |  Function1 => scala/Function1#
+       |local6 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local10
+       |  Int => scala/Int#
+       |  Boolean => scala/Boolean#
+       |local7 => synthetic param x: A1
+       |  A1 => local3
+       |local8 => synthetic param default: Function1[A1, B1]
+       |  Function1 => scala/Function1#
+       |  A1 => local3
+       |  B1 => local9
+       |local9 => typeparam B1 >: Set[A1] forSome { type A1 <: A1 }
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local2
+       |  A1 => local3
+       |local10 => param x: Int
+       |  Int => scala/Int#
+       |local12 => param x: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is213) synthetics(
+    "a library's existential result named A1 applied in partial function lambdas and plain lambdas",
+    """|import example.ExistentialResult.lib
+       |object t273 {
+       |  def a = lib(1)
+       |  def t = List(1).collect(x => lib(x))
+       |  def u = List(1).map(x => lib(x))
+       |}
+       |""".stripMargin,
+    """|[2:10..2:13): lib => *[Int]
+       |  Int => scala/Int#
+       |[3:10..3:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[3:10..3:25): List(1).collect => *[Set[A1] forSome { type A1 <: A1 }]
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local2
+       |  A1 => local3
+       |[3:31..3:34): lib => *[A1]
+       |  A1 => local3
+       |[4:10..4:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[4:10..4:21): List(1).map => *[Set[A1] forSome { type A1 <: Int }]
+       |  Set => scala/collection/immutable/Set#
+       |  A1 => local11
+       |  Int => scala/Int#
+       |[4:27..4:30): lib => *[Int]
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  symbols(
+    "a library's existential result named A1 applied in a match on the parameter of partial function lambdas and plain lambdas",
+    """|import example.ExistentialResult.lib
+       |object t274 {
+       |  def t = List(1).collect(x => x match { case y => lib(x) })
+       |  def u = List(1).map(x => x match { case y => lib(x) })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/t274. => final object t274 extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t274.t(). => method t: List[Set[A1] forSome { type A1 <: Int }]
+         |  List => scala/collection/immutable/List#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  Int => scala/Int#
+         |_empty_/t274.u(). => method u: List[Set[A1] forSome { type A1 <: Int }]
+         |  List => scala/collection/immutable/List#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local11
+         |  Int => scala/Int#
+         |local2 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local3 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Set[A1] forSome { type A1 <: A1 }] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local1
+         |  A1 => local2
+         |  Serializable => scala/Serializable#
+         |local4 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: A1 }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local2
+         |  Int => scala/Int#
+         |  B1 => local8
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local1
+         |  x => local6
+         |  default => local7
+         |  Function1 => scala/Function1#
+         |local5 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local9
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local6 => synthetic param x: A1
+         |  A1 => local2
+         |local7 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local2
+         |  B1 => local8
+         |local8 => typeparam B1 >: Set[A1] forSome { type A1 <: A1 }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local1
+         |  A1 => local2
+         |local9 => param x: Int
+         |  Int => scala/Int#
+         |local10 => val local y: A1
+         |  A1 => local2
+         |local12 => param x: Int
+         |  Int => scala/Int#
+         |local13 => val local y: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|_empty_/t274. => final object t274 extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t274.t(). => method t: List[Set[A1] forSome { type A1 <: Int }]
+         |  List => scala/collection/immutable/List#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local0
+         |  Int => scala/Int#
+         |_empty_/t274.u(). => method u: List[Set[A1] forSome { type A1 <: Int }]
+         |  List => scala/collection/immutable/List#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local11
+         |  Int => scala/Int#
+         |local2 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local3 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Set[A1] forSome { type A1 <: A1 }] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local1
+         |  A1 => local2
+         |  Serializable => java/io/Serializable#
+         |local4 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: A1 }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local2
+         |  Int => scala/Int#
+         |  B1 => local8
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local1
+         |  x => local6
+         |  default => local7
+         |  Function1 => scala/Function1#
+         |local5 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local9
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local6 => synthetic param x: A1
+         |  A1 => local2
+         |local7 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local2
+         |  B1 => local8
+         |local8 => typeparam B1 >: Set[A1] forSome { type A1 <: A1 }
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local1
+         |  A1 => local2
+         |local9 => param x: Int
+         |  Int => scala/Int#
+         |local10 => val local y: A1
+         |  A1 => local2
+         |local12 => param x: Int
+         |  Int => scala/Int#
+         |local13 => val local y: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  synthetics(
+    "a library's existential result named A1 applied in a match on the parameter of partial function lambdas and plain lambdas",
+    """|import example.ExistentialResult.lib
+       |object t274 {
+       |  def t = List(1).collect(x => x match { case y => lib(x) })
+       |  def u = List(1).map(x => x match { case y => lib(x) })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[2:10..2:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[2:10..2:25): List(1).collect => *[Set[A1] forSome { type A1 <: A1 }, List[Set[A1] forSome { type A1 <: A1 }]]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local1
+         |  A1 => local2
+         |  List => scala/collection/immutable/List#
+         |[2:10..2:60): List(1).collect(x => x match { case y => lib(x) }) => *(List.canBuildFrom[Set[A1] forSome { type A1 <: A1 }])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local1
+         |  A1 => local2
+         |[2:51..2:54): lib => *[A1]
+         |  A1 => local2
+         |[3:10..3:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[3:10..3:21): List(1).map => *[Set[A1] forSome { type A1 <: Int }, List[Set[A1] forSome { type A1 <: Int }]]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local11
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[3:10..3:56): List(1).map(x => x match { case y => lib(x) }) => *(List.canBuildFrom[Set[A1] forSome { type A1 <: Int }])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local11
+         |  Int => scala/Int#
+         |[3:47..3:50): lib => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|[2:10..2:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[2:10..2:25): List(1).collect => *[Set[A1] forSome { type A1 <: A1 }]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local1
+         |  A1 => local2
+         |[2:51..2:54): lib => *[A1]
+         |  A1 => local2
+         |[3:10..3:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[3:10..3:21): List(1).map => *[Set[A1] forSome { type A1 <: Int }]
+         |  Set => scala/collection/immutable/Set#
+         |  A1 => local11
+         |  Int => scala/Int#
+         |[3:47..3:50): lib => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  symbols(
+    "written existential results with and without a type parameter, applied outside lambdas and in a match on the parameter of partial function lambdas and plain lambdas",
+    """|object t275 {
+       |  def f[T](t: T): Class[_ <: T] = ???
+       |  def g(t: Int): Class[_ <: Int] = ???
+       |  def a = f(1)
+       |  def b = g(1)
+       |  def c = List(1).collect(x => x match { case y => g(x) })
+       |  def d = List(1).map(x => x match { case y => g(x) })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/t275. => final object t275 extends AnyRef { +6 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t275.a(). => method a: Class[_] forSome { type _ <: T }
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t275.f().[T]
+         |_empty_/t275.b(). => method b: Class[_] forSome { type _ <: Int }
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |_empty_/t275.c(). => method c: List[Class[_] forSome { type _ <: Int }]
+         |  List => scala/collection/immutable/List#
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |_empty_/t275.d(). => method d: List[Class[_] forSome { type _ <: Int }]
+         |  List => scala/collection/immutable/List#
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |_empty_/t275.f(). => method f[T](t: T): Class[_] forSome { type _ <: T }
+         |  T => _empty_/t275.f().[T]
+         |  t => _empty_/t275.f().(t)
+         |  Class => scala/Predef.Class#
+         |  _ => local0
+         |_empty_/t275.f().(t) => param t: T
+         |  T => _empty_/t275.f().[T]
+         |_empty_/t275.f().[T] => typeparam T
+         |_empty_/t275.g(). => method g(t: Int): Class[_] forSome { type _ <: Int }
+         |  t => _empty_/t275.g().(t)
+         |  Int => scala/Int#
+         |  Class => scala/Predef.Class#
+         |  _ => local1
+         |_empty_/t275.g().(t) => param t: Int
+         |  Int => scala/Int#
+         |local0 => synthetic abstract type _ <: T
+         |  T => _empty_/t275.f().[T]
+         |local1 => synthetic abstract type _ <: Int
+         |  Int => scala/Int#
+         |local2 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Class[_] forSome { type _ <: Int }] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Serializable => scala/Serializable#
+         |local3 => final method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local8
+         |  Int => scala/Int#
+         |  B1 => local7
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  x => local5
+         |  default => local6
+         |  Function1 => scala/Function1#
+         |local4 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local9
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local5 => synthetic param x: A1
+         |  A1 => local8
+         |local6 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local8
+         |  B1 => local7
+         |local7 => typeparam B1 >: Class[_] forSome { type _ <: Int }
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |local8 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local9 => param x: Int
+         |  Int => scala/Int#
+         |local10 => val local y: A1
+         |  A1 => local8
+         |local11 => param x: Int
+         |  Int => scala/Int#
+         |local12 => val local y: Int
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|_empty_/t275. => final object t275 extends AnyRef { +6 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/t275.a(). => method a: Class[_] forSome { type _ <: T }
+         |  Class => java/lang/Class#
+         |  _ => local0
+         |  T => _empty_/t275.f().[T]
+         |_empty_/t275.b(). => method b: Class[_] forSome { type _ <: Int }
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |_empty_/t275.c(). => method c: List[Class[_] forSome { type _ <: Int }]
+         |  List => scala/collection/immutable/List#
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |_empty_/t275.d(). => method d: List[Class[_] forSome { type _ <: Int }]
+         |  List => scala/collection/immutable/List#
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |_empty_/t275.f(). => method f[T](t: T): Class[_] forSome { type _ <: T }
+         |  T => _empty_/t275.f().[T]
+         |  t => _empty_/t275.f().(t)
+         |  Class => scala/Predef.Class#
+         |  _ => local0
+         |_empty_/t275.f().(t) => param t: T
+         |  T => _empty_/t275.f().[T]
+         |_empty_/t275.f().[T] => typeparam T
+         |_empty_/t275.g(). => method g(t: Int): Class[_] forSome { type _ <: Int }
+         |  t => _empty_/t275.g().(t)
+         |  Int => scala/Int#
+         |  Class => scala/Predef.Class#
+         |  _ => local1
+         |_empty_/t275.g().(t) => param t: Int
+         |  Int => scala/Int#
+         |local0 => synthetic abstract type _ <: T
+         |  T => _empty_/t275.f().[T]
+         |local1 => synthetic abstract type _ <: Int
+         |  Int => scala/Int#
+         |local2 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Class[_] forSome { type _ <: Int }] with Serializable { +2 decls }
+         |  SerialVersionUID => scala/SerialVersionUID#
+         |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+         |  Int => scala/Int#
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Serializable => java/io/Serializable#
+         |local3 => final method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local8
+         |  Int => scala/Int#
+         |  B1 => local7
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  x => local5
+         |  default => local6
+         |  Function1 => scala/Function1#
+         |local4 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x => local9
+         |  Int => scala/Int#
+         |  Boolean => scala/Boolean#
+         |local5 => synthetic param x: A1
+         |  A1 => local8
+         |local6 => synthetic param default: Function1[A1, B1]
+         |  Function1 => scala/Function1#
+         |  A1 => local8
+         |  B1 => local7
+         |local7 => typeparam B1 >: Class[_] forSome { type _ <: Int }
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |local8 => typeparam A1 <: Int
+         |  Int => scala/Int#
+         |local9 => param x: Int
+         |  Int => scala/Int#
+         |local10 => val local y: A1
+         |  A1 => local8
+         |local11 => param x: Int
+         |  Int => scala/Int#
+         |local12 => val local y: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  synthetics(
+    "written existential results with and without a type parameter, applied outside lambdas and in a match on the parameter of partial function lambdas and plain lambdas",
+    """|object t275 {
+       |  def f[T](t: T): Class[_ <: T] = ???
+       |  def g(t: Int): Class[_ <: Int] = ???
+       |  def a = f(1)
+       |  def b = g(1)
+       |  def c = List(1).collect(x => x match { case y => g(x) })
+       |  def d = List(1).map(x => x match { case y => g(x) })
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[3:10..3:11): f => *[Int]
+         |  Int => scala/Int#
+         |[5:10..5:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[5:10..5:25): List(1).collect => *[Class[_] forSome { type _ <: Int }, List[Class[_] forSome { type _ <: Int }]]
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[5:10..5:58): List(1).collect(x => x match { case y => g(x) }) => *(List.canBuildFrom[Class[_] forSome { type _ <: Int }])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |[6:10..6:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[6:10..6:21): List(1).map => *[Class[_] forSome { type _ <: Int }, List[Class[_] forSome { type _ <: Int }]]
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[6:10..6:54): List(1).map(x => x match { case y => g(x) }) => *(List.canBuildFrom[Class[_] forSome { type _ <: Int }])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |""".stripMargin
+    else
+      """|[3:10..3:11): f => *[Int]
+         |  Int => scala/Int#
+         |[5:10..5:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[5:10..5:25): List(1).collect => *[Class[_] forSome { type _ <: Int }]
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
+         |[6:10..6:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[6:10..6:21): List(1).map => *[Class[_] forSome { type _ <: Int }]
+         |  Class => java/lang/Class#
+         |  _ => local1
+         |  Int => scala/Int#
          |""".stripMargin,
   )
 
