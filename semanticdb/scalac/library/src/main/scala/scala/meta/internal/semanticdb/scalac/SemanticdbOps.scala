@@ -7,6 +7,7 @@ trait SemanticdbOps
     with VersionSpecificOps
     with SymbolInformationOps
     with TextDocumentOps
+    with TyperOps
     with InputOps
     with LanguageOps
     with DiagnosticOps
