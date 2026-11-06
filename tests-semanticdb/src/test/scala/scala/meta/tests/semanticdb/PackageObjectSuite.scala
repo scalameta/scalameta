@@ -734,6 +734,7 @@ class PackageObjectSuite extends SemanticdbSuite {
          |[2:26..2:29): Int => scala/Int#
          |[3:6..3:7): c <= _empty_/po19.c.
          |[3:10..3:14): List => scala/collection/immutable/Nil.
+         |[3:15..3:20): scala => scala/
          |[3:21..3:24): Nil => scala/collection/immutable/Nil.
          |[4:6..4:7): z <= _empty_/po19.z.
          |[4:9..4:14): scala => scala/
@@ -741,6 +742,7 @@ class PackageObjectSuite extends SemanticdbSuite {
          |[4:19..4:22): Int => scala/Int#
          |[4:26..4:29): Nil => scala/collection/immutable/Nil.
          |[5:6..5:7): y <= _empty_/po19.y.
+         |[5:9..5:14): scala => scala/
          |[5:15..5:18): Nil => scala/collection/immutable/Nil.
          |[5:26..5:29): Nil => scala/collection/immutable/Nil.
          |""".stripMargin

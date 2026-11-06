@@ -1588,6 +1588,7 @@ class QualifierSuite extends SemanticdbSuite {
              |[12:42..12:45): Int => scala/Int#
              |[13:6..13:8): g2 <= _empty_/qs6.g2.
              |[13:11..13:15): List => scala/collection/immutable/Nil.
+             |[13:16..13:21): scala => scala/
              |[13:22..13:25): Nil => scala/collection/immutable/Nil.
              |""".stripMargin,
         ScalaVersion.AtMost213(16) ->
@@ -11297,6 +11298,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[1:7..1:11): qs40 <= _empty_/qs40.
          |[2:9..2:10): o <= _empty_/qs40.o.
          |[2:17..2:21): List <= _empty_/qs40.o.List.
+         |[2:24..2:29): scala => scala/
          |[2:30..2:34): List => scala/collection/immutable/List.
          |[3:6..3:7): a <= _empty_/qs40.a.
          |[3:12..3:16): List => scala/collection/immutable/Nil.
@@ -11375,6 +11377,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[1:7..1:11): qs41 <= _empty_/qs41.
          |[2:9..2:14): scala <= _empty_/qs41.scala.
          |[2:21..2:25): List <= _empty_/qs41.scala.List.
+         |[2:35..2:40): scala => scala/
          |[2:41..2:45): List => scala/collection/immutable/List.
          |[3:6..3:7): a <= _empty_/qs41.a.
          |[3:16..3:20): List => scala/collection/immutable/Nil.
@@ -11442,6 +11445,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[1:7..1:11): qs50 <= _empty_/qs50.
          |[2:9..2:10): o <= _empty_/qs50.o.
          |[2:17..2:21): List <= _empty_/qs50.o.List.
+         |[2:24..2:29): scala => scala/
          |[2:30..2:34): List => scala/collection/immutable/List.
          |[3:6..3:7): a <= _empty_/qs50.a.
          |[3:12..3:16): List => scala/collection/immutable/Nil.
@@ -11530,6 +11534,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[2:26..2:35): immutable => scala/collection/immutable/
          |[3:9..3:10): o <= _empty_/qs57.o.
          |[3:17..3:21): List <= _empty_/qs57.o.List.
+         |[3:24..3:29): scala => scala/
          |[3:30..3:34): List => scala/collection/immutable/List.
          |[4:6..4:8): a1 <= _empty_/qs57.a1.
          |[4:22..4:27): apply => scala/collection/immutable/Nil.
@@ -11770,17 +11775,22 @@ class QualifierSuite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|[0:7..0:11): qs29 <= _empty_/qs29.
          |[1:6..1:7): a <= _empty_/qs29.a.
+         |[1:10..1:15): scala => scala/
          |[1:16..1:20): List => scala/collection/immutable/List.
          |[2:6..2:7): b <= _empty_/qs29.b.
+         |[2:10..2:15): scala => scala/
          |[2:16..2:19): Seq => scala/collection/Seq.
          |[3:6..3:7): c <= _empty_/qs29.c.
+         |[3:10..3:15): scala => scala/
          |[3:16..3:19): Nil => scala/collection/immutable/Nil.
          |[4:6..4:7): d <= _empty_/qs29.d.
+         |[4:17..4:22): scala => scala/
          |[4:23..4:27): List => scala/collection/immutable/List.
          |[5:9..5:14): scala => scala/
          |[5:16..5:20): List => scala/package.List#
          |[5:16..5:20): List => scala/package.List.
          |[6:6..6:7): e <= _empty_/qs29.e.
+         |[6:10..6:11): L => scala/collection/immutable/List.
          |""".stripMargin
     else
       """|[0:7..0:11): qs29 <= _empty_/qs29.
