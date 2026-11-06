@@ -3300,11 +3300,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(b) [58..59)
          |Semicolon [59..60)
          |Ident(c) [61..62)
+         |Indentation.Outdent [61..61)
          |KwThen [63..67)
          |Ident(d) [68..69)
          |KwElse [70..74)
          |Ident(e) [75..76)
-         |Indentation.Outdent [76..76)
          |LF [76..77)
          |Ident(g) [81..82)
          |LF [82..83)
@@ -3314,11 +3314,41 @@ class FewerBracesSuite extends BaseDottySuite {
          |EOF [89..89)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `identifier` expected but `if` found
-         |        if (a) b; c then d else e
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (xs.exists { x =>
+         |      if (a) b
+         |      c
+         |    }) d else e
+         |    g
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tapply(
+              tselect(tname("xs"), "exists"),
+              blk(tfunc(tparam("x"))(blk(tif(tname("a"), tname("b")), tname("c")))),
+            ),
+            tname("d"),
+            tname("e"),
+          ),
+          tname("g"),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("colon lambda in an indented if condition, `match` with an `if` with `&&` after the parentheses in the first case, leading `||` on the next line with `then` and `else`, outer `then` and `else` on the line of the last case, next statement") {
@@ -3367,6 +3397,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |InfixLF [96..97)
          |Ident(||) [109..111)
          |Ident(c) [112..113)
+         |Indentation.Outdent [112..112)
+         |Indentation.Outdent [112..112)
+         |Indentation.Outdent [112..112)
          |KwThen [114..118)
          |KwTrue [119..123)
          |KwElse [124..128)
@@ -3380,9 +3413,6 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(d) [166..167)
          |KwElse [168..172)
          |Ident(e) [173..174)
-         |Indentation.Outdent [174..174)
-         |Indentation.Outdent [174..174)
-         |Indentation.Outdent [174..174)
          |LF [174..175)
          |Ident(k) [179..180)
          |Indentation.Outdent [180..180)
@@ -3391,9 +3421,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
     val error =
-      """|<input>:4: error: `outdent` expected but `=>` found
-         |      xs.forall: x =>
-         |                   ^""".stripMargin
+      """|<input>:8: error: `outdent` expected but `case` found
+         |          case _ => false then d else e
+         |          ^""".stripMargin
     runTestError[Source](code, error)
   }
 

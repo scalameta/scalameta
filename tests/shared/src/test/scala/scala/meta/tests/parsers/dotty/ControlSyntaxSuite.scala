@@ -7748,22 +7748,40 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Underscore [30..31)
          |RightArrow [32..34)
          |Ident(b) [35..36)
+         |Indentation.Outdent [35..35)
          |KwThen [37..41)
          |Ident(c) [42..43)
          |KwElse [44..48)
          |Ident(d) [49..50)
-         |Indentation.Outdent [50..50)
          |LF [50..51)
          |Ident(g) [53..54)
          |Indentation.Outdent [54..54)
          |EOF [55..55)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
-    val error =
-      """|<input>:2: error: `outdent` expected but `then` found
-         |  if try a catch case _ => b then c else d
-         |                             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = {
+         |  if (try a catch {
+         |    case _ => b
+         |  }) c else d
+         |  g
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        tif(
+          Term.Try(tname("a"), List(Case(patwildcard, None, tname("b"))), None),
+          tname("c"),
+          tname("d"),
+        ),
+        tname("g"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("unparenthesized condition: `try` with `catch` without braces, `then` on the same line, no `else`, next statement") {
@@ -7787,20 +7805,34 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Underscore [30..31)
          |RightArrow [32..34)
          |Ident(b) [35..36)
+         |Indentation.Outdent [35..35)
          |KwThen [37..41)
          |Ident(c) [42..43)
-         |Indentation.Outdent [43..43)
          |LF [43..44)
          |Ident(g) [46..47)
          |Indentation.Outdent [47..47)
          |EOF [48..48)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
-    val error =
-      """|<input>:2: error: `outdent` expected but `then` found
-         |  if try a catch case _ => b then c
-         |                             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = {
+         |  if (try a catch {
+         |    case _ => b
+         |  }) c
+         |  g
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        tif(Term.Try(tname("a"), List(Case(patwildcard, None, tname("b"))), None), tname("c")),
+        tname("g"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("unparenthesized condition: `while` with `try` and `catch` without braces, `do` on the same line, next statement") {
@@ -7824,20 +7856,34 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Underscore [33..34)
          |RightArrow [35..37)
          |Ident(b) [38..39)
+         |Indentation.Outdent [38..38)
          |KwDo [40..42)
          |Ident(c) [43..44)
-         |Indentation.Outdent [44..44)
          |LF [44..45)
          |Ident(g) [47..48)
          |Indentation.Outdent [48..48)
          |EOF [49..49)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
-    val error =
-      """|<input>:2: error: `outdent` expected but `do` found
-         |  while try a catch case _ => b do c
-         |                                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = {
+         |  while (try a catch {
+         |    case _ => b
+         |  }) c
+         |  g
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Term.While(Term.Try(tname("a"), List(Case(patwildcard, None, tname("b"))), None), tname("c")),
+        tname("g"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("unparenthesized condition: `for` guard after a name, next generator on a deeper line, `do` on its own line, next statement") {
@@ -8677,11 +8723,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [24..25)
          |Dot [25..26)
          |Ident(ok) [26..28)
+         |Indentation.Outdent [26..26)
          |KwThen [29..33)
          |Ident(c) [34..35)
          |KwElse [36..40)
          |Ident(d) [41..42)
-         |Indentation.Outdent [42..42)
          |LF [42..43)
          |Ident(g) [45..46)
          |LF [46..47)
@@ -8734,9 +8780,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [24..25)
          |Dot [25..26)
          |Ident(ok) [26..28)
+         |Indentation.Outdent [26..26)
          |KwThen [29..33)
          |Ident(c) [34..35)
-         |Indentation.Outdent [35..35)
          |LF [35..36)
          |Ident(g) [38..39)
          |LF [39..40)
@@ -8790,11 +8836,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [26..27)
          |Dot [27..28)
          |Ident(ok) [28..30)
+         |Indentation.Outdent [28..28)
          |KwThen [31..35)
          |Ident(c) [36..37)
          |KwElse [38..42)
          |Ident(d) [43..44)
-         |Indentation.Outdent [44..44)
          |LF [44..45)
          |Ident(g) [47..48)
          |LF [48..49)
@@ -8850,11 +8896,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightArrow [38..40)
          |Ident(b) [41..42)
          |RightBrace [43..44)
+         |Indentation.Outdent [43..43)
          |KwThen [45..49)
          |Ident(c) [50..51)
          |KwElse [52..56)
          |Ident(d) [57..58)
-         |Indentation.Outdent [58..58)
          |LF [58..59)
          |Ident(g) [61..62)
          |LF [62..63)
@@ -8953,9 +8999,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [27..28)
          |Dot [28..29)
          |Ident(ok) [29..31)
+         |Indentation.Outdent [29..29)
          |KwDo [32..34)
          |Ident(c) [35..36)
-         |Indentation.Outdent [36..36)
          |LF [36..37)
          |Ident(g) [39..40)
          |LF [40..41)
@@ -8964,11 +9010,25 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [45..45)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
-    val error =
-      """|<input>:3: error: `outdent` expected but `do` found
-         |    new B(a).ok do c
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = {
+         |  while (new B(a).ok) c
+         |  g
+         |  h
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Term.While(tselect(Term.New(init(pname("B"), List(tname("a")))), "ok"), tname("c")),
+        tname("g"),
+        tname("h"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("unparenthesized condition: an indented `match`, `then` and `else` on the line of the last case, next statements") {
@@ -8999,11 +9059,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Underscore [53..54)
          |RightArrow [55..57)
          |KwFalse [58..63)
+         |Indentation.Outdent [58..58)
          |KwThen [64..68)
          |Ident(c) [69..70)
          |KwElse [71..75)
          |Ident(d) [76..77)
-         |Indentation.Outdent [77..77)
          |LF [77..78)
          |Ident(g) [80..81)
          |LF [81..82)
@@ -9012,11 +9072,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [86..86)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
-    val error =
-      """|<input>:4: error: `outdent` expected but `then` found
-         |      case _ => false then c else d
-         |                      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = {
+         |  if (x match {
+         |    case 1 => true
+         |    case _ => false
+         |  }) c else d
+         |  g
+         |  h
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        tif(
+          tmatch(tname("x"), Case(int(1), None, lit(true)), Case(patwildcard, None, lit(false))),
+          tname("c"),
+          tname("d"),
+        ),
+        tname("g"),
+        tname("h"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -10142,11 +10223,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(b) [40..41)
          |Semicolon [41..42)
          |Ident(c) [43..44)
+         |Indentation.Outdent [43..43)
          |KwThen [45..49)
          |Ident(d) [50..51)
          |KwElse [52..56)
          |Ident(e) [57..58)
-         |Indentation.Outdent [58..58)
          |LF [58..59)
          |Ident(g) [63..64)
          |LF [64..65)
@@ -10214,9 +10295,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(b) [46..47)
          |Semicolon [47..48)
          |Ident(c) [49..50)
+         |Indentation.Outdent [49..49)
          |KwDo [51..53)
          |Ident(d) [54..55)
-         |Indentation.Outdent [55..55)
          |LF [55..56)
          |Ident(g) [60..61)
          |LF [61..62)
@@ -10226,11 +10307,34 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [68..68)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `outdent` expected but `do` found
-         |      while (a) b; c do d
-         |                     ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while ({
+         |      while (a) b
+         |      c
+         |    }) d
+         |    g
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(blk(Term.While(tname("a"), tname("b")), tname("c")), tname("d")),
+          tname("g"),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("parenthesized condition: an identifier after the parentheses, `;` and an identifier inside an indented condition, `then` on the same line, no `else`, next statements") {
@@ -10261,9 +10365,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(b) [40..41)
          |Semicolon [41..42)
          |Ident(c) [43..44)
+         |Indentation.Outdent [43..43)
          |KwThen [45..49)
          |Ident(d) [50..51)
-         |Indentation.Outdent [51..51)
          |LF [51..52)
          |Ident(g) [56..57)
          |LF [57..58)
@@ -10332,11 +10436,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(x) [62..63)
          |Ident(>) [64..65)
          |Constant.Int(0) [66..67)
+         |Indentation.Outdent [66..66)
          |KwDo [68..70)
          |Ident(c) [71..72)
+         |LF [72..73)
          |Ident(g) [77..78)
+         |LF [78..79)
          |Ident(h) [83..84)
-         |Indentation.Outdent [84..84)
          |Indentation.Outdent [84..84)
          |Indentation.Outdent [84..84)
          |EOF [85..85)
@@ -10474,11 +10580,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(i) [63..64)
          |Ident(<) [65..66)
          |Ident(m) [67..68)
+         |Indentation.Outdent [67..67)
          |KwDo [69..71)
          |Ident(step) [72..76)
          |LeftParen [76..77)
          |RightParen [77..78)
-         |Indentation.Outdent [78..78)
          |LF [78..79)
          |Ident(g) [83..84)
          |LF [84..85)
@@ -10488,11 +10594,42 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [91..91)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `outdent` expected but `do` found
-         |      i += 1; if (i > n) stop(); i < m do step()
-         |                                       ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while ({
+         |      i += 1
+         |      if (i > n) stop()
+         |      i < m
+         |    }) step()
+         |    g
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(
+            blk(
+              tinfix(tname("i"), "+=", int(1)),
+              tif(tinfix(tname("i"), ">", tname("n")), tapply(tname("stop"))),
+              tinfix(tname("i"), "<", tname("m")),
+            ),
+            tapply(tname("step")),
+          ),
+          tname("g"),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("parenthesized condition: `&&` after the parentheses inside an indented condition, leading `||` on the next line with `then` and `else`, outer `then` and `else` on the next line, next statement") {
@@ -10977,11 +11114,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwElse [65..69)
          |Ident(d) [70..71)
          |Indentation.Outdent [71..71)
+         |Indentation.Outdent [71..71)
          |KwThen [78..82)
          |Ident(y) [83..84)
          |KwElse [85..89)
          |Ident(z) [90..91)
-         |Indentation.Outdent [91..91)
          |LF [91..92)
          |Ident(g) [96..97)
          |LF [97..98)
@@ -10991,11 +11128,37 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [104..104)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `then` expected but `identifier` found
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (if (a) f {
+         |      if (b) c else d
+         |    }) y else z
          |    g
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tif(tname("a"), tapply(tname("f"), blk(tif(tname("b"), tname("c"), tname("d"))))),
+            tname("y"),
+            tname("z"),
+          ),
+          tname("g"),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("parenthesized condition: `while` with a colon argument after the parentheses inside an indented `while` condition, a deeper `if` on the next line, `do` on the next line, next statements") {
@@ -11036,9 +11199,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(d) [76..77)
          |Indentation.Outdent [77..77)
          |LF [77..78)
+         |Indentation.Outdent [77..77)
          |KwDo [84..86)
          |Ident(y) [87..88)
-         |Indentation.Outdent [88..88)
          |LF [88..89)
          |Ident(g) [93..94)
          |LF [94..95)
@@ -11048,11 +11211,36 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [101..101)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `do` expected but `identifier` found
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while (while (a) f {
+         |      if (b) c else d
+         |    }) y
          |    g
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(
+            Term.While(tname("a"), tapply(tname("f"), blk(tif(tname("b"), tname("c"), tname("d"))))),
+            tname("y"),
+          ),
+          tname("g"),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("parenthesized condition: an `if` with parentheses in the body, `;` and `else` on the same line, next statement") {
@@ -11352,11 +11540,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(b) [43..44)
          |Semicolon [44..45)
          |Ident(c) [46..47)
+         |Indentation.Outdent [46..46)
          |KwThen [48..52)
          |Ident(d) [53..54)
          |KwElse [55..59)
          |Ident(e) [60..61)
-         |Indentation.Outdent [61..61)
          |LF [61..62)
          |Ident(g) [66..67)
          |LF [67..68)
@@ -11499,11 +11687,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(b) [48..49)
          |Semicolon [49..50)
          |Ident(c) [51..52)
+         |Indentation.Outdent [51..51)
          |KwThen [53..57)
          |Ident(d) [58..59)
          |KwElse [60..64)
          |Ident(e) [65..66)
-         |Indentation.Outdent [66..66)
          |LF [66..67)
          |Ident(g) [71..72)
          |LF [72..73)
@@ -11728,9 +11916,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(g) [45..46)
          |Semicolon [46..47)
          |Ident(c) [48..49)
+         |Indentation.Outdent [48..48)
          |KwDo [50..52)
          |Ident(d) [53..54)
-         |Indentation.Outdent [54..54)
          |LF [54..55)
          |Ident(g) [59..60)
          |LF [60..61)
@@ -11740,11 +11928,34 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [67..67)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `outdent` expected but `do` found
-         |      if (a) b.g; c do d
-         |                    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while ({
+         |      if (a) b.g
+         |      c
+         |    }) d
+         |    g
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(blk(tif(tname("a"), tselect(tname("b"), "g")), tname("c")), tname("d")),
+          tname("g"),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: an `if` with parentheses and `else` inside an `if` inside an indented condition, middle and outer `then` and `else` on the next lines, next statement") {
@@ -11856,11 +12067,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(b) [54..55)
          |Semicolon [55..56)
          |Ident(c) [57..58)
+         |Indentation.Outdent [57..57)
          |KwThen [59..63)
          |Ident(d) [64..65)
          |KwElse [66..70)
          |Ident(e) [71..72)
-         |Indentation.Outdent [72..72)
          |Indentation.Outdent [72..72)
          |KwThen [77..81)
          |Ident(g) [82..83)
@@ -11936,11 +12147,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(b) [54..55)
          |Semicolon [55..56)
          |Ident(c) [57..58)
+         |Indentation.Outdent [57..57)
          |KwThen [59..63)
          |Ident(d) [64..65)
          |KwElse [66..70)
          |Ident(e) [71..72)
-         |Indentation.Outdent [72..72)
          |Indentation.Outdent [72..72)
          |KwDo [77..79)
          |Ident(g) [80..81)
@@ -12717,9 +12928,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(b) [46..47)
          |Semicolon [47..48)
          |Ident(c) [49..50)
+         |Indentation.Outdent [49..49)
          |KwDo [51..53)
          |Ident(d) [54..55)
-         |Indentation.Outdent [55..55)
          |LF [55..56)
          |Ident(g) [60..61)
          |Indentation.Outdent [61..61)
@@ -12727,11 +12938,29 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [62..62)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `outdent` expected but `do` found
-         |      while (a) b; c do d
-         |                     ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while ({
+         |      while (a) b
+         |      c
+         |    }) d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(Term.While(blk(Term.While(tname("a"), tname("b")), tname("c")), tname("d")), tname("g")),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with `&&` after the parentheses in a value of indented enumerators, leading `||` on the next line with `then` and `else`, `do` on the next line, next statement") {
@@ -13990,9 +14219,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(g) [56..57)
          |Semicolon [57..58)
          |Ident(c) [59..60)
+         |Indentation.Outdent [59..59)
          |KwDo [61..63)
          |Ident(d) [64..65)
-         |Indentation.Outdent [65..65)
          |LF [65..66)
          |Ident(g) [70..71)
          |Indentation.Outdent [71..71)
@@ -14000,11 +14229,39 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [72..72)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `outdent` expected but `do` found
-         |      if (a) b.g; c do d
-         |                    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while ({
+         |      // x
+         |      if (a) b.g
+         |      c
+         |    }) d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(
+            blk(
+              tif(tname("a"), tselect(tname("b"), "g")).toBuilder.begComment(Seq("// x")).result(),
+              tname("c"),
+            ),
+            tname("d"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with parentheses, `;` and an identifier inside an indented condition, a comment between `;` and the identifier, `then` and `else` on the same line, next statement") {
@@ -14034,11 +14291,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(b) [40..41)
          |Semicolon [41..42)
          |Ident(c) [51..52)
+         |Indentation.Outdent [51..51)
          |KwThen [53..57)
          |Ident(d) [58..59)
          |KwElse [60..64)
          |Ident(e) [65..66)
-         |Indentation.Outdent [66..66)
          |LF [66..67)
          |Ident(k) [71..72)
          |Indentation.Outdent [72..72)
@@ -14362,10 +14619,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwThen [41..45)
          |Indentation.Indent [45..45)
          |Ident(b) [54..55)
+         |Indentation.Outdent [54..54)
+         |Indentation.Outdent [54..54)
          |KwDo [56..58)
          |Ident(c) [59..60)
-         |Indentation.Outdent [60..60)
-         |Indentation.Outdent [60..60)
          |LF [60..61)
          |Ident(k) [65..66)
          |Indentation.Outdent [66..66)
@@ -14373,11 +14630,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [67..67)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `outdent` expected but `do` found
-         |        b do c
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while (if (a) b) c
+         |    k
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(Term.While(tif(tname("a"), tname("b")), tname("c")), tname("k")),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` without parentheses with `then` at the line end inside an indented `while` condition, the body on the next line, outer `do` on the line after it at the column of the body, next statement") {
@@ -14408,10 +14680,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [45..45)
          |Ident(b) [54..55)
          |LF [55..56)
+         |Indentation.Outdent [55..55)
+         |Indentation.Outdent [55..55)
          |KwDo [64..66)
          |Ident(c) [67..68)
-         |Indentation.Outdent [68..68)
-         |Indentation.Outdent [68..68)
          |LF [68..69)
          |Ident(k) [73..74)
          |Indentation.Outdent [74..74)
@@ -14419,11 +14691,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [75..75)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `while` expected but `outdent` found
-         |        do c
-         |            ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while (if (a) b) c
+         |    k
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(Term.While(tif(tname("a"), tname("b")), tname("c")), tname("k")),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` without parentheses with `then` at the line end inside an indented `while` condition, the body, a comment and outer `do` on the next line, next statement") {
@@ -14452,10 +14739,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwThen [41..45)
          |Indentation.Indent [45..45)
          |Ident(b) [54..55)
+         |Indentation.Outdent [63..63)
+         |Indentation.Outdent [63..63)
          |KwDo [64..66)
          |Ident(c) [67..68)
-         |Indentation.Outdent [68..68)
-         |Indentation.Outdent [68..68)
          |LF [68..69)
          |Ident(k) [73..74)
          |Indentation.Outdent [74..74)
@@ -14463,11 +14750,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [75..75)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `outdent` expected but `do` found
-         |        b /* x */ do c
-         |                  ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while (if (a) b /* x */ ) c
+         |    k
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(
+            tif(tname("a"), tname("b")).toBuilder.endComment(Seq("/* x */")).result(),
+            tname("c"),
+          ),
+          tname("k"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with `&&` after the parentheses and `then` at the line end inside an indented condition, the body with `else` and outer `then` and `else` on the next line, next statement") {
@@ -14502,12 +14810,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(c) [58..59)
          |KwElse [60..64)
          |Ident(d) [65..66)
+         |Indentation.Outdent [65..65)
+         |Indentation.Outdent [65..65)
          |KwThen [67..71)
          |Ident(e) [72..73)
          |KwElse [74..78)
          |Ident(g) [79..80)
-         |Indentation.Outdent [80..80)
-         |Indentation.Outdent [80..80)
          |LF [80..81)
          |Ident(k) [85..86)
          |Indentation.Outdent [86..86)
@@ -14515,11 +14823,33 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [87..87)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `outdent` expected but `then` found
-         |        c else d then e else g
-         |                 ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (if (a && b) c else d) e else g
+         |    k
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tif(tinfix(tname("a"), "&&", tname("b")), tname("c"), tname("d")),
+            tname("e"),
+            tname("g"),
+          ),
+          tname("k"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `while` without parentheses with `do` at the line end inside an indented condition, the body and outer `then` and `else` on the next line, next statement") {
@@ -14548,12 +14878,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwDo [41..43)
          |Indentation.Indent [43..43)
          |Ident(b) [52..53)
+         |Indentation.Outdent [52..52)
+         |Indentation.Outdent [52..52)
          |KwThen [54..58)
          |Ident(c) [59..60)
          |KwElse [61..65)
          |Ident(d) [66..67)
-         |Indentation.Outdent [67..67)
-         |Indentation.Outdent [67..67)
          |LF [67..68)
          |Ident(k) [72..73)
          |Indentation.Outdent [73..73)
@@ -14561,11 +14891,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [74..74)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `outdent` expected but `then` found
-         |        b then c else d
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (while (a) b) c else d
+         |    k
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(tif(Term.While(tname("a"), tname("b")), tname("c"), tname("d")), tname("k")),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with parentheses and an interpolated string with an `if` in its splice inside an indented condition, `then` and `else` on the same line, outer `then` and `else` on the next line, next statement") {
@@ -14702,12 +15047,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(c) [62..63)
          |Semicolon [63..64)
          |Ident(d) [65..66)
+         |Indentation.Outdent [65..65)
+         |Indentation.Outdent [65..65)
          |KwThen [67..71)
          |Ident(e) [72..73)
          |KwElse [74..78)
          |Ident(g) [79..80)
-         |Indentation.Outdent [80..80)
-         |Indentation.Outdent [80..80)
          |LF [80..81)
          |Ident(k) [85..86)
          |Indentation.Outdent [86..86)
@@ -14715,11 +15060,41 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [87..87)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `outdent` expected but `then` found
-         |      try a catch case _ => if (b) c; d then e else g
-         |                                        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (try a catch {
+         |      case _ =>
+         |        if (b) c
+         |        d
+         |    }) e else g
+         |    k
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            Term.Try(
+              tname("a"),
+              List(Case(patwildcard, None, blk(tif(tname("b"), tname("c")), tname("d")))),
+              None,
+            ),
+            tname("e"),
+            tname("g"),
+          ),
+          tname("k"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `try` with `catch case`, `;` and an identifier inside an indented condition, outer `then` and `else` on the same line, next statement") {
@@ -14752,12 +15127,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(c) [55..56)
          |Semicolon [56..57)
          |Ident(d) [58..59)
+         |Indentation.Outdent [58..58)
+         |Indentation.Outdent [58..58)
          |KwThen [60..64)
          |Ident(e) [65..66)
          |KwElse [67..71)
          |Ident(g) [72..73)
-         |Indentation.Outdent [73..73)
-         |Indentation.Outdent [73..73)
          |LF [73..74)
          |Ident(k) [78..79)
          |Indentation.Outdent [79..79)
@@ -14765,11 +15140,37 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [80..80)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `outdent` expected but `then` found
-         |      try a catch case _ => c; d then e else g
-         |                                 ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (try a catch {
+         |      case _ =>
+         |        c
+         |        d
+         |    }) e else g
+         |    k
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            Term.Try(tname("a"), List(Case(patwildcard, None, blk(tname("c"), tname("d")))), None),
+            tname("e"),
+            tname("g"),
+          ),
+          tname("k"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with `==` after the parentheses in an indented `val` body, `then` and `else` on the next line at the column of the `val`, next statement") {
@@ -14958,11 +15359,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [24..25)
          |Dot [25..26)
          |Ident(ok) [26..28)
+         |Indentation.Outdent [26..26)
          |KwThen [29..33)
          |Ident(c) [34..35)
          |KwElse [36..40)
          |Ident(d) [41..42)
-         |Indentation.Outdent [57..57)
          |Indentation.Outdent [57..57)
          |KwDef [58..61)
          |Ident(g) [62..63)
@@ -14972,8 +15373,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
     val layout =
-      """|def f = if (new B(a).ok) c else d
+      """|def f = {
+         |  if (new B(a).ok) c else d
          |  // comment
+         |}
          |def g = 1
          |""".stripMargin
     val tree = Source(List(
@@ -14982,8 +15385,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
         tname("f"),
         Nil,
         None,
-        tif(tselect(Term.New(init(pname("B"), List(tname("a")))), "ok"), tname("c"), tname("d")),
-      ).toBuilder.endComment(Seq("// comment")).result(),
+        blk(
+          tif(tselect(Term.New(init(pname("B"), List(tname("a")))), "ok"), tname("c"), tname("d"))
+            .toBuilder.endComment(Seq("// comment")).result(),
+        ),
+      ),
       Defn.Def(Nil, tname("g"), Nil, None, int(1)),
     ))
     runTestAssert[Source](code, layout)(tree)
@@ -15012,29 +15418,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [24..25)
          |Dot [25..26)
          |Ident(ok) [26..28)
+         |Indentation.Outdent [26..26)
          |KwThen [29..33)
          |Ident(c) [34..35)
          |KwElse [36..40)
          |Ident(d) [41..42)
          |Indentation.Outdent [61..61)
-         |Indentation.Outdent [61..61)
          |EOF [62..62)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
     val layout =
-      """|def f = if (new B(a).ok) c else d
+      """|def f = {
+         |  if (new B(a).ok) c else d
          |
-         |/* comment */
+         |  /* comment */
+         |}
          |""".stripMargin
-    val tree = Source(List(
-      Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tif(tselect(Term.New(init(pname("B"), List(tname("a")))), "ok"), tname("c"), tname("d")),
-      ).toBuilder.endComment(Seq("/* comment */")).result(),
-    ))
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        tif(tselect(Term.New(init(pname("B"), List(tname("a")))), "ok"), tname("c"), tname("d"))
+          .toBuilder.endComment(Seq("/* comment */")).result(),
+      ),
+    )))
     runTestAssert[Source](code, layout)(tree)
   }
 
@@ -15061,11 +15470,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [24..25)
          |Dot [25..26)
          |Ident(ok) [26..28)
+         |Indentation.Outdent [26..26)
          |KwThen [29..33)
          |Ident(c) [34..35)
          |KwElse [36..40)
          |Ident(d) [41..42)
-         |Indentation.Outdent [42..42)
          |Indentation.Outdent [58..58)
          |KwDef [59..62)
          |Ident(g) [63..64)
@@ -15120,11 +15529,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [24..25)
          |Dot [25..26)
          |Ident(ok) [26..28)
+         |Indentation.Outdent [26..26)
          |KwThen [29..33)
          |Ident(c) [34..35)
          |KwElse [36..40)
          |Ident(d) [41..42)
-         |Indentation.Outdent [43..43)
          |Indentation.Outdent [56..56)
          |EOF [57..57)
          |""".stripMargin.nl2lf
@@ -15172,9 +15581,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [27..28)
          |Dot [28..29)
          |Ident(ok) [29..31)
+         |Indentation.Outdent [29..29)
          |KwDo [32..34)
          |Ident(c) [35..36)
-         |Indentation.Outdent [51..51)
          |Indentation.Outdent [51..51)
          |KwDef [52..55)
          |Ident(g) [56..57)
@@ -15183,11 +15592,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [62..62)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:3: error: `outdent` expected but `do` found
-         |    new B(a).ok do c
-         |                ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|def f = {
+         |  while (new B(a).ok) c
+         |  // comment
+         |}
+         |def g = 1
+         |""".stripMargin
+    val tree = Source(List(
+      Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(tselect(Term.New(init(pname("B"), List(tname("a")))), "ok"), tname("c"))
+            .toBuilder.endComment(Seq("// comment")).result(),
+        ),
+      ),
+      Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+    ))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `while` with `new` on the next line, `do` on the same line, a blank line, a multi-line comment at the column of the condition, end of file") {
@@ -15213,18 +15638,31 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [27..28)
          |Dot [28..29)
          |Ident(ok) [29..31)
+         |Indentation.Outdent [29..29)
          |KwDo [32..34)
          |Ident(c) [35..36)
-         |Indentation.Outdent [55..55)
          |Indentation.Outdent [55..55)
          |EOF [56..56)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:3: error: `outdent` expected but `do` found
-         |    new B(a).ok do c
-         |                ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|def f = {
+         |  while (new B(a).ok) c
+         |
+         |  /* comment */
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Term.While(tselect(Term.New(init(pname("B"), List(tname("a")))), "ok"), tname("c"))
+          .toBuilder.endComment(Seq("/* comment */")).result(),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `while` with `new` on the next line, `do` on the same line, a multi-line comment at the column of the `while`, next definition") {
@@ -15250,9 +15688,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [27..28)
          |Dot [28..29)
          |Ident(ok) [29..31)
+         |Indentation.Outdent [29..29)
          |KwDo [32..34)
          |Ident(c) [35..36)
-         |Indentation.Outdent [36..36)
          |Indentation.Outdent [52..52)
          |KwDef [53..56)
          |Ident(g) [57..58)
@@ -15261,11 +15699,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [63..63)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:3: error: `outdent` expected but `do` found
-         |    new B(a).ok do c
-         |                ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|def f = {
+         |  while (new B(a).ok) c
+         |  /* comment */
+         |}
+         |def g = 1
+         |""".stripMargin
+    val tree = Source(List(
+      Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(tselect(Term.New(init(pname("B"), List(tname("a")))), "ok"), tname("c"))
+            .toBuilder.endComment(Seq("/* comment */")).result(),
+        ),
+      ),
+      Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+    ))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `while` with `new` on the next line, `do` on the same line, a blank line, a single-line comment at the column of the `while`, end of file") {
@@ -15291,18 +15745,31 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [27..28)
          |Dot [28..29)
          |Ident(ok) [29..31)
+         |Indentation.Outdent [29..29)
          |KwDo [32..34)
          |Ident(c) [35..36)
-         |Indentation.Outdent [37..37)
          |Indentation.Outdent [50..50)
          |EOF [51..51)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:3: error: `outdent` expected but `do` found
-         |    new B(a).ok do c
-         |                ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|def f = {
+         |  while (new B(a).ok) c
+         |
+         |  // comment
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Term.While(tselect(Term.New(init(pname("B"), List(tname("a")))), "ok"), tname("c"))
+          .toBuilder.endComment(Seq("// comment")).result(),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with `&&` after the parentheses on the next line, `then` and `else` on the same line, a single-line comment at the column of the condition, next definition") {
@@ -15758,11 +16225,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightArrow [57..59)
          |KwTrue [60..64)
          |RightBrace [65..66)
+         |Indentation.Outdent [66..66)
          |KwThen [73..77)
          |Constant.Int(1) [78..79)
          |KwElse [80..84)
          |Constant.Int(2) [85..86)
-         |Indentation.Outdent [86..86)
          |LF [86..87)
          |Ident(g) [91..92)
          |Indentation.Outdent [92..92)
@@ -15770,11 +16237,35 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [93..93)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `then` expected but `identifier` found
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (if (a) x match {
+         |      case _ => true
+         |    }) 1 else 2
          |    g
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tif(tname("a"), tmatch(tname("x"), Case(patwildcard, None, bool(true)))),
+            int(1),
+            int(2),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with parentheses, `;` and an identifier inside an indented condition, outer `then` and `else` on the next line at the column of the inner `if`, next statement") {
@@ -15805,11 +16296,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(b) [40..41)
          |Semicolon [41..42)
          |Ident(c) [43..44)
+         |Indentation.Outdent [44..44)
          |KwThen [51..55)
          |Constant.Int(1) [56..57)
          |KwElse [58..62)
          |Constant.Int(2) [63..64)
-         |Indentation.Outdent [64..64)
          |LF [64..65)
          |Ident(g) [69..70)
          |Indentation.Outdent [70..70)
@@ -15871,9 +16362,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Semicolon [47..48)
          |Ident(c) [49..50)
          |LF [50..51)
+         |Indentation.Outdent [50..50)
          |KwDo [57..59)
          |Ident(d) [60..61)
-         |Indentation.Outdent [61..61)
          |LF [61..62)
          |Ident(g) [66..67)
          |Indentation.Outdent [67..67)
@@ -15881,11 +16372,29 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [68..68)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `while` expected but `outdent` found
-         |      do d
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while ({
+         |      while (a) b
+         |      c
+         |    }) d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(Term.While(blk(Term.While(tname("a"), tname("b")), tname("c")), tname("d")), tname("g")),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with `then` and an identifier on the next line inside an indented condition, outer `then` and `else` on the next line at the column of the inner `if`, next statement") {
@@ -16028,12 +16537,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |LeftParen [48..49)
          |Ident(x) [49..50)
          |RightParen [50..51)
+         |Indentation.Outdent [50..50)
+         |Indentation.Outdent [50..50)
          |KwThen [52..56)
          |Constant.Int(1) [57..58)
          |KwElse [59..63)
          |Constant.Int(2) [64..65)
-         |Indentation.Outdent [65..65)
-         |Indentation.Outdent [65..65)
          |KwThen [70..74)
          |Constant.Int(3) [75..76)
          |KwElse [77..81)
@@ -16046,9 +16555,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
     val error =
-      """|<input>:5: error: `outdent` expected but `then` found
-         |        (x) then 1 else 2
-         |            ^""".stripMargin
+      """|<input>:6: error: `outdent` expected but `then` found
+         |    then 3 else 4
+         |    ^""".stripMargin
     runTestError[Source](code, error)
   }
 
