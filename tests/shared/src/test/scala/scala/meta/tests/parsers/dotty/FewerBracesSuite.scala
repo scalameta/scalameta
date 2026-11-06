@@ -2965,7 +2965,6 @@ class FewerBracesSuite extends BaseDottySuite {
          |RightParen [38..39)
          |Colon [39..40)
          |Ident(Boolean) [41..48)
-         |LF [48..49)
          |KwThen [55..59)
          |Ident(c) [60..61)
          |KwElse [62..66)
@@ -3013,7 +3012,6 @@ class FewerBracesSuite extends BaseDottySuite {
          |InfixLF [48..49)
          |Ident(&&) [55..57)
          |Ident(b) [58..59)
-         |LF [59..60)
          |KwThen [66..70)
          |Ident(c) [71..72)
          |KwElse [73..77)
@@ -3057,7 +3055,6 @@ class FewerBracesSuite extends BaseDottySuite {
          |RightParen [45..46)
          |Colon [46..47)
          |Ident(Boolean) [48..55)
-         |LF [55..56)
          |KwDo [62..64)
          |Ident(c) [65..66)
          |LF [66..67)
@@ -3103,7 +3100,6 @@ class FewerBracesSuite extends BaseDottySuite {
          |InfixLF [55..56)
          |Ident(&&) [62..64)
          |Ident(b) [65..66)
-         |LF [66..67)
          |KwDo [73..75)
          |Ident(c) [76..77)
          |LF [77..78)
@@ -3127,11 +3123,47 @@ class FewerBracesSuite extends BaseDottySuite {
          |    then e else g
          |  def h = 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `outdent` expected but `=>` found
-         |      xs.exists: x => if (a): @ann(if b then 1 else 2)
-         |                   ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object O {
+         |  def f = if (xs.exists {
+         |    x => if (a: @ann(if (b) 1 else 2)) c else d
+         |  }) e else g
+         |  def h = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tapply(
+              tselect("xs", "exists"),
+              blk(tfunc(tparam("x"))(tif(
+                Term.Annotate(
+                  tname("a"),
+                  List(Mod.Annot(Init(
+                    pname("ann"),
+                    Name.Anonymous(),
+                    List(Term.ArgClause(List(tif(tname("b"), lit(1), lit(2))), None)),
+                  ))),
+                ),
+                tname("c"),
+                tname("d"),
+              ))),
+            ),
+            tname("e"),
+            tname("g"),
+          ),
+        ),
+        Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: in an indented if condition, if with parentheses and a colon argument with an indented if, then on the next line, then on the next line") {
@@ -3145,11 +3177,42 @@ class FewerBracesSuite extends BaseDottySuite {
          |    then e else g
          |  def h = 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `outdent` expected but `=>` found
-         |      xs.exists: x => if (f):
-         |                   ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object O {
+         |  def f = if (xs.exists {
+         |    x => if (f {
+         |      if (b) true else false
+         |    }) c else d
+         |  }) e else g
+         |  def h = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tapply(
+              tselect("xs", "exists"),
+              blk(tfunc(tparam("x"))(tif(
+                tapply(tname("f"), blk(tif(tname("b"), Lit.Boolean(true), Lit.Boolean(false)))),
+                tname("c"),
+                tname("d"),
+              ))),
+            ),
+            tname("e"),
+            tname("g"),
+          ),
+        ),
+        Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: in an indented while condition, while with parentheses and an annotation ascription with a while argument, do on the next line, do on the next line") {
@@ -3162,11 +3225,45 @@ class FewerBracesSuite extends BaseDottySuite {
          |    do k
          |  def h = 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `outdent` expected but `=>` found
-         |      xs.exists: x => while (a): @ann(while b do g)
-         |                   ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object O {
+         |  def f = while (xs.exists {
+         |    x => while (a: @ann(while (b) g)) h(x)
+         |  }) k
+         |  def h = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.While(
+            tapply(
+              tselect("xs", "exists"),
+              blk(tfunc(tparam("x"))(Term.While(
+                Term.Annotate(
+                  tname("a"),
+                  List(Mod.Annot(Init(
+                    pname("ann"),
+                    Name.Anonymous(),
+                    List(Term.ArgClause(List(Term.While(tname("b"), tname("g"))), None)),
+                  ))),
+                ),
+                tapply(tname("h"), tname("x")),
+              ))),
+            ),
+            tname("k"),
+          ),
+        ),
+        Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
 }

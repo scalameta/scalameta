@@ -238,7 +238,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |else
          |  gx
          |""".stripMargin
-    runTestError[Stat](code, "`then` expected but `identifier` found")
+    runTestError[Stat](code, "`then` expected but `else` found")
   }
 
   test("if-else-in-parens-3") {
@@ -5842,11 +5842,21 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    then c
          |  else d
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `then` expected but `(` found
-         |      (x => x > 0)
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = if (a && xs.exists(x => x > 0)) c else d
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tif(
+        tinfix("a", "&&", tapply(tselect("xs", "exists"), tfunc(tparam("x"))(tinfix("x", ">", lit(0))))),
+        tname("c"),
+        tname("d"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("parenthesized condition: an operator and a colon lambda after the parentheses, `then` at the lambda body") {
@@ -5878,7 +5888,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(x) [40..41)
          |Ident(>) [42..43)
          |Constant.Int(0) [44..45)
-         |LF [45..46)
          |Indentation.Outdent [45..45)
          |KwThen [50..54)
          |Ident(c) [55..56)
@@ -5943,40 +5952,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwTrue [50..54)
          |KwElse [55..59)
          |KwFalse [60..65)
-         |LF [65..66)
-         |Indentation.Outdent [65..65)
          |KwThen [70..74)
          |Ident(c) [75..76)
+         |Indentation.Outdent [76..76)
          |KwElse [79..83)
          |Ident(d) [84..85)
          |Indentation.Outdent [85..85)
          |EOF [86..86)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
-    val layout =
-      """|def f = if (a || xs.exists {
-         |  x => if (x) true else false
-         |}) c else d
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tif(
-        tinfix(
-          tname("a"),
-          "||",
-          tapply(
-            tselect("xs", "exists"),
-            blk(tfunc(tparam("x"))(tif(tname("x"), lit(true), lit(false)))),
-          ),
-        ),
-        tname("c"),
-        tname("d"),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `.` found
+         |  if (a) || xs.exists: x =>
+         |              ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("parenthesized condition: `while` with an operator and a colon lambda after the parentheses, `do` at the lambda body") {
@@ -6075,43 +6064,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |LF [67..68)
          |KwTrue [72..76)
          |LF [76..77)
-         |Indentation.Outdent [76..76)
          |KwDo [81..83)
          |Ident(c) [84..85)
+         |Indentation.Outdent [85..85)
          |Indentation.Outdent [85..85)
          |EOF [86..86)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
-    val layout =
-      """|def f = while (a || xs.exists { x =>
-         |  for (y <- x) println(y)
-         |  true
-         |}) c
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      Term.While(
-        tinfix(
-          tname("a"),
-          "||",
-          tapply(
-            tselect("xs", "exists"),
-            blk(tfunc(tparam("x"))(blk(
-              Term.For(
-                List(Enumerator.Generator(patvar("y"), tname("x"))),
-                tapply(tname("println"), tname("y")),
-              ),
-              lit(true),
-            ))),
-          ),
-        ),
-        tname("c"),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `.` found
+         |  while (a) || xs.exists: x =>
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("parenthesized condition: an operator and a colon lambda with `;` after the parentheses, `then` at the lambda body") {
@@ -6148,43 +6112,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(y) [51..52)
          |Ident(>) [53..54)
          |Constant.Int(0) [55..56)
-         |LF [56..57)
-         |Indentation.Outdent [56..56)
          |KwThen [61..65)
          |Ident(c) [66..67)
+         |Indentation.Outdent [67..67)
          |KwElse [70..74)
          |Ident(d) [75..76)
          |Indentation.Outdent [76..76)
          |EOF [77..77)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
-    val layout =
-      """|def f = if (a || xs.exists { x =>
-         |  val y = x
-         |  y > 0
-         |}) c else d
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tif(
-        tinfix(
-          tname("a"),
-          "||",
-          tapply(
-            tselect("xs", "exists"),
-            blk(tfunc(tparam("x"))(
-              blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tinfix(tname("y"), ">", lit(0))),
-            )),
-          ),
-        ),
-        tname("c"),
-        tname("d"),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `.` found
+         |  if (a) || xs.exists: x =>
+         |              ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("parenthesized condition: an operator after the parentheses in parentheses, leading infix at the outer column") {
@@ -6346,21 +6287,35 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(y) [39..40)
          |Ident(>) [41..42)
          |Constant.Int(0) [43..44)
-         |LF [44..45)
+         |Indentation.Outdent [44..44)
          |KwThen [49..53)
          |Ident(c) [54..55)
-         |Indentation.Outdent [55..55)
          |KwElse [58..62)
          |Ident(d) [63..64)
          |Indentation.Outdent [64..64)
          |EOF [65..65)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
-    val error =
-      """|<input>:2: error: illegal start of simple expression
-         |  if (x) = xs.exists: y =>
-         |         ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = if (x = xs.exists {
+         |  y => y > 0
+         |}) c else d
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tif(
+        Term.Assign(
+          tname("x"),
+          tapply(tselect("xs", "exists"), blk(tfunc(tparam("y"))(tinfix("y", ">", lit(0))))),
+        ),
+        tname("c"),
+        tname("d"),
+      ),
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
   }
 
   test("parenthesized condition: an ascription after the parentheses, `then` on the next line") {
@@ -6500,7 +6455,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [15..16)
          |Ident(&&) [17..19)
          |Ident(b) [20..21)
-         |LFLF [21..23)
          |KwThen [25..29)
          |Ident(c) [30..31)
          |KwElse [34..38)
@@ -6542,7 +6496,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(b) [20..21)
          |LF [21..22)
          |Ident(c) [28..29)
-         |LF [29..30)
          |KwThen [34..38)
          |Ident(d) [39..40)
          |KwElse [43..47)
@@ -6552,7 +6505,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
     val error =
-      """|<input>:4: error: illegal start of statement
+      """|<input>:4: error: `outdent` expected but `then` found
          |    then d
          |    ^""".stripMargin
     runTestError[Stat](code, error)
@@ -6851,12 +6804,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(T) [63..64)
          |RightArrow [65..67)
          |Constant.Int(1) [68..69)
-         |LF [69..70)
+         |Indentation.Outdent [69..69)
          |KwCase [72..76)
          |Underscore [77..78)
          |RightArrow [79..81)
          |Constant.Int(2) [82..83)
-         |Indentation.Outdent [83..83)
          |Indentation.Outdent [83..83)
          |EOF [84..84)
          |""".stripMargin.nl2lf
@@ -7376,7 +7328,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [28..29)
          |Colon [29..30)
          |Ident(Boolean) [31..38)
-         |LF [38..39)
          |KwDo [43..45)
          |Ident(c) [46..47)
          |Indentation.Outdent [47..47)
@@ -9135,7 +9086,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [20..21)
          |Dot [21..22)
          |Ident(ok) [22..24)
-         |LF [24..25)
          |KwThen [27..31)
          |Ident(c) [32..33)
          |KwElse [36..40)
@@ -9186,7 +9136,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightArrow [55..57)
          |KwFalse [58..63)
          |Indentation.Outdent [63..63)
-         |LF [63..64)
          |KwThen [66..70)
          |Ident(c) [71..72)
          |KwElse [73..77)
@@ -9280,11 +9229,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(B) [18..19)
          |At [20..21)
          |Ident(ann) [21..24)
-         |LF [24..25)
          |LeftParen [29..30)
          |Ident(c) [30..31)
          |RightParen [31..32)
-         |LF [32..33)
          |KwThen [35..39)
          |Ident(c) [40..41)
          |KwElse [42..46)
@@ -9347,11 +9294,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    (c)
          |  then c else d
          |""".stripMargin
-    val error =
-      """|<input>:2: error: illegal start of simple expression
-         |  if (a).g
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = if (a.g(c)) c else d
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tif(tapply(tselect("a", "g"), tname("c")), tname("c"), tname("d")),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("unparenthesized condition: a select, deeper argument in parentheses, `then` on a later line") {
@@ -9361,11 +9314,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    (c)
          |  then c else d
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `then` expected but `(` found
-         |    (c)
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = if (a.g(c)) c else d
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tif(tapply(tselect("a", "g"), tname("c")), tname("c"), tname("d")),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("unparenthesized condition: an operator and a select of a block with `if then`, deeper argument in parentheses, `then` on a later line, next statement") {
@@ -9395,11 +9354,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightBrace [37..38)
          |Dot [38..39)
          |Ident(g) [39..40)
-         |LF [40..41)
          |LeftParen [45..46)
          |Ident(e) [46..47)
          |RightParen [47..48)
-         |LF [48..49)
          |KwThen [51..55)
          |Ident(x) [56..57)
          |KwElse [58..62)
@@ -9410,11 +9367,33 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [69..69)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
-    val error =
-      """|<input>:3: error: `then` expected but `(` found
-         |    (e)
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = {
+         |  if (a && {
+         |    if (b) c else d
+         |  }.g(e)) x else y
+         |  g
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        tif(
+          tinfix(
+            "a",
+            "&&",
+            tapply(tselect(blk(tif(tname("b"), tname("c"), tname("d"))), "g"), tname("e")),
+          ),
+          tname("x"),
+          tname("y"),
+        ),
+        tname("g"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("parenthesized condition: a select and an argument with `if then` after the parentheses, deeper argument in parentheses, `then` on a later line, next statement") {
@@ -9445,11 +9424,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwElse [31..35)
          |Constant.Int(2) [36..37)
          |RightParen [37..38)
-         |LF [38..39)
          |LeftParen [43..44)
          |Ident(e) [44..45)
          |RightParen [45..46)
-         |LF [46..47)
          |KwThen [49..53)
          |Ident(x) [54..55)
          |KwElse [56..60)
@@ -9460,11 +9437,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [67..67)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
-    val error =
-      """|<input>:2: error: illegal start of simple expression
-         |  if (a).g(if b then 1 else 2)
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = {
+         |  if (a.g(if (b) 1 else 2)(e)) x else y
+         |  g
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        tif(
+          tapply(tapply(tselect("a", "g"), tif(tname("b"), lit(1), lit(2))), tname("e")),
+          tname("x"),
+          tname("y"),
+        ),
+        tname("g"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("parenthesized condition: a colon at the line end in braces, deeper `then` and `else`, blank line") {
@@ -9475,11 +9468,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |
          |}
          |""".stripMargin
-    val error =
-      """|<input>:2: error: illegal start of simple expression
-         |  if (a):
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = {
+         |  if (a {}) c else d
+         |}
+         |""".stripMargin
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(tif(tapply(tname("a"), blk()), tname("c"), tname("d"))))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("unparenthesized condition: `while` with an `if` without `else`, `do` on the same line, next statement") {
@@ -9924,7 +9920,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightArrow [49..51)
          |KwTrue [52..56)
          |Indentation.Outdent [56..56)
-         |LF [56..57)
          |KwThen [59..63)
          |Ident(c) [64..65)
          |KwElse [66..70)
@@ -9983,7 +9978,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightArrow [37..39)
          |KwTrue [40..44)
          |Indentation.Outdent [44..44)
-         |LF [44..45)
          |KwDo [47..49)
          |Ident(c) [50..51)
          |LF [51..52)
@@ -10076,6 +10070,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(ok) [22..24)
          |KwThen [25..29)
          |Ident(c) [30..31)
+         |LF [31..32)
          |LeftBrace [34..35)
          |Ident(c) [35..36)
          |RightBrace [36..37)
@@ -10089,8 +10084,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
     val layout =
-      """|def f = if (new B(a).ok) c {
-         |  c
+      """|def f = {
+         |  if (new B(a).ok) c
+         |  {
+         |    c
+         |  }
          |}
          |def g = 1
          |""".stripMargin
@@ -10100,9 +10098,15 @@ class ControlSyntaxSuite extends BaseDottySuite {
         tname("f"),
         Nil,
         None,
-        tif(
-          tselect(Term.New(init(pname("B"), List(tname("a")))), "ok"),
-          tapply(tname("c"), blk(tname("c"))),
+        blk(
+          tif(
+            tselect(
+              Term.New(Init(pname("B"), Name.Anonymous(), List(Term.ArgClause(List(tname("a")), None)))),
+              "ok",
+            ),
+            tname("c"),
+          ),
+          blk(tname("c")),
         ),
       ),
       Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -10330,9 +10334,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Constant.Int(0) [66..67)
          |KwDo [68..70)
          |Ident(c) [71..72)
-         |LF [72..73)
          |Ident(g) [77..78)
-         |LF [78..79)
          |Ident(h) [83..84)
          |Indentation.Outdent [84..84)
          |Indentation.Outdent [84..84)
@@ -10386,7 +10388,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(c) [65..66)
          |LF [66..67)
          |KwIf [71..73)
+         |Indentation.Indent [73..73)
          |Ident(a) [80..81)
+         |Indentation.Outdent [80..80)
          |KwThen [82..86)
          |Ident(d) [87..88)
          |KwElse [89..93)
@@ -10527,7 +10531,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(d) [63..64)
          |KwElse [65..69)
          |Ident(e) [70..71)
-         |LF [71..72)
          |KwThen [76..80)
          |Ident(g) [81..82)
          |KwElse [83..87)
@@ -10540,7 +10543,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
     val error =
-      """|<input>:6: error: illegal start of statement
+      """|<input>:6: error: `outdent` expected but `then` found
          |    then g else h
          |    ^""".stripMargin
     runTestError[Source](code, error)
@@ -10582,7 +10585,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwElse [68..72)
          |Ident(e) [73..74)
          |Indentation.Outdent [74..74)
-         |LF [74..75)
          |KwDo [79..81)
          |Ident(g) [82..83)
          |LF [83..84)
@@ -10853,7 +10855,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(d) [62..63)
          |KwElse [64..68)
          |Ident(e) [69..70)
-         |LF [70..71)
          |KwThen [75..79)
          |Ident(g) [80..81)
          |KwElse [82..86)
@@ -10866,7 +10867,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
     val error =
-      """|<input>:6: error: illegal start of statement
+      """|<input>:6: error: `outdent` expected but `then` found
          |    then g else h
          |    ^""".stripMargin
     runTestError[Source](code, error)
@@ -10976,7 +10977,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwElse [65..69)
          |Ident(d) [70..71)
          |Indentation.Outdent [71..71)
-         |LF [71..72)
          |KwThen [78..82)
          |Ident(y) [83..84)
          |KwElse [85..89)
@@ -11655,7 +11655,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Semicolon [41..42)
          |Ident(c) [43..44)
          |Indentation.Outdent [44..44)
-         |LF [44..45)
          |KwThen [49..53)
          |Ident(d) [54..55)
          |KwElse [56..60)
@@ -11764,7 +11763,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |LeftBrace [8..9)
          |KwIf [12..14)
          |Ident(a) [15..16)
-         |LF [16..17)
          |KwThen [19..23)
          |Ident(b) [24..25)
          |LF [25..26)
@@ -11799,7 +11797,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [7..7)
          |KwIf [10..12)
          |Ident(a) [13..14)
-         |LF [14..15)
          |KwThen [17..21)
          |Ident(b) [22..23)
          |LF [23..24)
@@ -11836,7 +11833,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |LF [11..12)
          |KwIf [14..16)
          |Ident(a) [17..18)
-         |LF [18..19)
          |KwThen [21..25)
          |Ident(b) [26..27)
          |LF [27..28)
@@ -11875,7 +11871,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |LeftParen [15..16)
          |Ident(a) [16..17)
          |RightParen [17..18)
-         |LF [18..19)
          |KwThen [21..25)
          |Ident(b) [26..27)
          |LF [27..28)
@@ -11912,7 +11907,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |LeftParen [13..14)
          |Ident(a) [14..15)
          |RightParen [15..16)
-         |LF [16..17)
          |KwThen [19..23)
          |Ident(b) [24..25)
          |LF [25..26)
@@ -11951,7 +11945,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |LeftParen [17..18)
          |Ident(a) [18..19)
          |RightParen [19..20)
-         |LF [20..21)
          |KwThen [23..27)
          |Ident(b) [28..29)
          |LF [29..30)
@@ -12330,7 +12323,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [15..16)
          |Ident(&&) [17..19)
          |Ident(b) [20..21)
-         |LF [21..22)
          |KwThen [24..28)
          |Ident(c) [29..30)
          |LF [30..31)
@@ -12377,7 +12369,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [19..20)
          |Ident(&&) [21..23)
          |Ident(b) [24..25)
-         |LF [25..26)
          |KwThen [28..32)
          |Ident(c) [33..34)
          |LF [34..35)
@@ -12777,7 +12768,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |LeftBrace [8..9)
          |KwWhile [12..17)
          |Ident(a) [18..19)
-         |LF [19..20)
          |KwDo [22..24)
          |Ident(b) [25..26)
          |LF [26..27)
@@ -12813,7 +12803,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [7..7)
          |KwWhile [10..15)
          |Ident(a) [16..17)
-         |LF [17..18)
          |KwDo [20..22)
          |Ident(b) [23..24)
          |LF [24..25)
@@ -12851,7 +12840,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |LF [11..12)
          |KwWhile [14..19)
          |Ident(a) [20..21)
-         |LF [21..22)
          |KwDo [24..26)
          |Ident(b) [27..28)
          |LF [28..29)
