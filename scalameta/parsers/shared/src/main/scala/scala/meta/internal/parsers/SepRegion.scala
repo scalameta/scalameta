@@ -26,6 +26,15 @@ sealed trait RegionNonDelimNonIndented extends SepRegionNonIndented
 
 case class RegionIndent(override val indent: Int) extends SepRegionIndented with RegionDelim
 
+/**
+ * A lambda after a colon that ends on its line, with the indentation of its context. As dotty's
+ * `ENDlambda`, it ends at the first line end where no region that opened inside it holds it open,
+ * and not before `condEnd`, the index of the `then` or `do` of a condition in it that continues
+ * past the parentheses of an `if` or a `while`.
+ */
+final class RegionColonLambda(override val indent: Int, val condEnd: Int = -1)
+    extends SepRegionIndented
+
 case class RegionLine(override val indent: Int) extends RegionNonDelimNonIndented with CanProduceLF
 
 case class RegionParen(override val indent: Int) extends RegionDelimNonIndented

@@ -341,8 +341,11 @@ private[meta] final class ScannerTokens(
     def mkIndent(pos: Int, pointPos: Int, rs: List[SepRegion], next: TokenRef = null): TokenRef =
       TokenRef(rs, mkIndentToken(pointPos), pos, nextPos, pointPos, next)
 
-    def mkOutdentTo(region: SepRegionIndented, regions: List[SepRegion]) =
-      mkOutdentAt(region.indent, regions)
+    def mkOutdentTo(region: SepRegionIndented, regions: List[SepRegion]) = region match {
+      // a comment on a later line comes after a lambda that ends on its line
+      case _: RegionColonLambda => mkOutdentAt(Int.MaxValue, regions)
+      case _ => mkOutdentAt(region.indent, regions)
+    }
 
     def mkOutdentAt(outdent: Int, regions: List[SepRegion]) = {
       val maxPointPos = if (nextPos < 0 || currNonTrivial) currPos else nextPos
@@ -470,6 +473,19 @@ private[meta] final class ScannerTokens(
       case _ => null
     }
 
+    // a colon that dotty reads as the start of a lambda argument that ends on this line
+    def startsColonLambda(sepRegions: List[SepRegion]): Boolean = dialect.allowFewerBraces &&
+      dialect.allowSignificantIndentation && isFewerBracesPrefix(prev) &&
+      (dropRegionLine(sepRegions) match {
+        // an ascription or a type parameter, where a type follows the colon
+        case (_: RegionParen | _: RegionBracket) :: _ => false
+        // a declaration, a template or a pattern, where a type follows the colon
+        case (_: RegionHasParamMark | _: RegionTemplateDecl | _: RegionCaseExpr) :: _ => false
+        case Nil => (treeType ne classOf[Term.Param]) && (treeType ne classOf[Type.Param])
+        case _ => true
+      }) && !precedesTypedName(prevNonTrivia(prevPos)) &&
+      isColonLambdaOnLine(nextNonHTriviaAt(currPos)) && !isInTypeDecl(prevPos)
+
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
       case _: EOF => getAtEof(sepRegions)
       case _: Comma =>
@@ -528,7 +544,7 @@ private[meta] final class ScannerTokens(
             // partial function
             case (_: RegionBrace) :: _ => expr() :: sepRegions
             // partial function in assignment or fewer braces
-            case (_: RegionIndent) :: rs
+            case (_: SepRegionIndented) :: rs
                 if prevToken.is[Indentation.Indent] &&
                   (prev match {
                     case _: Equals | _: Colon => true
@@ -587,7 +603,7 @@ private[meta] final class ScannerTokens(
               // add case region for `match {` to calculate proper indentation
               // for statements in indentation dialects
               val bodyIndent = rs match {
-                case (ri: RegionIndent) :: _ => ri.indent
+                case (ri: SepRegionIndented) :: _ => ri.indent
                 case _ => nextIndent
               }
               new RegionCaseBody(bodyIndent, curr) :: rs
@@ -630,6 +646,9 @@ private[meta] final class ScannerTokens(
           case (_: RegionCaseExprGuard) :: _ if dialect.allowFewerBraces =>
             // to distinguish `=>` from lambda and end of case expr
             currRef(RegionColonMaybeFewerBraces :: sepRegions)
+          case _ if startsColonLambda(sepRegions) =>
+            val nextRegions = new RegionColonLambda(findIndent(sepRegions)) :: sepRegions
+            currAndNextRef(sepRegions, mkIndent(currPos, nextPos, nextRegions))
           case _ => currRef(sepRegions)
         }
       case _: Equals => sepRegions match {
@@ -664,7 +683,8 @@ private[meta] final class ScannerTokens(
               // might continue cond or start body
               case _: Ident | _: LeftBrace | _: LeftBracket | _: LeftParen | _: Underscore
                   if dialect.allowQuietSyntax =>
-                rc.asCondOrBody(condEndAt(rc.asCond(), currPos)) :: rs
+                val condEnd = condEndAt(rc.asCond(), currPos)
+                rc.asCondOrBody(condEnd) :: withColonLambdaCondEnd(rs, condEnd)
               case _ => rc.asBody().fold(rs)(_ :: rs)
             }
           case RegionForMaybeParens if prev.is[RightParen] =>
@@ -819,6 +839,20 @@ private[meta] final class ScannerTokens(
                 }) => OutdentInfo(r, xs)
             case _ => null
           }
+          // a line end inside this region does not end the lambda, as in dotty
+          def holdsColonLambda(region: SepRegion): Boolean = region match {
+            case _: RegionDelim | _: RegionCaseExpr | _: RegionControlCond | RegionForOther => true
+            // an empty case body takes the next line, as `getOutdentInfo` lets it
+            case r: RegionCaseBody => r.arrow eq prev
+            case _ => false
+          }
+          // the regions from the innermost lambda that this line end closes, or null
+          @tailrec
+          def closingColonLambda(rs: List[SepRegion]): List[SepRegion] = rs match {
+            case (r: RegionColonLambda) :: _ => if (r.condEnd >= nextPos) null else rs
+            case r :: xs if !holdsColonLambda(r) => closingColonLambda(xs)
+            case _ => null
+          }
           def getOutdentInfo(sepRegions: List[SepRegion]) = sepRegions match {
             case (rc: RegionCaseBody) :: (r: RegionIndent) :: rs =>
               if (nextIndent > r.indent) null
@@ -947,10 +981,24 @@ private[meta] final class ScannerTokens(
             }
           }
 
+          // the outdent of the lambda that `lambda` starts with, if any, or else of `sepRegions`
+          def getOutdentInfoWith(lambda: List[SepRegion], sepRegions: List[SepRegion]) =
+            lambda match {
+              case (r: RegionColonLambda) :: rs => OutdentInfo(r, rs)
+              case _ => getOutdentInfo(sepRegions)
+            }
+
           val regionsToRes: List[SepRegion] => Option[Either[List[SepRegion], TokenRef]] =
             if (prevToken.is[Indentation]) _ => None
-            else
-              mkOutdentsT(_, multiEOL)(getIndentIfNeeded)((x, _) => Some(Right(x)))(getOutdentInfo)
+            else rs => {
+              val lambda = closingColonLambda(rs)
+              // an indent that opens here keeps the lambda open
+              val indentOpt = if (lambda eq null) None else getIndentIfNeeded(rs)
+              if (indentOpt.isDefined) indentOpt
+              else mkOutdentsT(rs, multiEOL)(getIndentIfNeeded)((x, _) => Some(Right(x)))(xs =>
+                getOutdentInfoWith(if (xs eq rs) lambda else closingColonLambda(xs), xs),
+              )
+            }
 
           def onlyWithoutLF() = sepRegionsOrig match {
             case (ri: SepRegionIndented) :: _ if ri.indent < nextIndent =>
@@ -995,6 +1043,67 @@ private[meta] final class ScannerTokens(
   }
 
   private def isFewerBracesPrefix(token: Token): Boolean = token.isAny[Ident, CloseDelim, KwThis]
+
+  // after this token, `T` in `name: T` is the type of `name`: a self type, a parameter, a pattern
+  private def precedesTypedName(token: Token): Boolean = token
+    .isAny[LeftBrace, Colon, KwImplicit, KwCase]
+
+  // the line up to `pos` declares a type outside delimiters, so a colon starts a context bound
+  private def isInTypeDecl(pos: Int): Boolean = {
+    @tailrec
+    def iter(i: Int, depth: Int): Boolean = i >= 0 &&
+      (tokens(i) match {
+        case _: CloseDelim => iter(i - 1, depth + 1)
+        case _: OpenDelim => depth > 0 && iter(i - 1, depth - 1)
+        case _ if depth > 0 => iter(i - 1, depth)
+        case _: AtEOLorF | _: Semicolon => false
+        case _: KwType => !prevNonTrivia(i).is[Dot]
+        case _ => iter(i - 1, depth)
+      })
+    iter(pos, 0)
+  }
+
+  // the index after the delimiter that closes the one at `pos`, or -1
+  private def skipDelims(pos: Int): Int = {
+    @tailrec
+    def iter(i: Int, depth: Int): Int = tokens(i) match {
+      case _: OpenDelim => iter(i + 1, depth + 1)
+      case _: CloseDelim => if (depth == 1) i + 1 else iter(i + 1, depth - 1)
+      case _: EOF => -1
+      case _ => iter(i + 1, depth)
+    }
+    iter(pos, 0)
+  }
+
+  // the index of the arrow after the parameters of a lambda at `pos`, or -1
+  private def colonLambdaArrowAt(pos: Int): Int = {
+    val end = tokens(pos) match {
+      case _: Ident | _: Underscore => pos + 1
+      case _: LeftParen | _: LeftBracket => skipDelims(pos)
+      case _ => -1
+    }
+    if (end < 0) end
+    else {
+      val arrow = nextNonHTriviaAt(end - 1)
+      if (tokens(arrow).is[FunctionArrow]) arrow else -1
+    }
+  }
+
+  // an expression follows the arrow at `arrow`, or a curried arrow after it, on the same line
+  @tailrec
+  private def hasBodyOnLine(arrow: Int): Boolean = {
+    val body = nextNonHTriviaAt(arrow)
+    !tokens(body).is[AtEOLorF] && {
+      val nextArrow = colonLambdaArrowAt(body)
+      nextArrow < 0 || hasBodyOnLine(nextArrow)
+    }
+  }
+
+  // a `case` or a lambda at `pos` that ends on its line
+  private def isColonLambdaOnLine(pos: Int): Boolean = tokens(pos).is[KwCase] || {
+    val arrow = colonLambdaArrowAt(pos)
+    arrow >= 0 && hasBodyOnLine(arrow)
+  }
 
   /* the index of the token that ends `cond` if the condition continues to it from `pos`, or -1;
    * as dotty's `followedByToken`, the scan stops at a statement outside braces */
@@ -1104,6 +1213,19 @@ private[meta] object ScannerTokens {
     case (_: RegionFor) :: _ | (_: RegionDelim) :: (_: RegionFor) :: _ => true
     case Nil | (_: RegionDelim | _: SepRegionIndented) :: _ => false
     case _ :: rs => isForGuard(rs)
+  }
+
+  /* `regions` where the nearest lambda that encloses them without a delimiter between has
+   * `condEnd` */
+  private def withColonLambdaCondEnd(regions: List[SepRegion], condEnd: Int): List[SepRegion] = {
+    def iter(rs: List[SepRegion]): List[SepRegion] = rs match {
+      case (r: RegionColonLambda) :: xs => new RegionColonLambda(r.indent, condEnd) :: xs
+      case Nil | (_: RegionDelim) :: _ => rs
+      case r :: xs =>
+        val ys = iter(xs)
+        if (ys eq xs) rs else r :: ys
+    }
+    if (condEnd < 0) regions else iter(regions)
   }
 
   @tailrec

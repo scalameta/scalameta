@@ -1771,11 +1771,21 @@ class FewerBracesSuite extends BaseDottySuite {
         |def a =
         |   foo { using bar: Int => baz }
         |""".stripMargin
-    val error =
-      """|<input>:3: error: `}` expected but `=>` found
-         |   foo { using bar: Int => baz }
-         |                        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def a = foo {
+         |  using bar {
+         |    Int => baz
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      tapply(tname("foo"), blk(tinfix(tname("using"), "bar", blk(tfunc(tparam("Int"))(tname("baz")))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 using, with type, arg in braces (no fewer braces)") {
@@ -2945,18 +2955,17 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|xs.map {
-         |  x => x + 1.filter {
-         |    y => y > 0
-         |  }
+         |  x => x + 1
+         |}.filter {
+         |  y => y > 0
          |}
          |""".stripMargin
     val tree = tapply(
-      tselect("xs", "map"),
-      blk(tfunc(tparam("x"))(tinfix(
-        "x",
-        "+",
-        tapply(tselect(lit(1), "filter"), blk(tfunc(tparam("y"))(tinfix("y", ">", lit(0))))),
-      ))),
+      tselect(
+        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix(tname("x"), "+", lit(1))))),
+        "filter",
+      ),
+      blk(tfunc(tparam("y"))(tinfix(tname("y"), ">", lit(0)))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2984,22 +2993,46 @@ class FewerBracesSuite extends BaseDottySuite {
     val code =
       """|val used = score.filter: case (_, (r, w)) => r > 0 || w > 0
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |val used = score.filter: case (_, (r, w)) => r > 0 || w > 0
-         |                         ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|val used = score.filter {
+         |  case (_, (r, w)) =>
+         |    r > 0 || w > 0
+         |}
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("used")),
+      None,
+      tapply(
+        tselect("score", "filter"),
+        Term.PartialFunction(List(Case(
+          Pat.Tuple(List(Pat.Wildcard(), Pat.Tuple(List(patvar("r"), patvar("w"))))),
+          None,
+          tinfix(tinfix(tname("r"), ">", lit(0)), "||", tinfix(tname("w"), ">", lit(0))),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case with guard") {
     val code =
       """|xs.collect: case (a, b) if b > 2 => a
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |xs.collect: case (a, b) if b > 2 => a
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|xs.collect {
+         |  case (a, b) if b > 2 => a
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "collect"),
+      Term.PartialFunction(List(Case(
+        Pat.Tuple(List(patvar("a"), patvar("b"))),
+        Some(tinfix(tname("b"), ">", lit(2))),
+        tname("a"),
+      ))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case, leading select on the next line") {
@@ -3008,11 +3041,27 @@ class FewerBracesSuite extends BaseDottySuite {
          |  .collect: case x => (x, x + 1)
          |  .toMap
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  .collect: case x => (x, x + 1)
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|val one = list.collect {
+         |  case x =>
+         |    (x, x + 1)
+         |}.toMap
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("one")),
+      None,
+      tselect(
+        tapply(
+          tselect("list", "collect"),
+          Term.PartialFunction(List(
+            Case(patvar("x"), None, Term.Tuple(List(tname("x"), tinfix(tname("x"), "+", lit(1))))),
+          )),
+        ),
+        "toMap",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: indented case body") {
@@ -3023,11 +3072,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |    (x, y)
          |  .toMap
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  .collect: case x =>
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|val three = list.collect {
+         |  case x =>
+         |    val y = x + 1
+         |    (x, y)
+         |}.toMap
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("three")),
+      None,
+      tselect(
+        tapply(
+          tselect("list", "collect"),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            blk(
+              Defn.Val(Nil, List(patvar("y")), None, tinfix(tname("x"), "+", lit(1))),
+              Term.Tuple(List(tname("x"), tname("y"))),
+            ),
+          ))),
+        ),
+        "toMap",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case expression") {
@@ -3084,11 +3155,21 @@ class FewerBracesSuite extends BaseDottySuite {
     val code =
       """|xs.map: [T] => (x: T) => List(x)
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `[` found
-         |xs.map: [T] => (x: T) => List(x)
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|xs.map {
+         |  [T] => (x: T) => List(x)
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "map"),
+      blk(Term.PolyFunction(
+        Type.ParamClause(List(
+          Type.Param(Nil, pname("T"), Type.ParamClause(Nil), Type.Bounds(None, None, Nil, Nil)),
+        )),
+        tfunc(tparam("x", pname("T")))(tapply(tname("List"), tname("x"))),
+      )),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: def rhs, name param") {
@@ -3281,15 +3362,15 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = xs.map {
-         |  x => x.foo
-         |}
+         |  x => x
+         |}.foo
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tselect("x", "foo")))),
+      tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "foo"),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -3301,15 +3382,15 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = xs.map {
-         |  x => x + 1
-         |}
+         |  x => x
+         |} + 1
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix("x", "+", lit(1))))),
+      tinfix(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "+", lit(1)),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -3389,8 +3470,9 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def f = xs.foreach: x => println(x); println(2)
          |""".stripMargin
     val layout =
-      """|def f = xs.foreach {
-         |  x => println(x)
+      """|def f = xs.foreach { x =>
+         |  println(x)
+         |  println(2)
          |}
          |""".stripMargin
     val tree = Defn.Def(
@@ -3398,7 +3480,10 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("f"),
       Nil,
       None,
-      tapply(tselect("xs", "foreach"), blk(tfunc(tparam("x"))(tapply("println", "x")))),
+      tapply(
+        tselect("xs", "foreach"),
+        blk(tfunc(tparam("x"))(blk(tapply("println", "x"), tapply("println", lit(2))))),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -3486,11 +3571,23 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def f = xs.map: case x =>
          |  x + 1
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = xs.map: case x =>
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map {
+         |  case x =>
+         |    x + 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "map"),
+        Term.PartialFunction(List(Case(patvar("x"), None, tinfix(tname("x"), "+", lit(1))))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: context function") {
@@ -3914,9 +4011,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y => y
          |""".stripMargin
     val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = xs.map: case x if x > 1 => x
-         |                ^""".stripMargin
+      """|<input>:2: error: `;` expected but `=>` found
+         |  case y => y
+         |         ^""".stripMargin
     runTestError[Stat](code, error)
   }
 
@@ -3924,11 +4021,26 @@ class FewerBracesSuite extends BaseDottySuite {
     val code =
       """|def f = xs.map: x => xs.map: case y => y
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = xs.map: x => xs.map: case y => y
-         |                             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map {
+         |  x => xs.map {
+         |    case y => y
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "map"),
+        blk(tfunc(tparam("x"))(
+          tapply(tselect("xs", "map"), Term.PartialFunction(List(Case(patvar("y"), None, tname("y"))))),
+        )),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: nested on the same line, after infix, selects") {
@@ -4035,17 +4147,20 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def f = xs.map {
          |  x => foo {
          |    a
-         |  } + 1.bar
-         |}
+         |  } + 1
+         |}.bar
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(
-        tselect("xs", "map"),
-        blk(tfunc(tparam("x"))(tinfix(tapply("foo", blk(tname("a"))), "+", tselect(lit(1), "bar")))),
+      tselect(
+        tapply(
+          tselect("xs", "map"),
+          blk(tfunc(tparam("x"))(tinfix(tapply(tname("foo"), blk(tname("a"))), "+", lit(1)))),
+        ),
+        "bar",
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -4080,24 +4195,11 @@ class FewerBracesSuite extends BaseDottySuite {
     val code =
       """|def f = if c then xs.map: x => x else 2
          |""".stripMargin
-    val layout =
-      """|def f = if (c) xs.map {
-         |  x => x
-         |} else 2
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      Term.If(
-        tname("c"),
-        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))),
-        lit(2),
-        Nil,
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:1: error: `outdent` expected but `else` found
+         |def f = if c then xs.map: x => x else 2
+         |                                 ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 relaxed lambda: case expression, first of two args") {
@@ -4117,11 +4219,24 @@ class FewerBracesSuite extends BaseDottySuite {
          |  a
          |  b
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = xs.map: case x =>
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map {
+         |  case x =>
+         |    a
+         |    b
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "map"),
+        Term.PartialFunction(List(Case(patvar("x"), None, blk(tname("a"), tname("b"))))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case expression with guard, next statement") {
@@ -4412,11 +4527,43 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def f = try a catch case e => xs.map: case y => y
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = try a catch case e => xs.map: case y => y
-         |                                        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      xs.map {
+         |        case y => y
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            Some(Term.CasesBlock(List(Case(
+              patvar("e"),
+              None,
+              tapply(
+                tselect("xs", "map"),
+                Term.PartialFunction(List(Case(patvar("y"), None, tname("y")))),
+              ),
+            )))),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 curried multi-line lambda: second param on the next line") {
@@ -4478,10 +4625,12 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def f = xs map: x => x
          |""".stripMargin
     val layout =
-      """|def f = xs map: (x => x)
+      """|def f = xs map {
+         |  x => x
+         |}
          |""".stripMargin
     val tree = Defn
-      .Def(Nil, tname("f"), Nil, None, Term.Ascribe(tpostfix("xs", "map"), pfunc("x")("x")))
+      .Def(Nil, tname("f"), Nil, None, tinfix(tname("xs"), "map", blk(tfunc(tparam("x"))(tname("x")))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -4490,11 +4639,22 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def f = xs.map: case x => x
          |  .foo
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = xs.map: case x => x
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map {
+         |  case x => x
+         |}.foo
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tselect(
+        tapply(tselect("xs", "map"), Term.PartialFunction(List(Case(patvar("x"), None, tname("x"))))),
+        "foo",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: empty case body, next case on the same line") {
@@ -4548,11 +4708,27 @@ class FewerBracesSuite extends BaseDottySuite {
     val code =
       """|def f = xs.map: case x => xs.map: y => y
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = xs.map: case x => xs.map: y => y
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map {
+         |  case x =>
+         |    xs.map {
+         |      y => y
+         |    }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "map"),
+        Term.PartialFunction(List(
+          Case(patvar("x"), None, tapply(tselect("xs", "map"), blk(tfunc(tparam("y"))(tname("y"))))),
+        )),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: infix rhs") {
@@ -4582,15 +4758,15 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = xs.map {
-         |  x => x.foo
-         |}
+         |  x => x
+         |}.foo
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tselect("x", "foo")))),
+      tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "foo"),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4614,11 +4790,26 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def f = xs.map: case (a, b) => a
          |  + 1
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = xs.map: case (a, b) => a
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map {
+         |  case (a, b) => a
+         |} + 1
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tinfix(
+        tapply(
+          tselect("xs", "map"),
+          Term.PartialFunction(List(Case(Pat.Tuple(List(patvar("a"), patvar("b"))), None, tname("a")))),
+        ),
+        "+",
+        lit(1),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case in braces arg and in parens") {
@@ -4640,11 +4831,31 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def f = xs.map: case x =>
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = xs.map: case x =>
-         |                  ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case x =>
+         |      def g = 1
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          tselect("xs", "map"),
+          Term.PartialFunction(List(
+            Case(patvar("x"), None, blk(Defn.Def(Nil, tname("g"), Nil, None, lit(1)))),
+          )),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: in yield") {
@@ -4982,15 +5193,15 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = xs.map {
-         |  x => x.foo
-         |}
+         |  x => x
+         |}.foo
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tselect("x", "foo")))),
+      tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "foo"),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -5021,76 +5232,10 @@ class FewerBracesSuite extends BaseDottySuite {
          |    a
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = xs.map: case x =>
-         |                  ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("SIP-75 relaxed lambda: case, indented body, leading select") {
-    val code =
-      """|object A:
-         |  def f = xs.map: case x =>
-         |      a
-         |    .foo
-         |  def g = 1
-         |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = xs.map: case x =>
-         |                  ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("SIP-75 relaxed lambda: case, next def") {
-    val code =
-      """|object A:
-         |  def f = xs.map: case x => x
-         |  def g = 1
-         |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = xs.map: case x => x
-         |                  ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("SIP-75 single-line lambda: tuple body spans lines, leading select") {
-    val code =
-      """|def f = xs.map: x => (x,
-         |  1) + 2
-         |  .bar
-         |""".stripMargin
-    val layout =
-      """|def f = xs.map {
-         |  x => (x, 1) + 2.bar
-         |}
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tapply(
-        tselect("xs", "map"),
-        blk(
-          tfunc(tparam("x"))(tinfix(Term.Tuple(List(tname("x"), lit(1))), "+", tselect(lit(2), "bar"))),
-        ),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
-  }
-
-  test("SIP-75 single-line lambda: semicolon and def after body") {
-    val code =
-      """|object A:
-         |  def f = xs.map: x => x; def g = 1
-         |""".stripMargin
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => x
+         |    case x => a
          |  }
          |  def g = 1
          |}
@@ -5104,10 +5249,134 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))),
+          tapply(tselect("xs", "map"), Term.PartialFunction(List(Case(patvar("x"), None, tname("a"))))),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
       ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 relaxed lambda: case, indented body, leading select") {
+    val code =
+      """|object A:
+         |  def f = xs.map: case x =>
+         |      a
+         |    .foo
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case x => a
+         |  }.foo
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tselect(
+            tapply(tselect("xs", "map"), Term.PartialFunction(List(Case(patvar("x"), None, tname("a"))))),
+            "foo",
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 relaxed lambda: case, next def") {
+    val code =
+      """|object A:
+         |  def f = xs.map: case x => x
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case x => x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tselect("xs", "map"), Term.PartialFunction(List(Case(patvar("x"), None, tname("x"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 single-line lambda: tuple body spans lines, leading select") {
+    val code =
+      """|def f = xs.map: x => (x,
+         |  1) + 2
+         |  .bar
+         |""".stripMargin
+    val layout =
+      """|def f = xs.map {
+         |  x => (x, 1) + 2
+         |}.bar
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tselect(
+        tapply(
+          tselect("xs", "map"),
+          blk(tfunc(tparam("x"))(tinfix(Term.Tuple(List(tname("x"), lit(1))), "+", lit(2)))),
+        ),
+        "bar",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 single-line lambda: semicolon and def after body") {
+    val code =
+      """|object A:
+         |  def f = xs.map: x => x; def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    x
+         |    def g = 1
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          tselect("xs", "map"),
+          blk(tfunc(tparam("x"))(blk(tname("x"), Defn.Def(Nil, tname("g"), Nil, None, lit(1))))),
+        ),
+      )),
     )))
     runTestAssert[Source](code, layout)(tree)
   }
@@ -5183,15 +5452,15 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = xs.map {
-         |  x => x ++ ys
-         |}
+         |  x => x
+         |} ++ ys
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix("x", "++", "ys")))),
+      tinfix(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "++", tname("ys")),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -5234,22 +5503,54 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case 1 => xs.map: case y => y
          |  case 2 => 3
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  case 1 => xs.map: case y => y
-         |                    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    xs.map {
+         |      case y => y
+         |    }
+         |  case 2 =>
+         |    3
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          lit(1),
+          None,
+          tapply(tselect("xs", "map"), Term.PartialFunction(List(Case(patvar("y"), None, tname("y"))))),
+        ),
+        Case(lit(2), None, lit(3)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: typed pattern") {
     val code =
       """|def f = ys.collect: case z: Int => z
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = ys.collect: case z: Int => z
-         |                    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = ys.collect {
+         |  case z: Int => z
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("ys", "collect"),
+        Term.PartialFunction(List(Case(Pat.Typed(patvar("z"), pname("Int")), None, tname("z")))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: interpolation prefix") {
@@ -5604,10 +5905,10 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|xs.map {
-         |  x => x.foo
-         |}
+         |  x => x
+         |}.foo
          |""".stripMargin
-    val tree = tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tselect("x", "foo"))))
+    val tree = tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "foo")
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -5618,10 +5919,10 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|xs.map {
-         |  x => x + 1
-         |}
+         |  x => x
+         |} + 1
          |""".stripMargin
-    val tree = tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix("x", "+", lit(1)))))
+    val tree = tinfix(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "+", lit(1))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -5742,9 +6043,8 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def t = {
          |  xs.map {
          |    x => x // c
-         |    .filter {
-         |      y => y
-         |    }
+         |  }.filter {
+         |    y => y
          |  }
          |  val z = 1
          |  z
@@ -5757,10 +6057,17 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       blk(
         tapply(
-          tselect("xs", "map"),
-          blk(tfunc(tparam("x"))(
-            tapply(tselect(tnameComments("x")()("// c"), "filter"), blk(tfunc(tparam("y"))(tname("y")))),
-          )),
+          tselect(
+            tapply(
+              tselect("xs", "map"),
+              blk(
+                Term.Function.newBuilder(List(tparam("x")), tname("x")).endComment(Seq("// c"))
+                  .result(),
+              ),
+            ),
+            "filter",
+          ),
+          blk(tfunc(tparam("y"))(tname("y"))),
         ),
         Defn.Val(Nil, List(patvar("z")), None, lit(1)),
         tname("z"),
@@ -5779,16 +6086,19 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def t = xs.map {
          |  x => x
-         |  // c
-         |  .foo
          |}
+         |// c
+         |.foo
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("t"),
       Nil,
       None,
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tselect("x", tnameComments("foo")("// c")())))),
+      Term.Select(
+        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))),
+        tnameComments("foo")("// c")(),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -5802,20 +6112,23 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def t = xs.map {
          |  x => ys.map {
-         |    y => x + y.sum
+         |    y => x + y
          |  }
-         |}
+         |}.sum
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("t"),
       Nil,
       None,
-      tapply(
-        tselect("xs", "map"),
-        blk(tfunc(tparam("x"))(
-          tapply(tselect("ys", "map"), blk(tfunc(tparam("y"))(tinfix("x", "+", tselect("y", "sum"))))),
-        )),
+      tselect(
+        tapply(
+          tselect("xs", "map"),
+          blk(tfunc(tparam("x"))(
+            tapply(tselect("ys", "map"), blk(tfunc(tparam("y"))(tinfix("x", "+", "y")))),
+          )),
+        ),
+        "sum",
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -5827,22 +6140,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |  xs.map: x => if x > 0 then 1
          |  else 2
          |""".stripMargin
-    val layout =
-      """|def t = xs.map {
-         |  x => if (x > 0) 1 else 2
-         |}
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("t"),
-      Nil,
-      None,
-      tapply(
-        tselect("xs", "map"),
-        blk(tfunc(tparam("x"))(Term.If(tinfix("x", ">", lit(0)), lit(1), lit(2), Nil))),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:3: error: `outdent` expected but `else` found
+         |  else 2
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda, then multi-line lambda on the same line") {
@@ -5856,20 +6158,22 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def t = xs.map {
          |  x => x.foo {
          |    y => y + 1
-         |  }.bar
-         |}
+         |  }
+         |}.bar
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("t"),
       Nil,
       None,
-      tapply(
-        tselect("xs", "map"),
-        blk(tfunc(tparam("x"))(tselect(
-          tapply(tselect("x", "foo"), blk(tfunc(tparam("y"))(tinfix("y", "+", lit(1))))),
-          "bar",
-        ))),
+      tselect(
+        tapply(
+          tselect("xs", "map"),
+          blk(tfunc(tparam("x"))(
+            tapply(tselect("x", "foo"), blk(tfunc(tparam("y"))(tinfix("y", "+", lit(1))))),
+          )),
+        ),
+        "bar",
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -6096,11 +6400,35 @@ class FewerBracesSuite extends BaseDottySuite {
          |    case y => ys.collect: case z: Int => z
          |    case _ => Nil
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `identifier` expected but `case` found
-         |    case y => ys.collect: case z: Int => z
-         |                          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def t = x match {
+         |  case y =>
+         |    ys.collect {
+         |      case z: Int => z
+         |    }
+         |  case _ =>
+         |    Nil
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("t"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          None,
+          tapply(
+            tselect("ys", "collect"),
+            Term.PartialFunction(List(Case(Pat.Typed(patvar("z"), pname("Int")), None, tname("z")))),
+          ),
+        ),
+        Case(Pat.Wildcard(), None, tname("Nil")),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case, second case on next line") {
@@ -6110,9 +6438,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y => y
          |""".stripMargin
     val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  xs.collect: case x => x
-         |              ^""".stripMargin
+      """|<input>:3: error: `outdent` expected but `case` found
+         |  case y => y
+         |  ^""".stripMargin
     runTestError[Stat](code, error)
   }
 
@@ -6204,11 +6532,22 @@ class FewerBracesSuite extends BaseDottySuite {
     val code =
       """|def f = xs.map: case x: Int => x
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = xs.map: case x: Int => x
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map {
+         |  case x: Int => x
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "map"),
+        Term.PartialFunction(List(Case(Pat.Typed(patvar("x"), pname("Int")), None, tname("x")))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 implicit closure: typed param in braces arg") {
@@ -6304,18 +6643,18 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def f = xs.map {
          |  x => x
-         |  // comment
-         |  .foo
          |}
+         |// comment
+         |.foo
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(
-        tselect("xs", "map"),
-        blk(tfunc(tparam("x"))(tselect("x", tnameComments("foo")("// comment")()))),
+      Term.Select(
+        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))),
+        tnameComments("foo")("// comment")(),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -6466,11 +6805,26 @@ class FewerBracesSuite extends BaseDottySuite {
          |    .foo
          |  .bar
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = xs.map: case x =>
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map {
+         |  case x =>
+         |    a.foo
+         |}.bar
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tselect(
+        tapply(
+          tselect("xs", "map"),
+          Term.PartialFunction(List(Case(patvar("x"), None, tselect("a", "foo")))),
+        ),
+        "bar",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 parens: colon and lambda in val rhs") {
@@ -6556,11 +6910,19 @@ class FewerBracesSuite extends BaseDottySuite {
          |    .map: case x =>
          |    a
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `identifier` expected but `case` found
-         |    .map: case x =>
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = foo.map {
+         |  case x => a
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(tselect("foo", "map"), Term.PartialFunction(List(Case(patvar("x"), None, tname("a"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 colon: literal prefix in def rhs, lambda on the next line") {
@@ -6733,15 +7095,18 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = xs.map {
-         |  x => new A.foo
-         |}
+         |  x => new A
+         |}.foo
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.New(init(Type.Select("A", "foo")))))),
+      tselect(
+        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.New(init(pname("A")))))),
+        "foo",
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -6755,8 +7120,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => new A.foo
-         |  }
+         |    x => new A
+         |  }.foo
          |}
          |""".stripMargin
     val tree = Defn.Object(
@@ -6767,7 +7132,10 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("f"),
         Nil,
         None,
-        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.New(init(Type.Select("A", "foo")))))),
+        tselect(
+          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.New(init(pname("A")))))),
+          "foo",
+        ),
       )),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -7140,7 +7508,7 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def f = xs.map: x => case y: Int => y
          |""".stripMargin
     val error =
-      """|<input>:1: error: `identifier` expected but `case` found
+      """|<input>:1: error: `outdent` expected but `case` found
          |def f = xs.map: x => case y: Int => y
          |                     ^""".stripMargin
     runTestError[Stat](code, error)
@@ -7588,7 +7956,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = xs.map {
-         |  x => x + y
+         |  x => x +
          |}
          |""".stripMargin
     val tree = Defn.Def(
@@ -7596,7 +7964,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("f"),
       Nil,
       None,
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix("x", "+", "y")))),
+      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.SelectPostfix(tname("x"), tname("+"))))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -7955,31 +8323,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  def f = try xs.map: x => x catch case e => 1
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = try xs.map {
-         |    x => x
-         |  } catch {
-         |    case e => 1
-         |  }
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        Term.Try(
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))("x"))),
-          List(Case(patvar("e"), None, lit(1))),
-          None,
-        ),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `catch` found
+         |  def f = try xs.map: x => x catch case e => 1
+         |                             ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: in try, finally on the same line") {
@@ -7987,25 +8335,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  def f = try xs.map: x => x finally g
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = try xs.map {
-         |    x => x
-         |  } finally g
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        Term.Try(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))("x"))), Nil, Some(tname("g"))),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `finally` found
+         |  def f = try xs.map: x => x finally g
+         |                             ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: new body, deeper with on the next line") {
@@ -8015,28 +8349,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |    xs.map: x => new A
          |      with B
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = xs.map {
-         |    x => new A with B
-         |  }
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tapply(
-          tselect("xs", "map"),
-          blk(tfunc(tparam("x"))(Term.NewAnonymous(tplNoBody(init("A"), init("B"))))),
-        ),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:4: error: `outdent` expected but `with` found
+         |      with B
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: try body, catch on the next line at the statement indent") {
@@ -8046,30 +8363,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |    xs.map: x => try a
          |    catch case e => b
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = xs.map {
-         |    x => try a catch {
-         |      case e => b
-         |    }
-         |  }
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tapply(
-          tselect("xs", "map"),
-          blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(Case(patvar("e"), None, "b")), None))),
-        ),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:4: error: `outdent` expected but `catch` found
+         |    catch case e => b
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 colon: for generator, function type ascription in parens") {
@@ -8101,9 +8399,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def g = for x: A => B <- fs yield x
          |""".stripMargin
     val error =
-      """|<input>:2: error: `<-` expected but `=>` found
+      """|<input>:2: error: `identifier` expected but `indent` found
          |  def g = for x: A => B <- fs yield x
-         |                   ^""".stripMargin
+         |                 ^""".stripMargin
     runTestError[Stat](code, error)
   }
 
@@ -8164,25 +8462,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  def f = if xs.exists: x => x then 1 else 2
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = if (xs.exists {
-         |    x => x
-         |  }) 1 else 2
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tif(tapply(tselect("xs", "exists"), blk(tfunc(tparam("x"))("x"))), lit(1), lit(2)),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `then` found
+         |  def f = if xs.exists: x => x then 1 else 2
+         |                               ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: deeper argument in parens on the next line") {
@@ -8195,8 +8479,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => f(y)
-         |  }
+         |    x => f
+         |  }(y)
          |}
          |""".stripMargin
     val tree = Defn.Object(
@@ -8207,7 +8491,7 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("f"),
         Nil,
         None,
-        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tapply("f", "y")))),
+        tapply(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("f")))), tname("y")),
       )),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -8275,25 +8559,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |    xs.map: x => if x then a
          |    else b
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = xs.map {
-         |    x => if (x) a else b
-         |  }
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif("x", "a", "b")))),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:4: error: `outdent` expected but `else` found
+         |    else b
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 catch case on the same line in braces, semicolon after the body") {
@@ -8481,29 +8751,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  def f = if xs.exists: x => g(x) then 1 else 2
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = if (xs.exists {
-         |    x => g(x)
-         |  }) 1 else 2
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tif(
-          tapply(tselect("xs", "exists"), blk(tfunc(tparam("x"))(tapply("g", "x")))),
-          lit(1),
-          lit(2),
-        ),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `then` found
+         |  def f = if xs.exists: x => g(x) then 1 else 2
+         |                                  ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 colon: if condition in parens, lambda with a call body") {
@@ -8523,25 +8775,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  def f = while xs.exists: x => g(x) do ()
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = while (xs.exists {
-         |    x => g(x)
-         |  }) ()
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        Term.While(tapply(tselect("xs", "exists"), blk(tfunc(tparam("x"))(tapply("g", "x")))), lit()),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `do` found
+         |  def f = while xs.exists: x => g(x) do ()
+         |                                     ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 colon: while condition in parens, lambda with a call body") {
@@ -8561,31 +8799,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  def f = for x <- xs.map: y => g(y) yield x
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = for (x <- xs.map {
-         |    y => g(y)
-         |  }) yield x
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        Term.ForYield(
-          List(Enumerator.Generator(
-            patvar("x"),
-            tapply(tselect("xs", "map"), blk(tfunc(tparam("y"))(tapply("g", "y")))),
-          )),
-          tname("x"),
-        ),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `yield` found
+         |  def f = for x <- xs.map: y => g(y) yield x
+         |                                     ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 colon: for generator in parens, lambda with a call body") {
@@ -8637,28 +8855,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  def f = foo(if c then xs.map: x => g(x) else y)
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = foo(if (c) xs.map {
-         |    x => g(x)
-         |  } else y)
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tapply(
-          "foo",
-          tif("c", tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tapply("g", "x")))), "y"),
-        ),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `else` found
+         |  def f = foo(if c then xs.map: x => g(x) else y)
+         |                                          ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: in then after a condition in parens, in parens, call body") {
@@ -8666,28 +8867,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  def f = foo(if (c) xs.map: x => g(x) else y)
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = foo(if (c) xs.map {
-         |    x => g(x)
-         |  } else y)
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tapply(
-          "foo",
-          tif("c", tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tapply("g", "x")))), "y"),
-        ),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `else` found
+         |  def f = foo(if (c) xs.map: x => g(x) else y)
+         |                                       ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: in try in parens, call body, finally on the same line") {
@@ -8695,32 +8879,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  def f = foo(try xs.map: x => g(x) finally h)
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = foo(try xs.map {
-         |    x => g(x)
-         |  } finally h)
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tapply(
-          "foo",
-          Term.Try(
-            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tapply("g", "x")))),
-            Nil,
-            Some(tname("h")),
-          ),
-        ),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `finally` found
+         |  def f = foo(try xs.map: x => g(x) finally h)
+         |                                    ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: in then, if body, else on the next line at the statement indent") {
@@ -8733,8 +8896,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = if (c) xs.map {
-         |    x => if (x) a else b
-         |  }
+         |    x => if (x) a
+         |  } else b
          |}
          |""".stripMargin
     val tree = Defn.Object(
@@ -8745,7 +8908,11 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("f"),
         Nil,
         None,
-        tif("c", tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif("x", "a", "b"))))),
+        tif(
+          tname("c"),
+          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif(tname("x"), tname("a"))))),
+          tname("b"),
+        ),
       )),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -8761,9 +8928,9 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = try xs.map {
-         |    x => try a catch {
-         |      case e => b
-         |    }
+         |    x => try a
+         |  } catch {
+         |    case e => b
          |  }
          |}
          |""".stripMargin
@@ -8776,11 +8943,8 @@ class FewerBracesSuite extends BaseDottySuite {
         Nil,
         None,
         Term.Try(
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(Case(patvar("e"), None, "b")), None))),
-          ),
-          Nil,
+          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), None, None)))),
+          Some(Term.CasesBlock(List(Case(patvar("e"), None, tname("b"))))),
           None,
         ),
       )),
@@ -9048,28 +9212,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |    xs.map: x => new A
          |    with B
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = xs.map {
-         |    x => new A with B
-         |  }
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tapply(
-          tselect("xs", "map"),
-          blk(tfunc(tparam("x"))(Term.NewAnonymous(tplNoBody(init("A"), init("B"))))),
-        ),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:4: error: `outdent` expected but `with` found
+         |    with B
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: match at the line end, deeper case, next statement") {
@@ -9121,9 +9268,9 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A {
          |  def f = {
          |    xs.map {
-         |      x => g(x) {
-         |        y
-         |      }
+         |      x => g(x)
+         |    } {
+         |      y
          |    }
          |    h
          |  }
@@ -9138,7 +9285,10 @@ class FewerBracesSuite extends BaseDottySuite {
         Nil,
         None,
         blk(
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tapply(tapply("g", "x"), blk("y"))))),
+          tapply(
+            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tapply(tname("g"), tname("x"))))),
+            blk(tname("y")),
+          ),
           tname("h"),
         ),
       )),
@@ -9158,8 +9308,8 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A {
          |  def f = {
          |    if (c) xs.map {
-         |      x => if (x) a else b
-         |    }
+         |      x => if (x) a
+         |    } else b
          |    h
          |  }
          |}
@@ -9173,7 +9323,11 @@ class FewerBracesSuite extends BaseDottySuite {
         Nil,
         None,
         blk(
-          tif("c", tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif("x", "a", "b"))))),
+          tif(
+            tname("c"),
+            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif(tname("x"), tname("a"))))),
+            tname("b"),
+          ),
           tname("h"),
         ),
       )),
@@ -9190,25 +9344,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |    else
          |      b
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = xs.map {
-         |    x => if (x) a else b
-         |  }
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif("x", "a", "b")))),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:5: error: `outdent` expected but `else` found
+         |    else
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: try at the line end, deeper body, catch at the statement indent") {
@@ -9327,34 +9467,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  def f = x match { case 1 => xs.map: y => y case 2 => 3 }
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = x match {
-         |    case 1 =>
-         |      xs.map {
-         |        y => y
-         |      }
-         |    case 2 =>
-         |      3
-         |  }
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tmatch(
-          "x",
-          Case(lit(1), None, tapply(tselect("xs", "map"), blk(tfunc(tparam("y"))("y")))),
-          Case(lit(2), None, lit(3)),
-        ),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `case` found
+         |  def f = x match { case 1 => xs.map: y => y case 2 => 3 }
+         |                                             ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: match at the line end, deeper case, leading select") {
@@ -9505,7 +9622,9 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A {
          |  def f = {
          |    xs.map {
-         |      x => new A { def g = 1 }
+         |      x => new A
+         |    } {
+         |      def g = 1
          |    }
          |    h
          |  }
@@ -9521,10 +9640,8 @@ class FewerBracesSuite extends BaseDottySuite {
         None,
         blk(
           tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(Term.NewAnonymous(
-              tpl(List(init("A")), List(Defn.Def(Nil, tname("g"), Nil, None, lit(1)))),
-            ))),
+            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.New(init(pname("A")))))),
+            blk(Defn.Def(Nil, tname("g"), Nil, None, lit(1))),
           ),
           tname("h"),
         ),
@@ -9593,9 +9710,9 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => x match {
-         |      case 1 => 2
-         |    }
+         |    x => x
+         |  } match {
+         |    case 1 => 2
          |  }
          |}
          |""".stripMargin
@@ -9607,7 +9724,10 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("f"),
         Nil,
         None,
-        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tmatch("x", Case(lit(1), None, lit(2)))))),
+        tmatch(
+          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))),
+          Case(lit(1), None, lit(2)),
+        ),
       )),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -9623,8 +9743,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => if (x) a else b.foo
-         |  }
+         |    x => if (x) a else b
+         |  }.foo
          |}
          |""".stripMargin
     val tree = Defn.Object(
@@ -9635,7 +9755,10 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("f"),
         Nil,
         None,
-        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif("x", "a", tselect("b", "foo"))))),
+        tselect(
+          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif(tname("x"), tname("a"), tname("b"))))),
+          "foo",
+        ),
       )),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -9703,8 +9826,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => a + b.foo
-         |  }
+         |    x => a + b
+         |  }.foo
          |}
          |""".stripMargin
     val tree = Defn.Object(
@@ -9715,7 +9838,10 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("f"),
         Nil,
         None,
-        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix("a", "+", tselect("b", "foo"))))),
+        tselect(
+          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix(tname("a"), "+", tname("b"))))),
+          "foo",
+        ),
       )),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -9949,7 +10075,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def g = 1
          |""".stripMargin
     val error =
-      """|<input>:2: error: `identifier` expected but `case` found
+      """|<input>:2: error: `outdent` expected but `case` found
          |  def f = xs.map: x => case y => y
          |                       ^""".stripMargin
     runTestError[Stat](code, error)
@@ -9993,9 +10119,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def g = 1
          |""".stripMargin
     val error =
-      """|<input>:2: error: `identifier` expected but `while` found
+      """|<input>:2: error: `do` expected but `;` found
          |  def f = xs.foreach: x => while x > 0; x < 9 do g(x)
-         |                           ^""".stripMargin
+         |                                      ^""".stripMargin
     runTestError[Stat](code, error)
   }
 
@@ -10006,9 +10132,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def g = 1
          |""".stripMargin
     val error =
-      """|<input>:2: error: `identifier` expected but `if` found
+      """|<input>:2: error: `then` expected but `;` found
          |  def f = xs.map: x => if a; b then c else d
-         |                       ^""".stripMargin
+         |                           ^""".stripMargin
     runTestError[Stat](code, error)
   }
 
@@ -10033,6 +10159,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(map) [23..26)
          |Colon [26..27)
+         |Indentation.Indent [28..28)
          |Ident(x) [28..29)
          |RightArrow [30..32)
          |KwIf [33..35)
@@ -10047,6 +10174,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(c) [53..54)
          |KwElse [55..59)
          |Ident(d) [60..61)
+         |Indentation.Outdent [61..61)
          |LF [61..62)
          |KwDef [64..67)
          |Ident(g) [68..69)
@@ -10101,6 +10229,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(map) [23..26)
          |Colon [26..27)
+         |Indentation.Indent [28..28)
          |Ident(x) [28..29)
          |RightArrow [30..32)
          |KwFor [33..36)
@@ -10115,6 +10244,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(ys) [51..53)
          |KwYield [54..59)
          |Ident(y) [60..61)
+         |Indentation.Outdent [61..61)
          |LF [61..62)
          |KwDef [64..67)
          |Ident(g) [68..69)
@@ -10177,6 +10307,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(map) [23..26)
          |Colon [26..27)
+         |Indentation.Indent [28..28)
          |Ident(x) [28..29)
          |RightArrow [30..32)
          |KwWhile [33..38)
@@ -10186,6 +10317,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(b) [49..50)
          |KwDo [51..53)
          |Ident(c) [54..55)
+         |Indentation.Outdent [55..55)
          |LF [55..56)
          |KwDef [58..61)
          |Ident(g) [62..63)
@@ -10244,6 +10376,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(map) [23..26)
          |Colon [26..27)
+         |Indentation.Indent [28..28)
          |Ident(x) [28..29)
          |RightArrow [30..32)
          |KwIf [33..35)
@@ -10256,6 +10389,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(ok) [45..47)
          |KwThen [48..52)
          |Ident(c) [53..54)
+         |Indentation.Outdent [54..54)
          |LF [54..55)
          |KwDef [57..60)
          |Ident(g) [61..62)
@@ -10314,6 +10448,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(map) [23..26)
          |Colon [26..27)
+         |Indentation.Indent [28..28)
          |Ident(x) [28..29)
          |RightArrow [30..32)
          |KwWhile [33..38)
@@ -10326,6 +10461,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(ok) [48..50)
          |KwDo [51..53)
          |Ident(c) [54..55)
+         |Indentation.Outdent [55..55)
          |LF [55..56)
          |KwDef [58..61)
          |Ident(g) [62..63)
@@ -10370,7 +10506,7 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  val g = f: [T] => T => T
          |""".stripMargin
-    val layout = "object A { val g = f: ([T] => T => T) }"
+    val layout = "object A {\n  val g = f {\n    [T] => T => T\n  }\n}"
     val tree = Defn.Object(
       Nil,
       tname("A"),
@@ -10378,7 +10514,15 @@ class FewerBracesSuite extends BaseDottySuite {
         Nil,
         List(patvar("g")),
         None,
-        Term.Ascribe("f", ppolyfunc(pparam("T"))(pfunc(pname("T"))(pname("T")))),
+        tapply(
+          tname("f"),
+          blk(Term.PolyFunction(
+            Type.ParamClause(List(
+              Type.Param(Nil, pname("T"), Type.ParamClause(Nil), Type.Bounds(None, None, Nil, Nil)),
+            )),
+            tfunc(tparam("T"))(tname("T")),
+          )),
+        ),
       )),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -10394,18 +10538,21 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|class C {
          |  xs.foreach {
-         |    x => g(x).foo
-         |  }
+         |    x => g(x)
+         |  }.foo
          |  def h = 1
          |}
          |""".stripMargin
     val tree = Defn.Class(
       Nil,
       pname("C"),
-      Nil,
-      EmptyCtor(),
+      Type.ParamClause(Nil),
+      ctor,
       tpl(
-        tapply(tselect("xs", "foreach"), blk(tfunc(tparam("x"))(tselect(tapply("g", "x"), "foo")))),
+        tselect(
+          tapply(tselect("xs", "foreach"), blk(tfunc(tparam("x"))(tapply(tname("g"), tname("x"))))),
+          "foo",
+        ),
         Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
       ),
     )
@@ -11138,29 +11285,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |      else c
          |  def g = 1
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = xs.map {
-         |    x => if (a) b else c
-         |  }
-         |  def g = 1
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(
-        Defn.Def(
-          Nil,
-          tname("f"),
-          Nil,
-          None,
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif(tname("a"), tname("b"), tname("c"))))),
-        ),
-        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
-      ),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:3: error: illegal start of definition `else`
+         |      else c
+         |      ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("SIP-75 relaxed lambda: first statement of an indented class, arrow body on the same line, next definition") {
@@ -11455,13 +11584,18 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|import scala.language.postfixOps
          |object A {
-         |  def f = xs.map {
-         |    x => x seconds g
+         |  def f = {
+         |    xs.map {
+         |      x => x seconds
+         |    }
+         |    g
          |  }
          |}
          |""".stripMargin
     val tree = Source(List(
-      Import(List(Importer(tselect("scala", "language"), List(Importee.Name(Name("postfixOps")))))),
+      Import(
+        List(Importer(tselect("scala", "language"), Importee.Name(Name.Indeterminate("postfixOps")))),
+      ),
       Defn.Object(
         Nil,
         tname("A"),
@@ -11470,9 +11604,12 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tinfix(tname("x"), "seconds", tname("g")))),
+          blk(
+            tapply(
+              tselect("xs", "map"),
+              blk(tfunc(tparam("x"))(Term.SelectPostfix(tname("x"), tname("seconds")))),
+            ),
+            tname("g"),
           ),
         )),
       ),
@@ -11537,6 +11674,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(map) [23..26)
          |Colon [26..27)
+         |Indentation.Indent [28..28)
          |Ident(x) [28..29)
          |RightArrow [30..32)
          |KwIf [33..35)
@@ -11547,6 +11685,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(b) [45..46)
          |KwElse [47..51)
          |Ident(c) [52..53)
+         |Indentation.Outdent [53..53)
          |LF [53..54)
          |KwDef [56..59)
          |Ident(g) [60..61)
@@ -11601,6 +11740,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(map) [23..26)
          |Colon [26..27)
+         |Indentation.Indent [28..28)
          |Ident(x) [28..29)
          |RightArrow [30..32)
          |KwIf [33..35)
@@ -11611,6 +11751,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(b) [45..46)
          |KwElse [47..51)
          |Ident(c) [52..53)
+         |Indentation.Outdent [53..53)
          |InfixLF [53..54)
          |Ident(+) [58..59)
          |Constant.Int(1) [60..61)
@@ -11626,8 +11767,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => if (a) b else c + 1
-         |  }
+         |    x => if (a) b else c
+         |  } + 1
          |  def g = 1
          |}
          |""".stripMargin
@@ -11640,9 +11781,13 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tif(tname("a"), tname("b"), tinfix(tname("c"), "+", lit(1))))),
+          tinfix(
+            tapply(
+              tselect("xs", "map"),
+              blk(tfunc(tparam("x"))(tif(tname("a"), tname("b"), tname("c")))),
+            ),
+            "+",
+            lit(1),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -11671,6 +11816,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(map) [23..26)
          |Colon [26..27)
+         |Indentation.Indent [28..28)
          |Ident(x) [28..29)
          |RightArrow [30..32)
          |KwIf [33..35)
@@ -11681,6 +11827,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(b) [45..46)
          |KwElse [47..51)
          |Ident(c) [52..53)
+         |Indentation.Outdent [53..53)
          |Dot [58..59)
          |Ident(foo) [59..62)
          |LF [62..63)
@@ -11695,8 +11842,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => if (a) b else c.foo
-         |  }
+         |    x => if (a) b else c
+         |  }.foo
          |  def g = 1
          |}
          |""".stripMargin
@@ -11709,9 +11856,12 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tif(tname("a"), tname("b"), tselect(tname("c"), "foo")))),
+          tselect(
+            tapply(
+              tselect("xs", "map"),
+              blk(tfunc(tparam("x"))(tif(tname("a"), tname("b"), tname("c")))),
+            ),
+            "foo",
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -11739,6 +11889,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(foreach) [23..30)
          |Colon [30..31)
+         |Indentation.Indent [32..32)
          |Ident(x) [32..33)
          |RightArrow [34..36)
          |KwWhile [37..42)
@@ -11747,6 +11898,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |RightParen [45..46)
          |KwDo [47..49)
          |Ident(b) [50..51)
+         |Indentation.Outdent [51..51)
          |LF [51..52)
          |KwDef [54..57)
          |Ident(g) [58..59)
@@ -11801,6 +11953,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(foreach) [23..30)
          |Colon [30..31)
+         |Indentation.Indent [32..32)
          |Ident(x) [32..33)
          |RightArrow [34..36)
          |KwWhile [37..42)
@@ -11809,6 +11962,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |RightParen [45..46)
          |KwDo [47..49)
          |Ident(b) [50..51)
+         |Indentation.Outdent [51..51)
          |InfixLF [51..52)
          |Ident(+) [56..57)
          |Constant.Int(1) [58..59)
@@ -11824,8 +11978,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.foreach {
-         |    x => while (a) b + 1
-         |  }
+         |    x => while (a) b
+         |  } + 1
          |  def g = 1
          |}
          |""".stripMargin
@@ -11838,9 +11992,10 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "foreach"),
-            blk(tfunc(tparam("x"))(Term.While(tname("a"), tinfix(tname("b"), "+", lit(1))))),
+          tinfix(
+            tapply(tselect("xs", "foreach"), blk(tfunc(tparam("x"))(Term.While(tname("a"), tname("b"))))),
+            "+",
+            lit(1),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -11869,6 +12024,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(foreach) [23..30)
          |Colon [30..31)
+         |Indentation.Indent [32..32)
          |Ident(x) [32..33)
          |RightArrow [34..36)
          |KwWhile [37..42)
@@ -11877,6 +12033,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |RightParen [45..46)
          |KwDo [47..49)
          |Ident(b) [50..51)
+         |Indentation.Outdent [51..51)
          |Dot [56..57)
          |Ident(foo) [57..60)
          |LF [60..61)
@@ -11891,8 +12048,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.foreach {
-         |    x => while (a) b.foo
-         |  }
+         |    x => while (a) b
+         |  }.foo
          |  def g = 1
          |}
          |""".stripMargin
@@ -11905,9 +12062,9 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "foreach"),
-            blk(tfunc(tparam("x"))(Term.While(tname("a"), tselect(tname("b"), "foo")))),
+          tselect(
+            tapply(tselect("xs", "foreach"), blk(tfunc(tparam("x"))(Term.While(tname("a"), tname("b"))))),
+            "foo",
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -12131,32 +12288,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |    x <- xs.map: y => y if x > 0
          |  } yield x
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = for (x <- xs.map {
-         |    y => y
-         |  }; if x > 0) yield x
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        Term.ForYield(
-          List(
-            Enumerator
-              .Generator(patvar("x"), tapply(tselect("xs", "map"), blk(tfunc(tparam("y"))(tname("y"))))),
-            Enumerator.Guard(tinfix(tname("x"), ">", lit(0))),
-          ),
-          tname("x"),
-        ),
-      )),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:3: error: `outdent` expected but `if` found
+         |    x <- xs.map: y => y if x > 0
+         |                        ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("SIP-75 single-line lambda: for generator in indented enumerators, guard on the same line") {
@@ -12167,32 +12303,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |      x <- xs.map: y => y if x > 0
          |    yield x
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = for (x <- xs.map {
-         |    y => y
-         |  }; if x > 0) yield x
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        Term.ForYield(
-          List(
-            Enumerator
-              .Generator(patvar("x"), tapply(tselect("xs", "map"), blk(tfunc(tparam("y"))(tname("y"))))),
-            Enumerator.Guard(tinfix(tname("x"), ">", lit(0))),
-          ),
-          tname("x"),
-        ),
-      )),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:4: error: `outdent` expected but `if` found
+         |      x <- xs.map: y => y if x > 0
+         |                          ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("SIP-75 single-line lambda: if with parentheses and a body, deeper leading infix, next definition") {
@@ -12205,8 +12320,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => if (a) b + 1
-         |  }
+         |    x => if (a) b
+         |  } + 1
          |  def g = 1
          |}
          |""".stripMargin
@@ -12219,9 +12334,10 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tif(tname("a"), tinfix(tname("b"), "+", lit(1))))),
+          tinfix(
+            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif(tname("a"), tname("b"))))),
+            "+",
+            lit(1),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -12242,8 +12358,8 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def f = xs.map {
          |    x => if (a) {
          |      b
-         |    } + 1
-         |  }
+         |    }
+         |  } + 1
          |  def g = 1
          |}
          |""".stripMargin
@@ -12256,9 +12372,10 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tif(tname("a"), tinfix(blk(tname("b")), "+", lit(1))))),
+          tinfix(
+            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif(tname("a"), blk(tname("b")))))),
+            "+",
+            lit(1),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -12277,8 +12394,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => if (a) b + 1
-         |  }
+         |    x => if (a) b
+         |  } + 1
          |  def g = 1
          |}
          |""".stripMargin
@@ -12291,9 +12408,10 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tif(tname("a"), tinfix(tname("b"), "+", lit(1))))),
+          tinfix(
+            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif(tname("a"), tname("b"))))),
+            "+",
+            lit(1),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -12312,8 +12430,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.foreach {
-         |    x => while (a) b + 1
-         |  }
+         |    x => while (a) b
+         |  } + 1
          |  def g = 1
          |}
          |""".stripMargin
@@ -12326,9 +12444,10 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "foreach"),
-            blk(tfunc(tparam("x"))(Term.While(tname("a"), tinfix(tname("b"), "+", lit(1))))),
+          tinfix(
+            tapply(tselect("xs", "foreach"), blk(tfunc(tparam("x"))(Term.While(tname("a"), tname("b"))))),
+            "+",
+            lit(1),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -12347,8 +12466,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => if (a) b.foo
-         |  }
+         |    x => if (a) b
+         |  }.foo
          |  def g = 1
          |}
          |""".stripMargin
@@ -12361,7 +12480,10 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif(tname("a"), tselect("b", "foo"))))),
+          tselect(
+            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif(tname("a"), tname("b"))))),
+            "foo",
+          ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
       ),
@@ -12379,8 +12501,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = if (a) xs.map {
-         |    x => x + 1
-         |  }
+         |    x => x
+         |  } + 1
          |  def g = 1
          |}
          |""".stripMargin
@@ -12395,7 +12517,7 @@ class FewerBracesSuite extends BaseDottySuite {
           None,
           tif(
             tname("a"),
-            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix(tname("x"), "+", lit(1))))),
+            tinfix(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "+", lit(1)),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -12828,33 +12950,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  def f = if (a) && xs.exists: x => x > 0 then b else c
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = if (a && xs.exists {
-         |    x => x > 0
-         |  }) b else c
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tif(
-          tinfix(
-            tname("a"),
-            "&&",
-            tapply(tselect("xs", "exists"), blk(tfunc(tparam("x"))(tinfix(tname("x"), ">", lit(0))))),
-          ),
-          tname("b"),
-          tname("c"),
-        ),
-      )),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `;` expected but `.` found
+         |  def f = if (a) && xs.exists: x => x > 0 then b else c
+         |                      ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("SIP-75 single-line lambda: in an if condition with parentheses and an infix, deeper leading infix, next definition") {
@@ -12867,8 +12967,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = if (a && xs.exists {
-         |    x => x > 0 && c
-         |  }) b else c
+         |    x => x > 0
+         |  } && c) b else c
          |  def g = 1
          |}
          |""".stripMargin
@@ -12883,12 +12983,13 @@ class FewerBracesSuite extends BaseDottySuite {
           None,
           tif(
             tinfix(
-              tname("a"),
-              "&&",
-              tapply(
-                tselect("xs", "exists"),
-                blk(tfunc(tparam("x"))(tinfix(tinfix(tname("x"), ">", lit(0)), "&&", tname("c")))),
+              tinfix(
+                "a",
+                "&&",
+                tapply(tselect("xs", "exists"), blk(tfunc(tparam("x"))(tinfix("x", ">", lit(0))))),
               ),
+              "&&",
+              "c",
             ),
             tname("b"),
             tname("c"),
@@ -13068,8 +13169,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => if (a && b) c else d + 1
-         |  }
+         |    x => if (a && b) c else d
+         |  } + 1
          |  def g = 1
          |}
          |""".stripMargin
@@ -13082,11 +13183,13 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(
-              tif(tinfix(tname("a"), "&&", tname("b")), tname("c"), tinfix(tname("d"), "+", lit(1))),
-            )),
+          tinfix(
+            tapply(
+              tselect("xs", "map"),
+              blk(tfunc(tparam("x"))(tif(tinfix(tname("a"), "&&", tname("b")), tname("c"), tname("d")))),
+            ),
+            "+",
+            lit(1),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -13261,32 +13364,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |      && b then c else d
          |  def g = 1
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = xs.map {
-         |    x => if (a && b) c else d
-         |  }
-         |  def g = 1
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(
-        Defn.Def(
-          Nil,
-          tname("f"),
-          Nil,
-          None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tif(tinfix(tname("a"), "&&", tname("b")), tname("c"), tname("d")))),
-          ),
-        ),
-        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
-      ),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:2: error: illegal start of simple expression
+         |  def f = xs.map: x => if (a)
+         |                             ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("SIP-75 single-line lambda: if with parentheses and an ascription, then on the next line, next definition") {
@@ -13485,34 +13567,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |      xs.foreach: x => if (a) b
          |      c then d
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = if ({
-         |    xs.foreach {
-         |      x => if (a) b
-         |    }
-         |    c
-         |  }) d
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tif(
-          blk(
-            tapply(tselect("xs", "foreach"), blk(tfunc(tparam("x"))(tif(tname("a"), tname("b"))))),
-            tname("c"),
-          ),
-          tname("d"),
-        ),
-      )),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:5: error: `then` expected but `outdent` found
+         |      c then d
+         |              ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("SIP-75 single-line lambda: in an indented if condition, if with parentheses and new in the body, next line with then") {
@@ -15913,32 +15972,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |    with B
          |  def g = 1
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = xs.map {
-         |    x => x: A with B
-         |  }
-         |  def g = 1
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(
-        Defn.Def(
-          Nil,
-          tname("f"),
-          Nil,
-          None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(Term.Ascribe(tname("x"), Type.With(pname("A"), pname("B"))))),
-          ),
-        ),
-        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
-      ),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:3: error: illegal start of definition `with`
+         |    with B
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("SIP-75 single-line lambda: return at the line end, deeper line, next definition") {
@@ -16312,25 +16350,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A:
          |  def f = if (c) xs.map: x => x else 2
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = if (c) xs.map {
-         |    x => x
-         |  } else 2
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tif(tname("c"), tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), lit(2)),
-      )),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `else` found
+         |  def f = if (c) xs.map: x => x else 2
+         |                                ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: if with parentheses, deeper else, next definition") {
@@ -16340,29 +16364,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |    else c
          |  def g = 1
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = xs.map {
-         |    x => if (a) b else c
-         |  }
-         |  def g = 1
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(
-        Defn.Def(
-          Nil,
-          tname("f"),
-          Nil,
-          None,
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif(tname("a"), tname("b"), tname("c"))))),
-        ),
-        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:3: error: illegal start of definition `else`
+         |    else c
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: new body, deeper with, next definition") {
@@ -16372,32 +16378,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |    with B
          |  def g = 1
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = xs.map {
-         |    x => new A with B
-         |  }
-         |  def g = 1
-         |}
-         |""".stripMargin
-    val tree = Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(
-        Defn.Def(
-          Nil,
-          tname("f"),
-          Nil,
-          None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(Term.NewAnonymous(tplNoBody(init("A"), init("B"))))),
-          ),
-        ),
-        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:3: error: illegal start of definition `with`
+         |    with B
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("SIP-75 single-line lambda: catch case in the body, leading select at the def indent") {
@@ -16448,8 +16433,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => if (a && b && c) d else e + 1
-         |  }
+         |    x => if (a && b && c) d else e
+         |  } + 1
          |  def g = 1
          |}
          |""".stripMargin
@@ -16462,13 +16447,17 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tif(
-              tinfix(tinfix(tname("a"), "&&", tname("b")), "&&", tname("c")),
-              tname("d"),
-              tinfix(tname("e"), "+", lit(1)),
-            ))),
+          tinfix(
+            tapply(
+              tselect("xs", "map"),
+              blk(tfunc(tparam("x"))(tif(
+                tinfix(tinfix(tname("a"), "&&", tname("b")), "&&", tname("c")),
+                tname("d"),
+                tname("e"),
+              ))),
+            ),
+            "+",
+            lit(1),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -16638,8 +16627,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    (x, y) => x + y.sum
-         |  }
+         |    (x, y) => x + y
+         |  }.sum
          |  def g = 1
          |}
          |""".stripMargin
@@ -16652,9 +16641,12 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"), tparam("y"))(tinfix(tname("x"), "+", tselect("y", "sum")))),
+          tselect(
+            tapply(
+              tselect("xs", "map"),
+              blk(tfunc(tparam("x"), tparam("y"))(tinfix(tname("x"), "+", tname("y")))),
+            ),
+            "sum",
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -16706,25 +16698,22 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = xs.map {
-         |    x => x
+         |  def f = xs.map { x =>
+         |    x
+         |    println(2)
          |  }
-         |  println(2)
          |}
          |""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("A"),
-      tpl(
-        Defn.Def(
-          Nil,
-          tname("f"),
-          Nil,
-          None,
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))),
-        ),
-        tapply(tname("println"), lit(2)),
-      ),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(blk(tname("x"), tapply("println", lit(2)))))),
+      )),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -16899,35 +16888,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |  val g = (try f: Int => Int finally ())
          |  val h = (if c then f: Int => Int else k)
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  val g = try f {
-         |    Int => Int
-         |  } finally ()
-         |  val h = if (c) f {
-         |    Int => Int
-         |  } else k
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(
-        Defn.Val(
-          Nil,
-          List(patvar("g")),
-          None,
-          Term.Try(tapply(tname("f"), blk(tfunc(tparam("Int"))(tname("Int")))), Nil, Some(lit())),
-        ),
-        Defn.Val(
-          Nil,
-          List(patvar("h")),
-          None,
-          tif(tname("c"), tapply(tname("f"), blk(tfunc(tparam("Int"))(tname("Int")))), tname("k")),
-        ),
-      ),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `finally` found
+         |  val g = (try f: Int => Int finally ())
+         |                             ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("SIP-75 single-line lambda: for generator, guard and yield on the same line") {
@@ -16936,37 +16901,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |  val v = for x <- xs.map: y => y if x > 0 yield x
          |  def g = 1
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  val v = for (x <- xs.map {
-         |    y => y
-         |  }; if x > 0) yield x
-         |  def g = 1
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(
-        Defn.Val(
-          Nil,
-          List(patvar("v")),
-          None,
-          Term.ForYield(
-            List(
-              Enumerator.Generator(
-                patvar("x"),
-                tapply(tselect("xs", "map"), blk(tfunc(tparam("y"))(tname("y")))),
-              ),
-              Enumerator.Guard(tinfix(tname("x"), ">", lit(0))),
-            ),
-            tname("x"),
-          ),
-        ),
-        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
-      ),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `if` found
+         |  val v = for x <- xs.map: y => y if x > 0 yield x
+         |                                  ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("SIP-75 single-line lambda: for generator in indented enumerators, if body") {
@@ -17014,11 +16953,34 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def f = xs.collect: case x if x > 0 => x
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = xs.collect: case x if x > 0 => x
-         |                      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case x if x > 0 => x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect("xs", "collect"),
+            Term.PartialFunction(List(
+              Case(patvar("x"), Some(tinfix(tname("x"), ">", lit(0))), tname("x")),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case with guard, deeper leading select, next definition") {
@@ -17028,11 +16990,37 @@ class FewerBracesSuite extends BaseDottySuite {
          |    .toList
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = xs.collect: case x if x > 0 => x
-         |                      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case x if x > 0 => x
+         |  }.toList
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tselect(
+            tapply(
+              tselect("xs", "collect"),
+              Term.PartialFunction(List(
+                Case(patvar("x"), Some(tinfix(tname("x"), ">", lit(0))), tname("x")),
+              )),
+            ),
+            "toList",
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case with guard in parentheses, next definition") {
@@ -17041,11 +17029,34 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def f = xs.collect: case x if (x > 0) => x
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = xs.collect: case x if (x > 0) => x
-         |                      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case x if x > 0 => x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect("xs", "collect"),
+            Term.PartialFunction(List(
+              Case(patvar("x"), Some(tinfix(tname("x"), ">", lit(0))), tname("x")),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case with guard, second case at the definition indent") {
@@ -17055,9 +17066,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y => y
          |""".stripMargin
     val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = xs.collect: case x if x > 0 => x
-         |                      ^""".stripMargin
+      """|<input>:3: error: `;` expected but `=>` found
+         |  case y => y
+         |         ^""".stripMargin
     runTestError[Source](code, error)
   }
 
@@ -17068,11 +17079,43 @@ class FewerBracesSuite extends BaseDottySuite {
          |    case 1 => xs.collect: case y if y > 0 => y
          |    case 2 => Nil
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `identifier` expected but `case` found
-         |    case 1 => xs.collect: case y if y > 0 => y
-         |                          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      xs.collect {
+         |        case y if y > 0 => y
+         |      }
+         |    case 2 =>
+         |      Nil
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            lit(1),
+            None,
+            tapply(
+              tselect("xs", "collect"),
+              Term.PartialFunction(List(
+                Case(patvar("y"), Some(tinfix(tname("y"), ">", lit(0))), tname("y")),
+              )),
+            ),
+          ),
+          Case(lit(2), None, tname("Nil")),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case with a typed binder pattern, next definition") {
@@ -17081,11 +17124,34 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def f = xs.map: case x @ y: Int => x
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = xs.map: case x @ y: Int => x
-         |                  ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case (x @ y): Int => x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect("xs", "map"),
+            Term.PartialFunction(List(
+              Case(Pat.Typed(Pat.Bind(patvar("x"), patvar("y")), pname("Int")), None, tname("x")),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: in an indented if condition, if with parentheses and an infix, deeper leading infix") {
@@ -17100,11 +17166,45 @@ class FewerBracesSuite extends BaseDottySuite {
          |    then h
          |  def k = 1
          |""".stripMargin
-    val error =
-      """|<input>:8: error: `outdent` expected but `then` found
-         |    then h
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if ({
+         |    xs.foreach {
+         |      x => if (a && b && c) d else e
+         |    }
+         |    g
+         |  }) h
+         |  def k = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            blk(
+              tapply(
+                tselect("xs", "foreach"),
+                blk(tfunc(tparam("x"))(tif(
+                  tinfix(tinfix(tname("a"), "&&", tname("b")), "&&", tname("c")),
+                  tname("d"),
+                  tname("e"),
+                ))),
+              ),
+              tname("g"),
+            ),
+            tname("h"),
+          ),
+        ),
+        Defn.Def(Nil, tname("k"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: in an indented while condition, while with parentheses and an infix, deeper leading infix") {
@@ -17119,11 +17219,44 @@ class FewerBracesSuite extends BaseDottySuite {
          |    do h
          |  def k = 1
          |""".stripMargin
-    val error =
-      """|<input>:8: error: `while` expected but `outdent` found
-         |    do h
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = while ({
+         |    xs.foreach {
+         |      x => while (a && b && c) d
+         |    }
+         |    g
+         |  }) h
+         |  def k = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.While(
+            blk(
+              tapply(
+                tselect("xs", "foreach"),
+                blk(tfunc(tparam("x"))(
+                  Term
+                    .While(tinfix(tinfix(tname("a"), "&&", tname("b")), "&&", tname("c")), tname("d")),
+                )),
+              ),
+              tname("g"),
+            ),
+            tname("h"),
+          ),
+        ),
+        Defn.Def(Nil, tname("k"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: match body with cases on the same line, next definition") {
@@ -17172,11 +17305,34 @@ class FewerBracesSuite extends BaseDottySuite {
          |    if x > 0 => x
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = xs.map: case x
-         |                  ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case x if x > 0 => x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect("xs", "map"),
+            Term.PartialFunction(List(
+              Case(patvar("x"), Some(tinfix(tname("x"), ">", lit(0))), tname("x")),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: if with parentheses and a trailing infix, condition on the next line, next definition") {
@@ -17224,8 +17380,9 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => a max b
+         |    x => a max
          |  }
+         |  b
          |  def g = 1
          |}
          |""".stripMargin
@@ -17238,8 +17395,12 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix(tname("a"), "max", tname("b"))))),
+          tapply(
+            tselect("xs", "map"),
+            blk(tfunc(tparam("x"))(Term.SelectPostfix(tname("a"), tname("max")))),
+          ),
         ),
+        tname("b"),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
       ),
     )))
@@ -17332,8 +17493,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  val f = xs.map {
-         |    x => x.filter(_ > 0)
-         |  }
+         |    x => x
+         |  }.filter(_ > 0)
          |  def g = 1
          |}
          |""".stripMargin
@@ -17346,11 +17507,8 @@ class FewerBracesSuite extends BaseDottySuite {
           List(patvar("f")),
           None,
           tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tapply(
-              tselect("x", "filter"),
-              Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", lit(0))),
-            ))),
+            tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "filter"),
+            Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", lit(0))),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -17606,8 +17764,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => /* c */ x.foo
-         |  }
+         |    x => /* c */ x
+         |  }.foo
          |  def g = 1
          |}
          |""".stripMargin
@@ -17620,9 +17778,9 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tselect("x", "foo").toBuilder.begComment(Seq("/* c */")).result())),
+          tselect(
+            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tnameComments("x")("/* c */")()))),
+            "foo",
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -17838,9 +17996,9 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A {
          |  def f = xs.map {
          |    x => xs.map {
-         |      y => y.foo
+         |      y => y
          |    }
-         |  }
+         |  }.foo
          |  def g = 1
          |}
          |""".stripMargin
@@ -17853,11 +18011,12 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(
-              tapply(tselect("xs", "map"), blk(tfunc(tparam("y"))(tselect("y", "foo")))),
-            )),
+          tselect(
+            tapply(
+              tselect("xs", "map"),
+              blk(tfunc(tparam("x"))(tapply(tselect("xs", "map"), blk(tfunc(tparam("y"))(tname("y")))))),
+            ),
+            "foo",
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -18115,8 +18274,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => x + 1 + 2
-         |  }
+         |    x => x
+         |  } + 1 + 2
          |  def g = 1
          |}
          |""".stripMargin
@@ -18129,9 +18288,10 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tinfix(tinfix(tname("x"), "+", lit(1)), "+", lit(2)))),
+          tinfix(
+            tinfix(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "+", lit(1)),
+            "+",
+            lit(2),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -18368,32 +18528,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object O:
          |  def f = g(if c then xs.map: x => x else y)
          |""".stripMargin
-    val layout =
-      """|object O {
-         |  def f = g(if (c) xs.map {
-         |    x => x
-         |  } else y)
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("O"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tapply(
-          tname("g"),
-          tif(
-            tname("c"),
-            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))),
-            tname("y"),
-          ),
-        ),
-      )),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `else` found
+         |  def f = g(if c then xs.map: x => x else y)
+         |                                     ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("SIP-75 single-line lambda: in try in parens, name body, finally on the same line") {
@@ -18401,32 +18540,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object O:
          |  def f = g(try xs.map: x => x finally ())
          |""".stripMargin
-    val layout =
-      """|object O {
-         |  def f = g(try xs.map {
-         |    x => x
-         |  } finally ())
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("O"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tapply(
-          tname("g"),
-          Term.Try(
-            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))),
-            Nil,
-            Some(Lit.Unit()),
-          ),
-        ),
-      )),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `finally` found
+         |  def f = g(try xs.map: x => x finally ())
+         |                               ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("SIP-75 single-line lambda: if with parentheses and two infixes, the second trailing, operand on the next line, leading infix and then on the third line") {
@@ -18579,8 +18697,9 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object O {
          |  def f = xs.map {
-         |    x => a + b
+         |    x => a +
          |  }
+         |  b
          |  def h = 1
          |}
          |""".stripMargin
@@ -18593,8 +18712,12 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix(tname("a"), "+", tname("b"))))),
+          tapply(
+            tselect("xs", "map"),
+            blk(tfunc(tparam("x"))(Term.SelectPostfix(tname("a"), tname("+")))),
+          ),
         ),
+        tname("b"),
         Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
       ),
     )))
@@ -18724,8 +18847,8 @@ class FewerBracesSuite extends BaseDottySuite {
          |  val r: A {
          |    type T
          |  } = xs.map {
-         |    x => x.foo
-         |  }
+         |    x => x
+         |  }.foo
          |  def h = 1
          |}
          |""".stripMargin
@@ -18736,10 +18859,13 @@ class FewerBracesSuite extends BaseDottySuite {
         Defn.Val(
           Nil,
           List(patvar("r")),
-          Some(
-            Type.Refine(Some(pname("A")), Stat.Block(List(Decl.Type(Nil, pname("T"), Nil, noBounds)))),
-          ),
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tselect("x", "foo")))),
+          Some(Type.Refine(
+            Some(pname("A")),
+            Stat.Block(List(
+              Decl.Type(Nil, pname("T"), Type.ParamClause(Nil), Type.Bounds(None, None, Nil, Nil)),
+            )),
+          )),
+          tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "foo"),
         ),
         Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
       ),
@@ -18759,27 +18885,47 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def f(y: A {
          |    type T
          |  }) = xs.map {
-         |    x => x.foo
-         |  }
+         |    x => x
+         |  }.foo
          |  def h = 1
          |}
          |""".stripMargin
     val refine = Type.Refine(Some(pname("A")), stats(Decl.Type(Nil, pname("T"), Nil, noBounds)))
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("O"),
-      tpl(
-        Defn.Def(
+    val tree = Source {
+      List {
+        Defn.Object(
           Nil,
-          tname("f"),
-          Nil,
-          List(List(tparam("y", refine))),
-          None,
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tselect("x", "foo")))),
-        ),
-        Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
-      ),
-    )))
+          tname("O"),
+          tpl(
+            Defn.Def(
+              Nil,
+              tname("f"),
+              List(Member.ParamClauseGroup(
+                Type.ParamClause(Nil),
+                List(Term.ParamClause(
+                  List(tparam(
+                    "y",
+                    Type.Refine(
+                      Some(pname("A")),
+                      Stat.Block(List(Decl.Type(
+                        Nil,
+                        pname("T"),
+                        Type.ParamClause(Nil),
+                        Type.Bounds(None, None, Nil, Nil),
+                      ))),
+                    ),
+                  )),
+                  None,
+                )),
+              )),
+              None,
+              tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "foo"),
+            ),
+            Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
+          ),
+        )
+      }
+    }
     runTestAssert[Source](code, layout)(tree)
   }
 
@@ -18795,8 +18941,8 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def f = xs.foo[A {
          |    type T
          |  }] {
-         |    y => y.bar
-         |  }
+         |    y => y
+         |  }.bar
          |  def h = 1
          |}
          |""".stripMargin
@@ -18810,7 +18956,22 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(tapplytype(tselect("xs", "foo"), refine), blk(tfunc(tparam("y"))(tselect("y", "bar")))),
+          tselect(
+            tapply(
+              Term.ApplyType(
+                tselect("xs", "foo"),
+                Type.ArgClause(List(Type.Refine(
+                  Some(pname("A")),
+                  Stat.Block(List(
+                    Decl
+                      .Type(Nil, pname("T"), Type.ParamClause(Nil), Type.Bounds(None, None, Nil, Nil)),
+                  )),
+                ))),
+              ),
+              blk(tfunc(tparam("y"))(tname("y"))),
+            ),
+            "bar",
+          ),
         ),
         Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
       ),
@@ -18830,8 +18991,8 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def f: A {
          |    type T
          |  } = xs.map {
-         |    x => x.foo
-         |  }
+         |    x => x
+         |  }.foo
          |  def h = 1
          |}
          |""".stripMargin
@@ -18844,8 +19005,13 @@ class FewerBracesSuite extends BaseDottySuite {
           Nil,
           tname("f"),
           Nil,
-          Some(refine),
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tselect("x", "foo")))),
+          Some(Type.Refine(
+            Some(pname("A")),
+            Stat.Block(List(
+              Decl.Type(Nil, pname("T"), Type.ParamClause(Nil), Type.Bounds(None, None, Nil, Nil)),
+            )),
+          )),
+          tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "foo"),
         ),
         Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
       ),
@@ -18866,8 +19032,8 @@ class FewerBracesSuite extends BaseDottySuite {
          |    type U
          |  }
          |  val v = xs.map {
-         |    x => x.foo
-         |  }
+         |    x => x
+         |  }.foo
          |  def h = 1
          |}
          |""".stripMargin
@@ -18876,12 +19042,23 @@ class FewerBracesSuite extends BaseDottySuite {
       Nil,
       tname("O"),
       tpl(
-        Defn.Type(Nil, pname("T"), Nil, refine),
+        Defn.Type(
+          Nil,
+          pname("T"),
+          Type.ParamClause(Nil),
+          Type.Refine(
+            Some(pname("A")),
+            Stat.Block(List(
+              Decl.Type(Nil, pname("U"), Type.ParamClause(Nil), Type.Bounds(None, None, Nil, Nil)),
+            )),
+          ),
+          Type.Bounds(None, None, Nil, Nil),
+        ),
         Defn.Val(
           Nil,
           List(patvar("v")),
           None,
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tselect("x", "foo")))),
+          tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "foo"),
         ),
         Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
       ),
@@ -18899,8 +19076,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object O {
          |  def f = xs.foreach {
-         |    x => while (a) b.foo
-         |  }
+         |    x => while (a) b
+         |  }.foo
          |  def h = 1
          |}
          |""".stripMargin
@@ -18913,9 +19090,9 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "foreach"),
-            blk(tfunc(tparam("x"))(Term.While(tname("a"), tselect("b", "foo")))),
+          tselect(
+            tapply(tselect("xs", "foreach"), blk(tfunc(tparam("x"))(Term.While(tname("a"), tname("b"))))),
+            "foo",
           ),
         ),
         Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
@@ -19111,8 +19288,8 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object O {
          |  def f = xs.map {
-         |    x => while (a && b) g(x).foo
-         |  }
+         |    x => while (a && b) g(x)
+         |  }.foo
          |  def h = 1
          |}
          |""".stripMargin
@@ -19125,11 +19302,14 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(
-              Term.While(tinfix(tname("a"), "&&", tname("b")), tselect(tapply("g", "x"), "foo")),
-            )),
+          tselect(
+            tapply(
+              tselect("xs", "map"),
+              blk(tfunc(tparam("x"))(
+                Term.While(tinfix(tname("a"), "&&", tname("b")), tapply(tname("g"), tname("x"))),
+              )),
+            ),
+            "foo",
           ),
         ),
         Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
@@ -19225,8 +19405,8 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object O {
          |  def f = xs.map {
          |    x => <a>
-         |    b</a>.foo
-         |  }
+         |    b</a>
+         |  }.foo
          |  def h = 1
          |}
          |""".stripMargin
@@ -19240,7 +19420,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tselect(xml, "foo")))),
+          tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(xml))), "foo"),
         ),
         Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
       ),
@@ -19259,8 +19439,8 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object O {
          |  def f = xs.map {
          |    x => x /* a
-         |    b */ .foo
-         |  }
+         |    b */
+         |  }.foo
          |  def h = 1
          |}
          |""".stripMargin
@@ -19273,9 +19453,15 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tselect(tnameComments("x")()("/* a\n    b */"), "foo"))),
+          tselect(
+            tapply(
+              tselect("xs", "map"),
+              blk(
+                Term.Function.newBuilder(List(tparam("x")), tname("x"))
+                  .endComment(Seq("/* a\n    b */")).result(),
+              ),
+            ),
+            "foo",
           ),
         ),
         Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
@@ -19381,9 +19567,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def f = for y: A => B <- ys yield y
          |""".stripMargin
     val error =
-      """|<input>:2: error: `<-` expected but `=>` found
+      """|<input>:2: error: `identifier` expected but `indent` found
          |  def f = for y: A => B <- ys yield y
-         |                   ^""".stripMargin
+         |                 ^""".stripMargin
     runTestError[Source](code, error)
   }
 
@@ -19393,9 +19579,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |  def f = for x <- xs; y: A => B = g yield y
          |""".stripMargin
     val error =
-      """|<input>:2: error: `<-` expected but `=>` found
+      """|<input>:2: error: `identifier` expected but `indent` found
          |  def f = for x <- xs; y: A => B = g yield y
-         |                            ^""".stripMargin
+         |                          ^""".stripMargin
     runTestError[Source](code, error)
   }
 
@@ -19407,9 +19593,9 @@ class FewerBracesSuite extends BaseDottySuite {
   test("SIP-75 colon: self entry point, self type and a statement") {
     implicit val parser: String => Self = parseRule(_, Parse.parseSelf)
     val error =
-      """|<input>:1: error: `end of file` expected but `identifier` found
+      """|<input>:1: error: missing type after self
          |self: A => B
-         |           ^""".stripMargin
+         |    ^""".stripMargin
     runTestError[Self]("self: A => B", error)
   }
 
@@ -19425,27 +19611,27 @@ class FewerBracesSuite extends BaseDottySuite {
   test("SIP-75 colon: pattern entry point, function type") {
     implicit val parser: String => Pat = parseRule(_, Parse.parsePat)
     val error =
-      """|<input>:1: error: `end of file` expected but `=>` found
+      """|<input>:1: error: `identifier` expected but `indent` found
          |y: A => B
-         |     ^""".stripMargin
+         |   ^""".stripMargin
     runTestError[Pat]("y: A => B", error)
   }
 
   test("SIP-75 colon: enumerator entry point, generator with a function type") {
     implicit val parser: String => Enumerator = parseRule(_, Parse.parseEnumerator)
     val error =
-      """|<input>:1: error: `<-` expected but `=>` found
+      """|<input>:1: error: `identifier` expected but `indent` found
          |y: A => B <- ys
-         |     ^""".stripMargin
+         |   ^""".stripMargin
     runTestError[Enumerator]("y: A => B <- ys", error)
   }
 
   test("SIP-75 colon: enumerator entry point, value definition with a function type") {
     implicit val parser: String => Enumerator = parseRule(_, Parse.parseEnumerator)
     val error =
-      """|<input>:1: error: `<-` expected but `=>` found
+      """|<input>:1: error: `identifier` expected but `indent` found
          |y: A => B = g
-         |     ^""".stripMargin
+         |   ^""".stripMargin
     runTestError[Enumerator]("y: A => B = g", error)
   }
 
@@ -19469,6 +19655,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(map) [23..26)
          |Colon [26..27)
+         |Indentation.Indent [28..28)
          |Ident(x) [28..29)
          |RightArrow [30..32)
          |KwIf [33..35)
@@ -19481,6 +19668,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(c) [60..61)
          |KwElse [62..66)
          |Ident(d) [67..68)
+         |Indentation.Outdent [68..68)
          |LF [68..69)
          |KwDef [71..74)
          |Ident(g) [75..76)
@@ -19513,6 +19701,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(map) [23..26)
          |Colon [26..27)
+         |Indentation.Indent [28..28)
          |Ident(x) [28..29)
          |RightArrow [30..32)
          |KwIf [33..35)
@@ -19528,6 +19717,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(c) [71..72)
          |KwElse [73..77)
          |Ident(d) [78..79)
+         |Indentation.Outdent [79..79)
          |LF [79..80)
          |KwDef [82..85)
          |Ident(g) [86..87)
@@ -19559,6 +19749,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(foreach) [23..30)
          |Colon [30..31)
+         |Indentation.Indent [32..32)
          |Ident(x) [32..33)
          |RightArrow [34..36)
          |KwWhile [37..42)
@@ -19569,6 +19760,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(Boolean) [48..55)
          |KwDo [62..64)
          |Ident(c) [65..66)
+         |Indentation.Outdent [66..66)
          |LF [66..67)
          |KwDef [69..72)
          |Ident(g) [73..74)
@@ -19601,6 +19793,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(foreach) [23..30)
          |Colon [30..31)
+         |Indentation.Indent [32..32)
          |Ident(x) [32..33)
          |RightArrow [34..36)
          |KwWhile [37..42)
@@ -19614,6 +19807,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(b) [65..66)
          |KwDo [73..75)
          |Ident(c) [76..77)
+         |Indentation.Outdent [77..77)
          |LF [77..78)
          |KwDef [80..83)
          |Ident(g) [84..85)
