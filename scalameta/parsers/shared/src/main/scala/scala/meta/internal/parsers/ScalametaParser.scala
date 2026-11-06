@@ -158,6 +158,12 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     case _ => false
   }
 
+  /** whether the scanner opens a lambda argument after the current colon */
+  private def isColonLambdaAhead: Boolean = in.peekRegions match {
+    case (_: RegionColonLambda) :: _ => true
+    case _ => false
+  }
+
   def next() = {
     in.next()
     currToken match {
@@ -4950,7 +4956,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
   def templateBodyOpt(): Template.Body =
     if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace()
-    else if (at[Colon] && peek[Indentation, EOL]) autoPos {
+    else if (at[Colon] && peek[Indentation, EOL] && !isColonLambdaAhead) autoPos {
       next()
       expect[Indentation.Indent]("template body")
       templateBodyOnIndentRaw()

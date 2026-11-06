@@ -1770,11 +1770,21 @@ class FewerBracesSuite extends BaseDottySuite {
         |def a =
         |   foo { using bar: Int => baz }
         |""".stripMargin
-    val error =
-      """|<input>:3: error: `}` expected but `=>` found
-         |   foo { using bar: Int => baz }
-         |                        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def a = foo {
+         |  using bar {
+         |    Int => baz
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      tapply(tname("foo"), blk(tinfix(tname("using"), "bar", blk(tfunc(tparam("Int"))(tname("baz")))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 using, with type, arg in braces (no fewer braces)") {
@@ -2957,6 +2967,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(map) [23..26)
          |Colon [26..27)
+         |Indentation.Indent [28..28)
          |Ident(x) [28..29)
          |RightArrow [30..32)
          |KwIf [33..35)
@@ -2969,6 +2980,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(c) [60..61)
          |KwElse [62..66)
          |Ident(d) [67..68)
+         |Indentation.Outdent [68..68)
          |LF [68..69)
          |KwDef [71..74)
          |Ident(g) [75..76)
@@ -3001,6 +3013,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(map) [23..26)
          |Colon [26..27)
+         |Indentation.Indent [28..28)
          |Ident(x) [28..29)
          |RightArrow [30..32)
          |KwIf [33..35)
@@ -3016,6 +3029,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(c) [71..72)
          |KwElse [73..77)
          |Ident(d) [78..79)
+         |Indentation.Outdent [79..79)
          |LF [79..80)
          |KwDef [82..85)
          |Ident(g) [86..87)
@@ -3047,6 +3061,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(foreach) [23..30)
          |Colon [30..31)
+         |Indentation.Indent [32..32)
          |Ident(x) [32..33)
          |RightArrow [34..36)
          |KwWhile [37..42)
@@ -3057,6 +3072,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(Boolean) [48..55)
          |KwDo [62..64)
          |Ident(c) [65..66)
+         |Indentation.Outdent [66..66)
          |LF [66..67)
          |KwDef [69..72)
          |Ident(g) [73..74)
@@ -3089,6 +3105,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Dot [22..23)
          |Ident(foreach) [23..30)
          |Colon [30..31)
+         |Indentation.Indent [32..32)
          |Ident(x) [32..33)
          |RightArrow [34..36)
          |KwWhile [37..42)
@@ -3102,6 +3119,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |Ident(b) [65..66)
          |KwDo [73..75)
          |Ident(c) [76..77)
+         |Indentation.Outdent [77..77)
          |LF [77..78)
          |KwDef [80..83)
          |Ident(g) [84..85)

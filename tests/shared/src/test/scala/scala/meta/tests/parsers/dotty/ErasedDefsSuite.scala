@@ -236,7 +236,27 @@ class ErasedDefsSuite extends BaseDottySuite {
 
   test("lambda argument after colon: using erased placeholder") {
     val code = "xs.map: (using erased _: Context) => 1"
-    runTestError[Stat](code, "`;` expected but `=>` found")
+    val layout =
+      """|xs.map {
+         |  (using erased _: Context) => 1
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "map"),
+      blk(Term.Function(
+        Term.ParamClause(
+          List(Term.Param(
+            List(Mod.Using(), Mod.Erased()),
+            Name.Placeholder(),
+            Some(pname("Context")),
+            None,
+          )),
+          Some(Mod.Using()),
+        ),
+        lit(1),
+      )),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("anonymous-method: using erased placeholder in double parens") {

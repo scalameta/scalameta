@@ -12,18 +12,17 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|xs.map {
-         |  x => x + 1.filter {
-         |    y => y > 0
-         |  }
+         |  x => x + 1
+         |}.filter {
+         |  y => y > 0
          |}
          |""".stripMargin
     val tree = tapply(
-      tselect("xs", "map"),
-      blk(tfunc(tparam("x"))(tinfix(
-        "x",
-        "+",
-        tapply(tselect(lit(1), "filter"), blk(tfunc(tparam("y"))(tinfix("y", ">", lit(0))))),
-      ))),
+      tselect(
+        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix(tname("x"), "+", lit(1))))),
+        "filter",
+      ),
+      blk(tfunc(tparam("y"))(tinfix(tname("y"), ">", lit(0)))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -51,22 +50,46 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val code =
       """|val used = score.filter: case (_, (r, w)) => r > 0 || w > 0
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |val used = score.filter: case (_, (r, w)) => r > 0 || w > 0
-         |                         ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|val used = score.filter {
+         |  case (_, (r, w)) =>
+         |    r > 0 || w > 0
+         |}
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("used")),
+      None,
+      tapply(
+        tselect("score", "filter"),
+        Term.PartialFunction(List(Case(
+          Pat.Tuple(List(Pat.Wildcard(), Pat.Tuple(List(patvar("r"), patvar("w"))))),
+          None,
+          tinfix(tinfix(tname("r"), ">", lit(0)), "||", tinfix(tname("w"), ">", lit(0))),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case with guard") {
     val code =
       """|xs.collect: case (a, b) if b > 2 => a
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |xs.collect: case (a, b) if b > 2 => a
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|xs.collect {
+         |  case (a, b) if b > 2 => a
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "collect"),
+      Term.PartialFunction(List(Case(
+        Pat.Tuple(List(patvar("a"), patvar("b"))),
+        Some(tinfix(tname("b"), ">", lit(2))),
+        tname("a"),
+      ))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case, leading select on the next line") {
@@ -75,11 +98,27 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |  .collect: case x => (x, x + 1)
          |  .toMap
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  .collect: case x => (x, x + 1)
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|val one = list.collect {
+         |  case x =>
+         |    (x, x + 1)
+         |}.toMap
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("one")),
+      None,
+      tselect(
+        tapply(
+          tselect("list", "collect"),
+          Term.PartialFunction(List(
+            Case(patvar("x"), None, Term.Tuple(List(tname("x"), tinfix(tname("x"), "+", lit(1))))),
+          )),
+        ),
+        "toMap",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: indented case body") {
@@ -90,11 +129,33 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |    (x, y)
          |  .toMap
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  .collect: case x =>
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|val three = list.collect {
+         |  case x =>
+         |    val y = x + 1
+         |    (x, y)
+         |}.toMap
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("three")),
+      None,
+      tselect(
+        tapply(
+          tselect("list", "collect"),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            blk(
+              Defn.Val(Nil, List(patvar("y")), None, tinfix(tname("x"), "+", lit(1))),
+              Term.Tuple(List(tname("x"), tname("y"))),
+            ),
+          ))),
+        ),
+        "toMap",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case expression") {
@@ -151,11 +212,21 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val code =
       """|xs.map: [T] => (x: T) => List(x)
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `[` found
-         |xs.map: [T] => (x: T) => List(x)
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|xs.map {
+         |  [T] => (x: T) => List(x)
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "map"),
+      blk(Term.PolyFunction(
+        Type.ParamClause(List(
+          Type.Param(Nil, pname("T"), Type.ParamClause(Nil), Type.Bounds(None, None, Nil, Nil)),
+        )),
+        tfunc(tparam("x", pname("T")))(tapply(tname("List"), tname("x"))),
+      )),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 parens: ascription of a function type") {
@@ -386,11 +457,19 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val code =
       """|def f = new A: case x => x
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = new A: case x => x
-         |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = (new A) {
+         |  case x => x
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(Term.New(init("A")), Term.PartialFunction(List(Case(patvar("x"), None, tname("x"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 colon: new prefix, function type ascription") {
@@ -414,15 +493,15 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = (new A) {
-         |  x => x + 1
-         |}
+         |  x => x
+         |} + 1
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(Term.New(init("A")), blk(tfunc(tparam("x"))(tinfix(tname("x"), "+", lit(1))))),
+      tinfix(tapply(Term.New(init("A")), blk(tfunc(tparam("x"))(tname("x")))), "+", lit(1)),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -470,11 +549,26 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val code =
       """|def f = xs.map: x => xs.map: case y => y
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = xs.map: x => xs.map: case y => y
-         |                             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map {
+         |  x => xs.map {
+         |    case y => y
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "map"),
+        blk(tfunc(tparam("x"))(
+          tapply(tselect("xs", "map"), Term.PartialFunction(List(Case(patvar("y"), None, tname("y"))))),
+        )),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: braces arg spans lines, leading select") {
@@ -488,17 +582,20 @@ class RelaxedLambdaSuite extends BaseDottySuite {
       """|def f = xs.map {
          |  x => foo {
          |    a
-         |  } + 1.bar
-         |}
+         |  } + 1
+         |}.bar
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(
-        tselect("xs", "map"),
-        blk(tfunc(tparam("x"))(tinfix(tapply("foo", blk(tname("a"))), "+", tselect(lit(1), "bar")))),
+      tselect(
+        tapply(
+          tselect("xs", "map"),
+          blk(tfunc(tparam("x"))(tinfix(tapply(tname("foo"), blk(tname("a"))), "+", lit(1)))),
+        ),
+        "bar",
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -656,10 +753,12 @@ class RelaxedLambdaSuite extends BaseDottySuite {
       """|def f = xs map: x => x
          |""".stripMargin
     val layout =
-      """|def f = xs map: (x => x)
+      """|def f = xs map {
+         |  x => x
+         |}
          |""".stripMargin
     val tree = Defn
-      .Def(Nil, tname("f"), Nil, None, Term.Ascribe(tpostfix("xs", "map"), pfunc("x")("x")))
+      .Def(Nil, tname("f"), Nil, None, tinfix(tname("xs"), "map", blk(tfunc(tparam("x"))(tname("x")))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -713,15 +812,15 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = xs.map {
-         |  x => x ++ ys
-         |}
+         |  x => x
+         |} ++ ys
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix("x", "++", "ys")))),
+      tinfix(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "++", tname("ys")),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -732,22 +831,54 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |  case 1 => xs.map: case y => y
          |  case 2 => 3
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  case 1 => xs.map: case y => y
-         |                    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    xs.map {
+         |      case y => y
+         |    }
+         |  case 2 =>
+         |    3
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          lit(1),
+          None,
+          tapply(tselect("xs", "map"), Term.PartialFunction(List(Case(patvar("y"), None, tname("y"))))),
+        ),
+        Case(lit(2), None, lit(3)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: typed pattern") {
     val code =
       """|def f = ys.collect: case z: Int => z
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `identifier` expected but `case` found
-         |def f = ys.collect: case z: Int => z
-         |                    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = ys.collect {
+         |  case z: Int => z
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("ys", "collect"),
+        Term.PartialFunction(List(Case(Pat.Typed(patvar("z"), pname("Int")), None, tname("z")))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("implicit closure in braces, typed param, select on next line") {
@@ -810,16 +941,19 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val layout =
       """|def t = xs.map {
          |  x => x
-         |  // c
-         |  .foo
          |}
+         |// c
+         |.foo
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("t"),
       Nil,
       None,
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tselect("x", tnameComments("foo")("// c")())))),
+      Term.Select(
+        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))),
+        tnameComments("foo")("// c")(),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1093,8 +1227,8 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => f(y)
-         |  }
+         |    x => f
+         |  }(y)
          |}
          |""".stripMargin
     val tree = Defn.Object(
@@ -1105,7 +1239,7 @@ class RelaxedLambdaSuite extends BaseDottySuite {
         tname("f"),
         Nil,
         None,
-        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tapply("f", "y")))),
+        tapply(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("f")))), tname("y")),
       )),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -1133,8 +1267,8 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = if (c) xs.map {
-         |    x => if (x) a else b
-         |  }
+         |    x => if (x) a
+         |  } else b
          |}
          |""".stripMargin
     val tree = Defn.Object(
@@ -1145,7 +1279,11 @@ class RelaxedLambdaSuite extends BaseDottySuite {
         tname("f"),
         Nil,
         None,
-        tif("c", tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif("x", "a", "b"))))),
+        tif(
+          tname("c"),
+          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif(tname("x"), tname("a"))))),
+          tname("b"),
+        ),
       )),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -1177,9 +1315,9 @@ class RelaxedLambdaSuite extends BaseDottySuite {
       """|object A {
          |  def f = {
          |    xs.map {
-         |      x => g(x) {
-         |        y
-         |      }
+         |      x => g(x)
+         |    } {
+         |      y
          |    }
          |    h
          |  }
@@ -1194,7 +1332,10 @@ class RelaxedLambdaSuite extends BaseDottySuite {
         Nil,
         None,
         blk(
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tapply(tapply("g", "x"), blk("y"))))),
+          tapply(
+            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tapply(tname("g"), tname("x"))))),
+            blk(tname("y")),
+          ),
           tname("h"),
         ),
       )),
@@ -1515,13 +1656,18 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val layout =
       """|import scala.language.postfixOps
          |object A {
-         |  def f = xs.map {
-         |    x => x seconds g
+         |  def f = {
+         |    xs.map {
+         |      x => x seconds
+         |    }
+         |    g
          |  }
          |}
          |""".stripMargin
     val tree = Source(List(
-      Import(List(Importer(tselect("scala", "language"), List(Importee.Name(Name("postfixOps")))))),
+      Import(
+        List(Importer(tselect("scala", "language"), Importee.Name(Name.Indeterminate("postfixOps")))),
+      ),
       Defn.Object(
         Nil,
         tname("A"),
@@ -1530,9 +1676,12 @@ class RelaxedLambdaSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tinfix(tname("x"), "seconds", tname("g")))),
+          blk(
+            tapply(
+              tselect("xs", "map"),
+              blk(tfunc(tparam("x"))(Term.SelectPostfix(tname("x"), tname("seconds")))),
+            ),
+            tname("g"),
           ),
         )),
       ),
@@ -1588,8 +1737,8 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    x => if (a) b + 1
-         |  }
+         |    x => if (a) b
+         |  } + 1
          |  def g = 1
          |}
          |""".stripMargin
@@ -1602,9 +1751,10 @@ class RelaxedLambdaSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tif(tname("a"), tinfix(tname("b"), "+", lit(1))))),
+          tinfix(
+            tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tif(tname("a"), tname("b"))))),
+            "+",
+            lit(1),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -1971,8 +2121,8 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.map {
-         |    (x, y) => x + y.sum
-         |  }
+         |    (x, y) => x + y
+         |  }.sum
          |  def g = 1
          |}
          |""".stripMargin
@@ -1985,9 +2135,12 @@ class RelaxedLambdaSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"), tparam("y"))(tinfix(tname("x"), "+", tselect("y", "sum")))),
+          tselect(
+            tapply(
+              tselect("xs", "map"),
+              blk(tfunc(tparam("x"), tparam("y"))(tinfix(tname("x"), "+", tname("y")))),
+            ),
+            "sum",
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -2070,11 +2223,34 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |  def f = xs.collect: case x if x > 0 => x
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = xs.collect: case x if x > 0 => x
-         |                      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case x if x > 0 => x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect("xs", "collect"),
+            Term.PartialFunction(List(
+              Case(patvar("x"), Some(tinfix(tname("x"), ">", lit(0))), tname("x")),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 relaxed lambda: case with a typed binder pattern, next definition") {
@@ -2083,11 +2259,34 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |  def f = xs.map: case x @ y: Int => x
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `identifier` expected but `case` found
-         |  def f = xs.map: case x @ y: Int => x
-         |                  ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case (x @ y): Int => x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect("xs", "map"),
+            Term.PartialFunction(List(
+              Case(Pat.Typed(Pat.Bind(patvar("x"), patvar("y")), pname("Int")), None, tname("x")),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: two statements of an indented def body") {
@@ -2176,8 +2375,8 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  val f = xs.map {
-         |    x => x.filter(_ > 0)
-         |  }
+         |    x => x
+         |  }.filter(_ > 0)
          |  def g = 1
          |}
          |""".stripMargin
@@ -2190,11 +2389,8 @@ class RelaxedLambdaSuite extends BaseDottySuite {
           List(patvar("f")),
           None,
           tapply(
-            tselect("xs", "map"),
-            blk(tfunc(tparam("x"))(tapply(
-              tselect("x", "filter"),
-              Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", lit(0))),
-            ))),
+            tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "filter"),
+            Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", lit(0))),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
@@ -2324,8 +2520,8 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |  val r: A {
          |    type T
          |  } = xs.map {
-         |    x => x.foo
-         |  }
+         |    x => x
+         |  }.foo
          |  def h = 1
          |}
          |""".stripMargin
@@ -2336,10 +2532,13 @@ class RelaxedLambdaSuite extends BaseDottySuite {
         Defn.Val(
           Nil,
           List(patvar("r")),
-          Some(
-            Type.Refine(Some(pname("A")), Stat.Block(List(Decl.Type(Nil, pname("T"), Nil, noBounds)))),
-          ),
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tselect("x", "foo")))),
+          Some(Type.Refine(
+            Some(pname("A")),
+            Stat.Block(List(
+              Decl.Type(Nil, pname("T"), Type.ParamClause(Nil), Type.Bounds(None, None, Nil, Nil)),
+            )),
+          )),
+          tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "foo"),
         ),
         Defn.Def(Nil, tname("h"), Nil, None, lit(1)),
       ),

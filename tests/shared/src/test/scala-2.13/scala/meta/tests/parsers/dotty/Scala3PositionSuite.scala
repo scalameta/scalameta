@@ -3395,17 +3395,14 @@ class Scala3PositionSuite extends BasePositionSuite {
     """|def f = xs.map: x => x
        |  .foo
        |""".stripMargin,
-    """|Term.Apply xs.map: x => x
+    """|Term.Select xs.map: x => x
        |  .foo [8:xs.map: x => x...:29)
+       |Term.Apply xs.map: x => x [8:xs.map: x => x:22)
        |Term.Select xs.map [8:xs.map:14)
-       |Term.Block : x => x
-       |  .foo [14<: x => x...>29)
-       |Term.Function x => x
-       |  .foo [16:x => x...:29)
+       |Term.Block : x => x [14<: x => x>22)
+       |Term.Function x => x [16:x => x:22)
        |Term.ParamClause x [16:x:17)
        |Term.Param x [16:x:17)
-       |Term.Select x
-       |  .foo [21:x...:29)
        |""".stripMargin,
     showPosition = true,
   )
@@ -3414,17 +3411,14 @@ class Scala3PositionSuite extends BasePositionSuite {
     """|def f = xs.map: x => x
        |  + 1
        |""".stripMargin,
-    """|Term.Apply xs.map: x => x
+    """|Term.ApplyInfix xs.map: x => x
        |  + 1 [8:xs.map: x => x...:28)
+       |Term.Apply xs.map: x => x [8:xs.map: x => x:22)
        |Term.Select xs.map [8:xs.map:14)
-       |Term.Block : x => x
-       |  + 1 [14<: x => x...>28)
-       |Term.Function x => x
-       |  + 1 [16:x => x...:28)
+       |Term.Block : x => x [14<: x => x>22)
+       |Term.Function x => x [16:x => x:22)
        |Term.ParamClause x [16:x:17)
        |Term.Param x [16:x:17)
-       |Term.ApplyInfix x
-       |  + 1 [21:x...:28)
        |Type.ArgClause   + @@1 [27::27)
        |""".stripMargin,
     showPosition = true,
@@ -3696,21 +3690,15 @@ class Scala3PositionSuite extends BasePositionSuite {
        |  // comment
        |  .foo
        |""".stripMargin,
-    """|Term.Apply xs.map: x => x
+    """|Term.Select xs.map: x => x
        |  // comment
        |  .foo [8:xs.map: x => x...:42)
+       |Term.Apply xs.map: x => x [8:xs.map: x => x:22)
        |Term.Select xs.map [8:xs.map:14)
-       |Term.Block : x => x
-       |  // comment
-       |  .foo [14<: x => x...>42)
-       |Term.Function x => x
-       |  // comment
-       |  .foo [16:x => x...:42)
+       |Term.Block : x => x [14<: x => x>22)
+       |Term.Function x => x [16:x => x:22)
        |Term.ParamClause x [16:x:17)
        |Term.Param x [16:x:17)
-       |Term.Select x
-       |  // comment
-       |  .foo [21:x...:42)
        |""".stripMargin,
     showPosition = true,
   )
