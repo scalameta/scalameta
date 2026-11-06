@@ -18,7 +18,9 @@ trait TypeOps {
   private[scalac] lazy val freeExistentials = new mutable.HashSet[String]
 
   implicit class XtensionGTypeSType(gtpe: g.Type) {
-    def toSemanticTpe: s.Type = {
+    def toSemanticTpe: s.Type = toSemanticTpe(null)
+    // `signatureOf` is the symbol whose signature this type is in, or null
+    def toSemanticTpe(signatureOf: g.Symbol): s.Type = {
       // A repeated type (`T*`) is only valid in parameter position; scalac widens a Scala repeated
       // to `scala.Seq[T]` everywhere else (e.g. the synthetic `unapplySeq` return), but leaves it
       // un-widened in some pickled positions such as a case class's synthetic
@@ -38,7 +40,17 @@ trait TypeOps {
           freeExistentials += ssym
         ssym
       }
+      // `A1` stays in the signature of its `applyOrElse`
+      def keepsLambdaArgType(gtparam: g.Symbol): Boolean = (signatureOf ne null) && {
+        val gmethod = gtparam.owner
+        (signatureOf eq gmethod) || (signatureOf.owner eq gmethod) &&
+        (signatureOf.isParameter || signatureOf.isTypeParameter)
+      }
       def loop(gtpe: g.Type): s.Type = gtpe match {
+        // the source means the type of the lambda's parameter
+        case gtpe: g.TypeRef
+            if gtpe.sym.isPartialFunctionArgType && !keepsLambdaArgType(gtpe.sym) =>
+          loop(gtpe.sym.info.bounds.hi)
         case gtpe: g.TypeRef =>
           val gsym = gtpe.sym
           gtpe.args match {
@@ -51,8 +63,12 @@ trait TypeOps {
               s.TypeRef(spre, referenced(gsym), gargs.map(widenRepeated))
           }
         case gtpe: g.SingleType =>
-          val spre = if (gtpe.hasTrivialPrefix) s.NoType else loop(gtpe.pre)
-          s.SingleType(spre, referenced(gtpe.sym))
+          val gsym = gtpe.sym
+          val isPFLP = gsym.isPartialFunctionLambdaAnyParam
+          s.SingleType(
+            if (gtpe.hasTrivialPrefix) s.NoType else loop(gtpe.pre),
+            referenced(if (isPFLP) gsym.partialFunctionParamFromAnyParam else gsym),
+          )
         case gtpe: g.ThisType => s.ThisType(gtpe.sym.ssym)
         case gtpe: g.SuperType =>
           val spre = loop(gtpe.thistpe.typeSymbol.tpe)
@@ -103,18 +119,18 @@ trait TypeOps {
       }
       loop(gtpe)
     }
-    def toSemanticSig(linkMode: LinkMode): s.Signature = {
+    def toSemanticSig(linkMode: LinkMode, signatureOf: g.Symbol = null): s.Signature = {
       def loop(gtpe: g.Type): s.Signature = gtpe match {
         case gtpe: g.ClassInfoType =>
           val stparams = Some(s.Scope())
-          val sparents = gtpe.parents.map(_.toSemanticTpe)
+          val sparents = gtpe.parents.map(_.toSemanticTpe(signatureOf))
           val gclass = gtpe.typeSymbol
-          val sself = gclass.self.toSemanticTpe
+          val sself = gclass.self.toSemanticTpe(signatureOf)
           val sdecls = Some(gclass.semanticdbDecls.sscope(linkMode))
           s.ClassSignature(stparams, sparents, sself, sdecls)
         case gtpe: g.NullaryMethodType =>
           val stparams = Some(s.Scope())
-          val stpe = gtpe.resultType.toSemanticTpe
+          val stpe = gtpe.resultType.toSemanticTpe(signatureOf)
           s.MethodSignature(stparams, Nil, stpe)
         case gtpe: g.MethodType =>
           val sparamss = List.newBuilder[s.Scope]
@@ -125,12 +141,12 @@ trait TypeOps {
               flatten(gtpe.resultType)
             case gret => gret
           }
-          val sret = flatten(gtpe).toSemanticTpe
+          val sret = flatten(gtpe).toSemanticTpe(signatureOf)
           s.MethodSignature(Some(s.Scope()), sparamss.result(), sret)
         case gtpe: g.TypeBounds =>
           val stparams = Some(s.Scope())
-          val slo = gtpe.lo.toSemanticTpe
-          val shi = gtpe.hi.toSemanticTpe
+          val slo = gtpe.lo.toSemanticTpe(signatureOf)
+          val shi = gtpe.hi.toSemanticTpe(signatureOf)
           s.TypeSignature(stparams, slo, shi)
         case gtpe: g.PolyType =>
           val gtparams = gtpe.typeParams
@@ -152,7 +168,7 @@ trait TypeOps {
           }
         case g.NoType => s.NoSignature
         case g.ErrorType => s.NoSignature
-        case gother => s.ValueSignature(gother.toSemanticTpe)
+        case gother => s.ValueSignature(gother.toSemanticTpe(signatureOf))
       }
       loop(gtpe)
     }
