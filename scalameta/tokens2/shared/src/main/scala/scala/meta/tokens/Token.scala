@@ -47,11 +47,15 @@ object Token {
   @branch
   trait ModifierKeyword extends Keyword
   @branch
+  private[meta] trait StatBegKeyword extends Keyword
+  @branch
+  private[meta] trait CtrlKeyword extends Keyword
+  @branch
   private[meta] trait ContKeyword extends Token
   @branch
-  private[meta] trait DeclBegKeyword extends Token
+  private[meta] trait DeclBegKeyword extends StatBegKeyword
   @branch
-  private[meta] trait TmplBegKeyword extends Token
+  private[meta] trait TmplBegKeyword extends StatBegKeyword
   @branch
   private[meta] trait ExprBegToken extends Token
   @branch
@@ -103,19 +107,19 @@ object Token {
   @fixed("case")
   class KwCase extends Keyword
   @fixed("catch")
-  class KwCatch extends Keyword with ContKeyword
+  class KwCatch extends CtrlKeyword with ContKeyword
   @fixed("class")
-  class KwClass extends Keyword with TmplBegKeyword
+  class KwClass extends TmplBegKeyword
   @fixed("def")
-  class KwDef extends Keyword with DeclBegKeyword
+  class KwDef extends DeclBegKeyword
   @fixed("do")
-  class KwDo extends Keyword with ExprBegToken
+  class KwDo extends CtrlKeyword with ExprBegToken
   @fixed("else")
-  class KwElse extends Keyword with ContKeyword
+  class KwElse extends CtrlKeyword with ContKeyword
   @fixed("enum")
-  class KwEnum extends Keyword with DeclBegKeyword
+  class KwEnum extends DeclBegKeyword
   @fixed("export")
-  class KwExport extends Keyword
+  class KwExport extends StatBegKeyword
   @fixed("extends")
   class KwExtends extends Keyword with ContKeyword
   @fixed("false")
@@ -123,69 +127,69 @@ object Token {
   @fixed("final")
   class KwFinal extends ModifierKeyword
   @fixed("finally")
-  class KwFinally extends Keyword with ContKeyword
+  class KwFinally extends CtrlKeyword with ContKeyword
   @fixed("for")
-  class KwFor extends Keyword with EndMarkerSpecifier with ExprBegToken
+  class KwFor extends CtrlKeyword with EndMarkerSpecifier with ExprBegToken
   @fixed("forSome")
   class KwForsome extends Keyword with ContKeyword
   @fixed("given")
-  class KwGiven extends Keyword with EndMarkerSpecifier with DeclBegKeyword with StatEndToken
+  class KwGiven extends DeclBegKeyword with EndMarkerSpecifier with StatEndToken
   @fixed("if")
-  class KwIf extends Keyword with EndMarkerSpecifier with ExprBegToken
+  class KwIf extends CtrlKeyword with EndMarkerSpecifier with ExprBegToken
   @fixed("implicit")
   class KwImplicit extends ModifierKeyword
   @fixed("import")
-  class KwImport extends Keyword
+  class KwImport extends StatBegKeyword
   @fixed("lazy")
   class KwLazy extends ModifierKeyword
   @fixed("match")
-  class KwMatch extends Keyword with ContKeyword with EndMarkerSpecifier
+  class KwMatch extends CtrlKeyword with ContKeyword with EndMarkerSpecifier
   @fixed("macro")
   class KwMacro extends Keyword
   @fixed("new")
-  class KwNew extends Keyword with EndMarkerSpecifier with ExprBegToken
+  class KwNew extends CtrlKeyword with EndMarkerSpecifier with ExprBegToken
   @fixed("null")
   class KwNull extends Literal
   @fixed("object")
-  class KwObject extends Keyword with TmplBegKeyword
+  class KwObject extends TmplBegKeyword
   @fixed("override")
   class KwOverride extends ModifierKeyword
   @fixed("package")
-  class KwPackage extends Keyword
+  class KwPackage extends StatBegKeyword
   @fixed("private")
   class KwPrivate extends ModifierKeyword
   @fixed("protected")
   class KwProtected extends ModifierKeyword
   @fixed("return")
-  class KwReturn extends Keyword with ExprBegToken with StatEndToken
+  class KwReturn extends CtrlKeyword with ExprBegToken with StatEndToken
   @fixed("sealed")
   class KwSealed extends ModifierKeyword
   @fixed("super")
   class KwSuper extends Keyword with ExprBegToken
   @fixed("then")
-  class KwThen extends Keyword
+  class KwThen extends CtrlKeyword
   @fixed("this")
   class KwThis extends Keyword with EndMarkerSpecifier with ExprBegToken with StatEndToken
   @fixed("throw")
-  class KwThrow extends Keyword with ExprBegToken
+  class KwThrow extends CtrlKeyword with ExprBegToken
   @fixed("trait")
-  class KwTrait extends Keyword with TmplBegKeyword
+  class KwTrait extends TmplBegKeyword
   @fixed("true")
   class KwTrue extends BooleanConstant(true)
   @fixed("try")
-  class KwTry extends Keyword with EndMarkerSpecifier with ExprBegToken
+  class KwTry extends CtrlKeyword with EndMarkerSpecifier with ExprBegToken
   @fixed("type")
-  class KwType extends Keyword with DeclBegKeyword with StatEndToken
+  class KwType extends DeclBegKeyword with StatEndToken
   @fixed("val")
-  class KwVal extends Keyword with EndMarkerSpecifier with DeclBegKeyword
+  class KwVal extends DeclBegKeyword with EndMarkerSpecifier
   @fixed("var")
-  class KwVar extends Keyword with DeclBegKeyword
+  class KwVar extends DeclBegKeyword
   @fixed("while")
-  class KwWhile extends Keyword with EndMarkerSpecifier with ExprBegToken
+  class KwWhile extends CtrlKeyword with EndMarkerSpecifier with ExprBegToken
   @fixed("with")
   class KwWith extends Keyword with ContKeyword
   @fixed("yield")
-  class KwYield extends Keyword with ContKeyword
+  class KwYield extends CtrlKeyword with ContKeyword
 
   // Symbolic keywords
   @fixed("#")
