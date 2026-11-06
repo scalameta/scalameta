@@ -167,7 +167,7 @@ object Token {
   @fixed("super")
   class KwSuper extends Keyword with ExprBegToken
   @fixed("then")
-  class KwThen extends CtrlKeyword
+  class KwThen extends CtrlKeyword with ContKeyword
   @fixed("this")
   class KwThis extends Keyword with EndMarkerSpecifier with ExprBegToken with StatEndToken
   @fixed("throw")

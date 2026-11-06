@@ -603,12 +603,14 @@ private[meta] final class ScannerTokens(
           case (r: RegionCaseExprPat) :: rs => new RegionCaseExprGuard(r.indent) :: rs
           case rs @ (_: RegionFor) :: _ => rs
           case rs @ (_: RegionDelim) :: (_: RegionFor) :: _ => rs
+          // a guard after a generator that left a region, such as that of `new` or `try`
+          case rs if canEndStat(prev) && isForGuard(rs) => rs
           case _ => RegionIf(next) :: sepRegions
         })
       case _: KwThen => dropRegionLine(sepRegions) match {
-          case (r: RegionIndent) :: (_: RegionIf) :: rs => outdentThenCurrRef(r, rs, Some(RegionThen))
-          case (_: RegionIf) :: rs => currRef(RegionThen :: rs)
-          case _ => currRef(RegionThen :: sepRegions)
+          case (r: RegionIndent) :: (rc: RegionIf) :: rs
+              if rc.isTerminatingTokenAt(curr, currPos) => outdentThenCurrRef(r, rs, Some(RegionThen))
+          case _ => currRef(RegionThen :: dropControl(curr, currPos, sepRegions))
         }
       case _: KwElse if dialect.allowQuietSyntax =>
         dropRegionLine(sepRegions) match {
@@ -616,10 +618,9 @@ private[meta] final class ScannerTokens(
           case _ => currRef(sepRegions)
         }
       case _: KwDo | _: KwYield => dropRegionLine(sepRegions) match {
-          case (r: RegionIndent) :: (_: RegionWhile | _: RegionFor) :: rs =>
-            outdentThenCurrRef(r, rs)
-          case (_: RegionWhile | _: RegionFor) :: rs => currRef(rs)
-          case _ => currRef(sepRegions)
+          case (r: RegionIndent) :: (rc: RegionControl) :: rs
+              if rc.isTerminatingTokenAt(curr, currPos) => outdentThenCurrRef(r, rs)
+          case _ => currRef(dropControl(curr, currPos, sepRegions))
         }
       case _: KwDef | _: KwVal | _: KwVar
           if dialect.allowSignificantIndentation && !isPrevEndMarker() =>
@@ -657,11 +658,13 @@ private[meta] final class ScannerTokens(
       case (r: RegionControl) :: rs if r.isNotTerminatingTokenIfOptional(curr) =>
         r match {
           case rc: RegionControlMaybeCond if prev.is[RightParen] =>
-            curr match {
-              case _: Dot | _: KwMatch => rc.asCond() :: rs
+            // as dotty's `toBeContinued`, a token that cannot start a statement continues cond
+            if (!mightStartStat(curr)) rc.asCond() :: rs
+            else curr match {
               // might continue cond or start body
               case _: Ident | _: LeftBrace | _: LeftBracket | _: LeftParen | _: Underscore
-                  if dialect.allowQuietSyntax => rc.asCondOrBody() :: rs
+                  if dialect.allowQuietSyntax =>
+                rc.asCondOrBody(condEndAt(rc.asCond(), currPos)) :: rs
               case _ => rc.asBody().fold(rs)(_ :: rs)
             }
           case RegionForMaybeParens if prev.is[RightParen] =>
@@ -729,6 +732,8 @@ private[meta] final class ScannerTokens(
               if !next.isAny[KwCatch, KwFinally] && canBeLeadingInfix != LeadingInfix.Yes &&
                 !isIndented(xs, nextIndent) => strip(xs)
           case (_: RegionGivenDecl) :: xs => strip(xs)
+          // as dotty's `InCond`, a condition continues past a line end
+          case (_: RegionControlCond) :: _ => None
           case Nil | (_: CanProduceLF) :: _ => Some(rs)
           case _ => None
         }
@@ -800,6 +805,8 @@ private[meta] final class ScannerTokens(
                 OutdentInfo(r, if (done) rs else xs, done)
               } else null
             case _ if nextIndent >= r.indent => null // we stop here
+            // a condition continues to its `then` or `do`
+            case (_: RegionControlCond) :: _ => OutdentInfo(r, rs)
             case (rc: RegionControl) :: xs =>
               OutdentInfo(r, if (rc.isTerminatingToken(next)) rs else xs)
             case _ if ctrlOnly => null // we stop here
@@ -987,6 +994,23 @@ private[meta] final class ScannerTokens(
     }
   }
 
+  /* the index of the token that ends `cond` if the condition continues to it from `pos`, or -1;
+   * as dotty's `followedByToken`, the scan stops at a statement outside braces */
+  private def condEndAt(cond: RegionControlCond, pos: Int): Int = {
+    @tailrec
+    def iter(i: Int, braces: Int): Int = tokens(i) match {
+      case _: Trivia => iter(i + 1, braces)
+      case _: LeftBrace => iter(i + 1, braces + 1)
+      case _: RightBrace => if (braces > 0) iter(i + 1, braces - 1) else -1
+      case _: EOF | _: Xml.Start => -1
+      case _ if braces > 0 => iter(i + 1, braces)
+      case t if cond.isTerminatingToken(t) => i
+      case _: StatBegKeyword | _: ModifierKeyword | _: CtrlKeyword | _: Semicolon => -1 // dotty's `stopScanTokens`
+      case _ => iter(i + 1, braces)
+    }
+    iter(pos, 0)
+  }
+
   private def isLeadingInfixArg(afterOpPos: Int, nextIndent: Int) = {
     // we don't check for pos to be within bounds since we would exit on EOF first
     @tailrec
@@ -1057,6 +1081,28 @@ private[meta] object ScannerTokens {
       case head :: tail => if (f(head)) tail else dropUntil(tail)(f)
       case _ => Nil
     }
+
+  /* `regions` without the nearest control region that `token` at `pos` ends, and without the
+   * regions above it unless an indented one comes first; a parenthesis, a bracket, a brace or a
+   * `for` region stops the search */
+  private def dropControl(token: Token, pos: Int, regions: List[SepRegion]): List[SepRegion] = {
+    @tailrec
+    def iter(rs: List[SepRegion], withAbove: Boolean): List[SepRegion] = rs match {
+      case (r: RegionControl) :: xs if r.isTerminatingTokenAt(token, pos) =>
+        if (withAbove) xs else regions.takeWhile(_ ne r) ::: xs
+      case Nil | (_: RegionDelimNonIndented | _: RegionFor) :: _ => regions
+      case r :: xs => iter(xs, withAbove && !r.isIndented)
+    }
+    iter(regions, withAbove = true)
+  }
+
+  // an `if` after `regions` is a guard: a `for` region comes before any delimiter or indented one
+  @tailrec
+  private def isForGuard(regions: List[SepRegion]): Boolean = regions match {
+    case (_: RegionFor) :: _ | (_: RegionDelim) :: (_: RegionFor) :: _ => true
+    case Nil | (_: RegionDelim | _: SepRegionIndented) :: _ => false
+    case _ :: rs => isForGuard(rs)
+  }
 
   @tailrec
   private def dropRegionLine(regions: List[SepRegion]): List[SepRegion] = regions match {
