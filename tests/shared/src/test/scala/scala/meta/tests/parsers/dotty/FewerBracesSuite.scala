@@ -2937,4 +2937,236 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("tokens of an if with parentheses and an ascription in a single-line lambda, then on the next line") {
+    val code =
+      """|object A:
+         |  def f = xs.map: x => if (a): Boolean
+         |      then c else d
+         |  def g = 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Ident(xs) [20..22)
+         |Dot [22..23)
+         |Ident(map) [23..26)
+         |Colon [26..27)
+         |Ident(x) [28..29)
+         |RightArrow [30..32)
+         |KwIf [33..35)
+         |LeftParen [36..37)
+         |Ident(a) [37..38)
+         |RightParen [38..39)
+         |Colon [39..40)
+         |Ident(Boolean) [41..48)
+         |LF [48..49)
+         |KwThen [55..59)
+         |Ident(c) [60..61)
+         |KwElse [62..66)
+         |Ident(d) [67..68)
+         |LF [68..69)
+         |KwDef [71..74)
+         |Ident(g) [75..76)
+         |Equals [77..78)
+         |Constant.Int(1) [79..80)
+         |Indentation.Outdent [80..80)
+         |EOF [81..81)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("tokens of an if with parentheses and an ascription in a single-line lambda, deeper leading infix") {
+    val code =
+      """|object A:
+         |  def f = xs.map: x => if (a): Boolean
+         |      && b
+         |      then c else d
+         |  def g = 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Ident(xs) [20..22)
+         |Dot [22..23)
+         |Ident(map) [23..26)
+         |Colon [26..27)
+         |Ident(x) [28..29)
+         |RightArrow [30..32)
+         |KwIf [33..35)
+         |LeftParen [36..37)
+         |Ident(a) [37..38)
+         |RightParen [38..39)
+         |Colon [39..40)
+         |Ident(Boolean) [41..48)
+         |InfixLF [48..49)
+         |Ident(&&) [55..57)
+         |Ident(b) [58..59)
+         |LF [59..60)
+         |KwThen [66..70)
+         |Ident(c) [71..72)
+         |KwElse [73..77)
+         |Ident(d) [78..79)
+         |LF [79..80)
+         |KwDef [82..85)
+         |Ident(g) [86..87)
+         |Equals [88..89)
+         |Constant.Int(1) [90..91)
+         |Indentation.Outdent [91..91)
+         |EOF [92..92)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("tokens of a while with parentheses and an ascription in a single-line lambda, do on the next line") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach: x => while (a): Boolean
+         |      do c
+         |  def g = 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Ident(xs) [20..22)
+         |Dot [22..23)
+         |Ident(foreach) [23..30)
+         |Colon [30..31)
+         |Ident(x) [32..33)
+         |RightArrow [34..36)
+         |KwWhile [37..42)
+         |LeftParen [43..44)
+         |Ident(a) [44..45)
+         |RightParen [45..46)
+         |Colon [46..47)
+         |Ident(Boolean) [48..55)
+         |LF [55..56)
+         |KwDo [62..64)
+         |Ident(c) [65..66)
+         |LF [66..67)
+         |KwDef [69..72)
+         |Ident(g) [73..74)
+         |Equals [75..76)
+         |Constant.Int(1) [77..78)
+         |Indentation.Outdent [78..78)
+         |EOF [79..79)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("tokens of a while with parentheses and an ascription in a single-line lambda, deeper leading infix") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach: x => while (a): Boolean
+         |      && b
+         |      do c
+         |  def g = 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Ident(xs) [20..22)
+         |Dot [22..23)
+         |Ident(foreach) [23..30)
+         |Colon [30..31)
+         |Ident(x) [32..33)
+         |RightArrow [34..36)
+         |KwWhile [37..42)
+         |LeftParen [43..44)
+         |Ident(a) [44..45)
+         |RightParen [45..46)
+         |Colon [46..47)
+         |Ident(Boolean) [48..55)
+         |InfixLF [55..56)
+         |Ident(&&) [62..64)
+         |Ident(b) [65..66)
+         |LF [66..67)
+         |KwDo [73..75)
+         |Ident(c) [76..77)
+         |LF [77..78)
+         |KwDef [80..83)
+         |Ident(g) [84..85)
+         |Equals [86..87)
+         |Constant.Int(1) [88..89)
+         |Indentation.Outdent [89..89)
+         |EOF [90..90)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("SIP-75 single-line lambda: in an indented if condition, if with parentheses and an annotation ascription with an if argument, then on the next line, then on the next line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    if
+         |      xs.exists: x => if (a): @ann(if b then 1 else 2)
+         |        then c else d
+         |    then e else g
+         |  def h = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `=>` found
+         |      xs.exists: x => if (a): @ann(if b then 1 else 2)
+         |                   ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("SIP-75 single-line lambda: in an indented if condition, if with parentheses and a colon argument with an indented if, then on the next line, then on the next line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    if
+         |      xs.exists: x => if (f):
+         |          if b then true else false
+         |        then c else d
+         |    then e else g
+         |  def h = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `=>` found
+         |      xs.exists: x => if (f):
+         |                   ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("SIP-75 single-line lambda: in an indented while condition, while with parentheses and an annotation ascription with a while argument, do on the next line, do on the next line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    while
+         |      xs.exists: x => while (a): @ann(while b do g)
+         |        do h(x)
+         |    do k
+         |  def h = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `=>` found
+         |      xs.exists: x => while (a): @ann(while b do g)
+         |                   ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
 }
