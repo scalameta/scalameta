@@ -101,6 +101,19 @@ jobs:
         run: sbt testsJS3_lts/testFull
       - if: ${{ !cancelled() }}
         run: sbt download-scala-library
+      # the tests run in the server JVM, which reads line.separator once at start
+      - &sbt_crlf
+        if: ${{ !cancelled() }}
+        name: restart the sbt server with CRLF line endings
+        run: |
+          sbt shutdown
+          sbt $'-J-Dline.separator=\r\n' whoami || sbt $'-J-Dline.separator=\r\n' whoami
+          sbt 'eval assert(System.lineSeparator == "\r\n")'
+        shell: bash
+      # each step carries the option: a client that misses the server starts its own
+      - if: ${{ !cancelled() }}
+        run: sbt $'-J-Dline.separator=\r\n' tests2_13/testFull
+        shell: bash
   
   pr-jvm33-sem213-other: # 3.3 parser and mima + 2.13 semanticdb + community + scalafmt
     runs-on: ubuntu-latest
@@ -122,6 +135,10 @@ jobs:
         run: sbt communitytest/testFull
       - if: ${{ !cancelled() }}
         run: ./bin/scalafmt --test
+      - *sbt_crlf
+      - if: ${{ !cancelled() }}
+        run: sbt $'-J-Dline.separator=\r\n' testsSemanticdb2_13
+        shell: bash
 
   pr-jvm38-js2: # latest-3 parser + JS on both Scala 2 lines
     runs-on: ubuntu-latest
