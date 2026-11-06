@@ -296,6 +296,14 @@ trait SymbolOps {
       isPartialFunctionLambdaAnyParam
     def isPartialFunctionLambdaClass: Boolean = sym.isSynthetic && sym.isAnonymousClass &&
       partialFunctionParamFromClass.isPartialFunctionLambdaAnyParam
+    // `A1` of `applyOrElse[A1 <: T, B1]` in a `PartialFunction` class that scalac generates
+    def isPartialFunctionArgType: Boolean = sym.isTypeParameter && {
+      val method = sym.owner
+      val cls = method.owner
+      method.name == g.nme.applyOrElse && method.typeParams.headOption.contains(sym) &&
+      cls.isSynthetic && cls.isAnonymousClass &&
+      cls.isSubClass(g.definitions.AbstractPartialFunctionClass)
+    }
     def isPartialFunctionLambdaParamPlaceholder: Boolean = { // is it `_` in `_ + 1`?
       val gpos = sym.pos
       gpos.isDefined && {

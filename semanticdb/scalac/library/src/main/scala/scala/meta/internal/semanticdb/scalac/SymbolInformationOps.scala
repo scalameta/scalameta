@@ -148,7 +148,7 @@ trait SymbolInformationOps {
             preprocess(gsym.info)
           } else if (gsym.isModule) gsym.moduleClass.info
           else gsym.info
-        val ssig = gsig.toSemanticSig(linkMode)
+        val ssig = gsig.toSemanticSig(linkMode, gsym)
         if (gsym.isConstructor) ssig match {
           case m: s.MethodSignature => m.copy(returnType = s.NoType)
           case m => m
