@@ -374,6 +374,11 @@ trait TextDocumentOps {
 
       object MyDocumentTraverser extends DocumentTraverser(unit.source) {
         private var genclosing: List[g.Tree] = Nil // the current tree and its parents
+        private val gnewNames: mutable.HashSet[g.Name] = mrenames.map(encodedTerm)
+        // rename importees enclosing current tree
+        private var grenames: List[Rename] = Nil
+        // an importee renaming `target` to `name`, within a `gtree` block at `start`
+        private case class Rename(gtree: g.Tree, name: g.Name, start: Int, target: g.Symbol)
         // for each template, the getters with a tree in its body
         private val ggetterTrees = mutable.HashMap.empty[g.Template, Set[g.Symbol]]
         private lazy val grootImports = g.analyzer.rootContext(unit).imports.map(_.tree)
@@ -931,7 +936,46 @@ trait TextDocumentOps {
               case gpre: g.ThisType if refersTo(mname, gpre.sym) => success(mname, gpre.sym)
               case _ =>
             }
+          case mthis: m.Term.This => gpre match {
+              case gpre: g.ThisType => if (isThisOf(mthis, gpre.sym)) success(mthis.qual, gpre.sym)
+              case gpre: g.SingleType =>
+                if (gpre.sym.isPackageObject) tryFindQualifier(mthis, gpre.pre)
+              case _ =>
+            }
           case _ =>
+        }
+        private def isThisOf(mthis: m.Term.This, gcls: g.Symbol): Boolean = mthis.qual match {
+          case mqual: m.Name.Indeterminate =>
+            val name = mqual.value
+            val gpos = gcls.pos
+            gcls.decodedName == name && gpos.isDefined && gpos.source == unit.source && {
+              val mdefn = thisDefn(mthis, name)
+              (null ne mdefn) && {
+                val start = mdefn.mods.lastOption.fold(mdefn.pos.start)(_.pos.end)
+                start <= gpos.point && gpos.point < mdefn.name.pos.end &&
+                gcls.isModuleClass == mdefn.name.isInstanceOf[m.Term.Name] // only `object` has a term name
+              }
+            }
+          case _ => false
+        }
+        @tailrec // innermost template defn enclosing `mtree` and named `name`
+        private def thisDefn(
+            mtree: m.Tree,
+            name: String,
+            inBody: Boolean = true, // false when `mtree` didn't come from the body
+        ): m.Member with m.Stat.WithMods = mtree.parent match {
+          case Some(p: m.Member with m.Stat.WithMods with m.Stat.WithTemplate) if (p match {
+                case _: m.Pkg.Object => DisplayNames.PackageObject
+                case _ => p.name.value
+              }) == name => if (inBody) p else null
+          case Some(p) =>
+            val inParentBody = p match {
+              case p: m.Template.Body => !p.selfOpt.contains(mtree)
+              case p: m.Template => inBody && (p.body eq mtree)
+              case _ => false
+            }
+            thisDefn(p, name, inParentBody)
+          case None => null
         }
         // a selection has the name of its member; an import or a self alias may rename an identifier
         private def refersTo(mqual: m.Term.Ref, gsym: g.Symbol): Boolean = mqual match {
@@ -948,25 +992,25 @@ trait TextDocumentOps {
           mrenames(mname.value) && {
             val gname = encoded(mname)
             val start = mname.pos.start
-            def renames(gstats: List[g.Tree]) = gstats.exists {
-              case t: g.Import => t.pos.isDefined && t.pos.start < start && {
-                  val gtpe = t.expr.tpe
-                  (gtpe ne null) && t.selectors.exists(sel =>
-                    sel.rename == gname && {
-                      val gtarget = gtpe.member(sel.name)
-                      gtarget == gsym || gtarget.moduleClass == gsym
-                    },
-                  )
-                }
-              case _ => false
-            }
-            genclosing.exists {
-              case t: g.Block => renames(t.stats)
-              case t: g.Template => renames(t.body)
-              case t: g.PackageDef => renames(t.stats)
-              case _ => false
-            }
+            grenames.exists(r =>
+              r.name == gname && r.start < start &&
+                (r.target == gsym || r.target.moduleClass == gsym),
+            )
           }
+        private def enterRenames(gtree: g.Tree, gstats: List[g.Tree]): Unit = gstats.foreach {
+          case t: g.Import if t.pos.isDefined =>
+            val gtpe = t.expr.tpe
+            if (gtpe ne null) t.selectors.foreach(sel =>
+              if (gnewNames.contains(sel.rename)) grenames ::=
+                Rename(gtree, sel.rename, t.pos.start, gtpe.member(sel.name)),
+            )
+          case _ =>
+        }
+        @tailrec
+        private def leaveRenames(renames: List[Rename], gtree: g.Tree): List[Rename] = renames match {
+          case head :: tail if head.gtree eq gtree => leaveRenames(tail, gtree)
+          case _ => renames
+        }
 
         /* scalac dealiased the parent, so its type and prefix may not be what the source names:
          * resolve the names from the scope around the class instead, and keep them if they
@@ -1142,6 +1186,9 @@ trait TextDocumentOps {
             tryFindTypes(mtpe.lhs :: mtpe.rhs :: Nil, gtpe.args)
             tryFindType(mtpe.op, gtpe)
           case (mtpe: m.Type.Singleton, _: g.SingleType | _: g.TypeRef) =>
+            tryFindQualifier(mtpe.ref, gtpe)
+          // only `C.this.type`: after a dealias, scalac may pair another singleton with `this`
+          case (mtpe: m.Type.Singleton, _: g.ThisType) if mtpe.ref.isInstanceOf[m.Term.This] =>
             tryFindQualifier(mtpe.ref, gtpe)
           case (mtpe: m.Type.With, gtpe: g.RefinedType) => tryFindParents(mtpe, gtpe)
           case (mtpe: m.Type.Refine, gtpe: g.RefinedType) =>
@@ -1483,9 +1530,18 @@ trait TextDocumentOps {
             case Nil => null
           }
 
-        override protected def enter(gtree: g.Tree): Unit = genclosing = gtree :: genclosing
+        override protected def enter(gtree: g.Tree): Unit = {
+          genclosing = gtree :: genclosing
+          if (gnewNames.nonEmpty) gtree match {
+            case t: g.Block => enterRenames(t, t.stats)
+            case t: g.Template => enterRenames(t, t.body)
+            case t: g.PackageDef => enterRenames(t, t.stats)
+            case _ =>
+          }
+        }
         override protected def leave(gtree: g.Tree): Unit = {
           genclosing = genclosing.drop(1)
+          grenames = leaveRenames(grenames, gtree)
           gtree match {
             case t: g.Template => ggetterTrees -= t
             case _ =>

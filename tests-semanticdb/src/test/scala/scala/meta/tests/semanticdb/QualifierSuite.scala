@@ -1092,10 +1092,12 @@ class QualifierSuite extends SemanticdbSuite {
          |[1:59..1:60): A <= qs78/package.O.TC#[A]
          |[2:6..2:7): a <= qs78/package.a.
          |[2:10..2:17): classOf => scala/Predef.classOf().
+         |[2:18..2:27): `package` => qs78/package.
          |[2:33..2:34): O => qs78/package.O.
          |[2:35..2:36): C => qs78/package.O.C#
          |[3:6..3:7): b <= qs78/package.b.
          |[3:10..3:14): List => scala/collection/immutable/Nil.
+         |[3:15..3:24): `package` => qs78/package.
          |[3:30..3:31): O => qs78/package.O.
          |[3:32..3:33): C => qs78/package.O.C#
          |[4:6..4:7): c <= qs78/package.c.
@@ -1103,6 +1105,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[4:18..4:22): List => scala/package.List#
          |[4:23..4:24): X => local0
          |[4:41..4:42): X <= local0
+         |[4:46..4:55): `package` => qs78/package.
          |[4:61..4:62): O => qs78/package.O.
          |[4:63..4:64): C => qs78/package.O.C#
          |[5:6..5:7): d <= qs78/package.d.
@@ -1120,6 +1123,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[6:45..6:48): Int => scala/Int#
          |[6:52..6:102): (x: `package`.this.O.C) => x match { case _ => 1 } <= local2
          |[6:53..6:54): x <= local9
+         |[6:56..6:65): `package` => qs78/package.
          |[6:71..6:72): O => qs78/package.O.
          |[6:73..6:74): C => qs78/package.O.C#
          |[6:79..6:80): x => local9
@@ -1127,10 +1131,12 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:10..7:14): List => scala/collection/immutable/Nil.
          |[7:15..7:21): AnyRef => java/lang/Object#
          |[7:28..7:29): m <= local10
+         |[7:31..7:40): `package` => qs78/package.
          |[7:46..7:47): O => qs78/package.O.
          |[7:48..7:49): C => qs78/package.O.C#
          |[8:6..8:7): g <= qs78/package.g.
          |[8:10..8:14): List => scala/collection/immutable/Nil.
+         |[8:15..8:24): `package` => qs78/package.
          |[9:8..9:9): I <= qs78/package.I#
          |[9:10..9:10):  <= qs78/package.I#`<init>`().
          |[9:12..9:13): s <= local11
@@ -1148,6 +1154,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[11:28..11:29): m <= local12
          |[11:30..11:31): A <= local14
          |[11:33..11:33):  <= local13
+         |[11:33..11:42): `package` => qs78/package.
          |[11:48..11:49): O => qs78/package.O.
          |[11:50..11:52): TC => qs78/package.O.TC#
          |[11:55..11:58): Int => scala/Int#
@@ -1155,10 +1162,12 @@ class QualifierSuite extends SemanticdbSuite {
          |[12:10..12:10):  <= qs78/package.K#`<init>`().
          |[13:8..13:9): a <= qs78/package.K#a.
          |[13:12..13:19): classOf => scala/Predef.classOf().
+         |[13:20..13:29): `package` => qs78/package.
          |[13:35..13:36): O => qs78/package.O.
          |[13:37..13:38): C => qs78/package.O.C#
          |[14:8..14:9): b <= qs78/package.K#b.
          |[14:12..14:16): List => scala/collection/immutable/Nil.
+         |[14:17..14:26): `package` => qs78/package.
          |[14:32..14:33): O => qs78/package.O.
          |[14:34..14:35): C => qs78/package.O.C#
          |[15:8..15:9): c <= qs78/package.K#c.
@@ -1166,6 +1175,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[15:20..15:24): List => scala/package.List#
          |[15:25..15:26): X => local15
          |[15:43..15:44): X <= local15
+         |[15:48..15:57): `package` => qs78/package.
          |[15:63..15:64): O => qs78/package.O.
          |[15:65..15:66): C => qs78/package.O.C#
          |[16:8..16:9): d <= qs78/package.K#d.
@@ -1183,6 +1193,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[17:47..17:50): Int => scala/Int#
          |[17:54..17:104): (x: `package`.this.O.C) => x match { case _ => 1 } <= local17
          |[17:55..17:56): x <= local24
+         |[17:58..17:67): `package` => qs78/package.
          |[17:73..17:74): O => qs78/package.O.
          |[17:75..17:76): C => qs78/package.O.C#
          |[17:81..17:82): x => local24
@@ -1190,10 +1201,12 @@ class QualifierSuite extends SemanticdbSuite {
          |[18:12..18:16): List => scala/collection/immutable/Nil.
          |[18:17..18:23): AnyRef => java/lang/Object#
          |[18:30..18:31): m <= local25
+         |[18:33..18:42): `package` => qs78/package.
          |[18:48..18:49): O => qs78/package.O.
          |[18:50..18:51): C => qs78/package.O.C#
          |[19:8..19:9): g <= qs78/package.K#g.
          |[19:12..19:16): List => scala/collection/immutable/Nil.
+         |[19:17..19:26): `package` => qs78/package.
          |[20:10..20:11): I <= qs78/package.K#I#
          |[20:12..20:12):  <= qs78/package.K#I#`<init>`().
          |[20:14..20:15): s <= local26
@@ -1211,6 +1224,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[22:30..22:31): m <= local27
          |[22:32..22:33): A <= local29
          |[22:35..22:35):  <= local28
+         |[22:35..22:44): `package` => qs78/package.
          |[22:50..22:51): O => qs78/package.O.
          |[22:52..22:54): TC => qs78/package.O.TC#
          |[22:57..22:60): Int => scala/Int#
@@ -1231,10 +1245,12 @@ class QualifierSuite extends SemanticdbSuite {
          |[1:59..1:60): A <= qs78/package.O.TC#[A]
          |[2:6..2:7): a <= qs78/package.a.
          |[2:10..2:17): classOf => scala/Predef.classOf().
+         |[2:18..2:27): `package` => qs78/package.
          |[2:33..2:34): O => qs78/package.O.
          |[2:35..2:36): C => qs78/package.O.C#
          |[3:6..3:7): b <= qs78/package.b.
          |[3:10..3:14): List => scala/collection/immutable/Nil.
+         |[3:15..3:24): `package` => qs78/package.
          |[3:30..3:31): O => qs78/package.O.
          |[3:32..3:33): C => qs78/package.O.C#
          |[4:6..4:7): c <= qs78/package.c.
@@ -1242,6 +1258,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[4:18..4:22): List => scala/package.List#
          |[4:23..4:24): X => local0
          |[4:41..4:42): X <= local0
+         |[4:46..4:55): `package` => qs78/package.
          |[4:61..4:62): O => qs78/package.O.
          |[4:63..4:64): C => qs78/package.O.C#
          |[5:6..5:7): d <= qs78/package.d.
@@ -1264,10 +1281,12 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:10..7:14): List => scala/collection/immutable/Nil.
          |[7:15..7:21): AnyRef => java/lang/Object#
          |[7:28..7:29): m <= local10
+         |[7:31..7:40): `package` => qs78/package.
          |[7:46..7:47): O => qs78/package.O.
          |[7:48..7:49): C => qs78/package.O.C#
          |[8:6..8:7): g <= qs78/package.g.
          |[8:10..8:14): List => scala/collection/immutable/Nil.
+         |[8:15..8:24): `package` => qs78/package.
          |[9:8..9:9): I <= qs78/package.I#
          |[9:10..9:10):  <= qs78/package.I#`<init>`().
          |[9:12..9:13): s <= local11
@@ -1285,6 +1304,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[11:28..11:29): m <= local12
          |[11:30..11:31): A <= local14
          |[11:33..11:33):  <= local13
+         |[11:33..11:42): `package` => qs78/package.
          |[11:48..11:49): O => qs78/package.O.
          |[11:50..11:52): TC => qs78/package.O.TC#
          |[11:55..11:58): Int => scala/Int#
@@ -1292,10 +1312,12 @@ class QualifierSuite extends SemanticdbSuite {
          |[12:10..12:10):  <= qs78/package.K#`<init>`().
          |[13:8..13:9): a <= qs78/package.K#a.
          |[13:12..13:19): classOf => scala/Predef.classOf().
+         |[13:20..13:29): `package` => qs78/package.
          |[13:35..13:36): O => qs78/package.O.
          |[13:37..13:38): C => qs78/package.O.C#
          |[14:8..14:9): b <= qs78/package.K#b.
          |[14:12..14:16): List => scala/collection/immutable/Nil.
+         |[14:17..14:26): `package` => qs78/package.
          |[14:32..14:33): O => qs78/package.O.
          |[14:34..14:35): C => qs78/package.O.C#
          |[15:8..15:9): c <= qs78/package.K#c.
@@ -1303,6 +1325,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[15:20..15:24): List => scala/package.List#
          |[15:25..15:26): X => local15
          |[15:43..15:44): X <= local15
+         |[15:48..15:57): `package` => qs78/package.
          |[15:63..15:64): O => qs78/package.O.
          |[15:65..15:66): C => qs78/package.O.C#
          |[16:8..16:9): d <= qs78/package.K#d.
@@ -1325,10 +1348,12 @@ class QualifierSuite extends SemanticdbSuite {
          |[18:12..18:16): List => scala/collection/immutable/Nil.
          |[18:17..18:23): AnyRef => java/lang/Object#
          |[18:30..18:31): m <= local25
+         |[18:33..18:42): `package` => qs78/package.
          |[18:48..18:49): O => qs78/package.O.
          |[18:50..18:51): C => qs78/package.O.C#
          |[19:8..19:9): g <= qs78/package.K#g.
          |[19:12..19:16): List => scala/collection/immutable/Nil.
+         |[19:17..19:26): `package` => qs78/package.
          |[20:10..20:11): I <= qs78/package.K#I#
          |[20:12..20:12):  <= qs78/package.K#I#`<init>`().
          |[20:14..20:15): s <= local26
@@ -1346,6 +1371,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[22:30..22:31): m <= local27
          |[22:32..22:33): A <= local29
          |[22:35..22:35):  <= local28
+         |[22:35..22:44): `package` => qs78/package.
          |[22:50..22:51): O => qs78/package.O.
          |[22:52..22:54): TC => qs78/package.O.TC#
          |[22:57..22:60): Int => scala/Int#
@@ -1773,15 +1799,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[1:9..1:9):  <= _empty_/qs7#B#`<init>`().
          |[2:6..2:8): a1 <= _empty_/qs7#a1.
          |[2:11..2:18): classOf => scala/Predef.classOf().
+         |[2:19..2:22): qs7 => _empty_/qs7#
          |[2:28..2:29): B => _empty_/qs7#B#
          |[3:6..3:8): b1 <= _empty_/qs7#b1.
          |[3:11..3:15): List => scala/collection/immutable/Nil.
+         |[3:16..3:19): qs7 => _empty_/qs7#
          |[3:25..3:26): B => _empty_/qs7#B#
          |[4:6..4:8): c1 <= _empty_/qs7#c1.
          |[4:11..4:18): classOf => scala/Predef.classOf().
          |[4:19..4:23): List => scala/package.List#
          |[4:24..4:25): X => local0
          |[4:42..4:43): X <= local0
+         |[4:47..4:50): qs7 => _empty_/qs7#
          |[4:56..4:57): B => _empty_/qs7#B#
          |[5:6..5:8): d1 <= _empty_/qs7#d1.
          |[5:10..5:14): List => scala/package.List#
@@ -1796,15 +1825,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[6:38..6:41): Int => scala/Int#
          |[6:45..6:87): (x: qs7.this.B) => x match { case _ => 1 } <= local2
          |[6:46..6:47): x <= local9
+         |[6:49..6:52): qs7 => _empty_/qs7#
          |[6:58..6:59): B => _empty_/qs7#B#
          |[6:64..6:65): x => local9
          |[7:6..7:8): f1 <= _empty_/qs7#f1.
          |[7:11..7:15): List => scala/collection/immutable/Nil.
          |[7:16..7:22): AnyRef => java/lang/Object#
          |[7:29..7:30): m <= local10
+         |[7:32..7:35): qs7 => _empty_/qs7#
          |[7:41..7:42): B => _empty_/qs7#B#
          |[8:6..8:8): g1 <= _empty_/qs7#g1.
          |[8:11..8:15): List => scala/collection/immutable/Nil.
+         |[8:16..8:19): qs7 => _empty_/qs7#
          |[9:6..9:8): a2 <= _empty_/qs7#a2.
          |[9:11..9:18): classOf => scala/Predef.classOf().
          |[9:24..9:25): B => _empty_/qs7#B#
@@ -1840,15 +1872,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[1:9..1:9):  <= _empty_/qs7#B#`<init>`().
          |[2:6..2:8): a1 <= _empty_/qs7#a1.
          |[2:11..2:18): classOf => scala/Predef.classOf().
+         |[2:19..2:22): qs7 => _empty_/qs7#
          |[2:28..2:29): B => _empty_/qs7#B#
          |[3:6..3:8): b1 <= _empty_/qs7#b1.
          |[3:11..3:15): List => scala/collection/immutable/Nil.
+         |[3:16..3:19): qs7 => _empty_/qs7#
          |[3:25..3:26): B => _empty_/qs7#B#
          |[4:6..4:8): c1 <= _empty_/qs7#c1.
          |[4:11..4:18): classOf => scala/Predef.classOf().
          |[4:19..4:23): List => scala/package.List#
          |[4:24..4:25): X => local0
          |[4:42..4:43): X <= local0
+         |[4:47..4:50): qs7 => _empty_/qs7#
          |[4:56..4:57): B => _empty_/qs7#B#
          |[5:6..5:8): d1 <= _empty_/qs7#d1.
          |[5:10..5:14): List => scala/package.List#
@@ -1868,9 +1903,11 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:11..7:15): List => scala/collection/immutable/Nil.
          |[7:16..7:22): AnyRef => java/lang/Object#
          |[7:29..7:30): m <= local10
+         |[7:32..7:35): qs7 => _empty_/qs7#
          |[7:41..7:42): B => _empty_/qs7#B#
          |[8:6..8:8): g1 <= _empty_/qs7#g1.
          |[8:11..8:15): List => scala/collection/immutable/Nil.
+         |[8:16..8:19): qs7 => _empty_/qs7#
          |[9:6..9:8): a2 <= _empty_/qs7#a2.
          |[9:11..9:18): classOf => scala/Predef.classOf().
          |[9:24..9:25): B => _empty_/qs7#B#
@@ -1926,15 +1963,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[1:9..1:9):  <= _empty_/qs8.B#`<init>`().
          |[2:6..2:8): a1 <= _empty_/qs8.a1.
          |[2:11..2:18): classOf => scala/Predef.classOf().
+         |[2:19..2:22): qs8 => _empty_/qs8.
          |[2:28..2:29): B => _empty_/qs8.B#
          |[3:6..3:8): b1 <= _empty_/qs8.b1.
          |[3:11..3:15): List => scala/collection/immutable/Nil.
+         |[3:16..3:19): qs8 => _empty_/qs8.
          |[3:25..3:26): B => _empty_/qs8.B#
          |[4:6..4:8): c1 <= _empty_/qs8.c1.
          |[4:11..4:18): classOf => scala/Predef.classOf().
          |[4:19..4:23): List => scala/package.List#
          |[4:24..4:25): X => local0
          |[4:42..4:43): X <= local0
+         |[4:47..4:50): qs8 => _empty_/qs8.
          |[4:56..4:57): B => _empty_/qs8.B#
          |[5:6..5:8): d1 <= _empty_/qs8.d1.
          |[5:10..5:14): List => scala/package.List#
@@ -1949,15 +1989,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[6:38..6:41): Int => scala/Int#
          |[6:45..6:87): (x: qs8.this.B) => x match { case _ => 1 } <= local2
          |[6:46..6:47): x <= local9
+         |[6:49..6:52): qs8 => _empty_/qs8.
          |[6:58..6:59): B => _empty_/qs8.B#
          |[6:64..6:65): x => local9
          |[7:6..7:8): f1 <= _empty_/qs8.f1.
          |[7:11..7:15): List => scala/collection/immutable/Nil.
          |[7:16..7:22): AnyRef => java/lang/Object#
          |[7:29..7:30): m <= local10
+         |[7:32..7:35): qs8 => _empty_/qs8.
          |[7:41..7:42): B => _empty_/qs8.B#
          |[8:6..8:8): g1 <= _empty_/qs8.g1.
          |[8:11..8:15): List => scala/collection/immutable/Nil.
+         |[8:16..8:19): qs8 => _empty_/qs8.
          |[9:6..9:8): a2 <= _empty_/qs8.a2.
          |[9:11..9:18): classOf => scala/Predef.classOf().
          |[9:19..9:22): qs8 => _empty_/qs8.
@@ -2005,15 +2048,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[1:9..1:9):  <= _empty_/qs8.B#`<init>`().
          |[2:6..2:8): a1 <= _empty_/qs8.a1.
          |[2:11..2:18): classOf => scala/Predef.classOf().
+         |[2:19..2:22): qs8 => _empty_/qs8.
          |[2:28..2:29): B => _empty_/qs8.B#
          |[3:6..3:8): b1 <= _empty_/qs8.b1.
          |[3:11..3:15): List => scala/collection/immutable/Nil.
+         |[3:16..3:19): qs8 => _empty_/qs8.
          |[3:25..3:26): B => _empty_/qs8.B#
          |[4:6..4:8): c1 <= _empty_/qs8.c1.
          |[4:11..4:18): classOf => scala/Predef.classOf().
          |[4:19..4:23): List => scala/package.List#
          |[4:24..4:25): X => local0
          |[4:42..4:43): X <= local0
+         |[4:47..4:50): qs8 => _empty_/qs8.
          |[4:56..4:57): B => _empty_/qs8.B#
          |[5:6..5:8): d1 <= _empty_/qs8.d1.
          |[5:10..5:14): List => scala/package.List#
@@ -2033,9 +2079,11 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:11..7:15): List => scala/collection/immutable/Nil.
          |[7:16..7:22): AnyRef => java/lang/Object#
          |[7:29..7:30): m <= local10
+         |[7:32..7:35): qs8 => _empty_/qs8.
          |[7:41..7:42): B => _empty_/qs8.B#
          |[8:6..8:8): g1 <= _empty_/qs8.g1.
          |[8:11..8:15): List => scala/collection/immutable/Nil.
+         |[8:16..8:19): qs8 => _empty_/qs8.
          |[9:6..9:8): a2 <= _empty_/qs8.a2.
          |[9:11..9:18): classOf => scala/Predef.classOf().
          |[9:19..9:22): qs8 => _empty_/qs8.
@@ -5959,15 +6007,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:37..7:38): B => _empty_/qs18.B#
          |[8:6..8:8): a2 <= _empty_/qs18#a2.
          |[8:11..8:18): classOf => scala/Predef.classOf().
+         |[8:19..8:23): qs18 => _empty_/qs18#
          |[8:29..8:30): B => _empty_/qs18#B#
          |[9:6..9:8): b2 <= _empty_/qs18#b2.
          |[9:11..9:15): List => scala/collection/immutable/Nil.
+         |[9:16..9:20): qs18 => _empty_/qs18#
          |[9:26..9:27): B => _empty_/qs18#B#
          |[10:6..10:8): c2 <= _empty_/qs18#c2.
          |[10:11..10:18): classOf => scala/Predef.classOf().
          |[10:19..10:23): List => scala/package.List#
          |[10:24..10:25): X => local11
          |[10:42..10:43): X <= local11
+         |[10:47..10:51): qs18 => _empty_/qs18#
          |[10:57..10:58): B => _empty_/qs18#B#
          |[11:6..11:8): d2 <= _empty_/qs18#d2.
          |[11:10..11:14): List => scala/package.List#
@@ -5982,12 +6033,14 @@ class QualifierSuite extends SemanticdbSuite {
          |[12:39..12:42): Int => scala/Int#
          |[12:46..12:89): (x: qs18.this.B) => x match { case _ => 1 } <= local13
          |[12:47..12:48): x <= local20
+         |[12:50..12:54): qs18 => _empty_/qs18#
          |[12:60..12:61): B => _empty_/qs18#B#
          |[12:66..12:67): x => local20
          |[13:6..13:8): f2 <= _empty_/qs18#f2.
          |[13:11..13:15): List => scala/collection/immutable/Nil.
          |[13:16..13:22): AnyRef => java/lang/Object#
          |[13:29..13:30): m <= local21
+         |[13:32..13:36): qs18 => _empty_/qs18#
          |[13:42..13:43): B => _empty_/qs18#B#
          |[15:7..15:11): qs18 <= _empty_/qs18.
          |[15:20..15:21): B <= _empty_/qs18.B#
@@ -6035,15 +6088,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:37..7:38): B => _empty_/qs18.B#
          |[8:6..8:8): a2 <= _empty_/qs18#a2.
          |[8:11..8:18): classOf => scala/Predef.classOf().
+         |[8:19..8:23): qs18 => _empty_/qs18#
          |[8:29..8:30): B => _empty_/qs18#B#
          |[9:6..9:8): b2 <= _empty_/qs18#b2.
          |[9:11..9:15): List => scala/collection/immutable/Nil.
+         |[9:16..9:20): qs18 => _empty_/qs18#
          |[9:26..9:27): B => _empty_/qs18#B#
          |[10:6..10:8): c2 <= _empty_/qs18#c2.
          |[10:11..10:18): classOf => scala/Predef.classOf().
          |[10:19..10:23): List => scala/package.List#
          |[10:24..10:25): X => local11
          |[10:42..10:43): X <= local11
+         |[10:47..10:51): qs18 => _empty_/qs18#
          |[10:57..10:58): B => _empty_/qs18#B#
          |[11:6..11:8): d2 <= _empty_/qs18#d2.
          |[11:10..11:14): List => scala/package.List#
@@ -6063,6 +6119,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[13:11..13:15): List => scala/collection/immutable/Nil.
          |[13:16..13:22): AnyRef => java/lang/Object#
          |[13:29..13:30): m <= local21
+         |[13:32..13:36): qs18 => _empty_/qs18#
          |[13:42..13:43): B => _empty_/qs18#B#
          |[15:7..15:11): qs18 <= _empty_/qs18.
          |[15:20..15:21): B <= _empty_/qs18.B#
@@ -7035,15 +7092,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[2:10..2:10):  <= _empty_/qs9#I#`<init>`().
          |[3:8..3:9): a <= _empty_/qs9#I#a.
          |[3:12..3:19): classOf => scala/Predef.classOf().
+         |[3:20..3:23): qs9 => _empty_/qs9#
          |[3:29..3:30): B => _empty_/qs9#B#
          |[4:8..4:9): b <= _empty_/qs9#I#b.
          |[4:12..4:16): List => scala/collection/immutable/Nil.
+         |[4:17..4:20): qs9 => _empty_/qs9#
          |[4:26..4:27): B => _empty_/qs9#B#
          |[5:8..5:9): c <= _empty_/qs9#I#c.
          |[5:12..5:19): classOf => scala/Predef.classOf().
          |[5:20..5:24): List => scala/package.List#
          |[5:25..5:26): X => local0
          |[5:43..5:44): X <= local0
+         |[5:48..5:51): qs9 => _empty_/qs9#
          |[5:57..5:58): B => _empty_/qs9#B#
          |[6:8..6:9): d <= _empty_/qs9#I#d.
          |[6:11..6:15): List => scala/package.List#
@@ -7058,15 +7118,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:39..7:42): Int => scala/Int#
          |[7:46..7:88): (x: qs9.this.B) => x match { case _ => 1 } <= local2
          |[7:47..7:48): x <= local9
+         |[7:50..7:53): qs9 => _empty_/qs9#
          |[7:59..7:60): B => _empty_/qs9#B#
          |[7:65..7:66): x => local9
          |[8:8..8:9): f <= _empty_/qs9#I#f.
          |[8:12..8:16): List => scala/collection/immutable/Nil.
          |[8:17..8:23): AnyRef => java/lang/Object#
          |[8:30..8:31): m <= local10
+         |[8:33..8:36): qs9 => _empty_/qs9#
          |[8:42..8:43): B => _empty_/qs9#B#
          |[9:8..9:9): g <= _empty_/qs9#I#g.
          |[9:12..9:16): List => scala/collection/immutable/Nil.
+         |[9:17..9:20): qs9 => _empty_/qs9#
          |""".stripMargin
     else
       """|[0:6..0:9): qs9 <= _empty_/qs9#
@@ -7077,15 +7140,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[2:10..2:10):  <= _empty_/qs9#I#`<init>`().
          |[3:8..3:9): a <= _empty_/qs9#I#a.
          |[3:12..3:19): classOf => scala/Predef.classOf().
+         |[3:20..3:23): qs9 => _empty_/qs9#
          |[3:29..3:30): B => _empty_/qs9#B#
          |[4:8..4:9): b <= _empty_/qs9#I#b.
          |[4:12..4:16): List => scala/collection/immutable/Nil.
+         |[4:17..4:20): qs9 => _empty_/qs9#
          |[4:26..4:27): B => _empty_/qs9#B#
          |[5:8..5:9): c <= _empty_/qs9#I#c.
          |[5:12..5:19): classOf => scala/Predef.classOf().
          |[5:20..5:24): List => scala/package.List#
          |[5:25..5:26): X => local0
          |[5:43..5:44): X <= local0
+         |[5:48..5:51): qs9 => _empty_/qs9#
          |[5:57..5:58): B => _empty_/qs9#B#
          |[6:8..6:9): d <= _empty_/qs9#I#d.
          |[6:11..6:15): List => scala/package.List#
@@ -7105,9 +7171,11 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:12..8:16): List => scala/collection/immutable/Nil.
          |[8:17..8:23): AnyRef => java/lang/Object#
          |[8:30..8:31): m <= local10
+         |[8:33..8:36): qs9 => _empty_/qs9#
          |[8:42..8:43): B => _empty_/qs9#B#
          |[9:8..9:9): g <= _empty_/qs9#I#g.
          |[9:12..9:16): List => scala/collection/immutable/Nil.
+         |[9:17..9:20): qs9 => _empty_/qs9#
          |""".stripMargin,
   )
 
@@ -7159,15 +7227,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[3:50..3:51): A <= _empty_/qs68#qs68#TC#[A]
          |[4:8..4:9): a <= _empty_/qs68#qs68#a.
          |[4:12..4:19): classOf => scala/Predef.classOf().
+         |[4:20..4:24): qs68 => _empty_/qs68#qs68#
          |[4:30..4:31): C => _empty_/qs68#qs68#C#
          |[5:8..5:9): b <= _empty_/qs68#qs68#b.
          |[5:12..5:16): List => scala/collection/immutable/Nil.
+         |[5:17..5:21): qs68 => _empty_/qs68#qs68#
          |[5:27..5:28): C => _empty_/qs68#qs68#C#
          |[6:8..6:9): c <= _empty_/qs68#qs68#c.
          |[6:12..6:19): classOf => scala/Predef.classOf().
          |[6:20..6:24): List => scala/package.List#
          |[6:25..6:26): X => local0
          |[6:43..6:44): X <= local0
+         |[6:48..6:52): qs68 => _empty_/qs68#qs68#
          |[6:58..6:59): C => _empty_/qs68#qs68#C#
          |[7:8..7:9): d <= _empty_/qs68#qs68#d.
          |[7:11..7:15): List => scala/package.List#
@@ -7182,15 +7253,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:40..8:43): Int => scala/Int#
          |[8:47..8:90): (x: qs68.this.C) => x match { case _ => 1 } <= local2
          |[8:48..8:49): x <= local9
+         |[8:51..8:55): qs68 => _empty_/qs68#qs68#
          |[8:61..8:62): C => _empty_/qs68#qs68#C#
          |[8:67..8:68): x => local9
          |[9:8..9:9): f <= _empty_/qs68#qs68#f.
          |[9:12..9:16): List => scala/collection/immutable/Nil.
          |[9:17..9:23): AnyRef => java/lang/Object#
          |[9:30..9:31): m <= local10
+         |[9:33..9:37): qs68 => _empty_/qs68#qs68#
          |[9:43..9:44): C => _empty_/qs68#qs68#C#
          |[10:8..10:9): g <= _empty_/qs68#qs68#g.
          |[10:12..10:16): List => scala/collection/immutable/Nil.
+         |[10:17..10:21): qs68 => _empty_/qs68#qs68#
          |[11:10..11:11): A <= _empty_/qs68#qs68#A#
          |[11:12..11:12):  <= _empty_/qs68#qs68#A#`<init>`().
          |[11:14..11:18): self <= local11
@@ -7206,6 +7280,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[13:30..13:31): m <= local12
          |[13:32..13:33): A <= local14
          |[13:35..13:35):  <= local13
+         |[13:35..13:39): qs68 => _empty_/qs68#qs68#
          |[13:45..13:47): TC => _empty_/qs68#qs68#TC#
          |[13:50..13:53): Int => scala/Int#
          |""".stripMargin
@@ -7238,15 +7313,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[3:50..3:51): A <= _empty_/qs68#qs68#TC#[A]
          |[4:8..4:9): a <= _empty_/qs68#qs68#a.
          |[4:12..4:19): classOf => scala/Predef.classOf().
+         |[4:20..4:24): qs68 => _empty_/qs68#qs68#
          |[4:30..4:31): C => _empty_/qs68#qs68#C#
          |[5:8..5:9): b <= _empty_/qs68#qs68#b.
          |[5:12..5:16): List => scala/collection/immutable/Nil.
+         |[5:17..5:21): qs68 => _empty_/qs68#qs68#
          |[5:27..5:28): C => _empty_/qs68#qs68#C#
          |[6:8..6:9): c <= _empty_/qs68#qs68#c.
          |[6:12..6:19): classOf => scala/Predef.classOf().
          |[6:20..6:24): List => scala/package.List#
          |[6:25..6:26): X => local0
          |[6:43..6:44): X <= local0
+         |[6:48..6:52): qs68 => _empty_/qs68#qs68#
          |[6:58..6:59): C => _empty_/qs68#qs68#C#
          |[7:8..7:9): d <= _empty_/qs68#qs68#d.
          |[7:11..7:15): List => scala/package.List#
@@ -7266,9 +7344,11 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:12..9:16): List => scala/collection/immutable/Nil.
          |[9:17..9:23): AnyRef => java/lang/Object#
          |[9:30..9:31): m <= local10
+         |[9:33..9:37): qs68 => _empty_/qs68#qs68#
          |[9:43..9:44): C => _empty_/qs68#qs68#C#
          |[10:8..10:9): g <= _empty_/qs68#qs68#g.
          |[10:12..10:16): List => scala/collection/immutable/Nil.
+         |[10:17..10:21): qs68 => _empty_/qs68#qs68#
          |[11:10..11:11): A <= _empty_/qs68#qs68#A#
          |[11:12..11:12):  <= _empty_/qs68#qs68#A#`<init>`().
          |[11:14..11:18): self <= local11
@@ -7284,6 +7364,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[13:30..13:31): m <= local12
          |[13:32..13:33): A <= local14
          |[13:35..13:35):  <= local13
+         |[13:35..13:39): qs68 => _empty_/qs68#qs68#
          |[13:45..13:47): TC => _empty_/qs68#qs68#TC#
          |[13:50..13:53): Int => scala/Int#
          |""".stripMargin,
@@ -7341,6 +7422,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[3:22..3:22):  => java/lang/Object#`<init>`().
          |[4:8..4:9): a <= _empty_/qs75#qs75#a.
          |[4:12..4:19): classOf => scala/Predef.classOf().
+         |[4:20..4:24): qs75 => _empty_/qs75#qs75#
          |[4:30..4:31): T => _empty_/qs75#A#T#
          |[5:8..5:9): b <= _empty_/qs75#qs75#b.
          |[5:12..5:16): List => scala/collection/immutable/Nil.
@@ -7350,6 +7432,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[6:20..6:24): List => scala/package.List#
          |[6:25..6:26): X => local0
          |[6:43..6:44): X <= local0
+         |[6:48..6:52): qs75 => _empty_/qs75#qs75#
          |[6:58..6:59): T => _empty_/qs75#A#T#
          |[7:8..7:9): d <= _empty_/qs75#qs75#d.
          |[7:11..7:15): List => scala/package.List#
@@ -7364,6 +7447,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:40..8:43): Int => scala/Int#
          |[8:47..8:90): (x: qs75.this.T) => x match { case _ => 1 } <= local2
          |[8:48..8:49): x <= local9
+         |[8:51..8:55): qs75 => _empty_/qs75#qs75#
          |[8:61..8:62): T => _empty_/qs75#A#T#
          |[8:67..8:68): x => local9
          |[9:8..9:9): f <= _empty_/qs75#qs75#f.
@@ -7373,6 +7457,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:43..9:44): T => _empty_/qs75#U#
          |[10:8..10:9): g <= _empty_/qs75#qs75#g.
          |[10:12..10:16): List => scala/collection/immutable/Nil.
+         |[10:17..10:21): qs75 => _empty_/qs75#qs75#
          |[11:10..11:11): I <= _empty_/qs75#qs75#I#
          |[11:12..11:12):  <= _empty_/qs75#qs75#I#`<init>`().
          |[11:14..11:15): s <= local11
@@ -7424,6 +7509,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[3:22..3:22):  => java/lang/Object#`<init>`().
          |[4:8..4:9): a <= _empty_/qs75#qs75#a.
          |[4:12..4:19): classOf => scala/Predef.classOf().
+         |[4:20..4:24): qs75 => _empty_/qs75#qs75#
          |[4:30..4:31): T => _empty_/qs75#A#T#
          |[5:8..5:9): b <= _empty_/qs75#qs75#b.
          |[5:12..5:16): List => scala/collection/immutable/Nil.
@@ -7433,6 +7519,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[6:20..6:24): List => scala/package.List#
          |[6:25..6:26): X => local0
          |[6:43..6:44): X <= local0
+         |[6:48..6:52): qs75 => _empty_/qs75#qs75#
          |[6:58..6:59): T => _empty_/qs75#A#T#
          |[7:8..7:9): d <= _empty_/qs75#qs75#d.
          |[7:11..7:15): List => scala/package.List#
@@ -7455,6 +7542,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:43..9:44): T => _empty_/qs75#U#
          |[10:8..10:9): g <= _empty_/qs75#qs75#g.
          |[10:12..10:16): List => scala/collection/immutable/Nil.
+         |[10:17..10:21): qs75 => _empty_/qs75#qs75#
          |[11:10..11:11): I <= _empty_/qs75#qs75#I#
          |[11:12..11:12):  <= _empty_/qs75#qs75#I#`<init>`().
          |[11:14..11:15): s <= local11
@@ -7528,6 +7616,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[3:22..3:22):  => java/lang/Object#`<init>`().
          |[4:8..4:9): a <= _empty_/qs76d#qs76#a.
          |[4:12..4:19): classOf => scala/Predef.classOf().
+         |[4:20..4:24): qs76 => _empty_/qs76d#qs76#
          |[4:30..4:31): T => _empty_/qs76d#A#T#
          |[5:8..5:9): b <= _empty_/qs76d#qs76#b.
          |[5:12..5:16): List => scala/collection/immutable/Nil.
@@ -7537,6 +7626,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[6:20..6:24): List => scala/package.List#
          |[6:25..6:26): X => local0
          |[6:43..6:44): X <= local0
+         |[6:48..6:52): qs76 => _empty_/qs76d#qs76#
          |[6:58..6:59): T => _empty_/qs76d#A#T#
          |[7:8..7:9): d <= _empty_/qs76d#qs76#d.
          |[7:11..7:15): List => scala/package.List#
@@ -7551,6 +7641,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:40..8:43): Int => scala/Int#
          |[8:47..8:90): (x: qs76.this.T) => x match { case _ => 1 } <= local2
          |[8:48..8:49): x <= local9
+         |[8:51..8:55): qs76 => _empty_/qs76d#qs76#
          |[8:61..8:62): T => _empty_/qs76d#A#T#
          |[8:67..8:68): x => local9
          |[9:8..9:9): f <= _empty_/qs76d#qs76#f.
@@ -7560,6 +7651,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:43..9:44): T => _empty_/qs76.U#
          |[10:8..10:9): g <= _empty_/qs76d#qs76#g.
          |[10:12..10:16): List => scala/collection/immutable/Nil.
+         |[10:17..10:21): qs76 => _empty_/qs76d#qs76#
          |[11:10..11:11): I <= _empty_/qs76d#qs76#I#
          |[11:12..11:12):  <= _empty_/qs76d#qs76#I#`<init>`().
          |[11:14..11:15): s <= local11
@@ -7612,6 +7704,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[3:22..3:22):  => java/lang/Object#`<init>`().
          |[4:8..4:9): a <= _empty_/qs76d#qs76#a.
          |[4:12..4:19): classOf => scala/Predef.classOf().
+         |[4:20..4:24): qs76 => _empty_/qs76d#qs76#
          |[4:30..4:31): T => _empty_/qs76d#A#T#
          |[5:8..5:9): b <= _empty_/qs76d#qs76#b.
          |[5:12..5:16): List => scala/collection/immutable/Nil.
@@ -7621,6 +7714,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[6:20..6:24): List => scala/package.List#
          |[6:25..6:26): X => local0
          |[6:43..6:44): X <= local0
+         |[6:48..6:52): qs76 => _empty_/qs76d#qs76#
          |[6:58..6:59): T => _empty_/qs76d#A#T#
          |[7:8..7:9): d <= _empty_/qs76d#qs76#d.
          |[7:11..7:15): List => scala/package.List#
@@ -7643,6 +7737,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:43..9:44): T => _empty_/qs76.U#
          |[10:8..10:9): g <= _empty_/qs76d#qs76#g.
          |[10:12..10:16): List => scala/collection/immutable/Nil.
+         |[10:17..10:21): qs76 => _empty_/qs76d#qs76#
          |[11:10..11:11): I <= _empty_/qs76d#qs76#I#
          |[11:12..11:12):  <= _empty_/qs76d#qs76#I#`<init>`().
          |[11:14..11:15): s <= local11
@@ -7708,15 +7803,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[2:80..2:81): C => _empty_/qs85#PA#[C]
          |[3:6..3:7): a <= _empty_/qs85#a.
          |[3:10..3:17): classOf => scala/Predef.classOf().
+         |[3:18..3:22): qs85 => _empty_/qs85#
          |[3:28..3:29): T => _empty_/qs85#T#
          |[4:6..4:7): b <= _empty_/qs85#b.
          |[4:10..4:14): List => scala/collection/immutable/Nil.
+         |[4:15..4:19): qs85 => _empty_/qs85#
          |[4:25..4:26): T => _empty_/qs85#package.B#
          |[5:6..5:7): c <= _empty_/qs85#c.
          |[5:10..5:17): classOf => scala/Predef.classOf().
          |[5:18..5:22): List => scala/package.List#
          |[5:23..5:24): X => local0
          |[5:41..5:42): X <= local0
+         |[5:46..5:50): qs85 => _empty_/qs85#
          |[5:56..5:57): T => _empty_/qs85#T#
          |[6:6..6:7): d <= _empty_/qs85#d.
          |[6:9..6:13): List => scala/package.List#
@@ -7731,12 +7829,14 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:38..7:41): Int => scala/Int#
          |[7:45..7:88): (x: qs85.this.T) => x match { case _ => 1 } <= local2
          |[7:46..7:47): x <= local9
+         |[7:49..7:53): qs85 => _empty_/qs85#
          |[7:59..7:60): T => _empty_/qs85#T#
          |[7:65..7:66): x => local9
          |[8:6..8:7): f <= _empty_/qs85#f.
          |[8:10..8:14): List => scala/collection/immutable/Nil.
          |[8:15..8:21): AnyRef => java/lang/Object#
          |[8:28..8:29): m <= local10
+         |[8:31..8:35): qs85 => _empty_/qs85#
          |[8:41..8:42): T => _empty_/qs85#package.B#
          |[9:8..9:9): I <= _empty_/qs85#I#
          |[9:10..9:10):  <= _empty_/qs85#I#`<init>`().
@@ -7753,6 +7853,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[11:28..11:29): m <= local12
          |[11:30..11:31): C <= local14
          |[11:33..11:33):  <= local13
+         |[11:33..11:37): qs85 => _empty_/qs85#
          |[11:43..11:45): TC => _empty_/qs85#package.TCB#
          |[11:48..11:51): Int => scala/Int#
          |""".stripMargin
@@ -7785,15 +7886,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[2:80..2:81): C => _empty_/qs85#PA#[C]
          |[3:6..3:7): a <= _empty_/qs85#a.
          |[3:10..3:17): classOf => scala/Predef.classOf().
+         |[3:18..3:22): qs85 => _empty_/qs85#
          |[3:28..3:29): T => _empty_/qs85#T#
          |[4:6..4:7): b <= _empty_/qs85#b.
          |[4:10..4:14): List => scala/collection/immutable/Nil.
+         |[4:15..4:19): qs85 => _empty_/qs85#
          |[4:25..4:26): T => _empty_/qs85#package.B#
          |[5:6..5:7): c <= _empty_/qs85#c.
          |[5:10..5:17): classOf => scala/Predef.classOf().
          |[5:18..5:22): List => scala/package.List#
          |[5:23..5:24): X => local0
          |[5:41..5:42): X <= local0
+         |[5:46..5:50): qs85 => _empty_/qs85#
          |[5:56..5:57): T => _empty_/qs85#T#
          |[6:6..6:7): d <= _empty_/qs85#d.
          |[6:9..6:13): List => scala/package.List#
@@ -7813,6 +7917,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:10..8:14): List => scala/collection/immutable/Nil.
          |[8:15..8:21): AnyRef => java/lang/Object#
          |[8:28..8:29): m <= local10
+         |[8:31..8:35): qs85 => _empty_/qs85#
          |[8:41..8:42): T => _empty_/qs85#package.B#
          |[9:8..9:9): I <= _empty_/qs85#I#
          |[9:10..9:10):  <= _empty_/qs85#I#`<init>`().
@@ -7829,6 +7934,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[11:28..11:29): m <= local12
          |[11:30..11:31): C <= local14
          |[11:33..11:33):  <= local13
+         |[11:33..11:37): qs85 => _empty_/qs85#
          |[11:43..11:45): TC => _empty_/qs85#package.TCB#
          |[11:48..11:51): Int => scala/Int#
          |""".stripMargin,
@@ -7883,6 +7989,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[3:82..3:83): C => _empty_/qs86#qs86#PA#[C]
          |[4:8..4:9): a <= _empty_/qs86#qs86#a.
          |[4:12..4:19): classOf => scala/Predef.classOf().
+         |[4:20..4:24): qs86 => _empty_/qs86#qs86#
          |[4:30..4:31): T => _empty_/qs86#qs86#T#
          |[5:8..5:9): b <= _empty_/qs86#qs86#b.
          |[5:12..5:16): List => scala/collection/immutable/Nil.
@@ -7892,6 +7999,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[6:20..6:24): List => scala/package.List#
          |[6:25..6:26): X => local0
          |[6:43..6:44): X <= local0
+         |[6:48..6:52): qs86 => _empty_/qs86#qs86#
          |[6:58..6:59): T => _empty_/qs86#qs86#T#
          |[7:8..7:9): d <= _empty_/qs86#qs86#d.
          |[7:11..7:15): List => scala/package.List#
@@ -7906,6 +8014,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:40..8:43): Int => scala/Int#
          |[8:47..8:90): (x: qs86.this.T) => x match { case _ => 1 } <= local2
          |[8:48..8:49): x <= local9
+         |[8:51..8:55): qs86 => _empty_/qs86#qs86#
          |[8:61..8:62): T => _empty_/qs86#qs86#T#
          |[8:67..8:68): x => local9
          |[9:8..9:9): f <= _empty_/qs86#qs86#f.
@@ -7962,6 +8071,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[3:82..3:83): C => _empty_/qs86#qs86#PA#[C]
          |[4:8..4:9): a <= _empty_/qs86#qs86#a.
          |[4:12..4:19): classOf => scala/Predef.classOf().
+         |[4:20..4:24): qs86 => _empty_/qs86#qs86#
          |[4:30..4:31): T => _empty_/qs86#qs86#T#
          |[5:8..5:9): b <= _empty_/qs86#qs86#b.
          |[5:12..5:16): List => scala/collection/immutable/Nil.
@@ -7971,6 +8081,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[6:20..6:24): List => scala/package.List#
          |[6:25..6:26): X => local0
          |[6:43..6:44): X <= local0
+         |[6:48..6:52): qs86 => _empty_/qs86#qs86#
          |[6:58..6:59): T => _empty_/qs86#qs86#T#
          |[7:8..7:9): d <= _empty_/qs86#qs86#d.
          |[7:11..7:15): List => scala/package.List#
@@ -11811,6 +11922,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[6:28..6:29): m <= local2
        |[6:30..6:31): A <= local4
        |[6:33..6:33):  <= local3
+       |[6:33..6:37): qs31 => _empty_/qs31#
        |[6:43..6:45): TC => _empty_/qs31#TC#
        |[6:48..6:51): Int => scala/Int#
        |[7:6..7:7): f <= _empty_/qs31#f.
