@@ -6,6 +6,14 @@ class NameRewriteSuite extends SemanticdbSuite {
       loc: munit.Location,
   ): Unit = checkSection(s"$name: occurrences", code, expected, "Occurrences")
 
+  private def symbols(name: String, code: String, expected: String)(implicit
+      loc: munit.Location,
+  ): Unit = checkSection(s"$name: symbols", code, expected, "Symbols")
+
+  private def synthetics(name: String, code: String, expected: String)(implicit
+      loc: munit.Location,
+  ): Unit = checkSection(s"$name: synthetics", code, expected, "Synthetics")
+
   occurrences(
     "assignments to vars and setters",
     """|object n1 {
@@ -3271,6 +3279,1761 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[6:22..6:32): collection => scala/collection/
          |[6:33..6:42): immutable => scala/collection/immutable/
          |[6:43..6:46): Nil => scala/collection/immutable/Nil.
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "right-associative operators on constants of other origins",
+    """|object n53 {
+       |  object O { final val K = 1; final val S = "a" }
+       |  import O.{K => J}
+       |  type I = Int
+       |  final val A: I = 1
+       |  final val K = 1
+       |  final val C = 'c'
+       |  final val T = true
+       |  val a = O.K :: Nil
+       |  val b = J :: Nil
+       |  val c = A :: Nil
+       |  val d = (K) :: Nil
+       |  val e = ((K + 1)) :: Nil
+       |  val f = classOf[String] :: Nil
+       |  val g = java.lang.Integer.MAX_VALUE :: Nil
+       |  val h = "a" + K :: Nil
+       |  val i = K.toLong :: Nil
+       |  val j = O.S +: Seq()
+       |  val k = C :: Nil
+       |  val l = !T :: Nil
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n53 <= _empty_/n53.
+             |[1:9..1:10): O <= _empty_/n53.O.
+             |[1:23..1:24): K <= _empty_/n53.O.K.
+             |[1:40..1:41): S <= _empty_/n53.O.S.
+             |[2:9..2:10): O => _empty_/n53.O.
+             |[2:12..2:13): K => _empty_/n53.O.K.
+             |[3:7..3:8): I <= _empty_/n53.I#
+             |[3:11..3:14): Int => scala/Int#
+             |[4:12..4:13): A <= _empty_/n53.A.
+             |[4:15..4:16): I => _empty_/n53.I#
+             |[5:12..5:13): K <= _empty_/n53.K.
+             |[6:12..6:13): C <= _empty_/n53.C.
+             |[7:12..7:13): T <= _empty_/n53.T.
+             |[8:6..8:7): a <= _empty_/n53.a.
+             |[8:10..8:11): O => _empty_/n53.O.
+             |[8:12..8:13): K => _empty_/n53.O.K.
+             |[8:14..8:16): :: => scala/collection/immutable/List#`::`().
+             |[8:17..8:20): Nil => scala/collection/immutable/Nil.
+             |[9:6..9:7): b <= _empty_/n53.b.
+             |[9:10..9:11): J => _empty_/n53.O.K.
+             |[9:12..9:14): :: => scala/collection/immutable/List#`::`().
+             |[9:15..9:18): Nil => scala/collection/immutable/Nil.
+             |[10:6..10:7): c <= _empty_/n53.c.
+             |[10:10..10:11): A => _empty_/n53.A.
+             |[10:12..10:14): :: => scala/collection/immutable/List#`::`().
+             |[10:15..10:18): Nil => scala/collection/immutable/Nil.
+             |[11:6..11:7): d <= _empty_/n53.d.
+             |[11:11..11:12): K => _empty_/n53.K.
+             |[11:14..11:16): :: => scala/collection/immutable/List#`::`().
+             |[11:17..11:20): Nil => scala/collection/immutable/Nil.
+             |[12:6..12:7): e <= _empty_/n53.e.
+             |[12:12..12:13): K => _empty_/n53.K.
+             |[12:14..12:15): + => scala/Int#`+`(+4).
+             |[12:20..12:22): :: => scala/collection/immutable/List#`::`().
+             |[12:23..12:26): Nil => scala/collection/immutable/Nil.
+             |[13:6..13:7): f <= _empty_/n53.f.
+             |[13:10..13:17): classOf => scala/Predef.classOf().
+             |[13:18..13:24): String => scala/Predef.String#
+             |[13:26..13:28): :: => scala/collection/immutable/List#`::`().
+             |[13:29..13:32): Nil => scala/collection/immutable/Nil.
+             |[14:6..14:7): g <= _empty_/n53.g.
+             |[14:10..14:14): java => java/
+             |[14:15..14:19): lang => java/lang/
+             |[14:20..14:27): Integer => java/lang/Integer#
+             |[14:28..14:37): MAX_VALUE => java/lang/Integer#MAX_VALUE.
+             |[14:38..14:40): :: => scala/collection/immutable/List#`::`().
+             |[14:41..14:44): Nil => scala/collection/immutable/Nil.
+             |[15:6..15:7): h <= _empty_/n53.h.
+             |[15:14..15:15): + => java/lang/String#`+`().
+             |[15:16..15:17): K => _empty_/n53.K.
+             |[15:18..15:20): :: => scala/collection/immutable/List#`::`().
+             |[15:21..15:24): Nil => scala/collection/immutable/Nil.
+             |[16:6..16:7): i <= _empty_/n53.i.
+             |[16:10..16:11): K => _empty_/n53.K.
+             |[16:12..16:18): toLong => scala/Int#toLong().
+             |[16:19..16:21): :: => scala/collection/immutable/List#`::`().
+             |[16:22..16:25): Nil => scala/collection/immutable/Nil.
+             |[17:6..17:7): j <= _empty_/n53.j.
+             |[17:10..17:11): O => _empty_/n53.O.
+             |[17:12..17:13): S => _empty_/n53.O.S.
+             |[17:14..17:16): +: => scala/collection/SeqLike#`+:`().
+             |[17:17..17:20): Seq => scala/collection/Seq.
+             |[18:6..18:7): k <= _empty_/n53.k.
+             |[18:10..18:11): C => _empty_/n53.C.
+             |[18:12..18:14): :: => scala/collection/immutable/List#`::`().
+             |[18:15..18:18): Nil => scala/collection/immutable/Nil.
+             |[19:6..19:7): l <= _empty_/n53.l.
+             |[19:10..19:11): ! => scala/Boolean#`unary_!`().
+             |[19:11..19:12): T => _empty_/n53.T.
+             |[19:13..19:15): :: => scala/collection/immutable/List#`::`().
+             |[19:16..19:19): Nil => scala/collection/immutable/Nil.
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n53 <= _empty_/n53.
+         |[1:9..1:10): O <= _empty_/n53.O.
+         |[1:23..1:24): K <= _empty_/n53.O.K.
+         |[1:40..1:41): S <= _empty_/n53.O.S.
+         |[2:9..2:10): O => _empty_/n53.O.
+         |[2:12..2:13): K => _empty_/n53.O.K.
+         |[3:7..3:8): I <= _empty_/n53.I#
+         |[3:11..3:14): Int => scala/Int#
+         |[4:12..4:13): A <= _empty_/n53.A.
+         |[4:15..4:16): I => _empty_/n53.I#
+         |[5:12..5:13): K <= _empty_/n53.K.
+         |[6:12..6:13): C <= _empty_/n53.C.
+         |[7:12..7:13): T <= _empty_/n53.T.
+         |[8:6..8:7): a <= _empty_/n53.a.
+         |[8:14..8:16): :: => scala/collection/immutable/List#`::`().
+         |[8:17..8:20): Nil => scala/package.Nil.
+         |[9:6..9:7): b <= _empty_/n53.b.
+         |[9:12..9:14): :: => scala/collection/immutable/List#`::`().
+         |[9:15..9:18): Nil => scala/package.Nil.
+         |[10:6..10:7): c <= _empty_/n53.c.
+         |[10:10..10:11): A => _empty_/n53.A.
+         |[10:12..10:14): :: => scala/collection/immutable/List#`::`().
+         |[10:15..10:18): Nil => scala/package.Nil.
+         |[11:6..11:7): d <= _empty_/n53.d.
+         |[11:14..11:16): :: => scala/collection/immutable/List#`::`().
+         |[11:17..11:20): Nil => scala/package.Nil.
+         |[12:6..12:7): e <= _empty_/n53.e.
+         |[12:20..12:22): :: => scala/collection/immutable/List#`::`().
+         |[12:23..12:26): Nil => scala/package.Nil.
+         |[13:6..13:7): f <= _empty_/n53.f.
+         |[13:26..13:28): :: => scala/collection/immutable/List#`::`().
+         |[13:29..13:32): Nil => scala/package.Nil.
+         |[14:6..14:7): g <= _empty_/n53.g.
+         |[14:38..14:40): :: => scala/collection/immutable/List#`::`().
+         |[14:41..14:44): Nil => scala/package.Nil.
+         |[15:6..15:7): h <= _empty_/n53.h.
+         |[15:14..15:15): + => java/lang/String#`+`().
+         |[15:16..15:17): K => _empty_/n53.K.
+         |[15:18..15:20): :: => scala/collection/immutable/List#`::`().
+         |[15:21..15:24): Nil => scala/package.Nil.
+         |[16:6..16:7): i <= _empty_/n53.i.
+         |[16:19..16:21): :: => scala/collection/immutable/List#`::`().
+         |[16:22..16:25): Nil => scala/package.Nil.
+         |[17:6..17:7): j <= _empty_/n53.j.
+         |[17:14..17:16): +: => scala/collection/SeqOps#`+:`().
+         |[17:17..17:20): Seq => scala/package.Seq.
+         |[18:6..18:7): k <= _empty_/n53.k.
+         |[18:12..18:14): :: => scala/collection/immutable/List#`::`().
+         |[18:15..18:18): Nil => scala/package.Nil.
+         |[19:6..19:7): l <= _empty_/n53.l.
+         |[19:13..19:15): :: => scala/collection/immutable/List#`::`().
+         |[19:16..19:19): Nil => scala/package.Nil.
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "right-associative operator kinds on constants",
+    """|object n54 {
+       |  final val K = 1
+       |  class R { def ->:[A](a: A) = this; def *:(i: => Int) = this }
+       |  val r = new R
+       |  val buf = scala.collection.mutable.ListBuffer.empty[Int]
+       |  val a = (K :: Nil) ::: Nil
+       |  val b = List(K) ::: Nil
+       |  val c = K +=: buf
+       |  val d = K ->: r
+       |  val e = K ->:[Int] r
+       |  val f = K *: r
+       |  val g = Nil.::(K)
+       |  val h = K ::[Int] Nil
+       |  val i = K +: Vector()
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n54 <= _empty_/n54.
+             |[1:12..1:13): K <= _empty_/n54.K.
+             |[2:8..2:9): R <= _empty_/n54.R#
+             |[2:10..2:10):  <= _empty_/n54.R#`<init>`().
+             |[2:16..2:19): ->: <= _empty_/n54.R#`->:`().
+             |[2:20..2:21): A <= _empty_/n54.R#`->:`().[A]
+             |[2:23..2:24): a <= _empty_/n54.R#`->:`().(a)
+             |[2:26..2:27): A => _empty_/n54.R#`->:`().[A]
+             |[2:41..2:43): *: <= _empty_/n54.R#`*:`().
+             |[2:44..2:45): i <= _empty_/n54.R#`*:`().(i)
+             |[2:50..2:53): Int => scala/Int#
+             |[3:6..3:7): r <= _empty_/n54.r.
+             |[3:14..3:15): R => _empty_/n54.R#
+             |[3:15..3:15):  => _empty_/n54.R#`<init>`().
+             |[4:6..4:9): buf <= _empty_/n54.buf.
+             |[4:12..4:17): scala => scala/
+             |[4:18..4:28): collection => scala/collection/
+             |[4:29..4:36): mutable => scala/collection/mutable/
+             |[4:37..4:47): ListBuffer => scala/collection/mutable/ListBuffer.
+             |[4:48..4:53): empty => scala/collection/generic/GenericCompanion#empty().
+             |[4:54..4:57): Int => scala/Int#
+             |[5:6..5:7): a <= _empty_/n54.a.
+             |[5:11..5:12): K => _empty_/n54.K.
+             |[5:13..5:15): :: => scala/collection/immutable/List#`::`().
+             |[5:16..5:19): Nil => scala/collection/immutable/Nil.
+             |[5:21..5:24): ::: => scala/collection/immutable/List#`:::`().
+             |[5:25..5:28): Nil => scala/collection/immutable/Nil.
+             |[6:6..6:7): b <= _empty_/n54.b.
+             |[6:10..6:14): List => scala/collection/immutable/List.
+             |[6:15..6:16): K => _empty_/n54.K.
+             |[6:18..6:21): ::: => scala/collection/immutable/List#`:::`().
+             |[6:22..6:25): Nil => scala/collection/immutable/Nil.
+             |[7:6..7:7): c <= _empty_/n54.c.
+             |[7:10..7:11): K => _empty_/n54.K.
+             |[7:12..7:15): +=: => scala/collection/mutable/ListBuffer#`+=:`().
+             |[7:16..7:19): buf => _empty_/n54.buf.
+             |[8:6..8:7): d <= _empty_/n54.d.
+             |[8:10..8:11): K => _empty_/n54.K.
+             |[8:12..8:15): ->: => _empty_/n54.R#`->:`().
+             |[8:16..8:17): r => _empty_/n54.r.
+             |[9:6..9:7): e <= _empty_/n54.e.
+             |[9:10..9:11): K => _empty_/n54.K.
+             |[9:12..9:15): ->: => _empty_/n54.R#`->:`().
+             |[9:16..9:19): Int => scala/Int#
+             |[9:21..9:22): r => _empty_/n54.r.
+             |[10:6..10:7): f <= _empty_/n54.f.
+             |[10:10..10:11): K => _empty_/n54.K.
+             |[10:12..10:14): *: => _empty_/n54.R#`*:`().
+             |[10:15..10:16): r => _empty_/n54.r.
+             |[11:6..11:7): g <= _empty_/n54.g.
+             |[11:10..11:13): Nil => scala/collection/immutable/Nil.
+             |[11:14..11:16): :: => scala/collection/immutable/List#`::`().
+             |[11:17..11:18): K => _empty_/n54.K.
+             |[12:6..12:7): h <= _empty_/n54.h.
+             |[12:10..12:11): K => _empty_/n54.K.
+             |[12:12..12:14): :: => scala/collection/immutable/List#`::`().
+             |[12:15..12:18): Int => scala/Int#
+             |[12:20..12:23): Nil => scala/collection/immutable/Nil.
+             |[13:6..13:7): i <= _empty_/n54.i.
+             |[13:10..13:11): K => _empty_/n54.K.
+             |[13:12..13:14): +: => scala/collection/immutable/Vector#`+:`().
+             |[13:15..13:21): Vector => scala/package.Vector.
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n54 <= _empty_/n54.
+         |[1:12..1:13): K <= _empty_/n54.K.
+         |[2:8..2:9): R <= _empty_/n54.R#
+         |[2:10..2:10):  <= _empty_/n54.R#`<init>`().
+         |[2:16..2:19): ->: <= _empty_/n54.R#`->:`().
+         |[2:20..2:21): A <= _empty_/n54.R#`->:`().[A]
+         |[2:23..2:24): a <= _empty_/n54.R#`->:`().(a)
+         |[2:26..2:27): A => _empty_/n54.R#`->:`().[A]
+         |[2:41..2:43): *: <= _empty_/n54.R#`*:`().
+         |[2:44..2:45): i <= _empty_/n54.R#`*:`().(i)
+         |[2:50..2:53): Int => scala/Int#
+         |[3:6..3:7): r <= _empty_/n54.r.
+         |[3:14..3:15): R => _empty_/n54.R#
+         |[3:15..3:15):  => _empty_/n54.R#`<init>`().
+         |[4:6..4:9): buf <= _empty_/n54.buf.
+         |[4:12..4:17): scala => scala/
+         |[4:18..4:28): collection => scala/collection/
+         |[4:29..4:36): mutable => scala/collection/mutable/
+         |[4:37..4:47): ListBuffer => scala/collection/mutable/ListBuffer.
+         |[4:48..4:53): empty => scala/collection/mutable/ListBuffer.empty().
+         |[4:54..4:57): Int => scala/Int#
+         |[5:6..5:7): a <= _empty_/n54.a.
+         |[5:13..5:15): :: => scala/collection/immutable/List#`::`().
+         |[5:16..5:19): Nil => scala/package.Nil.
+         |[5:21..5:24): ::: => scala/collection/immutable/List#`:::`().
+         |[5:25..5:28): Nil => scala/package.Nil.
+         |[6:6..6:7): b <= _empty_/n54.b.
+         |[6:10..6:14): List => scala/package.List.
+         |[6:15..6:16): K => _empty_/n54.K.
+         |[6:18..6:21): ::: => scala/collection/immutable/List#`:::`().
+         |[6:22..6:25): Nil => scala/package.Nil.
+         |[7:6..7:7): c <= _empty_/n54.c.
+         |[7:12..7:15): +=: => scala/collection/mutable/Buffer#`+=:`().
+         |[7:16..7:19): buf => _empty_/n54.buf.
+         |[8:6..8:7): d <= _empty_/n54.d.
+         |[8:12..8:15): ->: => _empty_/n54.R#`->:`().
+         |[8:16..8:17): r => _empty_/n54.r.
+         |[9:6..9:7): e <= _empty_/n54.e.
+         |[9:12..9:15): ->: => _empty_/n54.R#`->:`().
+         |[9:16..9:19): Int => scala/Int#
+         |[9:21..9:22): r => _empty_/n54.r.
+         |[10:6..10:7): f <= _empty_/n54.f.
+         |[10:12..10:14): *: => _empty_/n54.R#`*:`().
+         |[10:15..10:16): r => _empty_/n54.r.
+         |[11:6..11:7): g <= _empty_/n54.g.
+         |[11:10..11:13): Nil => scala/package.Nil.
+         |[11:14..11:16): :: => scala/collection/immutable/List#`::`().
+         |[11:17..11:18): K => _empty_/n54.K.
+         |[12:6..12:7): h <= _empty_/n54.h.
+         |[12:12..12:14): :: => scala/collection/immutable/List#`::`().
+         |[12:15..12:18): Int => scala/Int#
+         |[12:20..12:23): Nil => scala/package.Nil.
+         |[13:6..13:7): i <= _empty_/n54.i.
+         |[13:12..13:14): +: => scala/collection/SeqOps#`+:`().
+         |[13:15..13:21): Vector => scala/package.Vector.
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "right-associative operators on constants in other places",
+    """|object n55 {
+       |  final val K = 1
+       |  def f(l: List[Int]) = l
+       |  def g = { K :: Nil; K +: Vector(); () }
+       |  val a = f(K :: Nil)
+       |  val b = f(l = K :: Nil)
+       |  var l = List(1)
+       |  def h = { l ::= K; l +:= K }
+       |  def m(x: Any) = x match { case K :: _ => 1; case _ => 2 }
+       |  val c = if (true) K :: Nil else Nil
+       |  val d = List(K :: Nil)
+       |  def n = K :: Nil
+       |  lazy val e = K :: Nil
+       |  val o = for (i <- K :: Nil) yield i
+       |  class B(l: List[Int])
+       |  class D extends B(K :: Nil)
+       |  def p(l: List[Int] = K :: Nil) = l
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n55 <= _empty_/n55.
+             |[1:12..1:13): K <= _empty_/n55.K.
+             |[2:6..2:7): f <= _empty_/n55.f().
+             |[2:8..2:9): l <= _empty_/n55.f().(l)
+             |[2:11..2:15): List => scala/package.List#
+             |[2:16..2:19): Int => scala/Int#
+             |[2:24..2:25): l => _empty_/n55.f().(l)
+             |[3:6..3:7): g <= _empty_/n55.g().
+             |[3:12..3:13): K => _empty_/n55.K.
+             |[3:14..3:16): :: => scala/collection/immutable/List#`::`().
+             |[3:17..3:20): Nil => scala/collection/immutable/Nil.
+             |[3:22..3:23): K => _empty_/n55.K.
+             |[3:24..3:26): +: => scala/collection/immutable/Vector#`+:`().
+             |[3:27..3:33): Vector => scala/package.Vector.
+             |[4:6..4:7): a <= _empty_/n55.a.
+             |[4:10..4:11): f => _empty_/n55.f().
+             |[4:12..4:13): K => _empty_/n55.K.
+             |[4:14..4:16): :: => scala/collection/immutable/List#`::`().
+             |[4:17..4:20): Nil => scala/collection/immutable/Nil.
+             |[5:6..5:7): b <= _empty_/n55.b.
+             |[5:10..5:11): f => _empty_/n55.f().
+             |[5:12..5:13): l => _empty_/n55.f().(l)
+             |[5:16..5:17): K => _empty_/n55.K.
+             |[5:18..5:20): :: => scala/collection/immutable/List#`::`().
+             |[5:21..5:24): Nil => scala/collection/immutable/Nil.
+             |[6:6..6:7): l <= _empty_/n55.l().
+             |[6:10..6:14): List => scala/collection/immutable/List.
+             |[7:6..7:7): h <= _empty_/n55.h().
+             |[7:12..7:13): l => _empty_/n55.`l_=`().
+             |[7:14..7:17): ::= => scala/collection/immutable/List#`::`().
+             |[7:18..7:19): K => _empty_/n55.K.
+             |[7:21..7:22): l => _empty_/n55.`l_=`().
+             |[7:23..7:26): +:= => scala/collection/immutable/List#`+:`().
+             |[7:27..7:28): K => _empty_/n55.K.
+             |[8:6..8:7): m <= _empty_/n55.m().
+             |[8:8..8:9): x <= _empty_/n55.m().(x)
+             |[8:11..8:14): Any => scala/Any#
+             |[8:18..8:19): x => _empty_/n55.m().(x)
+             |[8:33..8:34): K => _empty_/n55.K.
+             |[8:35..8:37): :: => scala/package.`::`.
+             |[9:6..9:7): c <= _empty_/n55.c.
+             |[9:20..9:21): K => _empty_/n55.K.
+             |[9:22..9:24): :: => scala/collection/immutable/List#`::`().
+             |[9:25..9:28): Nil => scala/collection/immutable/Nil.
+             |[9:34..9:37): Nil => scala/collection/immutable/Nil.
+             |[10:6..10:7): d <= _empty_/n55.d.
+             |[10:10..10:14): List => scala/collection/immutable/List.
+             |[10:15..10:16): K => _empty_/n55.K.
+             |[10:17..10:19): :: => scala/collection/immutable/List#`::`().
+             |[10:20..10:23): Nil => scala/collection/immutable/Nil.
+             |[11:6..11:7): n <= _empty_/n55.n().
+             |[11:10..11:11): K => _empty_/n55.K.
+             |[11:12..11:14): :: => scala/collection/immutable/List#`::`().
+             |[11:15..11:18): Nil => scala/collection/immutable/Nil.
+             |[12:11..12:12): e <= _empty_/n55.e.
+             |[12:15..12:16): K => _empty_/n55.K.
+             |[12:17..12:19): :: => scala/collection/immutable/List#`::`().
+             |[12:20..12:23): Nil => scala/collection/immutable/Nil.
+             |[13:6..13:7): o <= _empty_/n55.o.
+             |[13:15..13:16): i <= local0
+             |[13:20..13:21): K => _empty_/n55.K.
+             |[13:22..13:24): :: => scala/collection/immutable/List#`::`().
+             |[13:25..13:28): Nil => scala/collection/immutable/Nil.
+             |[13:36..13:37): i => local0
+             |[14:8..14:9): B <= _empty_/n55.B#
+             |[14:9..14:9):  <= _empty_/n55.B#`<init>`().
+             |[14:10..14:11): l <= _empty_/n55.B#`<init>`().(l)
+             |[14:10..14:11): l <= _empty_/n55.B#l.
+             |[14:13..14:17): List => scala/package.List#
+             |[14:18..14:21): Int => scala/Int#
+             |[15:8..15:9): D <= _empty_/n55.D#
+             |[15:10..15:10):  <= _empty_/n55.D#`<init>`().
+             |[15:18..15:19): B => _empty_/n55.B#
+             |[15:19..15:19):  => _empty_/n55.B#`<init>`().
+             |[15:20..15:21): K => _empty_/n55.K.
+             |[15:22..15:24): :: => scala/collection/immutable/List#`::`().
+             |[15:25..15:28): Nil => scala/collection/immutable/Nil.
+             |[16:6..16:7): p <= _empty_/n55.p().
+             |[16:8..16:9): l <= _empty_/n55.p().(l)
+             |[16:11..16:15): List => scala/package.List#
+             |[16:16..16:19): Int => scala/Int#
+             |[16:23..16:24): K => _empty_/n55.K.
+             |[16:25..16:27): :: => scala/collection/immutable/List#`::`().
+             |[16:28..16:31): Nil => scala/collection/immutable/Nil.
+             |[16:35..16:36): l => _empty_/n55.p().(l)
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n55 <= _empty_/n55.
+         |[1:12..1:13): K <= _empty_/n55.K.
+         |[2:6..2:7): f <= _empty_/n55.f().
+         |[2:8..2:9): l <= _empty_/n55.f().(l)
+         |[2:11..2:15): List => scala/package.List#
+         |[2:16..2:19): Int => scala/Int#
+         |[2:24..2:25): l => _empty_/n55.f().(l)
+         |[3:6..3:7): g <= _empty_/n55.g().
+         |[3:14..3:16): :: => scala/collection/immutable/List#`::`().
+         |[3:17..3:20): Nil => scala/package.Nil.
+         |[3:24..3:26): +: => scala/collection/SeqOps#`+:`().
+         |[3:27..3:33): Vector => scala/package.Vector.
+         |[4:6..4:7): a <= _empty_/n55.a.
+         |[4:10..4:11): f => _empty_/n55.f().
+         |[4:14..4:16): :: => scala/collection/immutable/List#`::`().
+         |[4:17..4:20): Nil => scala/package.Nil.
+         |[5:6..5:7): b <= _empty_/n55.b.
+         |[5:10..5:11): f => _empty_/n55.f().
+         |[5:12..5:13): l => _empty_/n55.f().(l)
+         |[5:18..5:20): :: => scala/collection/immutable/List#`::`().
+         |[5:21..5:24): Nil => scala/package.Nil.
+         |[6:6..6:7): l <= _empty_/n55.l().
+         |[6:10..6:14): List => scala/package.List.
+         |[7:6..7:7): h <= _empty_/n55.h().
+         |[7:12..7:13): l => _empty_/n55.`l_=`().
+         |[7:14..7:17): ::= => scala/collection/immutable/List#`::`().
+         |[7:18..7:19): K => _empty_/n55.K.
+         |[7:21..7:22): l => _empty_/n55.`l_=`().
+         |[7:23..7:26): +:= => scala/collection/SeqOps#`+:`().
+         |[7:27..7:28): K => _empty_/n55.K.
+         |[8:6..8:7): m <= _empty_/n55.m().
+         |[8:8..8:9): x <= _empty_/n55.m().(x)
+         |[8:11..8:14): Any => scala/Any#
+         |[8:18..8:19): x => _empty_/n55.m().(x)
+         |[8:33..8:34): K => _empty_/n55.K.
+         |[8:35..8:37): :: => scala/package.`::`.
+         |[9:6..9:7): c <= _empty_/n55.c.
+         |[9:22..9:24): :: => scala/collection/immutable/List#`::`().
+         |[9:25..9:28): Nil => scala/package.Nil.
+         |[9:34..9:37): Nil => scala/package.Nil.
+         |[10:6..10:7): d <= _empty_/n55.d.
+         |[10:10..10:14): List => scala/package.List.
+         |[10:17..10:19): :: => scala/collection/immutable/List#`::`().
+         |[10:20..10:23): Nil => scala/package.Nil.
+         |[11:6..11:7): n <= _empty_/n55.n().
+         |[11:12..11:14): :: => scala/collection/immutable/List#`::`().
+         |[11:15..11:18): Nil => scala/package.Nil.
+         |[12:11..12:12): e <= _empty_/n55.e.
+         |[12:17..12:19): :: => scala/collection/immutable/List#`::`().
+         |[12:20..12:23): Nil => scala/package.Nil.
+         |[13:6..13:7): o <= _empty_/n55.o.
+         |[13:15..13:16): i <= local0
+         |[13:22..13:24): :: => scala/collection/immutable/List#`::`().
+         |[13:25..13:28): Nil => scala/package.Nil.
+         |[13:36..13:37): i => local0
+         |[14:8..14:9): B <= _empty_/n55.B#
+         |[14:9..14:9):  <= _empty_/n55.B#`<init>`().
+         |[14:10..14:11): l <= _empty_/n55.B#`<init>`().(l)
+         |[14:10..14:11): l <= _empty_/n55.B#l.
+         |[14:13..14:17): List => scala/package.List#
+         |[14:18..14:21): Int => scala/Int#
+         |[15:8..15:9): D <= _empty_/n55.D#
+         |[15:10..15:10):  <= _empty_/n55.D#`<init>`().
+         |[15:18..15:19): B => _empty_/n55.B#
+         |[15:19..15:19):  => _empty_/n55.B#`<init>`().
+         |[15:22..15:24): :: => scala/collection/immutable/List#`::`().
+         |[15:25..15:28): Nil => scala/package.Nil.
+         |[16:6..16:7): p <= _empty_/n55.p().
+         |[16:8..16:9): l <= _empty_/n55.p().(l)
+         |[16:11..16:15): List => scala/package.List#
+         |[16:16..16:19): Int => scala/Int#
+         |[16:25..16:27): :: => scala/collection/immutable/List#`::`().
+         |[16:28..16:31): Nil => scala/package.Nil.
+         |[16:35..16:36): l => _empty_/n55.p().(l)
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "named and default arguments with constants",
+    """|object n56 {
+       |  final val K = 1
+       |  val x = 1
+       |  def f(a: Int, b: Int) = a
+       |  def g(a: Int = K + 1, b: Int = 0) = a
+       |  case class P(a: Int, b: Int)
+       |  val a = f(b = K + 1, a = x)
+       |  val b = f(b = Int.MaxValue, a = -K)
+       |  val c = g(b = K)
+       |  val d = g()
+       |  val e = P(1, 2).copy(b = K + 1)
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): n56 <= _empty_/n56.
+       |[1:12..1:13): K <= _empty_/n56.K.
+       |[2:6..2:7): x <= _empty_/n56.x.
+       |[3:6..3:7): f <= _empty_/n56.f().
+       |[3:8..3:9): a <= _empty_/n56.f().(a)
+       |[3:11..3:14): Int => scala/Int#
+       |[3:16..3:17): b <= _empty_/n56.f().(b)
+       |[3:19..3:22): Int => scala/Int#
+       |[3:26..3:27): a => _empty_/n56.f().(a)
+       |[4:6..4:7): g <= _empty_/n56.g().
+       |[4:8..4:9): a <= _empty_/n56.g().(a)
+       |[4:11..4:14): Int => scala/Int#
+       |[4:17..4:18): K => _empty_/n56.K.
+       |[4:19..4:20): + => scala/Int#`+`(+4).
+       |[4:24..4:25): b <= _empty_/n56.g().(b)
+       |[4:27..4:30): Int => scala/Int#
+       |[4:38..4:39): a => _empty_/n56.g().(a)
+       |[5:13..5:14): P <= _empty_/n56.P#
+       |[5:14..5:14):  <= _empty_/n56.P#`<init>`().
+       |[5:15..5:16): a <= _empty_/n56.P#`<init>`().(a)
+       |[5:15..5:16): a <= _empty_/n56.P#a.
+       |[5:18..5:21): Int => scala/Int#
+       |[5:23..5:24): b <= _empty_/n56.P#`<init>`().(b)
+       |[5:23..5:24): b <= _empty_/n56.P#b.
+       |[5:26..5:29): Int => scala/Int#
+       |[6:6..6:7): a <= _empty_/n56.a.
+       |[6:10..6:11): f => _empty_/n56.f().
+       |[6:12..6:13): b => _empty_/n56.f().(b)
+       |[6:16..6:17): K => _empty_/n56.K.
+       |[6:18..6:19): + => scala/Int#`+`(+4).
+       |[6:23..6:24): a => _empty_/n56.f().(a)
+       |[6:27..6:28): x => _empty_/n56.x.
+       |[7:6..7:7): b <= _empty_/n56.b.
+       |[7:10..7:11): f => _empty_/n56.f().
+       |[7:12..7:13): b => _empty_/n56.f().(b)
+       |[7:16..7:19): Int => scala/Int.
+       |[7:20..7:28): MaxValue => scala/Int.MaxValue.
+       |[7:30..7:31): a => _empty_/n56.f().(a)
+       |[7:34..7:35): - => scala/Int#`unary_-`().
+       |[7:35..7:36): K => _empty_/n56.K.
+       |[8:6..8:7): c <= _empty_/n56.c.
+       |[8:10..8:11): g => _empty_/n56.g().
+       |[8:12..8:13): b => _empty_/n56.g().(b)
+       |[8:16..8:17): K => _empty_/n56.K.
+       |[9:6..9:7): d <= _empty_/n56.d.
+       |[9:10..9:11): g => _empty_/n56.g().
+       |[10:6..10:7): e <= _empty_/n56.e.
+       |[10:10..10:11): P => _empty_/n56.P.
+       |[10:18..10:22): copy => _empty_/n56.P#copy().
+       |[10:23..10:24): b => _empty_/n56.P#copy().(b)
+       |[10:27..10:28): K => _empty_/n56.K.
+       |[10:29..10:30): + => scala/Int#`+`(+4).
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "interpolators with constants",
+    """|object n57 {
+       |  final val K = 1
+       |  final val S = "a"
+       |  val a = s"$K"
+       |  val b = s"a${K + 1}b$S"
+       |  val c = raw"$S"
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): n57 <= _empty_/n57.
+       |[1:12..1:13): K <= _empty_/n57.K.
+       |[2:12..2:13): S <= _empty_/n57.S.
+       |[3:6..3:7): a <= _empty_/n57.a.
+       |[3:10..3:11): s => scala/StringContext#s().
+       |[3:13..3:14): K => _empty_/n57.K.
+       |[4:6..4:7): b <= _empty_/n57.b.
+       |[4:10..4:11): s => scala/StringContext#s().
+       |[4:15..4:16): K => _empty_/n57.K.
+       |[4:17..4:18): + => scala/Int#`+`(+4).
+       |[4:23..4:24): S => _empty_/n57.S.
+       |[5:6..5:7): c <= _empty_/n57.c.
+       |[5:10..5:13): raw => scala/StringContext#raw().
+       |[5:15..5:16): S => _empty_/n57.S.
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "right-associative operators on folded and adapted constants",
+    """|object n58 {
+       |  class A(l: List[Any]) extends scala.annotation.StaticAnnotation
+       |  final val K = 1
+       |  final val S = "a"
+       |  val a = "a" + S :: Nil
+       |  val b = K + 1L :: Nil
+       |  val c = K :: (Nil: List[Long])
+       |  val d = { K } :: Nil
+       |  val e = 1 + 1 :: Nil
+       |  val f = s"${K :: Nil}"
+       |  @A(K :: Nil) val g = 1
+       |  val h = S + "b" :: Nil
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n58 <= _empty_/n58.
+             |[1:8..1:9): A <= _empty_/n58.A#
+             |[1:9..1:9):  <= _empty_/n58.A#`<init>`().
+             |[1:10..1:11): l <= _empty_/n58.A#`<init>`().(l)
+             |[1:10..1:11): l <= _empty_/n58.A#l.
+             |[1:13..1:17): List => scala/package.List#
+             |[1:18..1:21): Any => scala/Any#
+             |[1:32..1:37): scala => scala/
+             |[1:38..1:48): annotation => scala/annotation/
+             |[1:49..1:65): StaticAnnotation => scala/annotation/StaticAnnotation#
+             |[1:65..1:65):  => scala/annotation/Annotation#`<init>`().
+             |[2:12..2:13): K <= _empty_/n58.K.
+             |[3:12..3:13): S <= _empty_/n58.S.
+             |[4:6..4:7): a <= _empty_/n58.a.
+             |[4:14..4:15): + => java/lang/String#`+`().
+             |[4:16..4:17): S => _empty_/n58.S.
+             |[4:18..4:20): :: => scala/collection/immutable/List#`::`().
+             |[4:21..4:24): Nil => scala/collection/immutable/Nil.
+             |[5:6..5:7): b <= _empty_/n58.b.
+             |[5:10..5:11): K => _empty_/n58.K.
+             |[5:12..5:13): + => scala/Int#`+`(+5).
+             |[5:17..5:19): :: => scala/collection/immutable/List#`::`().
+             |[5:20..5:23): Nil => scala/collection/immutable/Nil.
+             |[6:6..6:7): c <= _empty_/n58.c.
+             |[6:10..6:11): K => _empty_/n58.K.
+             |[6:12..6:14): :: => scala/collection/immutable/List#`::`().
+             |[6:16..6:19): Nil => scala/collection/immutable/Nil.
+             |[6:21..6:25): List => scala/package.List#
+             |[6:26..6:30): Long => scala/Long#
+             |[7:6..7:7): d <= _empty_/n58.d.
+             |[7:12..7:13): K => _empty_/n58.K.
+             |[7:16..7:18): :: => scala/collection/immutable/List#`::`().
+             |[7:19..7:22): Nil => scala/collection/immutable/Nil.
+             |[8:6..8:7): e <= _empty_/n58.e.
+             |[8:12..8:13): + => scala/Int#`+`(+4).
+             |[8:16..8:18): :: => scala/collection/immutable/List#`::`().
+             |[8:19..8:22): Nil => scala/collection/immutable/Nil.
+             |[9:6..9:7): f <= _empty_/n58.f.
+             |[9:10..9:11): s => scala/StringContext#s().
+             |[9:14..9:15): K => _empty_/n58.K.
+             |[9:16..9:18): :: => scala/collection/immutable/List#`::`().
+             |[9:19..9:22): Nil => scala/collection/immutable/Nil.
+             |[10:3..10:4): A => _empty_/n58.A#
+             |[10:4..10:4):  => _empty_/n58.A#`<init>`().
+             |[10:5..10:6): K => _empty_/n58.K.
+             |[10:7..10:9): :: => scala/collection/immutable/List#`::`().
+             |[10:10..10:13): Nil => scala/collection/immutable/Nil.
+             |[10:19..10:20): g <= _empty_/n58.g.
+             |[11:6..11:7): h <= _empty_/n58.h.
+             |[11:10..11:11): S => _empty_/n58.S.
+             |[11:12..11:13): + => java/lang/String#`+`().
+             |[11:18..11:20): :: => scala/collection/immutable/List#`::`().
+             |[11:21..11:24): Nil => scala/collection/immutable/Nil.
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n58 <= _empty_/n58.
+         |[1:8..1:9): A <= _empty_/n58.A#
+         |[1:9..1:9):  <= _empty_/n58.A#`<init>`().
+         |[1:10..1:11): l <= _empty_/n58.A#`<init>`().(l)
+         |[1:10..1:11): l <= _empty_/n58.A#l.
+         |[1:13..1:17): List => scala/package.List#
+         |[1:18..1:21): Any => scala/Any#
+         |[1:32..1:37): scala => scala/
+         |[1:38..1:48): annotation => scala/annotation/
+         |[1:49..1:65): StaticAnnotation => scala/annotation/StaticAnnotation#
+         |[1:65..1:65):  => scala/annotation/Annotation#`<init>`().
+         |[2:12..2:13): K <= _empty_/n58.K.
+         |[3:12..3:13): S <= _empty_/n58.S.
+         |[4:6..4:7): a <= _empty_/n58.a.
+         |[4:18..4:20): :: => scala/collection/immutable/List#`::`().
+         |[4:21..4:24): Nil => scala/package.Nil.
+         |[5:6..5:7): b <= _empty_/n58.b.
+         |[5:17..5:19): :: => scala/collection/immutable/List#`::`().
+         |[5:20..5:23): Nil => scala/package.Nil.
+         |[6:6..6:7): c <= _empty_/n58.c.
+         |[6:12..6:14): :: => scala/collection/immutable/List#`::`().
+         |[6:16..6:19): Nil => scala/package.Nil.
+         |[6:21..6:25): List => scala/package.List#
+         |[6:26..6:30): Long => scala/Long#
+         |[7:6..7:7): d <= _empty_/n58.d.
+         |[7:16..7:18): :: => scala/collection/immutable/List#`::`().
+         |[7:19..7:22): Nil => scala/package.Nil.
+         |[8:6..8:7): e <= _empty_/n58.e.
+         |[8:16..8:18): :: => scala/collection/immutable/List#`::`().
+         |[8:19..8:22): Nil => scala/package.Nil.
+         |[9:6..9:7): f <= _empty_/n58.f.
+         |[9:10..9:11): s => scala/StringContext#s().
+         |[9:16..9:18): :: => scala/collection/immutable/List#`::`().
+         |[9:19..9:22): Nil => scala/package.Nil.
+         |[10:3..10:4): A => _empty_/n58.A#
+         |[10:4..10:4):  => _empty_/n58.A#`<init>`().
+         |[10:7..10:9): :: => scala/collection/immutable/List#`::`().
+         |[10:10..10:13): Nil => scala/package.Nil.
+         |[10:19..10:20): g <= _empty_/n58.g.
+         |[11:6..11:7): h <= _empty_/n58.h.
+         |[11:18..11:20): :: => scala/collection/immutable/List#`::`().
+         |[11:21..11:24): Nil => scala/package.Nil.
+         |""".stripMargin,
+    ),
+  )
+
+  if (ScalaVersion.is213) occurrences(
+    "right-associative operators on literal-typed constants",
+    """|object n59 {
+       |  final val K = 1
+       |  final val L: 1 = 1
+       |  val a = (K: 1) :: Nil
+       |  val b = L :: Nil
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): n59 <= _empty_/n59.
+       |[1:12..1:13): K <= _empty_/n59.K.
+       |[2:12..2:13): L <= _empty_/n59.L.
+       |[3:6..3:7): a <= _empty_/n59.a.
+       |[3:11..3:12): K => _empty_/n59.K.
+       |[3:17..3:19): :: => scala/collection/immutable/List#`::`().
+       |[3:20..3:23): Nil => scala/package.Nil.
+       |[4:6..4:7): b <= _empty_/n59.b.
+       |[4:10..4:11): L => _empty_/n59.L.
+       |[4:12..4:14): :: => scala/collection/immutable/List#`::`().
+       |[4:15..4:18): Nil => scala/package.Nil.
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "pattern definitions with right-associative operators on constants",
+    """|object n60 {
+       |  final val K = 1
+       |  val (p, q) = (K :: Nil, 1)
+       |  def m = { val (r, s) = (K :: Nil, 1); r }
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n60 <= _empty_/n60.
+             |[1:12..1:13): K <= _empty_/n60.K.
+             |[2:7..2:8): p <= _empty_/n60.p.
+             |[2:10..2:11): q <= _empty_/n60.q.
+             |[2:16..2:17): K => _empty_/n60.K.
+             |[2:18..2:20): :: => scala/collection/immutable/List#`::`().
+             |[2:21..2:24): Nil => scala/collection/immutable/Nil.
+             |[3:6..3:7): m <= _empty_/n60.m().
+             |[3:17..3:18): r <= local0
+             |[3:20..3:21): s <= local1
+             |[3:26..3:27): K => _empty_/n60.K.
+             |[3:28..3:30): :: => scala/collection/immutable/List#`::`().
+             |[3:31..3:34): Nil => scala/collection/immutable/Nil.
+             |[3:40..3:41): r => local0
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n60 <= _empty_/n60.
+         |[1:12..1:13): K <= _empty_/n60.K.
+         |[2:7..2:8): p <= _empty_/n60.p.
+         |[2:10..2:11): q <= _empty_/n60.q.
+         |[2:18..2:20): :: => scala/collection/immutable/List#`::`().
+         |[2:21..2:24): Nil => scala/package.Nil.
+         |[3:6..3:7): m <= _empty_/n60.m().
+         |[3:17..3:18): r <= local0
+         |[3:20..3:21): s <= local1
+         |[3:28..3:30): :: => scala/collection/immutable/List#`::`().
+         |[3:31..3:34): Nil => scala/package.Nil.
+         |[3:40..3:41): r => local0
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "right-associative operators on constants in named arguments and defaults",
+    """|object n62 {
+       |  final val K = 1
+       |  val x = 2
+       |  def f(a: Int, b: List[Int]) = b
+       |  val a = f(b = K :: Nil, a = x)
+       |  def m = { def p(l: List[Int] = K :: Nil) = l; p() }
+       |  class C(l: List[Int] = K :: Nil)
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n62 <= _empty_/n62.
+             |[1:12..1:13): K <= _empty_/n62.K.
+             |[2:6..2:7): x <= _empty_/n62.x.
+             |[3:6..3:7): f <= _empty_/n62.f().
+             |[3:8..3:9): a <= _empty_/n62.f().(a)
+             |[3:11..3:14): Int => scala/Int#
+             |[3:16..3:17): b <= _empty_/n62.f().(b)
+             |[3:19..3:23): List => scala/package.List#
+             |[3:24..3:27): Int => scala/Int#
+             |[3:32..3:33): b => _empty_/n62.f().(b)
+             |[4:6..4:7): a <= _empty_/n62.a.
+             |[4:10..4:11): f => _empty_/n62.f().
+             |[4:12..4:13): b => _empty_/n62.f().(b)
+             |[4:16..4:17): K => _empty_/n62.K.
+             |[4:18..4:20): :: => scala/collection/immutable/List#`::`().
+             |[4:21..4:24): Nil => scala/collection/immutable/Nil.
+             |[4:26..4:27): a => _empty_/n62.f().(a)
+             |[4:30..4:31): x => _empty_/n62.x.
+             |[5:6..5:7): m <= _empty_/n62.m().
+             |[5:16..5:17): p <= local0
+             |[5:18..5:19): l <= local1
+             |[5:21..5:25): List => scala/package.List#
+             |[5:26..5:29): Int => scala/Int#
+             |[5:33..5:34): K => _empty_/n62.K.
+             |[5:35..5:37): :: => scala/collection/immutable/List#`::`().
+             |[5:38..5:41): Nil => scala/collection/immutable/Nil.
+             |[5:45..5:46): l => local1
+             |[5:48..5:49): p => local0
+             |[6:8..6:9): C <= _empty_/n62.C#
+             |[6:9..6:9):  <= _empty_/n62.C#`<init>`().
+             |[6:10..6:11): l <= _empty_/n62.C#`<init>`().(l)
+             |[6:10..6:11): l <= _empty_/n62.C#l.
+             |[6:13..6:17): List => scala/package.List#
+             |[6:18..6:21): Int => scala/Int#
+             |[6:25..6:26): K => _empty_/n62.K.
+             |[6:27..6:29): :: => scala/collection/immutable/List#`::`().
+             |[6:30..6:33): Nil => scala/collection/immutable/Nil.
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n62 <= _empty_/n62.
+         |[1:12..1:13): K <= _empty_/n62.K.
+         |[2:6..2:7): x <= _empty_/n62.x.
+         |[3:6..3:7): f <= _empty_/n62.f().
+         |[3:8..3:9): a <= _empty_/n62.f().(a)
+         |[3:11..3:14): Int => scala/Int#
+         |[3:16..3:17): b <= _empty_/n62.f().(b)
+         |[3:19..3:23): List => scala/package.List#
+         |[3:24..3:27): Int => scala/Int#
+         |[3:32..3:33): b => _empty_/n62.f().(b)
+         |[4:6..4:7): a <= _empty_/n62.a.
+         |[4:10..4:11): f => _empty_/n62.f().
+         |[4:12..4:13): b => _empty_/n62.f().(b)
+         |[4:18..4:20): :: => scala/collection/immutable/List#`::`().
+         |[4:21..4:24): Nil => scala/package.Nil.
+         |[4:26..4:27): a => _empty_/n62.f().(a)
+         |[4:30..4:31): x => _empty_/n62.x.
+         |[5:6..5:7): m <= _empty_/n62.m().
+         |[5:16..5:17): p <= local0
+         |[5:18..5:19): l <= local1
+         |[5:21..5:25): List => scala/package.List#
+         |[5:26..5:29): Int => scala/Int#
+         |[5:35..5:37): :: => scala/collection/immutable/List#`::`().
+         |[5:38..5:41): Nil => scala/package.Nil.
+         |[5:45..5:46): l => local1
+         |[5:48..5:49): p => local0
+         |[6:8..6:9): C <= _empty_/n62.C#
+         |[6:9..6:9):  <= _empty_/n62.C#`<init>`().
+         |[6:10..6:11): l <= _empty_/n62.C#`<init>`().(l)
+         |[6:10..6:11): l <= _empty_/n62.C#l.
+         |[6:13..6:17): List => scala/package.List#
+         |[6:18..6:21): Int => scala/Int#
+         |[6:27..6:29): :: => scala/collection/immutable/List#`::`().
+         |[6:30..6:33): Nil => scala/package.Nil.
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "right-associative operators on constants in annotations of a class and a method",
+    """|object n63 {
+       |  final val K = 1
+       |  class A(l: List[Any]) extends scala.annotation.StaticAnnotation
+       |  @A(K :: Nil) class C
+       |  @A(K :: Nil) def m = 1
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n63 <= _empty_/n63.
+             |[1:12..1:13): K <= _empty_/n63.K.
+             |[2:8..2:9): A <= _empty_/n63.A#
+             |[2:9..2:9):  <= _empty_/n63.A#`<init>`().
+             |[2:10..2:11): l <= _empty_/n63.A#`<init>`().(l)
+             |[2:10..2:11): l <= _empty_/n63.A#l.
+             |[2:13..2:17): List => scala/package.List#
+             |[2:18..2:21): Any => scala/Any#
+             |[2:32..2:37): scala => scala/
+             |[2:38..2:48): annotation => scala/annotation/
+             |[2:49..2:65): StaticAnnotation => scala/annotation/StaticAnnotation#
+             |[2:65..2:65):  => scala/annotation/Annotation#`<init>`().
+             |[3:3..3:4): A => _empty_/n63.A#
+             |[3:4..3:4):  => _empty_/n63.A#`<init>`().
+             |[3:5..3:6): K => _empty_/n63.K.
+             |[3:7..3:9): :: => scala/collection/immutable/List#`::`().
+             |[3:10..3:13): Nil => scala/collection/immutable/Nil.
+             |[3:21..3:22): C <= _empty_/n63.C#
+             |[3:22..3:22):  <= _empty_/n63.C#`<init>`().
+             |[4:3..4:4): A => _empty_/n63.A#
+             |[4:4..4:4):  => _empty_/n63.A#`<init>`().
+             |[4:5..4:6): K => _empty_/n63.K.
+             |[4:7..4:9): :: => scala/collection/immutable/List#`::`().
+             |[4:10..4:13): Nil => scala/collection/immutable/Nil.
+             |[4:19..4:20): m <= _empty_/n63.m().
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n63 <= _empty_/n63.
+         |[1:12..1:13): K <= _empty_/n63.K.
+         |[2:8..2:9): A <= _empty_/n63.A#
+         |[2:9..2:9):  <= _empty_/n63.A#`<init>`().
+         |[2:10..2:11): l <= _empty_/n63.A#`<init>`().(l)
+         |[2:10..2:11): l <= _empty_/n63.A#l.
+         |[2:13..2:17): List => scala/package.List#
+         |[2:18..2:21): Any => scala/Any#
+         |[2:32..2:37): scala => scala/
+         |[2:38..2:48): annotation => scala/annotation/
+         |[2:49..2:65): StaticAnnotation => scala/annotation/StaticAnnotation#
+         |[2:65..2:65):  => scala/annotation/Annotation#`<init>`().
+         |[3:3..3:4): A => _empty_/n63.A#
+         |[3:4..3:4):  => _empty_/n63.A#`<init>`().
+         |[3:7..3:9): :: => scala/collection/immutable/List#`::`().
+         |[3:10..3:13): Nil => scala/package.Nil.
+         |[3:21..3:22): C <= _empty_/n63.C#
+         |[3:22..3:22):  <= _empty_/n63.C#`<init>`().
+         |[4:3..4:4): A => _empty_/n63.A#
+         |[4:4..4:4):  => _empty_/n63.A#`<init>`().
+         |[4:7..4:9): :: => scala/collection/immutable/List#`::`().
+         |[4:10..4:13): Nil => scala/package.Nil.
+         |[4:19..4:20): m <= _empty_/n63.m().
+         |""".stripMargin,
+    ),
+  )
+
+  private val n64 =
+    """|object n64 {
+       |  final val K = 1
+       |  val a = { val y = K; K } :: Nil
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "right-associative operators on constant blocks with a statement",
+    n64,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n64 <= _empty_/n64.
+             |[1:12..1:13): K <= _empty_/n64.K.
+             |[2:6..2:7): a <= _empty_/n64.a.
+             |[2:16..2:17): y <= local0
+             |[2:20..2:21): K => _empty_/n64.K.
+             |[2:23..2:24): K => _empty_/n64.K.
+             |[2:27..2:29): :: => scala/collection/immutable/List#`::`().
+             |[2:30..2:33): Nil => scala/collection/immutable/Nil.
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n64 <= _empty_/n64.
+         |[1:12..1:13): K <= _empty_/n64.K.
+         |[2:6..2:7): a <= _empty_/n64.a.
+         |[2:16..2:17): y <= local0
+         |[2:20..2:21): K => _empty_/n64.K.
+         |[2:23..2:24): K => _empty_/n64.K.
+         |[2:27..2:29): :: => scala/collection/immutable/List#`::`().
+         |[2:30..2:33): Nil => scala/package.Nil.
+         |""".stripMargin,
+    ),
+  )
+
+  symbols(
+    "right-associative operators on constant blocks with a statement",
+    n64,
+    """|_empty_/n64. => final object n64 extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/n64.K. => final val method K: 1
+       |_empty_/n64.a. => val method a: List[Int]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |local0 => val local y: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "right-associative operators on constants under a view, a guard and a lambda",
+    """|object n65 {
+       |  final val K = 1
+       |  class R { def +:(s: String) = this }
+       |  implicit def v(i: Int): String = i.toString
+       |  val r = new R
+       |  val a = K +: r
+       |  val b: PartialFunction[Int, Int] = { case x if (K :: Nil).nonEmpty => x }
+       |  val c = List(1).map(_ => K :: Nil)
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n65 <= _empty_/n65.
+             |[1:12..1:13): K <= _empty_/n65.K.
+             |[2:8..2:9): R <= _empty_/n65.R#
+             |[2:10..2:10):  <= _empty_/n65.R#`<init>`().
+             |[2:16..2:18): +: <= _empty_/n65.R#`+:`().
+             |[2:19..2:20): s <= _empty_/n65.R#`+:`().(s)
+             |[2:22..2:28): String => scala/Predef.String#
+             |[3:15..3:16): v <= _empty_/n65.v().
+             |[3:17..3:18): i <= _empty_/n65.v().(i)
+             |[3:20..3:23): Int => scala/Int#
+             |[3:26..3:32): String => scala/Predef.String#
+             |[3:35..3:36): i => _empty_/n65.v().(i)
+             |[3:37..3:45): toString => scala/Any#toString().
+             |[4:6..4:7): r <= _empty_/n65.r.
+             |[4:14..4:15): R => _empty_/n65.R#
+             |[4:15..4:15):  => _empty_/n65.R#`<init>`().
+             |[5:6..5:7): a <= _empty_/n65.a.
+             |[5:10..5:11): K => _empty_/n65.K.
+             |[5:12..5:14): +: => _empty_/n65.R#`+:`().
+             |[5:15..5:16): r => _empty_/n65.r.
+             |[6:6..6:7): b <= _empty_/n65.b.
+             |[6:9..6:24): PartialFunction => scala/PartialFunction#
+             |[6:25..6:28): Int => scala/Int#
+             |[6:30..6:33): Int => scala/Int#
+             |[6:37..6:37):  <= local0
+             |[6:44..6:45): x <= local7
+             |[6:50..6:51): K => _empty_/n65.K.
+             |[6:52..6:54): :: => scala/collection/immutable/List#`::`().
+             |[6:55..6:58): Nil => scala/collection/immutable/Nil.
+             |[6:60..6:68): nonEmpty => scala/collection/TraversableOnce#nonEmpty().
+             |[6:72..6:73): x => local7
+             |[7:6..7:7): c <= _empty_/n65.c.
+             |[7:10..7:14): List => scala/collection/immutable/List.
+             |[7:18..7:21): map => scala/collection/immutable/List#map().
+             |[7:22..7:23): _ <= local9
+             |[7:27..7:28): K => _empty_/n65.K.
+             |[7:29..7:31): :: => scala/collection/immutable/List#`::`().
+             |[7:32..7:35): Nil => scala/collection/immutable/Nil.
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n65 <= _empty_/n65.
+         |[1:12..1:13): K <= _empty_/n65.K.
+         |[2:8..2:9): R <= _empty_/n65.R#
+         |[2:10..2:10):  <= _empty_/n65.R#`<init>`().
+         |[2:16..2:18): +: <= _empty_/n65.R#`+:`().
+         |[2:19..2:20): s <= _empty_/n65.R#`+:`().(s)
+         |[2:22..2:28): String => scala/Predef.String#
+         |[3:15..3:16): v <= _empty_/n65.v().
+         |[3:17..3:18): i <= _empty_/n65.v().(i)
+         |[3:20..3:23): Int => scala/Int#
+         |[3:26..3:32): String => scala/Predef.String#
+         |[3:35..3:36): i => _empty_/n65.v().(i)
+         |[3:37..3:45): toString => scala/Any#toString().
+         |[4:6..4:7): r <= _empty_/n65.r.
+         |[4:14..4:15): R => _empty_/n65.R#
+         |[4:15..4:15):  => _empty_/n65.R#`<init>`().
+         |[5:6..5:7): a <= _empty_/n65.a.
+         |[5:12..5:14): +: => _empty_/n65.R#`+:`().
+         |[5:15..5:16): r => _empty_/n65.r.
+         |[6:6..6:7): b <= _empty_/n65.b.
+         |[6:9..6:24): PartialFunction => scala/PartialFunction#
+         |[6:25..6:28): Int => scala/Int#
+         |[6:30..6:33): Int => scala/Int#
+         |[6:37..6:37):  <= local0
+         |[6:44..6:45): x <= local7
+         |[6:52..6:54): :: => scala/collection/immutable/List#`::`().
+         |[6:55..6:58): Nil => scala/package.Nil.
+         |[6:60..6:68): nonEmpty => scala/collection/IterableOnceOps#nonEmpty().
+         |[6:72..6:73): x => local7
+         |[7:6..7:7): c <= _empty_/n65.c.
+         |[7:10..7:14): List => scala/package.List.
+         |[7:18..7:21): map => scala/collection/immutable/List#map().
+         |[7:22..7:23): _ <= local9
+         |[7:29..7:31): :: => scala/collection/immutable/List#`::`().
+         |[7:32..7:35): Nil => scala/package.Nil.
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "right-associative operators and patterns on constants in one source",
+    """|object n66 {
+       |  final val K = 1
+       |  def m(l: List[Int]) = { val a = K :: Nil; l match { case K :: _ => a; case _ => Nil } }
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n66 <= _empty_/n66.
+             |[1:12..1:13): K <= _empty_/n66.K.
+             |[2:6..2:7): m <= _empty_/n66.m().
+             |[2:8..2:9): l <= _empty_/n66.m().(l)
+             |[2:11..2:15): List => scala/package.List#
+             |[2:16..2:19): Int => scala/Int#
+             |[2:30..2:31): a <= local0
+             |[2:34..2:35): K => _empty_/n66.K.
+             |[2:36..2:38): :: => scala/collection/immutable/List#`::`().
+             |[2:39..2:42): Nil => scala/collection/immutable/Nil.
+             |[2:44..2:45): l => _empty_/n66.m().(l)
+             |[2:59..2:60): K => _empty_/n66.K.
+             |[2:61..2:63): :: => scala/package.`::`.
+             |[2:69..2:70): a => local0
+             |[2:82..2:85): Nil => scala/collection/immutable/Nil.
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n66 <= _empty_/n66.
+         |[1:12..1:13): K <= _empty_/n66.K.
+         |[2:6..2:7): m <= _empty_/n66.m().
+         |[2:8..2:9): l <= _empty_/n66.m().(l)
+         |[2:11..2:15): List => scala/package.List#
+         |[2:16..2:19): Int => scala/Int#
+         |[2:30..2:31): a <= local0
+         |[2:36..2:38): :: => scala/collection/immutable/List#`::`().
+         |[2:39..2:42): Nil => scala/package.Nil.
+         |[2:44..2:45): l => _empty_/n66.m().(l)
+         |[2:59..2:60): K => _empty_/n66.K.
+         |[2:61..2:63): :: => scala/package.`::`.
+         |[2:69..2:70): a => local0
+         |[2:82..2:85): Nil => scala/package.Nil.
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "right-associative operators on a macro that expands to a constant",
+    """|object n67 {
+       |  final val K = 1
+       |  val a = example.ConstantExpansion.one(K) :: Nil
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n67 <= _empty_/n67.
+             |[1:12..1:13): K <= _empty_/n67.K.
+             |[2:6..2:7): a <= _empty_/n67.a.
+             |[2:10..2:17): example => example/
+             |[2:18..2:35): ConstantExpansion => example/ConstantExpansion.
+             |[2:36..2:39): one => example/ConstantExpansion.one().
+             |[2:40..2:41): K => _empty_/n67.K.
+             |[2:43..2:45): :: => scala/collection/immutable/List#`::`().
+             |[2:46..2:49): Nil => scala/collection/immutable/Nil.
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n67 <= _empty_/n67.
+         |[1:12..1:13): K <= _empty_/n67.K.
+         |[2:6..2:7): a <= _empty_/n67.a.
+         |[2:43..2:45): :: => scala/collection/immutable/List#`::`().
+         |[2:46..2:49): Nil => scala/package.Nil.
+         |""".stripMargin,
+    ),
+  )
+
+  private val n68 =
+    """|object n68 {
+       |  object O { final val J = 1 }
+       |  final val K = 1
+       |  val a = { def f = 1; K } :: Nil
+       |  val b = { import O.J; J } :: Nil
+       |  val c = { class C; K } :: Nil
+       |  val d = { type T = Int; K } :: Nil
+       |  val e = { object P; K } :: Nil
+       |  final val g = { def f = 1; K }
+       |  val h = identity({ import O.J; J })
+       |  val m = example.ConstantExpansion.one(K) :: Nil
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "right-associative operators on constant blocks with definitions and a macro",
+    n68,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n68 <= _empty_/n68.
+             |[1:9..1:10): O <= _empty_/n68.O.
+             |[1:23..1:24): J <= _empty_/n68.O.J.
+             |[2:12..2:13): K <= _empty_/n68.K.
+             |[3:6..3:7): a <= _empty_/n68.a.
+             |[3:16..3:17): f <= local0
+             |[3:23..3:24): K => _empty_/n68.K.
+             |[3:27..3:29): :: => scala/collection/immutable/List#`::`().
+             |[3:30..3:33): Nil => scala/collection/immutable/Nil.
+             |[4:6..4:7): b <= _empty_/n68.b.
+             |[4:19..4:20): O => _empty_/n68.O.
+             |[4:21..4:22): J => _empty_/n68.O.J.
+             |[4:24..4:25): J => _empty_/n68.O.J.
+             |[4:28..4:30): :: => scala/collection/immutable/List#`::`().
+             |[4:31..4:34): Nil => scala/collection/immutable/Nil.
+             |[5:6..5:7): c <= _empty_/n68.c.
+             |[5:18..5:19): C <= local1
+             |[5:19..5:19):  <= local2
+             |[5:21..5:22): K => _empty_/n68.K.
+             |[5:25..5:27): :: => scala/collection/immutable/List#`::`().
+             |[5:28..5:31): Nil => scala/collection/immutable/Nil.
+             |[6:6..6:7): d <= _empty_/n68.d.
+             |[6:17..6:18): T <= local3
+             |[6:21..6:24): Int => scala/Int#
+             |[6:26..6:27): K => _empty_/n68.K.
+             |[6:30..6:32): :: => scala/collection/immutable/List#`::`().
+             |[6:33..6:36): Nil => scala/collection/immutable/Nil.
+             |[7:6..7:7): e <= _empty_/n68.e.
+             |[7:19..7:20): P <= local4
+             |[7:22..7:23): K => _empty_/n68.K.
+             |[7:26..7:28): :: => scala/collection/immutable/List#`::`().
+             |[7:29..7:32): Nil => scala/collection/immutable/Nil.
+             |[8:12..8:13): g <= _empty_/n68.g.
+             |[8:22..8:23): f <= local5
+             |[8:29..8:30): K => _empty_/n68.K.
+             |[9:6..9:7): h <= _empty_/n68.h.
+             |[9:10..9:18): identity => scala/Predef.identity().
+             |[9:28..9:29): O => _empty_/n68.O.
+             |[9:30..9:31): J => _empty_/n68.O.J.
+             |[9:33..9:34): J => _empty_/n68.O.J.
+             |[10:6..10:7): m <= _empty_/n68.m.
+             |[10:10..10:17): example => example/
+             |[10:18..10:35): ConstantExpansion => example/ConstantExpansion.
+             |[10:36..10:39): one => example/ConstantExpansion.one().
+             |[10:40..10:41): K => _empty_/n68.K.
+             |[10:43..10:45): :: => scala/collection/immutable/List#`::`().
+             |[10:46..10:49): Nil => scala/collection/immutable/Nil.
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n68 <= _empty_/n68.
+         |[1:9..1:10): O <= _empty_/n68.O.
+         |[1:23..1:24): J <= _empty_/n68.O.J.
+         |[2:12..2:13): K <= _empty_/n68.K.
+         |[3:6..3:7): a <= _empty_/n68.a.
+         |[3:16..3:17): f <= local0
+         |[3:23..3:24): K => _empty_/n68.K.
+         |[3:27..3:29): :: => scala/collection/immutable/List#`::`().
+         |[3:30..3:33): Nil => scala/package.Nil.
+         |[4:6..4:7): b <= _empty_/n68.b.
+         |[4:19..4:20): O => _empty_/n68.O.
+         |[4:21..4:22): J => _empty_/n68.O.J.
+         |[4:24..4:25): J => _empty_/n68.O.J.
+         |[4:28..4:30): :: => scala/collection/immutable/List#`::`().
+         |[4:31..4:34): Nil => scala/package.Nil.
+         |[5:6..5:7): c <= _empty_/n68.c.
+         |[5:18..5:19): C <= local1
+         |[5:19..5:19):  <= local2
+         |[5:21..5:22): K => _empty_/n68.K.
+         |[5:25..5:27): :: => scala/collection/immutable/List#`::`().
+         |[5:28..5:31): Nil => scala/package.Nil.
+         |[6:6..6:7): d <= _empty_/n68.d.
+         |[6:17..6:18): T <= local3
+         |[6:21..6:24): Int => scala/Int#
+         |[6:26..6:27): K => _empty_/n68.K.
+         |[6:30..6:32): :: => scala/collection/immutable/List#`::`().
+         |[6:33..6:36): Nil => scala/package.Nil.
+         |[7:6..7:7): e <= _empty_/n68.e.
+         |[7:19..7:20): P <= local4
+         |[7:22..7:23): K => _empty_/n68.K.
+         |[7:26..7:28): :: => scala/collection/immutable/List#`::`().
+         |[7:29..7:32): Nil => scala/package.Nil.
+         |[8:12..8:13): g <= _empty_/n68.g.
+         |[8:22..8:23): f <= local5
+         |[8:29..8:30): K => _empty_/n68.K.
+         |[9:6..9:7): h <= _empty_/n68.h.
+         |[9:10..9:18): identity => scala/Predef.identity().
+         |[9:28..9:29): O => _empty_/n68.O.
+         |[9:30..9:31): J => _empty_/n68.O.J.
+         |[9:33..9:34): J => _empty_/n68.O.J.
+         |[10:6..10:7): m <= _empty_/n68.m.
+         |[10:43..10:45): :: => scala/collection/immutable/List#`::`().
+         |[10:46..10:49): Nil => scala/package.Nil.
+         |""".stripMargin,
+    ),
+  )
+
+  symbols(
+    "right-associative operators on constant blocks with definitions and a macro",
+    n68,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|_empty_/n68. => final object n68 extends AnyRef { +10 decls }
+             |  AnyRef => scala/AnyRef#
+             |_empty_/n68.K. => final val method K: 1
+             |_empty_/n68.O. => final object O extends AnyRef { +1 decls }
+             |  AnyRef => scala/AnyRef#
+             |_empty_/n68.O.J. => final val method J: 1
+             |_empty_/n68.a. => val method a: List[Int]
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |_empty_/n68.b. => val method b: List[Int]
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |_empty_/n68.c. => val method c: List[Int]
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |_empty_/n68.d. => val method d: List[Int]
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |_empty_/n68.e. => val method e: List[Int]
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |_empty_/n68.g. => final val method g: Int
+             |  Int => scala/Int#
+             |_empty_/n68.h. => val method h: Int
+             |  Int => scala/Int#
+             |_empty_/n68.m. => val method m: List[Int]
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |local0 => method f: Int
+             |  Int => scala/Int#
+             |local1 => class C extends AnyRef { +1 decls }
+             |  AnyRef => scala/AnyRef#
+             |local2 => primary ctor <init>()
+             |local3 => type T = Int
+             |  Int => scala/Int#
+             |local4 => final object P extends AnyRef
+             |  AnyRef => scala/AnyRef#
+             |local5 => method f: Int
+             |  Int => scala/Int#
+             |""".stripMargin
+      },
+      """|_empty_/n68. => final object n68 extends AnyRef { +10 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/n68.K. => final val method K: 1
+         |_empty_/n68.O. => final object O extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/n68.O.J. => final val method J: 1
+         |_empty_/n68.a. => val method a: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/n68.b. => val method b: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/n68.c. => val method c: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/n68.d. => val method d: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/n68.e. => val method e: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/n68.g. => final val method g: 1
+         |_empty_/n68.h. => val method h: Int
+         |  Int => scala/Int#
+         |_empty_/n68.m. => val method m: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |local0 => method f: Int
+         |  Int => scala/Int#
+         |local1 => class C extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local2 => primary ctor <init>()
+         |local3 => type T = Int
+         |  Int => scala/Int#
+         |local4 => final object P extends AnyRef
+         |  AnyRef => scala/AnyRef#
+         |local5 => method f: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+    ),
+  )
+
+  synthetics(
+    "right-associative operators on constant blocks with definitions and a macro",
+    n68,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[3:27..3:33): :: Nil => *[Int]
+             |  Int => scala/Int#
+             |[4:28..4:34): :: Nil => *[Int]
+             |  Int => scala/Int#
+             |[5:25..5:31): :: Nil => *[Int]
+             |  Int => scala/Int#
+             |[6:30..6:36): :: Nil => *[Int]
+             |  Int => scala/Int#
+             |[7:26..7:32): :: Nil => *[Int]
+             |  Int => scala/Int#
+             |[9:10..9:18): identity => *[Int]
+             |  Int => scala/Int#
+             |[10:10..10:39): example.ConstantExpansion.one => *[Int]
+             |  Int => scala/Int#
+             |[10:43..10:49): :: Nil => *[Int]
+             |  Int => scala/Int#
+             |""".stripMargin
+      },
+      """|[3:27..3:33): :: Nil => *[Int]
+         |  Int => scala/Int#
+         |[4:28..4:34): :: Nil => *[Int]
+         |  Int => scala/Int#
+         |[5:25..5:31): :: Nil => *[Int]
+         |  Int => scala/Int#
+         |[6:30..6:36): :: Nil => *[Int]
+         |  Int => scala/Int#
+         |[7:26..7:32): :: Nil => *[Int]
+         |  Int => scala/Int#
+         |[9:10..9:18): identity => *[Int]
+         |  Int => scala/Int#
+         |[10:43..10:49): :: Nil => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin,
+    ),
+  )
+
+  private val n69 =
+    """|object n69 {
+       |  final val K = 1
+       |  class R { def +:(s: String) = this }
+       |  implicit def v(i: Int): String = i.toString
+       |  val r = new R
+       |  val x = 2
+       |  val a = K +: r
+       |  val b = x +: r
+       |  val c = 3 +: r
+       |  val d = r.+:(K)
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "right-associative operators under an implicit view",
+    n69,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n69 <= _empty_/n69.
+             |[1:12..1:13): K <= _empty_/n69.K.
+             |[2:8..2:9): R <= _empty_/n69.R#
+             |[2:10..2:10):  <= _empty_/n69.R#`<init>`().
+             |[2:16..2:18): +: <= _empty_/n69.R#`+:`().
+             |[2:19..2:20): s <= _empty_/n69.R#`+:`().(s)
+             |[2:22..2:28): String => scala/Predef.String#
+             |[3:15..3:16): v <= _empty_/n69.v().
+             |[3:17..3:18): i <= _empty_/n69.v().(i)
+             |[3:20..3:23): Int => scala/Int#
+             |[3:26..3:32): String => scala/Predef.String#
+             |[3:35..3:36): i => _empty_/n69.v().(i)
+             |[3:37..3:45): toString => scala/Any#toString().
+             |[4:6..4:7): r <= _empty_/n69.r.
+             |[4:14..4:15): R => _empty_/n69.R#
+             |[4:15..4:15):  => _empty_/n69.R#`<init>`().
+             |[5:6..5:7): x <= _empty_/n69.x.
+             |[6:6..6:7): a <= _empty_/n69.a.
+             |[6:10..6:11): K => _empty_/n69.K.
+             |[6:12..6:14): +: => _empty_/n69.R#`+:`().
+             |[6:15..6:16): r => _empty_/n69.r.
+             |[7:6..7:7): b <= _empty_/n69.b.
+             |[7:10..7:11): x => _empty_/n69.x.
+             |[7:12..7:14): +: => _empty_/n69.R#`+:`().
+             |[7:15..7:16): r => _empty_/n69.r.
+             |[8:6..8:7): c <= _empty_/n69.c.
+             |[8:12..8:14): +: => _empty_/n69.R#`+:`().
+             |[8:15..8:16): r => _empty_/n69.r.
+             |[9:6..9:7): d <= _empty_/n69.d.
+             |[9:10..9:11): r => _empty_/n69.r.
+             |[9:12..9:14): +: => _empty_/n69.R#`+:`().
+             |[9:15..9:16): K => _empty_/n69.K.
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n69 <= _empty_/n69.
+         |[1:12..1:13): K <= _empty_/n69.K.
+         |[2:8..2:9): R <= _empty_/n69.R#
+         |[2:10..2:10):  <= _empty_/n69.R#`<init>`().
+         |[2:16..2:18): +: <= _empty_/n69.R#`+:`().
+         |[2:19..2:20): s <= _empty_/n69.R#`+:`().(s)
+         |[2:22..2:28): String => scala/Predef.String#
+         |[3:15..3:16): v <= _empty_/n69.v().
+         |[3:17..3:18): i <= _empty_/n69.v().(i)
+         |[3:20..3:23): Int => scala/Int#
+         |[3:26..3:32): String => scala/Predef.String#
+         |[3:35..3:36): i => _empty_/n69.v().(i)
+         |[3:37..3:45): toString => scala/Any#toString().
+         |[4:6..4:7): r <= _empty_/n69.r.
+         |[4:14..4:15): R => _empty_/n69.R#
+         |[4:15..4:15):  => _empty_/n69.R#`<init>`().
+         |[5:6..5:7): x <= _empty_/n69.x.
+         |[6:6..6:7): a <= _empty_/n69.a.
+         |[6:12..6:14): +: => _empty_/n69.R#`+:`().
+         |[6:15..6:16): r => _empty_/n69.r.
+         |[7:6..7:7): b <= _empty_/n69.b.
+         |[7:10..7:11): x => _empty_/n69.x.
+         |[7:12..7:14): +: => _empty_/n69.R#`+:`().
+         |[7:15..7:16): r => _empty_/n69.r.
+         |[8:6..8:7): c <= _empty_/n69.c.
+         |[8:12..8:14): +: => _empty_/n69.R#`+:`().
+         |[8:15..8:16): r => _empty_/n69.r.
+         |[9:6..9:7): d <= _empty_/n69.d.
+         |[9:10..9:11): r => _empty_/n69.r.
+         |[9:12..9:14): +: => _empty_/n69.R#`+:`().
+         |[9:15..9:16): K => _empty_/n69.K.
+         |""".stripMargin,
+    ),
+  )
+
+  synthetics(
+    "right-associative operators under an implicit view",
+    n69,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[6:10..6:11): K => v(*)
+             |  v => _empty_/n69.v().
+             |[7:10..7:11): x => v(*)
+             |  v => _empty_/n69.v().
+             |[8:10..8:11): 3 => v(*)
+             |  v => _empty_/n69.v().
+             |[9:15..9:16): K => v(*)
+             |  v => _empty_/n69.v().
+             |""".stripMargin
+      },
+      """|[9:15..9:16): K => v(*)
+         |  v => _empty_/n69.v().
+         |""".stripMargin,
+    ),
+  )
+
+  private val n70 =
+    """|object n70 {
+       |  object O { final val K = 1 }
+       |  val a = example.ConstantExpansion.one({ val q = 2; q }) :: { val w = 1; List(w) }
+       |  val b = example.ConstantExpansion.one({ val q = 2; q }) :: Nil
+       |  val c = example.ConstantExpansion.one({ import O.{K => J}; J }) :: Nil
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "right-associative operators on a macro with a block argument",
+    n70,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n70 <= _empty_/n70.
+             |[1:9..1:10): O <= _empty_/n70.O.
+             |[1:23..1:24): K <= _empty_/n70.O.K.
+             |[2:6..2:7): a <= _empty_/n70.a.
+             |[2:10..2:17): example => example/
+             |[2:18..2:35): ConstantExpansion => example/ConstantExpansion.
+             |[2:36..2:39): one => example/ConstantExpansion.one().
+             |[2:46..2:47): q <= local0
+             |[2:53..2:54): q => local0
+             |[2:58..2:60): :: => scala/collection/immutable/List#`::`().
+             |[2:67..2:68): w <= local1
+             |[2:74..2:78): List => scala/collection/immutable/List.
+             |[2:79..2:80): w => local1
+             |[3:6..3:7): b <= _empty_/n70.b.
+             |[3:10..3:17): example => example/
+             |[3:18..3:35): ConstantExpansion => example/ConstantExpansion.
+             |[3:36..3:39): one => example/ConstantExpansion.one().
+             |[3:46..3:47): q <= local2
+             |[3:53..3:54): q => local2
+             |[3:58..3:60): :: => scala/collection/immutable/List#`::`().
+             |[3:61..3:64): Nil => scala/collection/immutable/Nil.
+             |[4:6..4:7): c <= _empty_/n70.c.
+             |[4:10..4:17): example => example/
+             |[4:18..4:35): ConstantExpansion => example/ConstantExpansion.
+             |[4:36..4:39): one => example/ConstantExpansion.one().
+             |[4:49..4:50): O => _empty_/n70.O.
+             |[4:52..4:53): K => _empty_/n70.O.K.
+             |[4:61..4:62): J => _empty_/n70.O.K.
+             |[4:66..4:68): :: => scala/collection/immutable/List#`::`().
+             |[4:69..4:72): Nil => scala/collection/immutable/Nil.
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n70 <= _empty_/n70.
+         |[1:9..1:10): O <= _empty_/n70.O.
+         |[1:23..1:24): K <= _empty_/n70.O.K.
+         |[2:6..2:7): a <= _empty_/n70.a.
+         |[2:58..2:60): :: => scala/collection/immutable/List#`::`().
+         |[2:67..2:68): w <= local0
+         |[2:74..2:78): List => scala/package.List.
+         |[2:79..2:80): w => local0
+         |[3:6..3:7): b <= _empty_/n70.b.
+         |[3:58..3:60): :: => scala/collection/immutable/List#`::`().
+         |[3:61..3:64): Nil => scala/package.Nil.
+         |[4:6..4:7): c <= _empty_/n70.c.
+         |[4:66..4:68): :: => scala/collection/immutable/List#`::`().
+         |[4:69..4:72): Nil => scala/package.Nil.
+         |""".stripMargin,
+    ),
+  )
+
+  symbols(
+    "right-associative operators on a macro with a block argument",
+    n70,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|_empty_/n70. => final object n70 extends AnyRef { +4 decls }
+             |  AnyRef => scala/AnyRef#
+             |_empty_/n70.O. => final object O extends AnyRef { +1 decls }
+             |  AnyRef => scala/AnyRef#
+             |_empty_/n70.O.K. => final val method K: 1
+             |_empty_/n70.a. => val method a: List[Int]
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |_empty_/n70.b. => val method b: List[Int]
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |_empty_/n70.c. => val method c: List[Int]
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |local0 => val local q: Int
+             |  Int => scala/Int#
+             |local1 => val local w: Int
+             |  Int => scala/Int#
+             |local2 => val local q: Int
+             |  Int => scala/Int#
+             |""".stripMargin
+      },
+      """|_empty_/n70. => final object n70 extends AnyRef { +4 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/n70.O. => final object O extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/n70.O.K. => final val method K: 1
+         |_empty_/n70.a. => val method a: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/n70.b. => val method b: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |_empty_/n70.c. => val method c: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |local0 => val local w: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+    ),
+  )
+
+  synthetics(
+    "right-associative operators on a macro with a block argument",
+    n70,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[2:10..2:39): example.ConstantExpansion.one => *[Int]
+             |  Int => scala/Int#
+             |[2:58..2:83): :: { val w = 1; List(w) } => *[Int]
+             |  Int => scala/Int#
+             |[2:74..2:78): List => *.apply[Int]
+             |  apply => scala/collection/immutable/List.apply().
+             |  Int => scala/Int#
+             |[3:10..3:39): example.ConstantExpansion.one => *[Int]
+             |  Int => scala/Int#
+             |[3:58..3:64): :: Nil => *[Int]
+             |  Int => scala/Int#
+             |[4:10..4:39): example.ConstantExpansion.one => *[Int]
+             |  Int => scala/Int#
+             |[4:66..4:72): :: Nil => *[Int]
+             |  Int => scala/Int#
+             |""".stripMargin
+      },
+      """|[2:58..2:83): :: { val w = 1; List(w) } => *[Int]
+         |  Int => scala/Int#
+         |[2:74..2:78): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |[3:58..3:64): :: Nil => *[Int]
+         |  Int => scala/Int#
+         |[4:66..4:72): :: Nil => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin,
+    ),
+  )
+
+  private val n71 =
+    """|object n71 {
+       |  final val K = 1
+       |  def m(a: List[Int] = example.ConstantExpansion.one(K) :: Nil) = a
+       |  val b: PartialFunction[Int, Int] = {
+       |    case x if (example.ConstantExpansion.one(K) :: Nil).nonEmpty => x
+       |  }
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "right-associative operators on a macro in a default value and a guard",
+    n71,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n71 <= _empty_/n71.
+             |[1:12..1:13): K <= _empty_/n71.K.
+             |[2:6..2:7): m <= _empty_/n71.m().
+             |[2:8..2:9): a <= _empty_/n71.m().(a)
+             |[2:11..2:15): List => scala/package.List#
+             |[2:16..2:19): Int => scala/Int#
+             |[2:23..2:30): example => example/
+             |[2:31..2:48): ConstantExpansion => example/ConstantExpansion.
+             |[2:49..2:52): one => example/ConstantExpansion.one().
+             |[2:53..2:54): K => _empty_/n71.K.
+             |[2:56..2:58): :: => scala/collection/immutable/List#`::`().
+             |[2:59..2:62): Nil => scala/collection/immutable/Nil.
+             |[2:66..2:67): a => _empty_/n71.m().(a)
+             |[3:6..3:7): b <= _empty_/n71.b.
+             |[3:9..3:24): PartialFunction => scala/PartialFunction#
+             |[3:25..3:28): Int => scala/Int#
+             |[3:30..3:33): Int => scala/Int#
+             |[3:37..3:37):  <= local0
+             |[4:9..4:10): x <= local7
+             |[4:15..4:22): example => example/
+             |[4:23..4:40): ConstantExpansion => example/ConstantExpansion.
+             |[4:41..4:44): one => example/ConstantExpansion.one().
+             |[4:45..4:46): K => _empty_/n71.K.
+             |[4:48..4:50): :: => scala/collection/immutable/List#`::`().
+             |[4:51..4:54): Nil => scala/collection/immutable/Nil.
+             |[4:56..4:64): nonEmpty => scala/collection/TraversableOnce#nonEmpty().
+             |[4:68..4:69): x => local7
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n71 <= _empty_/n71.
+         |[1:12..1:13): K <= _empty_/n71.K.
+         |[2:6..2:7): m <= _empty_/n71.m().
+         |[2:8..2:9): a <= _empty_/n71.m().(a)
+         |[2:11..2:15): List => scala/package.List#
+         |[2:16..2:19): Int => scala/Int#
+         |[2:56..2:58): :: => scala/collection/immutable/List#`::`().
+         |[2:59..2:62): Nil => scala/package.Nil.
+         |[2:66..2:67): a => _empty_/n71.m().(a)
+         |[3:6..3:7): b <= _empty_/n71.b.
+         |[3:9..3:24): PartialFunction => scala/PartialFunction#
+         |[3:25..3:28): Int => scala/Int#
+         |[3:30..3:33): Int => scala/Int#
+         |[3:37..3:37):  <= local0
+         |[4:9..4:10): x <= local7
+         |[4:48..4:50): :: => scala/collection/immutable/List#`::`().
+         |[4:51..4:54): Nil => scala/package.Nil.
+         |[4:56..4:64): nonEmpty => scala/collection/IterableOnceOps#nonEmpty().
+         |[4:68..4:69): x => local7
+         |""".stripMargin,
+    ),
+  )
+
+  synthetics(
+    "right-associative operators on a macro in a default value and a guard",
+    n71,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[2:23..2:52): example.ConstantExpansion.one => *[Int]
+             |  Int => scala/Int#
+             |[2:56..2:62): :: Nil => *[Int]
+             |  Int => scala/Int#
+             |[3:37..5:3): {
+             |    case x if (example.ConstantExpansion.one(K) :: Nil).nonEmpty => x
+             |  } => *.apply
+             |  apply => scala/Function1#apply().
+             |[4:15..4:44): example.ConstantExpansion.one => *[Int]
+             |  Int => scala/Int#
+             |[4:48..4:54): :: Nil => *[Int]
+             |  Int => scala/Int#
+             |""".stripMargin
+      },
+      """|[2:56..2:62): :: Nil => *[Int]
+         |  Int => scala/Int#
+         |[3:37..5:3): {
+         |    case x if (example.ConstantExpansion.one(K) :: Nil).nonEmpty => x
+         |  } => *.apply
+         |  apply => scala/Function1#apply().
+         |[4:48..4:54): :: Nil => *[Int]
+         |  Int => scala/Int#
          |""".stripMargin,
     ),
   )

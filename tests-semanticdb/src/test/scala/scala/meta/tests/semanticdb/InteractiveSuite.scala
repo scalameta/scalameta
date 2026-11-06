@@ -136,4 +136,79 @@ class InteractiveSuite extends FunSuite {
        |[2:13..2:15) [error] not found: type In
        |""".stripMargin,
   )
+
+  check(
+    """|object n61 {
+       |  final val K = 1
+       |  val a = K :: Nil
+       |}
+       |""".stripMargin,
+    """|interactive.scala
+       |-----------------
+       |
+       |Summary:
+       |Schema => SemanticDB v4
+       |Uri => interactive.scala
+       |Text => non-empty
+       |Language => Scala
+       |Symbols => 3 entries
+       |Occurrences => 6 entries
+       |Synthetics => 1 entries
+       |
+       |Symbols:
+       |_empty_/n61. => final object n61 extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/n61.K. => final val method K: 1
+       |_empty_/n61.a. => val method a: List[Int]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |
+       |Occurrences:
+       |[0:7..0:10): n61 <= _empty_/n61.
+       |[1:12..1:13): K <= _empty_/n61.K.
+       |[2:6..2:7): a <= _empty_/n61.a.
+       |[2:10..2:11): K => _empty_/n61.K.
+       |[2:12..2:14): :: => scala/collection/immutable/List#`::`().
+       |[2:15..2:18): Nil => scala/collection/immutable/Nil.
+       |
+       |Synthetics:
+       |[2:12..2:18): :: Nil => *[Int]
+       |  Int => scala/Int#
+       |""".stripMargin,
+    compat = List {
+      ScalaVersion.Scala213 ->
+        """|interactive.scala
+           |-----------------
+           |
+           |Summary:
+           |Schema => SemanticDB v4
+           |Uri => interactive.scala
+           |Text => non-empty
+           |Language => Scala
+           |Symbols => 3 entries
+           |Occurrences => 6 entries
+           |Synthetics => 1 entries
+           |
+           |Symbols:
+           |_empty_/n61. => final object n61 extends AnyRef { +2 decls }
+           |  AnyRef => scala/AnyRef#
+           |_empty_/n61.K. => final val method K: 1
+           |_empty_/n61.a. => val method a: List[Int]
+           |  List => scala/collection/immutable/List#
+           |  Int => scala/Int#
+           |
+           |Occurrences:
+           |[0:7..0:10): n61 <= _empty_/n61.
+           |[1:12..1:13): K <= _empty_/n61.K.
+           |[2:6..2:7): a <= _empty_/n61.a.
+           |[2:10..2:11): K => _empty_/n61.K.
+           |[2:12..2:14): :: => scala/collection/immutable/List#`::`().
+           |[2:15..2:18): Nil => scala/package.Nil.
+           |
+           |Synthetics:
+           |[2:12..2:18): :: Nil => *[Int]
+           |  Int => scala/Int#
+           |""".stripMargin
+    },
+  )
 }
