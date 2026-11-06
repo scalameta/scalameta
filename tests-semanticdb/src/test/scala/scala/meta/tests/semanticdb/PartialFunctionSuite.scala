@@ -14264,6 +14264,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |[10:30..10:33): Int => scala/Int#
          |[10:37..10:77): (x: o.this.B) => x match { case _ => 1 } <= local27
          |[10:38..10:39): x <= local34
+         |[10:41..10:42): o => _empty_/t240.o.
          |[10:48..10:49): B => _empty_/t240.o.B#
          |[10:54..10:55): x => local34
          |[11:8..11:9): h <= _empty_/t240.o.h.
