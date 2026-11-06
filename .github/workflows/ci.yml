@@ -66,7 +66,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: sbt tests3_next/testFull
 
-  # ===== PR gate: 5 balanced JDK-17 workers, run on PR *and* push (~8 min) =====
+  # ===== PR gate: 4 balanced JDK-17 workers, run on PR *and* push (~12 min) =====
   pr-jvm212-sem212-js38: # 2.12 parser and mima + semanticdb + latest-3 JS
     runs-on: ubuntu-latest
     timeout-minutes: *timeout
