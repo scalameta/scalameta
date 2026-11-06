@@ -18,7 +18,7 @@ class ParsedSuite extends TreeSuiteBase {
   test("statement, one-argument apply") {
     val parsed = Parse.parseStat(Input.String("val a = 1"))
     assertEquals(
-      parsed.get.structure,
+      parsed.get.structure.nl2lf,
       """|Defn.Val(
          |  Nil,
          |  List(
@@ -33,7 +33,7 @@ class ParsedSuite extends TreeSuiteBase {
   test("statement, two-argument apply") {
     val parsed = Parse.parseStat(Input.String("val a = 1"), dialect)
     assertEquals(
-      parsed.get.structure,
+      parsed.get.structure.nl2lf,
       """|Defn.Val(
          |  Nil,
          |  List(
@@ -127,7 +127,7 @@ class ParsedSuite extends TreeSuiteBase {
   test("term with a term unquote") {
     val parsed = Parse.parseTerm(Input.String("$a + 1"), dialect.unquoteTerm(multiline = false))
     assertEquals(
-      parsed.get.structure,
+      parsed.get.structure.nl2lf,
       """|Term.ApplyInfix(
          |  Term.Quasi(
          |    0,
@@ -145,7 +145,7 @@ class ParsedSuite extends TreeSuiteBase {
   test("pattern with a pattern unquote") {
     val parsed = Parse.parsePat(Input.String("Some($a)"), dialect.unquotePat(multiline = false))
     assertEquals(
-      parsed.get.structure,
+      parsed.get.structure.nl2lf,
       """|Pat.Extract(
          |  Term.Name("Some"),
          |  Pat.ArgClause(List(
