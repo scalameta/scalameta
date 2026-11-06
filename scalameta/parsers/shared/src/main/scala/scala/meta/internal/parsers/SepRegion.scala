@@ -93,8 +93,6 @@ sealed trait RegionControl extends RegionNonDelimNonIndented with CanProduceLF {
    */
   final def isNotTerminatingTokenIfOptional(token: Token): Boolean =
     !isTerminatingTokenRequired() && !isTerminatingToken(token)
-
-  def isTerminatingTokenAt(token: Token, pos: Int): Boolean = isTerminatingToken(token)
 }
 
 /*
@@ -121,22 +119,7 @@ sealed trait RegionControlCond extends RegionControl {
 sealed trait RegionControlMaybeCond extends RegionControl {
   final def isTerminatingTokenRequired(): Boolean = false
   def asCond(): RegionControlCond
-  def asCondOrBody(condEnd: Int): RegionControlMaybeBody
   def asBody(): Option[RegionControl]
-}
-
-/**
- * Describes the part of an `if` or `while` whose condition started with an opening parenthesis,
- * after encountering the matching closing parenthesis; it might still continue a scala3-style
- * condition or describe the body instead.
- */
-sealed trait RegionControlMaybeBody extends RegionControl {
-  final def isTerminatingTokenRequired(): Boolean = false
-
-  /* the index of the `then` or `do` if the condition continues past the parentheses, or -1;
-   * the region outlives a finished `if (a) b`, so only that token ends it */
-  val condEnd: Int
-  override final def isTerminatingTokenAt(token: Token, pos: Int): Boolean = pos == condEnd
 }
 
 sealed trait RegionWhile extends RegionControl {
@@ -150,10 +133,8 @@ object RegionWhile {
 case object RegionWhileCond extends RegionControlCond with RegionWhile
 case object RegionWhileMaybeCond extends RegionControlMaybeCond with RegionWhile {
   def asCond(): RegionControlCond = RegionWhileCond
-  def asCondOrBody(condEnd: Int): RegionControlMaybeBody = new RegionWhileMaybeBody(condEnd)
   def asBody(): Option[RegionControl] = None
 }
-final class RegionWhileMaybeBody(val condEnd: Int) extends RegionControlMaybeBody with RegionWhile
 
 sealed trait RegionIf extends RegionControl {
   def isControlKeyword(token: Token): Boolean = token.is[Token.KwIf]
@@ -168,10 +149,8 @@ case object RegionIfCond extends RegionControlCond with RegionIf {
 }
 case object RegionIfMaybeCond extends RegionControlMaybeCond with RegionIf {
   def asCond(): RegionControlCond = RegionIfCond
-  def asCondOrBody(condEnd: Int): RegionControlMaybeBody = new RegionIfMaybeBody(condEnd)
   def asBody(): Option[RegionControl] = Some(RegionThen)
 }
-final class RegionIfMaybeBody(val condEnd: Int) extends RegionControlMaybeBody with RegionIf
 
 /**
  * Describes the body of an `if` statement, with a possible `else` following.
