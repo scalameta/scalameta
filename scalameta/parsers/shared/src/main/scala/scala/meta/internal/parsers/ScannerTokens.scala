@@ -889,7 +889,7 @@ private[meta] final class ScannerTokens(
                     case (_: RegionBracket | _: RegionHasParamMark) :: _ => false
                     case (_: RegionParen) :: (_: RegionHasParamMark) :: _ => false
                     case _ => true
-                  }) && prevNonTrivia(prevPos).isAny[Ident, CloseDelim, KwThis]
+                  }) && isFewerBracesPrefix(prevNonTrivia(prevPos))
                 sepRegions match {
                   case (_: RegionTemplateDecl) :: rs =>
                     if (exceedsIndent) emitIndent(RegionTemplateBody :: rs)
@@ -993,6 +993,8 @@ private[meta] final class ScannerTokens(
       }
     }
   }
+
+  private def isFewerBracesPrefix(token: Token): Boolean = token.isAny[Ident, CloseDelim, KwThis]
 
   /* the index of the token that ends `cond` if the condition continues to it from `pos`, or -1;
    * as dotty's `followedByToken`, the scan stops at a statement outside braces */
