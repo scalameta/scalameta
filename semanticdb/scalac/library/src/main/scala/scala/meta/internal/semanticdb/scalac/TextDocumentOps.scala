@@ -938,7 +938,7 @@ trait TextDocumentOps {
           case mqual: m.Term.Select => mqual.name.value == gsym.decodedName
           case mname: m.Term.Name =>
             val name = mname.value
-            if (name == "_root_") gsym.isRoot || gsym.isRootPackage
+            if (name == DisplayNames.RootPackage) gsym.isRoot || gsym.isRootPackage
             else name == gsym.decodedName || gsym.thisSym.decodedName == name ||
             isRenamedTo(mname, gsym)
           case _ => false
@@ -946,7 +946,7 @@ trait TextDocumentOps {
         // an import before the name, in a tree around it, renames the symbol to the name
         private def isRenamedTo(mname: m.Term.Name, gsym: g.Symbol): Boolean =
           mrenames(mname.value) && {
-            val gname = g.TermName(mname.value).encode
+            val gname = encoded(mname)
             val start = mname.pos.start
             def renames(gstats: List[g.Tree]) = gstats.exists {
               case t: g.Import => t.pos.isDefined && t.pos.start < start && {
@@ -1010,7 +1010,6 @@ trait TextDocumentOps {
             }
           case _ => null
         }
-        private def encoded(name: m.Term.Name) = g.TermName(name.value).encode
         // the type of a stable path and the symbols of its names, if scalac would accept it
         private def resolvePath(
             mqual: m.Term,
@@ -1024,7 +1023,7 @@ trait TextDocumentOps {
                   case (gtpe, gsym) => (gtpe, (mqual.name -> gsym) :: gquals)
                 }
             }
-          case mname: m.Term.Name if mname.value == "_root_" =>
+          case mname: m.Term.Name if mname.value == DisplayNames.RootPackage =>
             (g.rootMirror.RootClass.tpe, (mname -> g.rootMirror.RootPackage) :: Nil)
           case mname: m.Term.Name => stablePath(lookupName(encoded(mname), gscope, start)) match {
               case null => null
@@ -2000,6 +1999,9 @@ trait TextDocumentOps {
         wrapper.setInfo(g.OverloadedType(g.NoType, normalizedAlts))
     }
   }
+
+  private def encodedTerm(name: String): g.Name = g.TermName(name).encode
+  private def encoded(name: m.Term.Name): g.Name = encodedTerm(name.value)
 
 }
 
