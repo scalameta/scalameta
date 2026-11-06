@@ -408,16 +408,6 @@ private[meta] final class ScannerTokens(
       eolRefFor(rs, out, eolPos)
     }
 
-    def outdentThenCurrRef(
-        ri: RegionIndent,
-        rs: List[SepRegion],
-        rn: Option[SepRegion] = None,
-    ): TokenRef = {
-      val ref = mkOutdentTo(ri, rs)
-      ref.next = currRef(rn.fold(rs)(_ :: rs))
-      ref
-    }
-
     def getCaseIntro(sepRegions: List[SepRegion]) = {
       def markRegions() = RegionCaseMark :: sepRegions
       next match {
@@ -468,6 +458,22 @@ private[meta] final class ScannerTokens(
       case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)
       case _ :: rs => OutdentInfo(null, rs)
       case _ => null
+    }
+
+    def afterControlRef(
+        regions: List[SepRegion],
+        body: List[SepRegion] => List[SepRegion] = identity,
+    ) = {
+      val dropped = dropControl(curr, currPos, regions)
+      if (dropped.isEmpty) currRef(body(regions))
+      // only line regions are nested in it: no outdent, and no closure to allocate
+      else if (dropped eq dropRegionLine(regions)) currRef(body(dropped.tail))
+      else mkOutdents(regions) {
+        case (r: SepRegionIndented) :: xs => OutdentInfo(r, xs)
+        case xs @ _ :: tail =>
+          if (xs eq dropped) OutdentInfo(null, body(tail), done = true) else OutdentInfo(null, tail)
+        case _ => null
+      }
     }
 
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
@@ -607,21 +613,13 @@ private[meta] final class ScannerTokens(
           case rs if canEndStat(prev) && isForGuard(rs) => rs
           case _ => RegionIf(next) :: sepRegions
         })
-      case _: KwThen => dropRegionLine(sepRegions) match {
-          case (r: RegionIndent) :: (rc: RegionIf) :: rs
-              if rc.isTerminatingTokenAt(curr, currPos) => outdentThenCurrRef(r, rs, Some(RegionThen))
-          case _ => currRef(RegionThen :: dropControl(curr, currPos, sepRegions))
-        }
+      case _: KwThen => afterControlRef(sepRegions, RegionThen :: _)
       case _: KwElse if dialect.allowQuietSyntax =>
         dropRegionLine(sepRegions) match {
           case (_: RegionIf | RegionThen) :: rs => currRef(rs)
           case _ => currRef(sepRegions)
         }
-      case _: KwDo | _: KwYield => dropRegionLine(sepRegions) match {
-          case (r: RegionIndent) :: (rc: RegionControl) :: rs
-              if rc.isTerminatingTokenAt(curr, currPos) => outdentThenCurrRef(r, rs)
-          case _ => currRef(dropControl(curr, currPos, sepRegions))
-        }
+      case _: KwDo | _: KwYield => afterControlRef(sepRegions)
       case _: KwDef | _: KwVal | _: KwVar
           if dialect.allowSignificantIndentation && !isPrevEndMarker() =>
         currRef(RegionDefMark :: sepRegions)
@@ -1082,18 +1080,15 @@ private[meta] object ScannerTokens {
       case _ => Nil
     }
 
-  /* `regions` without the nearest control region that `token` at `pos` ends, and without the
-   * regions above it unless an indented one comes first; a parenthesis, a bracket, a brace or a
-   * `for` region stops the search */
+  // a control-region terminating token closes nested regions as well, like a closing delim
   private def dropControl(token: Token, pos: Int, regions: List[SepRegion]): List[SepRegion] = {
     @tailrec
-    def iter(rs: List[SepRegion], withAbove: Boolean): List[SepRegion] = rs match {
-      case (r: RegionControl) :: xs if r.isTerminatingTokenAt(token, pos) =>
-        if (withAbove) xs else regions.takeWhile(_ ne r) ::: xs
-      case Nil | (_: RegionDelimNonIndented | _: RegionFor) :: _ => regions
-      case r :: xs => iter(xs, withAbove && !r.isIndented)
+    def iter(rs: List[SepRegion]): List[SepRegion] = rs match {
+      case (r: RegionControl) :: _ if r.isTerminatingTokenAt(token, pos) => rs
+      case Nil | (_: RegionDelimNonIndented | _: RegionFor) :: _ => Nil
+      case _ :: xs => iter(xs)
     }
-    iter(regions, withAbove = true)
+    iter(regions)
   }
 
   // an `if` after `regions` is a guard: a `for` region comes before any delimiter or indented one
