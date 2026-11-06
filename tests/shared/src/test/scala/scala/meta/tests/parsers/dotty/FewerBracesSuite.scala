@@ -3397,9 +3397,6 @@ class FewerBracesSuite extends BaseDottySuite {
          |InfixLF [96..97)
          |Ident(||) [109..111)
          |Ident(c) [112..113)
-         |Indentation.Outdent [112..112)
-         |Indentation.Outdent [112..112)
-         |Indentation.Outdent [112..112)
          |KwThen [114..118)
          |KwTrue [119..123)
          |KwElse [124..128)
@@ -3409,6 +3406,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |Underscore [150..151)
          |RightArrow [152..154)
          |KwFalse [155..160)
+         |Indentation.Outdent [155..155)
+         |Indentation.Outdent [155..155)
+         |Indentation.Outdent [155..155)
          |KwThen [161..165)
          |Ident(d) [166..167)
          |KwElse [168..172)
@@ -3420,11 +3420,55 @@ class FewerBracesSuite extends BaseDottySuite {
          |EOF [181..181)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:8: error: `outdent` expected but `case` found
-         |          case _ => false then d else e
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (xs.forall {
+         |      x => x match {
+         |        case 1 =>
+         |          if (a && b || c) true else false
+         |        case _ =>
+         |          false
+         |      }
+         |    }) d else e
+         |    k
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tapply(
+              tselect(tname("xs"), "forall"),
+              blk(tfunc(tparam("x"))(tmatch(
+                tname("x"),
+                Case(
+                  int(1),
+                  None,
+                  tif(
+                    tinfix(tinfix(tname("a"), "&&", tname("b")), "||", tname("c")),
+                    lit(true),
+                    lit(false),
+                  ),
+                ),
+                Case(patwildcard, None, lit(false)),
+              ))),
+            ),
+            tname("d"),
+            tname("e"),
+          ),
+          tname("k"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("colon lambda, `if` with `&&` after the parentheses in the body, `then` and `else` on the next line at the column of the lambda, next definition") {

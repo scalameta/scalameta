@@ -435,7 +435,7 @@ private[meta] final class ScannerTokens(
           @tailrec
           def getExtraIndent(rs: List[SepRegion]): Int = rs match {
             case (_: RegionCaseExprGuard) :: _ => 1
-            case (_: RegionIf | _: RegionLine) :: tail => getExtraIndent(tail)
+            case (_: RegionIf | RegionThen | _: RegionLine) :: tail => getExtraIndent(tail)
             case _ => 0
           }
           val indent = findIndent(sepRegions) + getExtraIndent(sepRegions)
@@ -464,7 +464,7 @@ private[meta] final class ScannerTokens(
         regions: List[SepRegion],
         body: List[SepRegion] => List[SepRegion] = identity,
     ) = {
-      val dropped = dropControl(curr, currPos, regions)
+      val dropped = dropControl(curr, regions)
       if (dropped.isEmpty) currRef(body(regions))
       // only line regions are nested in it: no outdent, and no closure to allocate
       else if (dropped eq dropRegionLine(regions)) currRef(body(dropped.tail))
@@ -662,7 +662,8 @@ private[meta] final class ScannerTokens(
               // might continue cond or start body
               case _: Ident | _: LeftBrace | _: LeftBracket | _: LeftParen | _: Underscore
                   if dialect.allowQuietSyntax =>
-                rc.asCondOrBody(condEndAt(rc.asCond(), currPos)) :: rs
+                val cond = rc.asCond()
+                if (condEndAt(cond, currPos) < 0) rc.asBody().fold(rs)(_ :: rs) else cond :: rs
               case _ => rc.asBody().fold(rs)(_ :: rs)
             }
           case RegionForMaybeParens if prev.is[RightParen] =>
@@ -1081,10 +1082,10 @@ private[meta] object ScannerTokens {
     }
 
   // a control-region terminating token closes nested regions as well, like a closing delim
-  private def dropControl(token: Token, pos: Int, regions: List[SepRegion]): List[SepRegion] = {
+  private def dropControl(token: Token, regions: List[SepRegion]): List[SepRegion] = {
     @tailrec
     def iter(rs: List[SepRegion]): List[SepRegion] = rs match {
-      case (r: RegionControl) :: _ if r.isTerminatingTokenAt(token, pos) => rs
+      case (r: RegionControl) :: _ if r.isTerminatingToken(token) => rs
       case Nil | (_: RegionDelimNonIndented | _: RegionFor) :: _ => Nil
       case _ :: xs => iter(xs)
     }
