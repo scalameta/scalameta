@@ -135,10 +135,10 @@ object Scala {
     final case class TermName(value: String) extends Name
     final case class TypeName(value: String) extends Name
 
-    val RootPackage: TermName = TermName("_root_")
-    val EmptyPackage: TermName = TermName("_empty_")
-    val PackageObject: TermName = TermName("package")
-    val Constructor: TermName = TermName("<init>")
+    val RootPackage: TermName = TermName(DisplayNames.RootPackage)
+    val EmptyPackage: TermName = TermName(DisplayNames.EmptyPackage)
+    val PackageObject: TermName = TermName(DisplayNames.PackageObject)
+    val Constructor: TermName = TermName(DisplayNames.Constructor)
 
     private[meta] def encode(value: String): String =
       if (value == "") "``"
@@ -153,6 +153,7 @@ object Scala {
   object DisplayNames {
     val RootPackage: String = "_root_"
     val EmptyPackage: String = "_empty_"
+    val PackageObject: String = "package"
     val Constructor: String = "<init>"
     val Anonymous: String = "_"
   }
