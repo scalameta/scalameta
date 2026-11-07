@@ -4842,42 +4842,22 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("parenthesized condition: an operator and a `match` after the parentheses, `then` on the same line") {
     val code = "def f = if (a) && b match { case _ => true } then c else d"
-    val layout =
-      """|def f = if (a && b match {
-         |  case _ => true
-         |}) c else d
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tif(
-        tmatch(tinfix(tname("a"), "&&", tname("b")), Case(patwildcard, None, lit(true))),
-        tname("c"),
-        tname("d"),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:1: error: `;` expected but `then` found
+         |def f = if (a) && b match { case _ => true } then c else d
+         |                                             ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test(
     "parenthesized condition: an operator and `new` after the parentheses, `then` on the same line",
   ) {
     val code = "def f = if (a) && new B().c then c else d"
-    val layout = "def f = if (a && new B().c) c else d"
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tif(
-        tinfix(tname("a"), "&&", tselect(Term.New(init(pname("B"), List())), "c")),
-        tname("c"),
-        tname("d"),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:1: error: `;` expected but `new` found
+         |def f = if (a) && new B().c then c else d
+         |                  ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("parenthesized condition: an identifier after the parentheses, `else` on the same line") {
@@ -5150,28 +5130,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  then c
          |  else d
          |""".stripMargin
-    val layout =
-      """|def f = if (a && b match {
-         |  case 1 => true
-         |  case _ => false
-         |}) c else d
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tif(
-        tmatch(
-          tinfix(tname("a"), "&&", tname("b")),
-          Case(lit(1), None, lit(true)),
-          Case(patwildcard, None, lit(false)),
-        ),
-        tname("c"),
-        tname("d"),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:5: error: `outdent` expected but `then` found
+         |  then c
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("parenthesized condition: an operator after the parentheses, trailing operator, `then` on the next line") {
@@ -6151,23 +6114,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  then c
          |  else d
          |""".stripMargin
-    val layout =
-      """|def f = if (a || x match {
-         |  case y => y
-         |}) c else d
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tif(
-        tmatch(tinfix(tname("a"), "||", tname("x")), Case(patvar("y"), None, tname("y"))),
-        tname("c"),
-        tname("d"),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:4: error: `outdent` expected but `then` found
+         |  then c
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("parenthesized condition: an operator and a colon lambda after the parentheses, select and `then` on a later line") {
@@ -6243,19 +6194,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("parenthesized condition: an operator and XML after the parentheses, `then` on the same line") {
     val code = "def f = if (a) || <x/>.isEmpty then c else d"
-    val layout = "def f = if (a || <x/>.isEmpty) c else d"
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tif(
-        tinfix(tname("a"), "||", tselect(Term.Xml(List(Lit.String("<x/>")), Nil), "isEmpty")),
-        tname("c"),
-        tname("d"),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:1: error: `;` expected but `xml start` found
+         |def f = if (a) || <x/>.isEmpty then c else d
+         |                  ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("parenthesized condition: an assignment and a colon lambda after the parentheses, `then` at the lambda body") {
@@ -6577,30 +6520,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  then c
          |  else d
          |""".stripMargin
-    val layout =
-      """|def f = if (a && xs.exists {
-         |  x => if (x) true else false
-         |}) c else d
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tif(
-        tinfix(
-          tname("a"),
-          "&&",
-          tapply(
-            tselect("xs", "exists"),
-            blk(tfunc(tparam("x"))(tif(tname("x"), lit(true), lit(false)))),
-          ),
-        ),
-        tname("c"),
-        tname("d"),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `.` found
+         |  if (a) && xs.exists: x =>
+         |              ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("parenthesized condition: an operator and a colon lambda with two statements after the parentheses, `then` at the `if`") {
@@ -6612,33 +6536,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  then c
          |  else d
          |""".stripMargin
-    val layout =
-      """|def f = if (a && xs.exists { x =>
-         |  val y = x
-         |  y > 0
-         |}) c else d
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tif(
-        tinfix(
-          tname("a"),
-          "&&",
-          tapply(
-            tselect("xs", "exists"),
-            blk(tfunc(tparam("x"))(
-              blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tinfix(tname("y"), ">", lit(0))),
-            )),
-          ),
-        ),
-        tname("c"),
-        tname("d"),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `outdent` expected but `.` found
+         |  if (a) && xs.exists: x =>
+         |              ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("parenthesized condition: an operator and a block with `if then` after the parentheses, `then` after the block") {
@@ -6999,23 +6901,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|object A:
          |  def f = if (a) && f(if b then c else d) then e else g
          |""".stripMargin
-    val layout = "object A { def f = if (a && f(if (b) c else d)) e else g }"
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        tif(
-          tinfix(tname("a"), "&&", tapply(tname("f"), tif(tname("b"), tname("c"), tname("d")))),
-          tname("e"),
-          tname("g"),
-        ),
-      )),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `;` expected but `then` found
+         |  def f = if (a) && f(if b then c else d) then e else g
+         |                                          ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("parenthesized condition: an identifier and `else` after the parentheses inside an indented condition") {
@@ -16670,11 +16560,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [65..65)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `then` expected but `outdent` found
-         |    else 2
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = "object A { def f = if (if (a) g(new B)) 1 else 2 }"
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(tif(tname("a"), tapply(tname("g"), Term.New(init(pname("B"))))), int(1), int(2)),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `while` with parentheses in an `if` with parentheses and `else` in an `if` with parentheses, outer `else` on the next line") {
@@ -16768,11 +16666,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [57..57)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:3: error: `then` expected but `outdent` found
-         |    if if (a) g(new B) then 1 else 2
-         |                                    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = "object A { def f = if (if (a) g(new B)) 1 else 2 }"
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(tif(tname("a"), tapply(tname("g"), Term.New(init(pname("B"))))), int(1), int(2)),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `while` with parentheses and an argument with `new` after them on the line of the outer `while`, outer `do` on the same line") {
@@ -16808,11 +16714,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [54..54)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:3: error: `do` expected but `outdent` found
-         |    while while (a) g(new B) do h
-         |                                 ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = "object A { def f = while (while (a) g(new B)) h }"
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.While(Term.While(tname("a"), tapply(tname("g"), Term.New(init(pname("B"))))), tname("h")),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with parentheses and an argument with an `if` without parentheses after them on the line of the outer `if`, outer `then` and `else` on the next lines") {
@@ -16856,11 +16770,23 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [78..78)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `then` expected but `outdent` found
-         |    else 2
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = "object A { def f = if (if (a) g(if (b) c else d)) 1 else 2 }"
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          tif(tname("a"), tapply(tname("g"), tif(tname("b"), tname("c"), tname("d")))),
+          int(1),
+          int(2),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with parentheses, a multi-line comment and an argument with `new` after them on the line of the outer `if`, outer `then` and `else` on the next lines") {
@@ -16900,11 +16826,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [73..73)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `then` expected but `outdent` found
-         |    else 2
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = "object A { def f = if (if (a) /* c */ g(new B)) 1 else 2 }"
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          tif(
+            tname("a"),
+            tapply(tname("g"), Term.New(init(pname("B")))).toBuilder.begComment(Seq("/* c */"))
+              .result(),
+          ),
+          int(1),
+          int(2),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with parentheses and `new` in parentheses with a selection after them on the line of the outer `if`, outer `then` and `else` on the next lines") {
@@ -16945,11 +16887,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [67..67)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `then` expected but `outdent` found
-         |    else 2
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = "object A { def f = if (if (a) (new B).ok) 1 else 2 }"
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(tif(tname("a"), tselect(Term.New(init(pname("B"))), "ok")), int(1), int(2)),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with parentheses and a `match` with braces after them on the line of the outer `if`, outer `then` and `else` on the next lines") {
@@ -16992,11 +16942,25 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [83..83)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `then` expected but `outdent` found
-         |    else 2
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (if (a) x match {
+         |    case _ => true
+         |  }) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(tif(tname("a"), tmatch(tname("x"), Case(patwildcard, None, lit(true)))), int(1), int(2)),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with parentheses and an argument with `new` after them on the line of the outer `if`, outer `then` indented on the next line, outer `else` on the line after it") {
@@ -17036,11 +17000,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [67..67)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `then` expected but `outdent` found
-         |    else 2
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = "object A { def f = if (if (a) g(new B)) 1 else 2 }"
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(tif(tname("a"), tapply(tname("g"), Term.New(init(pname("B"))))), int(1), int(2)),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with parentheses and an argument with `throw` after them on the line of the outer `if`, outer `then` and `else` on the next lines") {
@@ -17080,11 +17052,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [67..67)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `then` expected but `outdent` found
-         |    else 2
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = "object A { def f = if (if (a) g(throw e)) 1 else 2 }"
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(tif(tname("a"), tapply(tname("g"), Term.Throw(tname("e")))), int(1), int(2)),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: an `if` inside an `if` inside an indented condition, `&&` after the parentheses, leading `||` on the next line with `then` and `else`, middle and outer `then` and `else` on the next lines, next statement") {
@@ -18292,11 +18272,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [58..58)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `do` expected but `outdent` found
-         |    do h
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = "object A { def f = while (while (a) g(new B)) h }"
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.While(Term.While(tname("a"), tapply(tname("g"), Term.New(init(pname("B"))))), tname("h")),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `while` with parentheses and an argument with `try` and `catch` in braces after them on the line of the outer `while`, outer `do` on the next line") {
@@ -18340,11 +18328,31 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [80..80)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `do` expected but `outdent` found
-         |    do h
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = while (while (a) g(try x catch {
+         |    case _ => y
+         |  })) h
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.While(
+          Term.While(
+            tname("a"),
+            tapply(tname("g"), Term.Try(tname("x"), List(Case(patwildcard, None, tname("y"))), None)),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `while` with parentheses and an assignment with `new` after them on the line of the outer `while`, outer `do` on the next line") {
@@ -18380,11 +18388,22 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [59..59)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `do` expected but `outdent` found
-         |    do h
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = "object A { def f = while (while (a) x = new B) h }"
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.While(
+          Term.While(tname("a"), Term.Assign(tname("x"), Term.New(init(pname("B"))))),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `while` with parentheses and an argument with `for` and `yield` without parentheses after them on the line of the outer `while`, outer `do` on the next line") {
@@ -18425,11 +18444,28 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [72..72)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `do` expected but `outdent` found
-         |    do h
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = "object A { def f = while (while (a) g(for (x <- xs) yield x)) h }"
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.While(
+          Term.While(
+            tname("a"),
+            tapply(
+              tname("g"),
+              Term.ForYield(List(Enumerator.Generator(patvar("x"), tname("xs"))), tname("x")),
+            ),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`then` and `do`: `if` without parentheses at a line end, `then` on the next line, in braces, next statement") {
