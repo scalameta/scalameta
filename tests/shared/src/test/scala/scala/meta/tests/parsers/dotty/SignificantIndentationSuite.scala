@@ -3419,4 +3419,362 @@ class SignificantIndentationSuite extends BaseDottySuite {
     assertEquals(endAtEof(source(code)), Nil)
   }
 
+  test("`throw` at the end of a line within parentheses, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        foo:
+         |          z
+         |        b)
+         |    h
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |Ident(g) [24..25)
+         |LeftParen [25..26)
+         |KwThrow [26..31)
+         |Ident(foo) [40..43)
+         |Colon [43..44)
+         |Indentation.Indent [44..44)
+         |Ident(z) [55..56)
+         |Indentation.Outdent [56..56)
+         |Ident(b) [65..66)
+         |RightParen [66..67)
+         |LF [67..68)
+         |Ident(h) [72..73)
+         |Indentation.Outdent [73..73)
+         |Indentation.Outdent [73..73)
+         |EOF [74..74)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val layout =
+      """|object A {
+         |  def f = {
+         |    g(throw foo {
+         |      z
+         |    } b)
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tapply(tname("g"), Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b"))),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses, a colon argument on the next line, the argument on the line after, a blank line, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        foo:
+         |          z
+         |
+         |        b)
+         |    h
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |Ident(g) [24..25)
+         |LeftParen [25..26)
+         |KwThrow [26..31)
+         |Ident(foo) [40..43)
+         |Colon [43..44)
+         |Indentation.Indent [44..44)
+         |Ident(z) [55..56)
+         |Indentation.Outdent [57..57)
+         |LFLF [57..58)
+         |Ident(b) [66..67)
+         |RightParen [67..68)
+         |LF [68..69)
+         |Ident(h) [73..74)
+         |Indentation.Outdent [74..74)
+         |Indentation.Outdent [74..74)
+         |EOF [75..75)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:7: error: `)` expected but `identifier` found
+         |        b)
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line within parentheses, a colon argument on the next line, the argument on the line after, a blank line, a definition and an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        foo:
+         |          z
+         |
+         |        val c = 1
+         |        c)
+         |    h
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |Ident(g) [24..25)
+         |LeftParen [25..26)
+         |KwThrow [26..31)
+         |Ident(foo) [40..43)
+         |Colon [43..44)
+         |Indentation.Indent [44..44)
+         |Ident(z) [55..56)
+         |Indentation.Outdent [57..57)
+         |LFLF [57..58)
+         |KwVal [66..69)
+         |Ident(c) [70..71)
+         |Equals [72..73)
+         |Constant.Int(1) [74..75)
+         |Ident(c) [84..85)
+         |RightParen [85..86)
+         |LF [86..87)
+         |Ident(h) [91..92)
+         |Indentation.Outdent [92..92)
+         |Indentation.Outdent [92..92)
+         |EOF [93..93)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:7: error: `)` expected but `val` found
+         |        val c = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line within a condition, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if throw
+         |        foo:
+         |          z
+         |        b
+         |    then c else d
+         |    g
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |KwThrow [27..32)
+         |Ident(foo) [41..44)
+         |Colon [44..45)
+         |Indentation.Indent [45..45)
+         |Ident(z) [56..57)
+         |Indentation.Outdent [57..57)
+         |Ident(b) [66..67)
+         |KwThen [72..76)
+         |Ident(c) [77..78)
+         |KwElse [79..83)
+         |Ident(d) [84..85)
+         |LF [85..86)
+         |Ident(g) [90..91)
+         |Indentation.Outdent [91..91)
+         |Indentation.Outdent [91..91)
+         |EOF [92..92)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:6: error: `then` expected but `identifier` found
+         |        b
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line within a condition, a colon argument on the next line, the argument on the line after, a blank line, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if throw
+         |         foo:
+         |           z
+         |
+         |         b
+         |    then c else d
+         |    g
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |KwThrow [27..32)
+         |Ident(foo) [42..45)
+         |Colon [45..46)
+         |Indentation.Indent [46..46)
+         |Ident(z) [58..59)
+         |Indentation.Outdent [60..60)
+         |LFLF [60..61)
+         |Ident(b) [70..71)
+         |KwThen [76..80)
+         |Ident(c) [81..82)
+         |KwElse [83..87)
+         |Ident(d) [88..89)
+         |LF [89..90)
+         |Ident(g) [94..95)
+         |Indentation.Outdent [95..95)
+         |Indentation.Outdent [95..95)
+         |EOF [96..96)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:7: error: `then` expected but `identifier` found
+         |         b
+         |         ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line within a condition, a colon argument on the next line, the argument on the line after, a comment line, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if throw
+         |        foo:
+         |          z
+         |        // c
+         |        b
+         |    then c else d
+         |    g
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |KwThrow [27..32)
+         |Ident(foo) [41..44)
+         |Colon [44..45)
+         |Indentation.Indent [45..45)
+         |Ident(z) [56..57)
+         |Indentation.Outdent [57..57)
+         |Ident(b) [79..80)
+         |KwThen [85..89)
+         |Ident(c) [90..91)
+         |KwElse [92..96)
+         |Ident(d) [97..98)
+         |LF [98..99)
+         |Ident(g) [103..104)
+         |Indentation.Outdent [104..104)
+         |Indentation.Outdent [104..104)
+         |EOF [105..105)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:7: error: `then` expected but `identifier` found
+         |        b
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line within an inline `then` body nested in a condition, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if if a then throw
+         |          foo:
+         |            z
+         |          b
+         |       else d
+         |    then c else e
+         |    g
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |KwIf [27..29)
+         |Ident(a) [30..31)
+         |KwThen [32..36)
+         |KwThrow [37..42)
+         |Ident(foo) [53..56)
+         |Colon [56..57)
+         |Indentation.Indent [57..57)
+         |Ident(z) [70..71)
+         |Indentation.Outdent [71..71)
+         |Ident(b) [82..83)
+         |KwElse [91..95)
+         |Ident(d) [96..97)
+         |KwThen [102..106)
+         |Ident(c) [107..108)
+         |KwElse [109..113)
+         |Ident(e) [114..115)
+         |LF [115..116)
+         |Ident(g) [120..121)
+         |Indentation.Outdent [121..121)
+         |Indentation.Outdent [121..121)
+         |EOF [122..122)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:6: error: `then` expected but `identifier` found
+         |          b
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
 }
