@@ -998,6 +998,13 @@ private[meta] final class ScannerTokens(
     })
   }
 
+  /** Returns true if `regions`, those of a `)`, end the condition before the body at `pos` */
+  private[parsers] def isAtControlCondEnd(regions: List[SepRegion], pos: Int): Boolean =
+    regions match {
+      case (rc: RegionControlMaybeCond) :: _ => !isCondContinued(rc.asCond(), pos)
+      case _ => false
+    }
+
   /* the index of the token that ends `cond` if the condition continues to it from `pos`, or -1;
    * as dotty's `followedByToken`, the scan stops at a statement outside braces */
   private def condEndAt(cond: RegionControlCond, pos: Int): Int = {

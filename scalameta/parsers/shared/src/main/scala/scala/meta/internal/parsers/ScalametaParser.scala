@@ -2232,12 +2232,13 @@ class ScalametaParser private (scannerTokens: ScannerTokens)(implicit options: P
       else {
         // let's consider case when something can continue cond or start body
         val argPos = currIndex
+        val isBody = isAtControlCondEnd(in.prevRegions, argPos) // scanner can still tell
         val argsOrInitBody = currToken match {
           case _: LeftParen => inParensOrTupleOrUnitExpr()
           case _: LeftBrace => blockExprOnBrace()
           case _ => null
         }
-        val complexExpr = tryParse {
+        def longerCond() = tryParse {
           val simpleExprWithArgs =
             if (argsOrInitBody eq null) simpleExpr
             else {
@@ -2249,6 +2250,7 @@ class ScalametaParser private (scannerTokens: ScannerTokens)(implicit options: P
             case _ => null
           }
         }
+        val complexExpr = if (isBody) null else longerCond()
         complexExpr match {
           case null =>
             // a body follows the parentheses: the comments after them lead it
