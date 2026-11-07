@@ -17015,6 +17015,1010 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestError[Source](code, error)
   }
 
+  test("nested condition: an `if` inside an `if` inside an indented condition, `&&` after the parentheses, leading `||` on the next line with `then` and `else`, middle and outer `then` and `else` on the next lines, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      if
+         |        if (a) && b
+         |          || c then d else e
+         |      then f else g
+         |    then h else k
+         |    m
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |Indentation.Indent [26..26)
+         |KwIf [33..35)
+         |Indentation.Indent [35..35)
+         |KwIf [44..46)
+         |LeftParen [47..48)
+         |Ident(a) [48..49)
+         |RightParen [49..50)
+         |Ident(&&) [51..53)
+         |Ident(b) [54..55)
+         |InfixLF [55..56)
+         |Ident(||) [66..68)
+         |Ident(c) [69..70)
+         |Indentation.Outdent [69..69)
+         |KwThen [71..75)
+         |Ident(d) [76..77)
+         |KwElse [78..82)
+         |Ident(e) [83..84)
+         |Indentation.Outdent [84..84)
+         |KwThen [91..95)
+         |Ident(f) [96..97)
+         |KwElse [98..102)
+         |Ident(g) [103..104)
+         |KwThen [109..113)
+         |Ident(h) [114..115)
+         |KwElse [116..120)
+         |Ident(k) [121..122)
+         |LF [122..123)
+         |Ident(m) [127..128)
+         |Indentation.Outdent [128..128)
+         |Indentation.Outdent [128..128)
+         |EOF [129..129)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:8: error: `outdent` expected but `then` found
+         |    then h else k
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: a `while` inside a `while` inside an indented `while` condition, `&&` after the parentheses, leading `||` on the next line with `do`, middle and outer `do` on the next lines, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while
+         |      while
+         |        while (a) && b
+         |          || c do d
+         |        e
+         |      do f
+         |      g
+         |    do k
+         |    m
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |Indentation.Indent [29..29)
+         |KwWhile [36..41)
+         |Indentation.Indent [41..41)
+         |KwWhile [50..55)
+         |LeftParen [56..57)
+         |Ident(a) [57..58)
+         |RightParen [58..59)
+         |Ident(&&) [60..62)
+         |Ident(b) [63..64)
+         |InfixLF [64..65)
+         |Ident(||) [75..77)
+         |Ident(c) [78..79)
+         |Indentation.Outdent [78..78)
+         |KwDo [80..82)
+         |Ident(d) [83..84)
+         |LF [84..85)
+         |Ident(e) [93..94)
+         |LF [94..95)
+         |Indentation.Outdent [94..94)
+         |KwDo [101..103)
+         |Ident(f) [104..105)
+         |LF [105..106)
+         |Ident(g) [112..113)
+         |LF [113..114)
+         |KwDo [118..120)
+         |Ident(k) [121..122)
+         |LF [122..123)
+         |Ident(m) [127..128)
+         |Indentation.Outdent [128..128)
+         |Indentation.Outdent [128..128)
+         |EOF [129..129)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:11: error: `while` expected but `identifier` found
+         |    m
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `&&` and an identifier after the parentheses inside an indented `while` condition, an argument in parentheses on the next line with `then` and `else`, `do` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while
+         |      if (a) && f
+         |        (c) then d else e
+         |    do g
+         |    k
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |Indentation.Indent [29..29)
+         |KwIf [36..38)
+         |LeftParen [39..40)
+         |Ident(a) [40..41)
+         |RightParen [41..42)
+         |Ident(&&) [43..45)
+         |Ident(f) [46..47)
+         |LF [47..48)
+         |LeftParen [56..57)
+         |Ident(c) [57..58)
+         |RightParen [58..59)
+         |KwThen [60..64)
+         |Ident(d) [65..66)
+         |KwElse [67..71)
+         |Ident(e) [72..73)
+         |Indentation.Outdent [73..73)
+         |KwDo [78..80)
+         |Ident(g) [81..82)
+         |LF [82..83)
+         |Ident(k) [87..88)
+         |Indentation.Outdent [88..88)
+         |Indentation.Outdent [88..88)
+         |EOF [89..89)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while (if (a && f(c)) d else e) g
+         |    k
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(
+            tif(tinfix(tname("a"), "&&", tapply(tname("f"), tname("c"))), tname("d"), tname("e")),
+            tname("g"),
+          ),
+          tname("k"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: `while` with `&&` after the parentheses in a value of indented enumerators, leading `||` on the next line with `do`, `do` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      y = while (a) && b
+         |        || c do d
+         |    do g
+         |    k
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwFor [24..27)
+         |Indentation.Indent [27..27)
+         |Ident(x) [34..35)
+         |LeftArrow [36..38)
+         |Ident(xs) [39..41)
+         |LF [41..42)
+         |Ident(y) [48..49)
+         |Equals [50..51)
+         |KwWhile [52..57)
+         |LeftParen [58..59)
+         |Ident(a) [59..60)
+         |RightParen [60..61)
+         |Ident(&&) [62..64)
+         |Ident(b) [65..66)
+         |InfixLF [66..67)
+         |Ident(||) [75..77)
+         |Ident(c) [78..79)
+         |Indentation.Outdent [78..78)
+         |KwDo [80..82)
+         |Ident(d) [83..84)
+         |LF [84..85)
+         |KwDo [89..91)
+         |Ident(g) [92..93)
+         |LF [93..94)
+         |Ident(k) [98..99)
+         |Indentation.Outdent [99..99)
+         |Indentation.Outdent [99..99)
+         |EOF [100..100)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:8: error: `while` expected but `identifier` found
+         |    k
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with `&&` after the parentheses inside an indented condition, leading `||` on the next line with `then`, `else`, `;` and an identifier, outer `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      if (a) && b
+         |        || c then d else e; g
+         |    then h else k
+         |    m
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |Indentation.Indent [26..26)
+         |KwIf [33..35)
+         |LeftParen [36..37)
+         |Ident(a) [37..38)
+         |RightParen [38..39)
+         |Ident(&&) [40..42)
+         |Ident(b) [43..44)
+         |InfixLF [44..45)
+         |Ident(||) [53..55)
+         |Ident(c) [56..57)
+         |Indentation.Outdent [56..56)
+         |KwThen [58..62)
+         |Ident(d) [63..64)
+         |KwElse [65..69)
+         |Ident(e) [70..71)
+         |Semicolon [71..72)
+         |Ident(g) [73..74)
+         |KwThen [79..83)
+         |Ident(h) [84..85)
+         |KwElse [86..90)
+         |Ident(k) [91..92)
+         |LF [92..93)
+         |Ident(m) [97..98)
+         |Indentation.Outdent [98..98)
+         |Indentation.Outdent [98..98)
+         |EOF [99..99)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:6: error: `outdent` expected but `then` found
+         |    then h else k
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `while` with `&&` after the parentheses inside an indented `while` condition, leading `||` on the next line with `do`, `;` and an identifier, outer `do` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while
+         |      while (a) && b
+         |        || c do d; e
+         |    do k
+         |    g
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |Indentation.Indent [29..29)
+         |KwWhile [36..41)
+         |LeftParen [42..43)
+         |Ident(a) [43..44)
+         |RightParen [44..45)
+         |Ident(&&) [46..48)
+         |Ident(b) [49..50)
+         |InfixLF [50..51)
+         |Ident(||) [59..61)
+         |Ident(c) [62..63)
+         |Indentation.Outdent [62..62)
+         |KwDo [64..66)
+         |Ident(d) [67..68)
+         |Semicolon [68..69)
+         |Ident(e) [70..71)
+         |LF [71..72)
+         |KwDo [76..78)
+         |Ident(k) [79..80)
+         |LF [80..81)
+         |Ident(g) [85..86)
+         |Indentation.Outdent [86..86)
+         |Indentation.Outdent [86..86)
+         |EOF [87..87)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:7: error: `while` expected but `identifier` found
+         |    g
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with `&&` after the parentheses inside an indented condition, a blank line, leading `||` on the next line with `then` and `else`, outer `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      if (a) && b
+         |
+         |        || c then d else e
+         |    then g else h
+         |    k
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |Indentation.Indent [26..26)
+         |KwIf [33..35)
+         |LeftParen [36..37)
+         |Ident(a) [37..38)
+         |RightParen [38..39)
+         |Ident(&&) [40..42)
+         |Ident(b) [43..44)
+         |LFLF [44..46)
+         |Ident(||) [54..56)
+         |Ident(c) [57..58)
+         |Indentation.Outdent [57..57)
+         |KwThen [59..63)
+         |Ident(d) [64..65)
+         |KwElse [66..70)
+         |Ident(e) [71..72)
+         |KwThen [77..81)
+         |Ident(g) [82..83)
+         |KwElse [84..88)
+         |Ident(h) [89..90)
+         |LF [90..91)
+         |Ident(k) [95..96)
+         |Indentation.Outdent [96..96)
+         |Indentation.Outdent [96..96)
+         |EOF [97..97)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:7: error: `outdent` expected but `then` found
+         |    then g else h
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with `&&` after the parentheses inside an indented condition, leading `||` on the next line with `then` and `else`, a blank line, outer `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      if (a) && b
+         |        || c then d else e
+         |
+         |    then g else h
+         |    k
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |Indentation.Indent [26..26)
+         |KwIf [33..35)
+         |LeftParen [36..37)
+         |Ident(a) [37..38)
+         |RightParen [38..39)
+         |Ident(&&) [40..42)
+         |Ident(b) [43..44)
+         |InfixLF [44..45)
+         |Ident(||) [53..55)
+         |Ident(c) [56..57)
+         |Indentation.Outdent [56..56)
+         |KwThen [58..62)
+         |Ident(d) [63..64)
+         |KwElse [65..69)
+         |Ident(e) [70..71)
+         |KwThen [77..81)
+         |Ident(g) [82..83)
+         |KwElse [84..88)
+         |Ident(h) [89..90)
+         |LF [90..91)
+         |Ident(k) [95..96)
+         |Indentation.Outdent [96..96)
+         |Indentation.Outdent [96..96)
+         |EOF [97..97)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:7: error: `outdent` expected but `then` found
+         |    then g else h
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with `&&` after the parentheses inside an indented condition, a comment line, leading `||` on the next line with `then` and `else`, outer `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      if (a) && b
+         |        // x
+         |        || c then d else e
+         |    then g else h
+         |    k
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |Indentation.Indent [26..26)
+         |KwIf [33..35)
+         |LeftParen [36..37)
+         |Ident(a) [37..38)
+         |RightParen [38..39)
+         |Ident(&&) [40..42)
+         |Ident(b) [43..44)
+         |InfixLF [57..58)
+         |Ident(||) [66..68)
+         |Ident(c) [69..70)
+         |Indentation.Outdent [69..69)
+         |KwThen [71..75)
+         |Ident(d) [76..77)
+         |KwElse [78..82)
+         |Ident(e) [83..84)
+         |KwThen [89..93)
+         |Ident(g) [94..95)
+         |KwElse [96..100)
+         |Ident(h) [101..102)
+         |LF [102..103)
+         |Ident(k) [107..108)
+         |Indentation.Outdent [108..108)
+         |Indentation.Outdent [108..108)
+         |EOF [109..109)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:7: error: `outdent` expected but `then` found
+         |    then g else h
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with `&&` after the parentheses inside an indented condition, leading `||` on the next line with `then`, `else` and a comment, outer `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      if (a) && b
+         |        || c then d else e // x
+         |    then g else h
+         |    k
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |Indentation.Indent [26..26)
+         |KwIf [33..35)
+         |LeftParen [36..37)
+         |Ident(a) [37..38)
+         |RightParen [38..39)
+         |Ident(&&) [40..42)
+         |Ident(b) [43..44)
+         |InfixLF [44..45)
+         |Ident(||) [53..55)
+         |Ident(c) [56..57)
+         |Indentation.Outdent [56..56)
+         |KwThen [58..62)
+         |Ident(d) [63..64)
+         |KwElse [65..69)
+         |Ident(e) [70..71)
+         |KwThen [81..85)
+         |Ident(g) [86..87)
+         |KwElse [88..92)
+         |Ident(h) [93..94)
+         |LF [94..95)
+         |Ident(k) [99..100)
+         |Indentation.Outdent [100..100)
+         |Indentation.Outdent [100..100)
+         |EOF [101..101)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:6: error: `outdent` expected but `then` found
+         |    then g else h
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `while` with `&&` after the parentheses inside an indented `while` condition, leading `||` on the next line with `do`, another statement, a blank line, `do` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while
+         |      while (a) && b
+         |        || c do d
+         |      e
+         |
+         |    do k
+         |    g
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |Indentation.Indent [29..29)
+         |KwWhile [36..41)
+         |LeftParen [42..43)
+         |Ident(a) [43..44)
+         |RightParen [44..45)
+         |Ident(&&) [46..48)
+         |Ident(b) [49..50)
+         |InfixLF [50..51)
+         |Ident(||) [59..61)
+         |Ident(c) [62..63)
+         |Indentation.Outdent [62..62)
+         |KwDo [64..66)
+         |Ident(d) [67..68)
+         |LF [68..69)
+         |Ident(e) [75..76)
+         |LFLF [76..78)
+         |KwDo [82..84)
+         |Ident(k) [85..86)
+         |LF [86..87)
+         |Ident(g) [91..92)
+         |Indentation.Outdent [92..92)
+         |Indentation.Outdent [92..92)
+         |EOF [93..93)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:9: error: `while` expected but `identifier` found
+         |    g
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `while` with `&&` after the parentheses on the line of the outer `while`, leading `||` on the next line with `do`, outer `do` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while while (a) && b
+         |      || c do d
+         |    do k
+         |    g
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |KwWhile [30..35)
+         |LeftParen [36..37)
+         |Ident(a) [37..38)
+         |RightParen [38..39)
+         |Ident(&&) [40..42)
+         |Ident(b) [43..44)
+         |InfixLF [44..45)
+         |Ident(||) [51..53)
+         |Ident(c) [54..55)
+         |KwDo [56..58)
+         |Ident(d) [59..60)
+         |LF [60..61)
+         |KwDo [65..67)
+         |Ident(k) [68..69)
+         |LF [69..70)
+         |Ident(g) [74..75)
+         |Indentation.Outdent [75..75)
+         |Indentation.Outdent [75..75)
+         |EOF [76..76)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while (while (a && b || c) d) k
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(
+            Term.While(tinfix(tinfix(tname("a"), "&&", tname("b")), "||", tname("c")), tname("d")),
+            tname("k"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: an identifier and an `if` with `&&` after the parentheses inside an indented condition, leading `||` on the next line with `then` and `else`, outer `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      c
+         |      if (a) && b
+         |        || c then d else e
+         |    then g else h
+         |    k
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |Indentation.Indent [26..26)
+         |Ident(c) [33..34)
+         |LF [34..35)
+         |KwIf [41..43)
+         |LeftParen [44..45)
+         |Ident(a) [45..46)
+         |RightParen [46..47)
+         |Ident(&&) [48..50)
+         |Ident(b) [51..52)
+         |InfixLF [52..53)
+         |Ident(||) [61..63)
+         |Ident(c) [64..65)
+         |Indentation.Outdent [64..64)
+         |KwThen [66..70)
+         |Ident(d) [71..72)
+         |KwElse [73..77)
+         |Ident(e) [78..79)
+         |KwThen [84..88)
+         |Ident(g) [89..90)
+         |KwElse [91..95)
+         |Ident(h) [96..97)
+         |LF [97..98)
+         |Ident(k) [102..103)
+         |Indentation.Outdent [103..103)
+         |Indentation.Outdent [103..103)
+         |EOF [104..104)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:7: error: `outdent` expected but `then` found
+         |    then g else h
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: an identifier and a `while` with `&&` after the parentheses inside an indented `while` condition, leading `||` on the next line with `do`, an identifier, outer `do` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while
+         |      c
+         |      while (a) && b
+         |        || c do d
+         |      e
+         |    do k
+         |    g
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |Indentation.Indent [29..29)
+         |Ident(c) [36..37)
+         |LF [37..38)
+         |KwWhile [44..49)
+         |LeftParen [50..51)
+         |Ident(a) [51..52)
+         |RightParen [52..53)
+         |Ident(&&) [54..56)
+         |Ident(b) [57..58)
+         |InfixLF [58..59)
+         |Ident(||) [67..69)
+         |Ident(c) [70..71)
+         |Indentation.Outdent [70..70)
+         |KwDo [72..74)
+         |Ident(d) [75..76)
+         |LF [76..77)
+         |Ident(e) [83..84)
+         |LF [84..85)
+         |KwDo [89..91)
+         |Ident(k) [92..93)
+         |LF [93..94)
+         |Ident(g) [98..99)
+         |Indentation.Outdent [99..99)
+         |Indentation.Outdent [99..99)
+         |EOF [100..100)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:9: error: `while` expected but `identifier` found
+         |    g
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `while` with parentheses and an argument with `new` after them on the line of the outer `while`, outer `do` on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while while (a) g(new B)
+         |    do h
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |KwWhile [30..35)
+         |LeftParen [36..37)
+         |Ident(a) [37..38)
+         |RightParen [38..39)
+         |Ident(g) [40..41)
+         |LeftParen [41..42)
+         |KwNew [42..45)
+         |Ident(B) [46..47)
+         |RightParen [47..48)
+         |LF [48..49)
+         |KwDo [53..55)
+         |Ident(h) [56..57)
+         |Indentation.Outdent [57..57)
+         |Indentation.Outdent [57..57)
+         |EOF [58..58)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: `do` expected but `outdent` found
+         |    do h
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `while` with parentheses and an argument with `try` and `catch` in braces after them on the line of the outer `while`, outer `do` on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while while (a) g(try x catch { case _ => y })
+         |    do h
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |KwWhile [30..35)
+         |LeftParen [36..37)
+         |Ident(a) [37..38)
+         |RightParen [38..39)
+         |Ident(g) [40..41)
+         |LeftParen [41..42)
+         |KwTry [42..45)
+         |Ident(x) [46..47)
+         |KwCatch [48..53)
+         |LeftBrace [54..55)
+         |KwCase [56..60)
+         |Underscore [61..62)
+         |RightArrow [63..65)
+         |Ident(y) [66..67)
+         |RightBrace [68..69)
+         |RightParen [69..70)
+         |LF [70..71)
+         |KwDo [75..77)
+         |Ident(h) [78..79)
+         |Indentation.Outdent [79..79)
+         |Indentation.Outdent [79..79)
+         |EOF [80..80)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: `do` expected but `outdent` found
+         |    do h
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `while` with parentheses and an assignment with `new` after them on the line of the outer `while`, outer `do` on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while while (a) x = new B
+         |    do h
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |KwWhile [30..35)
+         |LeftParen [36..37)
+         |Ident(a) [37..38)
+         |RightParen [38..39)
+         |Ident(x) [40..41)
+         |Equals [42..43)
+         |KwNew [44..47)
+         |Ident(B) [48..49)
+         |LF [49..50)
+         |KwDo [54..56)
+         |Ident(h) [57..58)
+         |Indentation.Outdent [58..58)
+         |Indentation.Outdent [58..58)
+         |EOF [59..59)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: `do` expected but `outdent` found
+         |    do h
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `while` with parentheses and an argument with `for` and `yield` without parentheses after them on the line of the outer `while`, outer `do` on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while while (a) g(for x <- xs yield x)
+         |    do h
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |KwWhile [30..35)
+         |LeftParen [36..37)
+         |Ident(a) [37..38)
+         |RightParen [38..39)
+         |Ident(g) [40..41)
+         |LeftParen [41..42)
+         |KwFor [42..45)
+         |Ident(x) [46..47)
+         |LeftArrow [48..50)
+         |Ident(xs) [51..53)
+         |KwYield [54..59)
+         |Ident(x) [60..61)
+         |RightParen [61..62)
+         |LF [62..63)
+         |KwDo [67..69)
+         |Ident(h) [70..71)
+         |Indentation.Outdent [71..71)
+         |Indentation.Outdent [71..71)
+         |EOF [72..72)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: `do` expected but `outdent` found
+         |    do h
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
   test("`then` and `do`: `if` without parentheses at a line end, `then` on the next line, in braces, next statement") {
     val code =
       """|def f = {
