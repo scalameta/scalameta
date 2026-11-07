@@ -656,16 +656,8 @@ private[meta] final class ScannerTokens(
       case (r: RegionControl) :: rs if r.isNotTerminatingTokenIfOptional(curr) =>
         r match {
           case rc: RegionControlMaybeCond if prev.is[RightParen] =>
-            // as dotty's `toBeContinued`, a token that cannot start a statement continues cond
-            if (!mightStartStat(curr)) rc.asCond() :: rs
-            else curr match {
-              // might continue cond or start body
-              case _: Ident | _: LeftBrace | _: LeftBracket | _: LeftParen | _: Underscore
-                  if dialect.allowQuietSyntax =>
-                val cond = rc.asCond()
-                if (condEndAt(cond, currPos) < 0) rc.asBody().fold(rs)(_ :: rs) else cond :: rs
-              case _ => rc.asBody().fold(rs)(_ :: rs)
-            }
+            val cond = rc.asCond()
+            if (isCondContinued(cond, currPos)) cond :: rs else rc.asBody().fold(rs)(_ :: rs)
           case RegionForMaybeParens if prev.is[RightParen] =>
             curr match {
               case _: LeftArrow => RegionForOther :: rs
@@ -991,6 +983,19 @@ private[meta] final class ScannerTokens(
         case _ => nextToken(prevToken, prevPos, nextPos, sepRegionsOrig)
       }
     }
+  }
+
+  /** Returns true if `cond` continues past `)` to the token at `pos`, as dotty's `toBeContinued` */
+  private def isCondContinued(cond: RegionControlCond, pos: Int): Boolean = {
+    val token = tokens(pos)
+    // a token that cannot start a statement continues cond
+    !mightStartStat(token) ||
+    (token match {
+      // might continue cond or start body
+      case _: Ident | _: LeftBrace | _: LeftBracket | _: LeftParen | _: Underscore =>
+        dialect.allowQuietSyntax && condEndAt(cond, pos) >= 0
+      case _ => false
+    })
   }
 
   /* the index of the token that ends `cond` if the condition continues to it from `pos`, or -1;
