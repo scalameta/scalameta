@@ -6,6 +6,7 @@ import org.scalameta._
 import org.scalameta.invariants.InvariantFailedException
 import scala.meta.classifiers._
 import scala.meta.inputs._
+import scala.meta.internal.NullableOps._
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.prettyprinters.{TreeSyntacticGroup => TSG}
@@ -337,7 +338,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     def begIndex = prevIndex + 1
   }
   implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.fold[Pos](AutoPos)(treeToTreePos)
-  implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption
+  implicit def modsToPos(mods: List[Mod]): Pos =
+    if (mods.isEmpty) AutoPos else treeToTreePos(mods.head)
 
   def atPos[T <: Tree](start: StartPos, end: EndPos)(body: => T): T =
     atPos(start.begIndex, end)(body)
@@ -522,7 +524,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
                 after = b.name
                 b.mods.dropWhile(_.begTokenIdx < start) // the clause's `implicit` or `using`
               case b: Ctor.Primary =>
-                after = b.paramClauses.headOption.orNull
+                after = b.paramClauses.headOrNull
                 b.mods
               case b: Term.MatchLike =>
                 after = b.expr
@@ -792,8 +794,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
           var tree = next
           while (tree ne null) {
             tree.privateSetBegComment(group)
-            tree = tree.children.find(_.begTokenIdx == next.begTokenIdx).filter(_.begComment == old)
-              .orNull
+            val kids = tree.children.dropWhile(_.begTokenIdx != next.begTokenIdx)
+            tree = if (kids.nonEmpty && kids.head.begComment == old) kids.head else null
           }
         case None =>
       }
@@ -1052,7 +1054,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       tok: Token,
       exists: Boolean,
   )(msg: => String, prefix: => String): Unit = if (tok.is[T] != exists)
-    syntaxError(Option(prefix).filter(_.nonEmpty).fold(msg)(p => s"$p: $msg"), at = tok)
+    syntaxError(prefix.nnIf(_.nonEmpty).nnFold(msg)(p => s"$p: $msg"), at = tok)
 
   @inline
   private def expectAt[T <: Token: ClassTag](tok: Token, prefix: => String = ""): Unit =
@@ -1903,11 +1905,11 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     val startsAtBof = prev[BOF]
     def afterDot[A <: Term.Ref](ref: A)(f: PartialFunction[Token, A => Term.Ref]): Term.Ref =
       if (!at[Dot]) ref
-      else f.lift(peekToken) match {
-        case Some(f) =>
+      else f.applyOrElse(peekToken, (_: Token) => null) match {
+        case null => ref
+        case f =>
           next()
           f(ref)
-        case _ => ref
       }
     @inline
     def maybeSelectors(ref: Term.Ref): Term.Ref = afterDot(ref) { case _: Ident | _: Unquote =>
@@ -3520,17 +3522,16 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
           case Unary(unary) if tryAhead[Literal] => literal(unary)
           case sidToken @ (_: Ident | _: KwThis | _: Unquote) =>
             val sid = stableId()
-            val targs = if (at[LeftBracket]) Some(super.patternTypeArgs()) else None
+            val targs = if (at[LeftBracket]) super.patternTypeArgs() else null
             if (at[LeftParen]) {
               val ref = sid.become[Term]
               Pat.Extract(
-                targs.fold(ref)(x => autoEndPos(sid)(Term.ApplyType(ref, x))),
+                if (targs eq null) ref else autoEndPos(sid)(Term.ApplyType(ref, targs)),
                 autoPos(argumentPatterns().reduceWith(Pat.ArgClause.apply)),
               )
             } else {
-              targs.foreach(x =>
-                syntaxError(s"pattern must be a value or have parens: $sid$x", at = currToken),
-              )
+              if (targs ne null)
+                syntaxError(s"pattern must be a value or have parens: $sid$targs", at = currToken)
               sid match {
                 case name: Term.Name if isNamedTupleOk && acceptOpt[Equals] =>
                   Pat.Assign(name, noSeqWithNamed.pattern())
@@ -3852,7 +3853,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
           // can't have consecutive type clauses (so params must be present)
           // also, only the very last param may contain implicit
           pcg.is[Quasi] ||
-          pcg.paramClauses.lastOption.exists(pc => pc.is[Quasi] || !pc.mod.is[Mod.Implicit])
+          pcg.paramClauses.lastOrNull.nnHas(pc => pc.is[Quasi] || !pc.mod.is[Mod.Implicit])
         }
       }) {},
   )
@@ -3960,8 +3961,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       tparamModifiers(buf)
     }
     def endTparamQuasi = at[RightBracket, Comma]
-    mods.headOption match {
-      case Some(q: Mod.Quasi) if endTparamQuasi => q.become[Type.Param]
+    mods match {
+      case (q: Mod.Quasi) :: _ if endTparamQuasi => q.become[Type.Param]
       case _ =>
         val name = currToken match {
           case t: Ident => peekToken match {
@@ -4395,7 +4396,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       if (ok) pcgbuf += atPos(tpc, arrowPos)(Member.ParamClauseGroup(tpc, pcbuf.toList))
       pcbuf.clear()
     }
-    if (pcbuf.lastOption.exists(!_.nonEmpty)) { // empty clause ends `GivenConditional`
+    if (pcbuf.nonEmpty && !pcbuf.last.nonEmpty) { // empty clause ends `GivenConditional`
       flushPcBuf()
       GivenSig(name, pcgbuf.toList)
     } else if (isAfterOptNewLine[LeftParen]) {
@@ -4689,7 +4690,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     try autoEndPos(startPos) {
         val args = argss
         // put name at arguments or right after the type otherwise
-        val name = anonNameAt(args.headOption.fold[StartPos](AfterPrevPos)(treeToTreePos))
+        val name = anonNameAt(if (args.isEmpty) AfterPrevPos else treeToTreePos(args.head))
         Init(tpe, name, args)
       }
     catch {
@@ -4981,9 +4982,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
   def quasiquoteStat(): Stat = {
     def failEmpty() = syntaxError("unexpected end of input", at = currToken)
-    def failMix(advice: Option[String]) = {
+    def failMix(advice: String) = {
       val message = "these statements can't be mixed together"
-      val addendum = advice.fold("")(", " + _)
+      val addendum = advice.nnFold("")(", " + _)
       syntaxError(message + addendum, at = tokens.head)
     }
     statSeq(consumeStat) match {
@@ -4991,8 +4992,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       case (stat @ Stat.Quasi(1, _)) :: Nil => toBlockRaw(List(stat))
       case stat :: Nil => stat
       case stats if stats.forall(_.isBlockStat) => toBlockRaw(stats)
-      case stats if stats.forall(_.isTopLevelStat) => failMix(Some("try source\"...\" instead"))
-      case _ => failMix(None)
+      case stats if stats.forall(_.isTopLevelStat) => failMix("try source\"...\" instead")
+      case _ => failMix(null)
     }
   }
 
@@ -5075,10 +5076,10 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     doWhile(skipAllStatSep())(cond(currToken))
   }
 
-  def localDef(implicitMod: Option[Mod.Implicit]): Stat = {
+  def localDef(implicitMod: Mod.Implicit): Stat = {
     val mods = listBy[Mod] { buf =>
       annotsBuf(buf, skipNewLines = true)
-      implicitMod.foreach(buf += _)
+      if (implicitMod ne null) buf += implicitMod
       modifiersBuf(buf, isLocal = true)
     }
     if (mods.forall {
@@ -5099,8 +5100,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
         val implicitPos = currIndex
         next()
         if (at[Ident] && !isSoftModifier(currIndex)) implicitClosure(BlockStat)
-        else localDef(Some(atPos(implicitPos)(Mod.Implicit())))
-      case t if !isNonlocalModifier(t) && isDefIntro(currIndex) => localDef(None)
+        else localDef(atPos(implicitPos)(Mod.Implicit()))
+      case t if !isNonlocalModifier(t) && isDefIntro(currIndex) => localDef(null)
       case _ if isAtEndMarker() => endMarker()
       case _ if isIdentOrExprIntro(currToken) =>
         stat(expr(location = BlockStat, allowRepeated = allowRepeated))
