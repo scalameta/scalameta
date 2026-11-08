@@ -119,7 +119,7 @@ sealed trait RegionControlCond extends RegionControl {
 sealed trait RegionControlMaybeCond extends RegionControl {
   final def isTerminatingTokenRequired(): Boolean = false
   def asCond(): RegionControlCond
-  def asBody(): Option[RegionControl]
+  def asBody(): RegionControl
 }
 
 sealed trait RegionWhile extends RegionControl {
@@ -133,7 +133,7 @@ object RegionWhile {
 case object RegionWhileCond extends RegionControlCond with RegionWhile
 case object RegionWhileMaybeCond extends RegionControlMaybeCond with RegionWhile {
   def asCond(): RegionControlCond = RegionWhileCond
-  def asBody(): Option[RegionControl] = None
+  def asBody(): RegionControl = null
 }
 
 sealed trait RegionIf extends RegionControl {
@@ -149,7 +149,7 @@ case object RegionIfCond extends RegionControlCond with RegionIf {
 }
 case object RegionIfMaybeCond extends RegionControlMaybeCond with RegionIf {
   def asCond(): RegionControlCond = RegionIfCond
-  def asBody(): Option[RegionControl] = Some(RegionThen)
+  def asBody(): RegionControl = RegionThen
 }
 
 /**
