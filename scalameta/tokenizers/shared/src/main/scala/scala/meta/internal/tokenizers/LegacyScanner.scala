@@ -10,7 +10,7 @@ import scala.meta.internal.tokens.Chars._
 import scala.annotation.{switch, tailrec}
 import scala.collection.mutable
 
-private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
+private[meta] final class LegacyScanner(input: Input, dialect: Dialect) {
 
   import LegacyToken._
 

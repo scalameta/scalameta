@@ -7,7 +7,7 @@ import scala.meta.contrib.equality.{Equal, TreeEquality}
 import scala.language.higherKinds
 
 trait TreeExtensions {
-  implicit class XtensionTreeOps[A <: Tree](a: A) {
+  implicit final class XtensionTreeOps[A <: Tree](a: A) {
     @inline
     def ancestors: List[Tree] = TreeOps.ancestors(a)
 

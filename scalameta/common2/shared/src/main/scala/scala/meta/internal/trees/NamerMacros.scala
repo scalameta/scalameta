@@ -66,9 +66,10 @@ trait CommonNamerMacros extends MacroHelpers {
 
   private val quasiTypeName = TypeName(CommonNamerMacros.quasiName)
   @inline
-  private[trees] def isQuasiClass(cdef: ClassDef) = isQuasiName(cdef.name)
+  private[trees] final def isQuasiClass(cdef: ClassDef) = isQuasiName(cdef.name)
   @inline
-  private[trees] def isQuasiName(name: TypeName) = name.toString == CommonNamerMacros.quasiName
+  private[trees] final def isQuasiName(name: TypeName) = name.toString ==
+    CommonNamerMacros.quasiName
 
   private def mkQuasiParent(parent: Tree): Tree = parent match {
     case Ident(name) => Select(Ident(name.toTermName), quasiTypeName)

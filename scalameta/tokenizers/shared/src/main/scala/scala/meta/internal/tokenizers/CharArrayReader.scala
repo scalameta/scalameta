@@ -4,7 +4,7 @@ package tokenizers
 
 import scala.meta.internal.tokens.Chars._
 
-private[meta] case class CharArrayReader(
+private[meta] final case class CharArrayReader(
     buf: Array[Char],
     dialect: Dialect,
     /** the last read character */

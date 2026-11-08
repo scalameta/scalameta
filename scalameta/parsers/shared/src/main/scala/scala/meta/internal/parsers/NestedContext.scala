@@ -11,7 +11,7 @@ private[parsers] trait NestedContext {
   @inline
   def isInside() = isDeeper(0)
   @inline
-  def isDeeper(level: Int) = nested > level
+  final def isDeeper(level: Int) = nested > level
 }
 
 private[parsers] abstract class NestedContextWithOwner[A <: AnyRef](private var _owner: A)
