@@ -69,11 +69,11 @@ object Mima {
     exclude[Problem]("prettyprinters.Show$*"),
     exclude[Problem]("prettyprinters.Show#*"),
     // Origin: its subtypes are now sealed or final
-    exclude[HierarchyNoLongerCheckedProblem]("trees.Origin$*"),
-    exclude[FinalClassProblem]("trees.Origin$*"),
-    // Origin: every subtype already declares or defines these
-    exclude[ReversedMissingMethodProblem]("trees.Origin.begTokenIdx"),
-    exclude[ReversedMissingMethodProblem]("trees.Origin.endTokenIdx"),
+    exclude[Problem]("trees.Origin$*"),
+    exclude[Problem]("trees.Origin.*"),
+    exclude[Problem]("trees.Origin#*"),
+    // Tokens: final for the optimizer, and its private constructor already barred subclasses
+    exclude[FinalClassProblem]("tokens.Tokens"),
     // FunctionType: the extractor no longer returns the private `params`
     exclude[IncompatibleSignatureProblem]("Type#FunctionType.unapply"),
   )

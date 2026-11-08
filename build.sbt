@@ -647,6 +647,13 @@ lazy val sharedSettings = Def.settings(
   scalacOptions ++= { if (isScala212.value) Nil else List("-Xfatal-warnings") },
   scalacOptions ++= { if (isScala213.value) List("-Wconf:cat=deprecation:is") else Nil },
   scalacOptions ++= {
+    if (isScala213.value) List("-opt:inline:scala.meta.**", "-Wopt:at-inline-failed")
+    else if (isScala212.value) List("-opt:l:inline", "-opt-inline-from:scala.meta.**")
+    else Nil
+  },
+  // test code stands in for a client, which does not inline scalameta
+  Test / scalacOptions ~= (_.filterNot(_.startsWith("-opt"))),
+  scalacOptions ++= {
     if (isScala3.value) List(
       "-Wconf:msg=.*no longer supported for vararg splices.*:silent",
       "-Wconf:msg=.*Implicit parameters should be provided.*:silent",

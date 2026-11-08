@@ -48,7 +48,7 @@ object Origin {
     val source: ParsedSource
 
     @inline
-    def allInputTokens() = source.tokens
+    final def allInputTokens() = source.tokens
 
     override def begOffset: Int = allInputTokens()(begTokenIdx).start
     override def endOffset: Int = allInputTokens()(endTokenIdx - 1).end
@@ -61,9 +61,9 @@ object Origin {
     private[meta] def tokensOpt: Option[Tokens] = Some(tokens)
 
     @inline
-    def input: Input = source.input
+    final def input: Input = source.input
     @inline
-    def dialect: Dialect = source.dialect
+    final def dialect: Dialect = source.dialect
     def tokens: Tokens = allInputTokens().slice(begTokenIdx, endTokenIdx)
 
   }

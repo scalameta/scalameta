@@ -6,7 +6,7 @@ import scala.meta.tokens.Token
 
 import java.math.{MathContext, RoundingMode}
 
-private[meta] class LegacyTokenData {
+private[meta] final class LegacyTokenData {
 
   import LegacyToken._
 

@@ -25,7 +25,9 @@ import scala.language.implicitConversions
 import scala.reflect.{ClassTag, classTag}
 import scala.util.{Success, Try}
 
-class ScalametaParser private (scannerTokens: ScannerTokens)(implicit options: ParserOptions) {
+final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
+    options: ParserOptions,
+) {
   parser =>
 
   import ScalametaParser._
@@ -1647,7 +1649,7 @@ class ScalametaParser private (scannerTokens: ScannerTokens)(implicit options: P
       else infixType(inMatchType = inMatchType)
 
     @inline
-    def infixType(inMatchType: Boolean = false, inGivenSig: Boolean = false): Type =
+    final def infixType(inMatchType: Boolean = false, inGivenSig: Boolean = false): Type =
       maybeAnonymousLambda(infixTypeRest(
         compoundType(inMatchType = inMatchType, inGivenSig = inGivenSig),
         inMatchType = inMatchType,
@@ -1655,7 +1657,11 @@ class ScalametaParser private (scannerTokens: ScannerTokens)(implicit options: P
       ))
 
     @inline
-    def infixTypeRest(t: Type, inMatchType: Boolean = false, inGivenSig: Boolean = false): Type =
+    final def infixTypeRest(
+        t: Type,
+        inMatchType: Boolean = false,
+        inGivenSig: Boolean = false,
+    ): Type =
       if (dialect.useInfixTypePrecedence)
         infixTypeRestWithPrecedence(t, inMatchType = inMatchType, inGivenSig = inGivenSig)
       else infixTypeRestImpl(t, identity, inMatchType = inMatchType, inGivenSig = inGivenSig)
@@ -1675,13 +1681,20 @@ class ScalametaParser private (scannerTokens: ScannerTokens)(implicit options: P
         val op = typeName()
         newLineOptWhenFollowedBy(TypeIntro)
         val typ = compoundType(inMatchType = inMatchType, inGivenSig = inGivenSig)
-        def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
         if (op.isLeftAssoc)
-          infixTypeRestImpl(mkOp(typ), f, inMatchType = inMatchType, inGivenSig = inGivenSig)
-        else
-          infixTypeRestImpl(typ, f.compose(mkOp), inMatchType = inMatchType, inGivenSig = inGivenSig)
+          infixTypeRestImpl(mkOp(t, op)(typ), f, inMatchType = inMatchType, inGivenSig = inGivenSig)
+        else infixTypeRestImpl(
+          typ,
+          f.compose(mkOp(t, op)),
+          inMatchType = inMatchType,
+          inGivenSig = inGivenSig,
+        )
       } else f(t)
     }
+
+    // a local method of a trait is private in bytecode, so `infixTypeRest` would not inline
+    private[parsers] def mkOp(t: Type, op: Type.Name)(t1: Type) =
+      atPos(t, t1)(Type.ApplyInfix(t, op, t1))
 
     private final def infixTypeRestWithPrecedence(
         t: Type,
