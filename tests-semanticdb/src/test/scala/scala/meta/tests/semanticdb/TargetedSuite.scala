@@ -297,6 +297,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:18..2:19): x => u/O.f().(x)
        |[3:6..3:7): y <= u/O.y.
        |[3:10..3:11): f => u/O.f().
+       |[3:13..3:14): x => u/O.f().(x)
        |[4:8..4:9): K <= u/O.K#
        |[4:9..4:9):  <= u/O.K#`<init>`().
        |[4:10..4:11): x <= u/O.K#`<init>`().(x)
@@ -334,12 +335,16 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:12..3:13): x => ua/A.f().(x)
        |[4:6..4:7): b <= ua/A.b.
        |[4:10..4:11): f => ua/A.f().
+       |[4:14..4:15): x => ua/A.f().(x)
        |[5:6..5:7): c <= ua/A.c.
        |[5:11..5:12): f => ua/A.f().
+       |[6:5..6:6): x => ua/A.f().(x)
        |[7:6..7:7): d <= ua/A.d.
        |[7:10..7:11): f => ua/A.f().
+       |[7:21..7:22): x => ua/A.f().(x)
        |[8:6..8:7): e <= ua/A.e.
        |[8:11..8:12): f => ua/A.f().
+       |[9:5..9:6): x => ua/A.f().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -378,9 +383,11 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:12..3:13): x => ub/B.o.apply().(x)
        |[4:6..4:7): b <= ub/B.b.
        |[4:10..4:11): o => ub/B.o.
+       |[4:13..4:14): x => ub/B.o.apply().(x)
        |[5:6..5:7): c <= ub/B.c.
        |[5:10..5:11): o => ub/B.o.
        |[5:12..5:17): apply => ub/B.o.apply().
+       |[5:19..5:20): x => ub/B.o.apply().(x)
        |[6:6..6:7): g <= ub/B.g().
        |[6:8..6:9): T <= ub/B.g().[T]
        |[6:11..6:12): x <= ub/B.g().(x)
@@ -393,6 +400,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[8:6..8:7): e <= ub/B.e.
        |[8:10..8:11): g => ub/B.g().
        |[8:12..8:15): Int => scala/Int#
+       |[8:18..8:19): x => ub/B.g().(x)
        |[9:6..9:7): f <= ub/B.f.
        |[9:10..9:11): g => ub/B.g().
        |[9:13..9:16): Int => scala/Int#
@@ -408,8 +416,10 @@ class TargetedSuite extends SemanticdbSuite {
        |[11:15..11:16): y => ub/B.h().(y)
        |[12:6..12:7): j <= ub/B.j.
        |[12:10..12:11): h => ub/B.h().
+       |[12:16..12:17): y => ub/B.h().(y)
        |[13:6..13:7): k <= ub/B.k.
        |[13:10..13:11): h => ub/B.h().
+       |[13:13..13:14): x => ub/B.h().(x)
        |[13:20..13:21): y => ub/B.h().(y)
        |[14:6..14:7): m <= ub/B.m().
        |[14:8..14:9): x <= ub/B.m().(x)
@@ -417,10 +427,13 @@ class TargetedSuite extends SemanticdbSuite {
        |[14:18..14:19): x => ub/B.m().(x)
        |[15:6..15:7): l <= ub/B.l.
        |[15:15..15:16): m => ub/B.m().
+       |[15:18..15:19): x => ub/B.m().(x)
        |[16:6..16:7): n <= ub/B.n.
        |[16:15..16:16): m => ub/B.m().
+       |[16:18..16:19): x => ub/B.m().(x)
        |[17:6..17:7): p <= ub/B.p.
        |[17:15..17:16): m => ub/B.m().
+       |[17:17..17:18): x => ub/B.m().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -462,6 +475,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:62..2:62):  => uc/Q#
        |[2:67..2:67):  => uc/P#
        |[2:68..2:69): f => uc/P#f().
+       |[2:71..2:72): x => uc/P#f().(x)
        |[3:6..3:7): K <= uc/K#
        |[3:7..3:7):  <= uc/K#`<init>`().
        |[3:8..3:9): x <= uc/K#`<init>`().(x)
@@ -573,6 +587,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[5:6..5:7): b <= ud/D.b.
        |[5:10..5:11): c => ud/D.c.
        |[5:12..5:16): copy => ud/C#copy().
+       |[5:18..5:19): y => ud/C#copy().(y)
        |[6:6..6:7): d <= ud/D.d().
        |[6:8..6:9): x <= ud/D.d().(x)
        |[6:11..6:14): Int => scala/Int#
@@ -584,6 +599,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[7:12..7:13): y => ud/D.d().(y)
        |[8:6..8:7): f <= ud/D.f.
        |[8:10..8:11): d => ud/D.d().
+       |[8:13..8:14): y => ud/D.d().(y)
        |[9:6..9:7): v <= ud/D.v().
        |[9:8..9:9): x <= ud/D.v().(x)
        |[9:11..9:14): Int => scala/Int#
@@ -595,6 +611,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[10:12..10:13): x => ud/D.v().(x)
        |[11:6..11:7): h <= ud/D.h.
        |[11:10..11:11): v => ud/D.v().
+       |[11:13..11:14): x => ud/D.v().(x)
        |[12:6..12:8): mk <= ud/D.mk().
        |[13:6..13:7): m <= ud/D.m().
        |[13:8..13:9): x <= ud/D.m().(x)
@@ -610,9 +627,13 @@ class TargetedSuite extends SemanticdbSuite {
        |[15:6..15:7): j <= ud/D.j.
        |[15:10..15:12): mk => ud/D.mk().
        |[15:15..15:16): m => ud/D.m().
+       |[15:18..15:19): y => ud/D.m().(y)
+       |[15:25..15:26): x => ud/D.m().(x)
        |[16:6..16:7): k <= ud/D.k.
        |[16:10..16:12): mk => ud/D.mk().
        |[16:16..16:17): m => ud/D.m().
+       |[16:19..16:20): y => ud/D.m().(y)
+       |[16:26..16:27): x => ud/D.m().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -743,10 +764,11 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:6..6:7): a <= uh/H.a.
        |[6:9..6:10): S => uh/H.S#
        |[6:13..6:14): f => uh/H.f().
-       |[6:15..6:16): x => uh/H.conv().(x)
+       |[6:15..6:16): x => uh/H.f().(x)
        |[7:6..7:7): b <= uh/H.b.
        |[7:9..7:10): S => uh/H.S#
        |[7:13..7:14): f => uh/H.f().
+       |[7:16..7:17): x => uh/H.f().(x)
        |[8:8..8:9): T <= uh/H.T#
        |[8:9..8:9):  <= uh/H.T#`<init>`().
        |[8:14..8:15): v <= uh/H.T#`<init>`().(v)
@@ -862,9 +884,13 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:6..3:7): a <= uj/J.a.
        |[3:15..3:16): m => uj/J.m().
        |[3:17..3:20): Int => scala/Int#
+       |[3:23..3:24): y => uj/J.m().(y)
+       |[3:30..3:31): x => uj/J.m().(x)
        |[4:6..4:7): b <= uj/J.b.
        |[4:15..4:16): m => uj/J.m().
        |[4:17..4:20): Int => scala/Int#
+       |[4:22..4:23): y => uj/J.m().(y)
+       |[4:29..4:30): x => uj/J.m().(x)
        |[5:6..5:7): c <= uj/J.c.
        |[5:15..5:16): m => uj/J.m().
        |[5:17..5:20): Int => scala/Int#
@@ -873,6 +899,8 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:6..6:7): d <= uj/J.d.
        |[6:15..6:16): m => uj/J.m().
        |[6:17..6:20): Int => scala/Int#
+       |[6:23..6:24): y => uj/J.m().(y)
+       |[6:30..6:31): x => uj/J.m().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -908,6 +936,8 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:19..4:20): x => uk/K.m().(x)
        |[5:6..5:7): b <= uk/K.b.
        |[5:10..5:11): m => uk/K.m().
+       |[5:13..5:14): z => uk/K.m().(z)
+       |[5:20..5:21): x => uk/K.m().(x)
        |[6:6..6:7): c <= uk/K.c.
        |[6:10..6:12): mk => uk/K.mk().
        |[6:15..6:16): m => uk/K.m().
@@ -916,6 +946,8 @@ class TargetedSuite extends SemanticdbSuite {
        |[7:6..7:7): d <= uk/K.d.
        |[7:10..7:12): mk => uk/K.mk().
        |[7:15..7:16): m => uk/K.m().
+       |[7:18..7:19): z => uk/K.m().(z)
+       |[7:25..7:26): x => uk/K.m().(x)
        |[8:6..8:7): e <= uk/K.e.
        |[8:10..8:12): mk => uk/K.mk().
        |[8:15..8:16): m => uk/K.m().
@@ -923,6 +955,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[9:6..9:7): f <= uk/K.f.
        |[9:10..9:12): mk => uk/K.mk().
        |[9:15..9:16): m => uk/K.m().
+       |[9:18..9:19): x => uk/K.m().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -957,6 +990,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:12..4:13): x => ul/L.f().(x)
        |[5:6..5:7): b <= ul/L.b.
        |[5:10..5:11): f => ul/L.f().
+       |[5:13..5:14): x => ul/L.f().(x)
        |[6:6..6:7): c <= ul/L.c.
        |[6:10..6:11): f => ul/L.f().
        |[6:12..6:13): x => ul/L.f().(x)
@@ -964,6 +998,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[7:6..7:7): d <= ul/L.d.
        |[7:10..7:11): f => ul/L.f().
        |[7:12..7:13): x => ul/L.f().(x)
+       |[7:20..7:21): y => ul/L.f().(y)
        |""".stripMargin,
     "Occurrences",
   )
@@ -1038,6 +1073,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[9:6..9:7): b <= um/M.b.
        |[9:12..9:14): -> => scala/Predef.ArrowAssoc#`->`().
        |[9:15..9:16): g => um/M.g().
+       |[9:18..9:19): y => um/M.g().(y)
        |[10:6..10:7): c <= um/M.c.
        |[10:15..10:16): m => um/M.m().
        |[10:17..10:18): g => um/M.g().
@@ -1045,6 +1081,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[11:6..11:7): d <= um/M.d.
        |[11:15..11:16): m => um/M.m().
        |[11:17..11:18): g => um/M.g().
+       |[11:20..11:21): y => um/M.g().(y)
        |[12:6..12:9): arr <= um/M.arr.
        |[12:12..12:17): Array => scala/Array.
        |[13:2..13:5): arr => um/M.arr.
@@ -1052,6 +1089,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[13:13..13:14): x => um/M.h().(x)
        |[14:2..14:5): arr => um/M.arr.
        |[14:11..14:12): h => um/M.h().
+       |[14:14..14:15): x => um/M.h().(x)
        |[15:2..15:5): arr => um/M.arr.
        |[15:9..15:11): += => scala/Int#`+`(+4).
        |[15:12..15:13): h => um/M.h().
@@ -1059,11 +1097,13 @@ class TargetedSuite extends SemanticdbSuite {
        |[16:2..16:5): arr => um/M.arr.
        |[16:9..16:11): += => scala/Int#`+`(+4).
        |[16:12..16:13): h => um/M.h().
+       |[16:15..16:16): x => um/M.h().(x)
        |[17:7..17:8): v => um/M.`v_=`().
        |[17:11..17:12): g => um/M.g().
        |[17:13..17:14): y => um/M.g().(y)
        |[18:7..18:8): v => um/M.`v_=`().
        |[18:11..18:12): g => um/M.g().
+       |[18:14..18:15): y => um/M.g().(y)
        |[19:6..19:7): w <= um/M.w().
        |[20:2..20:3): w => um/M.`w_=`().
        |[20:4..20:6): += => scala/Int#`+`(+4).
@@ -1072,6 +1112,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[21:2..21:3): w => um/M.`w_=`().
        |[21:4..21:6): += => scala/Int#`+`(+4).
        |[21:7..21:8): h => um/M.h().
+       |[21:10..21:11): x => um/M.h().(x)
        |[22:6..22:7): e <= um/M.e.
        |[22:15..22:16): a <= local0
        |[22:20..22:26): Option => scala/Option.
@@ -1082,6 +1123,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[23:15..23:16): a <= local1
        |[23:20..23:26): Option => scala/Option.
        |[23:37..23:38): p => um/M.p().
+       |[23:40..23:41): f => um/M.p().(f)
        |[23:44..23:45): a => local1
        |[24:7..24:8): a <= local2
        |[24:12..24:18): Option => scala/Option.
@@ -1091,6 +1133,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[25:7..25:8): a <= local3
        |[25:12..25:18): Option => scala/Option.
        |[25:23..25:24): p => um/M.p().
+       |[25:26..25:27): f => um/M.p().(f)
        |[25:30..25:31): a => local3
        |""".stripMargin,
     "Occurrences",
@@ -1122,14 +1165,16 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:18..3:19): P => un/P.
        |[4:6..4:7): a <= un/N.a.
        |[4:10..4:11): k => un/N.k().
-       |[4:12..4:13): z => un/P.apply().(z)
+       |[4:12..4:13): z => un/N.k().(z)
        |[4:19..4:20): z => un/P.apply().(z)
        |[5:6..5:7): b <= un/N.b.
        |[5:10..5:11): k => un/N.k().
+       |[5:13..5:14): z => un/N.k().(z)
        |[5:20..5:21): z => un/P.apply().(z)
        |[6:6..6:7): c <= un/N.c.
        |[6:10..6:11): k => un/N.k().
-       |[6:12..6:13): z => un/P.apply().(z)
+       |[6:12..6:13): z => un/N.k().(z)
+       |[6:20..6:21): z => un/P.apply().(z)
        |[7:6..7:7): d <= un/N.d.
        |[7:10..7:11): k => un/N.k().
        |[7:12..7:13): z => un/N.k().(z)
@@ -1171,10 +1216,11 @@ class TargetedSuite extends SemanticdbSuite {
        |[5:19..5:20): x => uo/O.mk().(x)
        |[6:6..6:7): a <= uo/O.a.
        |[6:10..6:12): mk => uo/O.mk().
-       |[6:13..6:14): x => uo/O.conv().(x)
+       |[6:13..6:14): x => uo/O.mk().(x)
        |[6:20..6:23): ext => uo/O.E#ext().
        |[7:6..7:7): b <= uo/O.b.
        |[7:10..7:12): mk => uo/O.mk().
+       |[7:14..7:15): x => uo/O.mk().(x)
        |[7:21..7:24): ext => uo/O.E#ext().
        |""".stripMargin,
     "Occurrences",
@@ -1352,7 +1398,6 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:15..6:15):  => ur/D#`<init>`().
        |[7:6..7:7): a <= ur/R.a.
        |[7:10..7:11): d => ur/R.d.
-       |[7:16..7:20): name => ur/D#applyDynamicNamed().(name)
        |[8:6..8:7): b <= ur/R.b.
        |[8:10..8:11): d => ur/R.d.
        |[9:6..9:7): c <= ur/R.c.
@@ -1383,6 +1428,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:12..3:13): x => us/S.f().(x)
        |[4:6..4:7): b <= us/S.b.
        |[4:10..4:11): f => us/S.f().
+       |[4:13..4:14): x => us/S.f().(x)
        |[5:6..5:7): c <= us/S.c.
        |[5:10..5:11): f => us/S.f().
        |[5:12..5:13): x => us/S.f().(x)
@@ -1427,6 +1473,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:12..6:13): x => ut/T.f().(x)
        |[7:6..7:7): b <= ut/T.b.
        |[7:10..7:11): f => ut/T.f().
+       |[7:13..7:14): x => ut/T.f().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -1488,15 +1535,19 @@ class TargetedSuite extends SemanticdbSuite {
        |[7:18..7:19): x => uu/U.f().(x)
        |[8:6..8:7): b <= uu/U.b.
        |[8:10..8:11): o => uu/U.o().
+       |[8:13..8:14): y => uu/U.o().(y)
        |[8:17..8:18): f => uu/U.f().
        |[8:19..8:20): x => uu/U.f().(x)
        |[9:6..9:7): c <= uu/U.c.
        |[9:10..9:11): o => uu/U.o().
        |[9:12..9:13): y => uu/U.o().(y)
        |[9:16..9:17): f => uu/U.f().
+       |[9:19..9:20): x => uu/U.f().(x)
        |[10:6..10:7): d <= uu/U.d.
        |[10:10..10:11): o => uu/U.o().
+       |[10:13..10:14): y => uu/U.o().(y)
        |[10:17..10:18): f => uu/U.f().
+       |[10:20..10:21): x => uu/U.f().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -1586,7 +1637,9 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:6..3:9): arr <= uw/W.arr.
        |[3:12..3:17): Array => scala/Array.
        |[4:2..4:5): arr => uw/W.arr.
+       |[4:6..4:7): i => scala/Array#update().(i)
        |[5:2..5:5): arr => uw/W.arr.
+       |[5:7..5:8): i => scala/Array#update().(i)
        |[6:2..6:5): arr => uw/W.arr.
        |[6:6..6:12): update => scala/Array#update().
        |[6:13..6:14): i => scala/Array#update().(i)
@@ -1595,7 +1648,9 @@ class TargetedSuite extends SemanticdbSuite {
        |[7:14..7:15): M => uw/M#
        |[7:15..7:15):  => uw/M#`<init>`().
        |[8:2..8:3): m => uw/W.m.
+       |[8:4..8:5): k => uw/M#update().(k)
        |[9:2..9:3): m => uw/W.m.
+       |[9:5..9:6): k => uw/M#update().(k)
        |""".stripMargin,
     "Occurrences",
   )
@@ -1688,6 +1743,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:12..3:13): x => uz/Z.f().(x)
        |[4:6..4:7): b <= uz/Z.b.
        |[4:10..4:11): f => uz/Z.f().
+       |[4:13..4:14): x => uz/Z.f().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -1729,12 +1785,12 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:9..6:10): S => va/S#
        |[6:17..6:18): K => va/K#
        |[6:18..6:18):  => va/K#`<init>`().
-       |[6:19..6:20): x => va/A.conv().(x)
+       |[6:19..6:20): x => va/K#`<init>`().(x)
        |[7:6..7:7): b <= va/A.b.
        |[7:9..7:10): S => va/S#
        |[7:17..7:18): K => va/K#
        |[7:19..7:19):  => va/K#`<init>`().
-       |[7:20..7:21): x => va/A.conv().(x)
+       |[7:20..7:21): x => va/K#`<init>`().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -1776,30 +1832,32 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:6..3:7): a <= vb/B.a.
        |[3:14..3:15): K => vb/K#
        |[3:15..3:15):  => vb/K#`<init>`().
-       |[3:16..3:17): x => vb/K#m().(x)
+       |[3:16..3:17): x => vb/K#`<init>`().(x)
        |[3:23..3:24): m => vb/K#m().
        |[4:6..4:7): b <= vb/B.b.
        |[4:14..4:15): K => vb/K#
        |[4:15..4:15):  => vb/K#`<init>`().
-       |[4:16..4:17): x => vb/K#m().(x)
+       |[4:16..4:17): x => vb/K#`<init>`().(x)
        |[4:23..4:24): m => vb/K#m().
        |[4:25..4:26): x => vb/K#m().(x)
        |[5:6..5:7): c <= vb/B.c.
        |[5:14..5:15): K => vb/K#
        |[5:16..5:16):  => vb/K#`<init>`().
-       |[5:17..5:18): x => vb/K#m().(x)
+       |[5:17..5:18): x => vb/K#`<init>`().(x)
        |[5:24..5:25): m => vb/K#m().
        |[5:26..5:27): x => vb/K#m().(x)
        |[6:6..6:7): d <= vb/B.d.
        |[6:14..6:15): K => vb/K#
        |[6:15..6:15):  => vb/K#`<init>`().
-       |[6:16..6:17): x => vb/K#m().(x)
+       |[6:16..6:17): x => vb/K#`<init>`().(x)
        |[6:23..6:24): m => vb/K#m().
+       |[6:26..6:27): x => vb/K#m().(x)
        |[7:6..7:7): e <= vb/B.e.
        |[7:14..7:15): K => vb/K#
        |[7:16..7:16):  => vb/K#`<init>`().
-       |[7:17..7:18): x => vb/K#m().(x)
+       |[7:17..7:18): x => vb/K#`<init>`().(x)
        |[7:24..7:25): m => vb/K#m().
+       |[7:27..7:28): x => vb/K#m().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -1877,14 +1935,22 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:33..3:34): c => vd/D.h().(c)
        |[4:6..4:7): q <= vd/D.q.
        |[4:10..4:11): h => vd/D.h().
+       |[4:13..4:14): b => vd/D.h().(b)
+       |[4:20..4:21): a => vd/D.h().(a)
        |[4:27..4:28): d => vd/D.h().(d)
        |[4:34..4:35): c => vd/D.h().(c)
        |[5:6..5:7): r <= vd/D.r.
        |[5:10..5:11): h => vd/D.h().
        |[5:12..5:13): b => vd/D.h().(b)
        |[5:19..5:20): a => vd/D.h().(a)
+       |[5:27..5:28): d => vd/D.h().(d)
+       |[5:34..5:35): c => vd/D.h().(c)
        |[6:6..6:7): s <= vd/D.s.
        |[6:10..6:11): h => vd/D.h().
+       |[6:13..6:14): b => vd/D.h().(b)
+       |[6:20..6:21): a => vd/D.h().(a)
+       |[6:28..6:29): d => vd/D.h().(d)
+       |[6:35..6:36): c => vd/D.h().(c)
        |""".stripMargin,
     "Occurrences",
   )
@@ -1921,6 +1987,8 @@ class TargetedSuite extends SemanticdbSuite {
        |[5:19..5:20): x => ve/E.m().(x)
        |[6:6..6:7): b <= ve/E.b.
        |[6:10..6:11): m => ve/E.m().
+       |[6:13..6:14): y => ve/E.m().(y)
+       |[6:20..6:21): x => ve/E.m().(x)
        |[7:6..7:7): c <= ve/E.c.
        |[7:10..7:11): m => ve/E.m().
        |[7:12..7:13): y => ve/E.m().(y)
@@ -1929,8 +1997,10 @@ class TargetedSuite extends SemanticdbSuite {
        |[7:23..7:24): x => ve/E.m().(x)
        |[8:6..8:7): d <= ve/E.d.
        |[8:10..8:11): m => ve/E.m().
+       |[8:13..8:14): y => ve/E.m().(y)
        |[8:17..8:18): z => ve/E.z.
        |[8:19..8:20): + => scala/Int#`+`(+4).
+       |[8:24..8:25): x => ve/E.m().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -1966,15 +2036,19 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:6..3:9): arr <= vf/F.arr.
        |[3:12..3:17): Array => scala/Array.
        |[4:2..4:5): arr => vf/F.arr.
+       |[4:6..4:7): i => scala/Array#apply().(i)
        |[4:13..4:15): += => scala/Int#`+`(+4).
        |[5:2..5:5): arr => vf/F.arr.
+       |[5:7..5:8): i => scala/Array#apply().(i)
        |[5:14..5:16): += => scala/Int#`+`(+4).
        |[6:6..6:7): m <= vf/F.m.
        |[6:14..6:15): M => vf/M#
        |[6:15..6:15):  => vf/M#`<init>`().
        |[7:2..7:3): m => vf/F.m.
+       |[7:4..7:5): k => vf/M#apply().(k)
        |[7:11..7:13): += => scala/Int#`+`(+4).
        |[8:2..8:3): m => vf/F.m.
+       |[8:5..8:6): k => vf/M#apply().(k)
        |[8:12..8:14): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -2010,6 +2084,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:16..3:17): x => vg/G.E#ext().(x)
        |[4:6..4:7): b <= vg/G.b.
        |[4:12..4:15): ext => vg/G.E#ext().
+       |[4:17..4:18): x => vg/G.E#ext().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -2229,25 +2304,25 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:15..3:15):  => vl/K#`<init>`().
        |[3:16..3:17): x => vl/K#`<init>`().(x)
        |[3:23..3:24): b => vl/K#apply().(b)
-       |[3:30..3:31): a => vl/K#`<init>`().(a)
+       |[3:30..3:31): a => vl/K#apply().(a)
        |[4:6..4:7): q <= vl/O.q.
        |[4:14..4:15): K => vl/K#
        |[4:16..4:16):  => vl/K#`<init>`().
        |[4:17..4:18): x => vl/K#`<init>`().(x)
        |[4:24..4:25): b => vl/K#apply().(b)
-       |[4:31..4:32): a => vl/K#`<init>`().(a)
+       |[4:31..4:32): a => vl/K#apply().(a)
        |[5:6..5:7): r <= vl/O.r.
        |[5:14..5:15): K => vl/K#
        |[5:15..5:15):  => vl/K#`<init>`().
        |[5:16..5:17): x => vl/K#`<init>`().(x)
        |[5:24..5:25): b => vl/K#apply().(b)
-       |[5:31..5:32): a => vl/K#`<init>`().(a)
+       |[5:31..5:32): a => vl/K#apply().(a)
        |[6:6..6:7): s <= vl/O.s.
        |[6:14..6:15): K => vl/K#
        |[6:16..6:16):  => vl/K#`<init>`().
        |[6:17..6:18): x => vl/K#`<init>`().(x)
        |[6:25..6:26): b => vl/K#apply().(b)
-       |[6:32..6:33): a => vl/K#`<init>`().(a)
+       |[6:32..6:33): a => vl/K#apply().(a)
        |""".stripMargin,
     "Occurrences",
   )
@@ -2274,6 +2349,8 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:20..3:22): _2 => scala/Tuple2.apply().(_2)
        |[4:6..4:7): b <= vm/M.b.
        |[4:10..4:11): f => vm/M.f().
+       |[4:13..4:15): _1 => scala/Tuple2.apply().(_1)
+       |[4:21..4:23): _2 => scala/Tuple2.apply().(_2)
        |""".stripMargin,
     "Occurrences",
   )
@@ -2345,9 +2422,13 @@ class TargetedSuite extends SemanticdbSuite {
        |[13:5..13:6): n => vn/N.n().
        |[13:8..13:10): += => scala/Int#`+`(+4).
        |[14:2..14:5): arr => vn/N.arr.
+       |[14:6..14:7): i => scala/Array#update().(i)
        |[15:2..15:5): arr => vn/N.arr.
+       |[15:7..15:8): i => scala/Array#update().(i)
        |[16:2..16:3): m => vn/N.m.
+       |[16:4..16:5): k => vn/M#update().(k)
        |[17:2..17:3): m => vn/N.m.
+       |[17:5..17:6): k => vn/M#update().(k)
        |""".stripMargin,
     "Occurrences",
   )
@@ -2424,15 +2505,19 @@ class TargetedSuite extends SemanticdbSuite {
        |[5:14..5:15): M => vo/M#
        |[5:15..5:15):  => vo/M#`<init>`().
        |[6:2..6:5): arr => vo/O.arr.
+       |[6:6..6:7): i => scala/Array#apply().(i)
        |[6:10..6:11): n => vo/O.n().
        |[6:13..6:15): += => scala/Int#`+`(+4).
        |[7:2..7:5): arr => vo/O.arr.
+       |[7:7..7:8): i => scala/Array#apply().(i)
        |[7:11..7:12): n => vo/O.n().
        |[7:14..7:16): += => scala/Int#`+`(+4).
        |[8:2..8:3): m => vo/O.m.
+       |[8:4..8:5): k => vo/M#apply().(k)
        |[8:8..8:9): n => vo/O.n().
        |[8:11..8:13): += => scala/Int#`+`(+4).
        |[9:2..9:3): m => vo/O.m.
+       |[9:5..9:6): k => vo/M#apply().(k)
        |[9:9..9:10): n => vo/O.n().
        |[9:12..9:14): += => scala/Int#`+`(+4).
        |""".stripMargin,
@@ -2480,18 +2565,24 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:6..3:9): arr <= vp/O.arr.
        |[3:12..3:17): Array => scala/Array.
        |[4:2..4:5): arr => vp/O.arr.
+       |[4:6..4:7): i => scala/Array#apply().(i)
        |[4:10..4:11): h => vp/O.h().
        |[4:12..4:13): x => vp/O.h().(x)
        |[4:20..4:22): += => scala/Int#`+`(+4).
        |[5:2..5:5): arr => vp/O.arr.
+       |[5:7..5:8): i => scala/Array#apply().(i)
        |[5:11..5:12): h => vp/O.h().
        |[5:13..5:14): x => vp/O.h().(x)
        |[5:21..5:23): += => scala/Int#`+`(+4).
        |[6:2..6:5): arr => vp/O.arr.
+       |[6:6..6:7): i => scala/Array#apply().(i)
        |[6:10..6:11): h => vp/O.h().
+       |[6:13..6:14): x => vp/O.h().(x)
        |[6:21..6:23): += => scala/Int#`+`(+4).
        |[7:2..7:5): arr => vp/O.arr.
+       |[7:7..7:8): i => scala/Array#apply().(i)
        |[7:11..7:12): h => vp/O.h().
+       |[7:14..7:15): x => vp/O.h().(x)
        |[7:22..7:24): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -2558,6 +2649,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:4..6:5): k => vq/M#apply().(k)
        |[6:11..6:13): += => vq/B#`+=`().
        |[7:2..7:3): m => vq/O.m.
+       |[7:5..7:6): k => vq/M#apply().(k)
        |[7:12..7:14): += => vq/B#`+=`().
        |""".stripMargin,
     "Occurrences",
@@ -2608,8 +2700,10 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:14..3:15): M => vr/M#
        |[3:15..3:15):  => vr/M#`<init>`().
        |[4:2..4:3): m => vr/O.m.
+       |[4:4..4:5): k => vr/M#apply().(k)
        |[4:11..4:13): += => scala/Int#`+`(+4).
        |[5:2..5:3): m => vr/O.m.
+       |[5:5..5:6): k => vr/M#apply().(k)
        |[5:12..5:14): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -2653,7 +2747,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:6..3:7): p <= vt/O.p.
        |[3:14..3:15): K => vt/K#
        |[3:15..3:15):  => vt/K#`<init>`().
-       |[3:16..3:17): a => vt/K#apply().(a)
+       |[3:16..3:17): a => vt/K#`<init>`().(a)
        |[3:23..3:24): a => vt/K#apply().(a)
        |[3:30..3:31): b => vt/K#apply().(b)
        |[4:6..4:7): q <= vt/O.q.
@@ -2661,11 +2755,11 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:15..4:15):  => vt/K#`<init>`().
        |[4:16..4:17): a => vt/K#`<init>`().(a)
        |[4:23..4:24): b => vt/K#apply().(b)
-       |[4:30..4:31): a => vt/K#`<init>`().(a)
+       |[4:30..4:31): a => vt/K#apply().(a)
        |[5:6..5:7): r <= vt/O.r.
        |[5:14..5:15): K => vt/K#
        |[5:16..5:16):  => vt/K#`<init>`().
-       |[5:17..5:18): a => vt/K#apply().(a)
+       |[5:17..5:18): a => vt/K#`<init>`().(a)
        |[5:25..5:26): a => vt/K#apply().(a)
        |[5:32..5:33): b => vt/K#apply().(b)
        |[6:6..6:7): s <= vt/O.s.
@@ -2673,7 +2767,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:16..6:16):  => vt/K#`<init>`().
        |[6:17..6:18): a => vt/K#`<init>`().(a)
        |[6:25..6:26): b => vt/K#apply().(b)
-       |[6:32..6:33): a => vt/K#`<init>`().(a)
+       |[6:32..6:33): a => vt/K#apply().(a)
        |""".stripMargin,
     "Occurrences",
   )
@@ -2763,7 +2857,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:11..2:14): Int => scala/Int#
        |[2:24..2:25): K => vv/K#
        |[2:25..2:25):  => vv/K#`<init>`().
-       |[2:26..2:27): x => vv/X#`<init>`().(x)
+       |[2:26..2:27): x => vv/K#`<init>`().(x)
        |[2:30..2:31): x => vv/X#`<init>`().(x)
        |[2:32..2:33): + => scala/Int#`+`(+4).
        |[3:6..3:7): Y <= vv/Y#
@@ -2773,7 +2867,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:11..3:14): Int => scala/Int#
        |[3:24..3:25): K => vv/K#
        |[3:26..3:26):  => vv/K#`<init>`().
-       |[3:27..3:28): x => vv/Y#`<init>`().(x)
+       |[3:27..3:28): x => vv/K#`<init>`().(x)
        |[3:31..3:32): x => vv/Y#`<init>`().(x)
        |[3:33..3:34): + => scala/Int#`+`(+4).
        |""".stripMargin,
@@ -2847,8 +2941,6 @@ class TargetedSuite extends SemanticdbSuite {
          |[8:36..8:36):  => vw/L#`<init>`().
          |[8:37..8:38): x => vw/L#`<init>`().(x)
          |""".stripMargin
-    val startsAtArg = expected.replace("[3:24..3:25): x => vw/L#", "[3:24..3:25): x => vw/K#")
-      .replace("[4:26..4:27): x => vw/L#", "[4:26..4:27): x => vw/K#")
     checkSection(
       "named arguments of a constructor call in a super call",
       """|package vw
@@ -2861,10 +2953,7 @@ class TargetedSuite extends SemanticdbSuite {
          |class E extends K(y = 0, x = new L(x = 1))
          |class F extends K (y = 0, x = new L (x = 1))
          |""".stripMargin,
-      ScalaVersion.getExpected(
-        List(ScalaVersion.Scala212 -> startsAtArg, ScalaVersion.AtMost213(15) -> startsAtArg),
-        expected,
-      ),
+      expected,
       "Occurrences",
     )
   }
@@ -3012,8 +3101,6 @@ class TargetedSuite extends SemanticdbSuite {
          |[9:26..9:26):  => vy/L#`<init>`().
          |[9:27..9:28): x => vy/L#`<init>`().(x)
          |""".stripMargin
-    val startsAtArg = expected.replace("[4:14..4:15): x => vy/L#", "[4:14..4:15): x => vy/K#")
-      .replace("[5:16..5:17): x => vy/L#", "[5:16..5:17): x => vy/K#")
     checkSection(
       "named arguments of a constructor call in an anonymous class",
       """|package vy
@@ -3028,10 +3115,7 @@ class TargetedSuite extends SemanticdbSuite {
          |  new K (y = 0, x = new L (x = 1)) {}
          |}
          |""".stripMargin,
-      ScalaVersion.getExpected(
-        List(ScalaVersion.Scala212 -> startsAtArg, ScalaVersion.AtMost213(15) -> startsAtArg),
-        expected,
-      ),
+      expected,
       "Occurrences",
     )
   }
@@ -3065,6 +3149,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:4..4:5): k => vz/O.m().(k)
        |[4:11..4:13): += => vz/B#`+=`().
        |[5:2..5:3): m => vz/O.m().
+       |[5:5..5:6): k => vz/O.m().(k)
        |[5:12..5:14): += => vz/B#`+=`().
        |""".stripMargin,
     "Occurrences",
@@ -3109,7 +3194,9 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:14..3:15): M => wa/M#
        |[3:15..3:15):  => wa/M#`<init>`().
        |[4:2..4:3): m => wa/O.m.
+       |[4:4..4:5): j => wa/M#update().(j)
        |[5:2..5:3): m => wa/O.m.
+       |[5:5..5:6): j => wa/M#update().(j)
        |""".stripMargin,
     "Occurrences",
   )
@@ -3154,6 +3241,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:9..4:10): k => wb/O.update().(k)
        |[4:16..4:18): += => wb/B#`+=`().
        |[5:2..5:8): update => wb/O.update().
+       |[5:10..5:11): k => wb/O.update().(k)
        |[5:17..5:19): += => wb/B#`+=`().
        |""".stripMargin,
     "Occurrences",
@@ -3210,19 +3298,31 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:18..4:19): m => wc/C.m.
        |[5:2..5:3): a => wc/C.a().
        |[5:4..5:5): i => wc/C.a().(i)
+       |[5:11..5:12): k => wc/M#update().(k)
        |[6:2..6:3): a => wc/C.a().
+       |[6:5..6:6): i => wc/C.a().(i)
+       |[6:12..6:13): k => wc/M#update().(k)
        |[7:2..7:3): a => wc/C.a().
        |[7:4..7:5): i => wc/C.a().(i)
+       |[7:12..7:13): k => wc/M#update().(k)
        |[8:2..8:3): a => wc/C.a().
+       |[8:5..8:6): i => wc/C.a().(i)
+       |[8:13..8:14): k => wc/M#update().(k)
        |[9:2..9:3): a => wc/C.a().
        |[9:4..9:5): i => wc/C.a().(i)
+       |[9:11..9:12): k => wc/M#apply().(k)
        |[9:18..9:20): += => scala/Int#`+`(+4).
        |[10:2..10:3): a => wc/C.a().
+       |[10:5..10:6): i => wc/C.a().(i)
+       |[10:12..10:13): k => wc/M#apply().(k)
        |[10:19..10:21): += => scala/Int#`+`(+4).
        |[11:2..11:3): a => wc/C.a().
        |[11:4..11:5): i => wc/C.a().(i)
+       |[11:12..11:13): k => wc/M#apply().(k)
        |[11:19..11:21): += => scala/Int#`+`(+4).
        |[12:2..12:3): a => wc/C.a().
+       |[12:5..12:6): i => wc/C.a().(i)
+       |[12:13..12:14): k => wc/M#apply().(k)
        |[12:20..12:22): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -3276,8 +3376,6 @@ class TargetedSuite extends SemanticdbSuite {
          |[4:27..4:28): x => wd/L#`<init>`().(x)
          |[4:36..4:37): y => wd/K2#`<init>`().(y)
          |""".stripMargin
-    val startsAtArg = expected.replace("[3:25..3:26): x => wd/L#", "[3:25..3:26): x => wd/K2#")
-      .replace("[4:27..4:28): x => wd/L#", "[4:27..4:28): x => wd/K2#")
     checkSection(
       "named arguments of a constructor call in a curried super call",
       """|package wd
@@ -3286,10 +3384,7 @@ class TargetedSuite extends SemanticdbSuite {
          |class P extends K2(new L(x = 1))(y = 2)
          |class Q extends K2 (new L (x = 1)) (y = 2)
          |""".stripMargin,
-      ScalaVersion.getExpected(
-        List(ScalaVersion.Scala212 -> startsAtArg, ScalaVersion.AtMost213(15) -> startsAtArg),
-        expected,
-      ),
+      expected,
       "Occurrences",
     )
   }
@@ -3326,8 +3421,6 @@ class TargetedSuite extends SemanticdbSuite {
          |[5:17..5:18): x => we/L#`<init>`().(x)
          |[5:26..5:27): y => we/K2#`<init>`().(y)
          |""".stripMargin
-    val startsAtArg = expected.replace("[4:15..4:16): x => we/L#", "[4:15..4:16): x => we/K2#")
-      .replace("[5:17..5:18): x => we/L#", "[5:17..5:18): x => we/K2#")
     checkSection(
       "named arguments of a constructor call in a curried anonymous class",
       """|package we
@@ -3338,10 +3431,7 @@ class TargetedSuite extends SemanticdbSuite {
          |  new K2 (new L (x = 1)) (y = 2) {}
          |}
          |""".stripMargin,
-      ScalaVersion.getExpected(
-        List(ScalaVersion.Scala212 -> startsAtArg, ScalaVersion.AtMost213(15) -> startsAtArg),
-        expected,
-      ),
+      expected,
       "Occurrences",
     )
   }
@@ -3380,8 +3470,6 @@ class TargetedSuite extends SemanticdbSuite {
          |[5:26..5:27): x => wf/L#`<init>`().(x)
          |[5:39..5:40): T => wf/T#
          |""".stripMargin
-    val startsAtArg = expected.replace("[4:24..4:25): x => wf/L#", "[4:24..4:25): x => wf/K#")
-      .replace("[5:26..5:27): x => wf/L#", "[5:26..5:27): x => wf/K#")
     checkSection(
       "named arguments of a constructor call in a super call with a trait",
       """|package wf
@@ -3391,10 +3479,7 @@ class TargetedSuite extends SemanticdbSuite {
          |class R extends K(new L(x = 1)) with T
          |class S extends K (new L (x = 1)) with T
          |""".stripMargin,
-      ScalaVersion.getExpected(
-        List(ScalaVersion.Scala212 -> startsAtArg, ScalaVersion.AtMost213(15) -> startsAtArg),
-        expected,
-      ),
+      expected,
       "Occurrences",
     )
   }
@@ -3478,12 +3563,16 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:14..4:15): M => wh/M#
        |[4:15..4:15):  => wh/M#`<init>`().
        |[5:2..5:5): arr => wh/O.arr.
+       |[5:6..5:7): i => scala/Array#apply().(i)
        |[5:13..5:15): += => scala/Int#`+`(+4).
        |[6:2..6:5): arr => wh/O.arr.
+       |[6:7..6:8): i => scala/Array#apply().(i)
        |[6:14..6:16): += => scala/Int#`+`(+4).
        |[7:2..7:3): m => wh/O.m.
+       |[7:4..7:5): k => wh/M#apply().(k)
        |[7:11..7:13): += => scala/Int#`+`(+4).
        |[8:2..8:3): m => wh/O.m.
+       |[8:5..8:6): k => wh/M#apply().(k)
        |[8:12..8:14): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -3534,10 +3623,14 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:4..3:5): a => wi/O.m().(a)
        |[3:11..3:12): c => wi/O.m().(c)
        |[4:2..4:3): m => wi/O.m().
+       |[4:5..4:6): a => wi/O.m().(a)
        |[4:12..4:13): c => wi/O.m().(c)
        |[5:2..5:3): m => wi/O.m().
        |[5:4..5:5): a => wi/O.m().(a)
+       |[5:12..5:13): c => wi/O.m().(c)
        |[6:2..6:3): m => wi/O.m().
+       |[6:5..6:6): a => wi/O.m().(a)
+       |[6:13..6:14): c => wi/O.m().(c)
        |""".stripMargin,
     "Occurrences",
   )
@@ -3601,11 +3694,13 @@ class TargetedSuite extends SemanticdbSuite {
          |[7:16..7:17): p => wj/p/
          |[7:18..7:19): K => wj/p/K#
          |[7:19..7:19):  => wj/p/K#`<init>`().
+         |[7:20..7:21): x => wj/p/K#`<init>`().(x)
          |[8:6..8:7): Y <= wj/Y#
          |[8:8..8:8):  <= wj/Y#`<init>`().
          |[8:16..8:17): p => wj/p/
          |[8:18..8:19): K => wj/p/K#
          |[8:20..8:20):  => wj/p/K#`<init>`().
+         |[8:21..8:22): x => wj/p/K#`<init>`().(x)
          |[9:6..9:7): Z <= wj/Z#
          |[9:8..9:8):  <= wj/Z#`<init>`().
          |[9:16..9:17): p => wj/p/
@@ -3620,10 +3715,12 @@ class TargetedSuite extends SemanticdbSuite {
          |[11:6..11:7): p => wj/p/
          |[11:8..11:9): K => wj/p/K#
          |[11:9..11:9):  => wj/p/K#`<init>`().
+         |[11:10..11:11): x => wj/p/K#`<init>`().(x)
          |[12:6..12:6):  <= local1
          |[12:6..12:7): p => wj/p/
          |[12:8..12:9): K => wj/p/K#
          |[12:10..12:10):  => wj/p/K#`<init>`().
+         |[12:11..12:12): x => wj/p/K#`<init>`().(x)
          |[13:3..13:4): p => wj/p/
          |[13:5..13:7): an => wj/p/an#
          |[13:7..13:7):  => wj/p/an#`<init>`().
@@ -3635,14 +3732,10 @@ class TargetedSuite extends SemanticdbSuite {
          |[14:9..14:10): x => wj/p/an#`<init>`().(x)
          |[14:20..14:21): g <= wj/O.g().
          |""".stripMargin
-    val startsAtArg = expected.replace("[9:29..9:30): x => wj/p/L#", "[9:29..9:30): x => wj/p/KL#")
     checkSection(
       "named arguments of qualified constructors",
       qualifiedConstructors,
-      ScalaVersion.getExpected(
-        List(ScalaVersion.Scala212 -> startsAtArg, ScalaVersion.AtMost213(15) -> startsAtArg),
-        expected,
-      ),
+      expected,
       "Occurrences",
     )
   }
@@ -3684,23 +3777,27 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:18..4:19): G => wk/p/G#
        |[4:20..4:23): Int => scala/Int#
        |[4:24..4:24):  => wk/p/G#`<init>`().
+       |[4:25..4:26): x => wk/p/G#`<init>`().(x)
        |[5:6..5:7): Y <= wk/Y#
        |[5:8..5:8):  <= wk/Y#`<init>`().
        |[5:16..5:17): p => wk/p/
        |[5:18..5:19): G => wk/p/G#
        |[5:20..5:23): Int => scala/Int#
        |[5:25..5:25):  => wk/p/G#`<init>`().
+       |[5:26..5:27): x => wk/p/G#`<init>`().(x)
        |[6:7..6:8): O <= wk/O.
        |[7:6..7:6):  <= local0
        |[7:6..7:7): p => wk/p/
        |[7:8..7:9): G => wk/p/G#
        |[7:10..7:13): Int => scala/Int#
        |[7:14..7:14):  => wk/p/G#`<init>`().
+       |[7:15..7:16): x => wk/p/G#`<init>`().(x)
        |[8:6..8:6):  <= local1
        |[8:6..8:7): p => wk/p/
        |[8:8..8:9): G => wk/p/G#
        |[8:10..8:13): Int => scala/Int#
        |[8:15..8:15):  => wk/p/G#`<init>`().
+       |[8:16..8:17): x => wk/p/G#`<init>`().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -3744,23 +3841,27 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:18..6:19): b => wl/a/b/
        |[6:20..6:21): K => wl/a/b/K#
        |[6:21..6:21):  => wl/a/b/K#`<init>`().
+       |[6:22..6:23): x => wl/a/b/K#`<init>`().(x)
        |[7:6..7:7): Y <= wl/Y#
        |[7:8..7:8):  <= wl/Y#`<init>`().
        |[7:16..7:17): a => wl/a/
        |[7:18..7:19): b => wl/a/b/
        |[7:20..7:21): K => wl/a/b/K#
        |[7:22..7:22):  => wl/a/b/K#`<init>`().
+       |[7:23..7:24): x => wl/a/b/K#`<init>`().(x)
        |[8:7..8:8): O <= wl/O.
        |[9:6..9:6):  <= local0
        |[9:6..9:7): a => wl/a/
        |[9:8..9:9): b => wl/a/b/
        |[9:10..9:11): K => wl/a/b/K#
        |[9:11..9:11):  => wl/a/b/K#`<init>`().
+       |[9:12..9:13): x => wl/a/b/K#`<init>`().(x)
        |[10:6..10:6):  <= local1
        |[10:6..10:7): a => wl/a/
        |[10:8..10:9): b => wl/a/b/
        |[10:10..10:11): K => wl/a/b/K#
        |[10:12..10:12):  => wl/a/b/K#`<init>`().
+       |[10:13..10:14): x => wl/a/b/K#`<init>`().(x)
        |""".stripMargin,
     "Occurrences",
   )
@@ -3815,11 +3916,13 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:4..6:5): k => wm/M#apply().(k)
        |[6:11..6:13): += => wm/B#`+=`().
        |[7:2..7:3): m => wm/O.m.
+       |[7:5..7:6): k => wm/M#apply().(k)
        |[7:12..7:14): += => wm/B#`+=`().
        |[8:2..8:3): f => wm/O.f().
        |[8:4..8:5): k => wm/O.f().(k)
        |[8:11..8:13): += => wm/B#`+=`().
        |[9:2..9:3): f => wm/O.f().
+       |[9:5..9:6): k => wm/O.f().(k)
        |[9:12..9:14): += => wm/B#`+=`().
        |""".stripMargin,
     "Occurrences",
@@ -3876,13 +3979,19 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:18..4:19): m => wn/C.m.
        |[5:2..5:3): a => wn/C.a().
        |[5:4..5:5): i => wn/C.a().(i)
+       |[5:11..5:12): k => wn/M#apply().(k)
        |[5:18..5:20): += => scala/Int#`+`(+4).
        |[6:2..6:3): a => wn/C.a().
+       |[6:5..6:6): i => wn/C.a().(i)
+       |[6:12..6:13): k => wn/M#apply().(k)
        |[6:19..6:21): += => scala/Int#`+`(+4).
        |[7:2..7:3): a => wn/C.a().
        |[7:4..7:5): i => wn/C.a().(i)
+       |[7:12..7:13): k => wn/M#apply().(k)
        |[7:19..7:21): += => scala/Int#`+`(+4).
        |[8:2..8:3): a => wn/C.a().
+       |[8:5..8:6): i => wn/C.a().(i)
+       |[8:13..8:14): k => wn/M#apply().(k)
        |[8:20..8:22): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -3915,6 +4024,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:6..3:7): i => scala/Array#apply().(i)
        |[3:13..3:14): + => scala/Int#`+`(+4).
        |[4:2..4:5): arr => wo/O.arr.
+       |[4:7..4:8): i => scala/Array#apply().(i)
        |[4:14..4:15): + => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -4047,13 +4157,17 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:8..4:9): n => wq/O.n().
        |[4:11..4:12): c => wq/O.m().(c)
        |[5:2..5:3): m => wq/O.m().
+       |[5:5..5:6): a => wq/O.m().(a)
        |[5:9..5:10): n => wq/O.n().
        |[5:12..5:13): c => wq/O.m().(c)
        |[6:2..6:3): m => wq/O.m().
        |[6:4..6:5): a => wq/O.m().(a)
        |[6:8..6:9): n => wq/O.n().
+       |[6:12..6:13): c => wq/O.m().(c)
        |[7:2..7:3): m => wq/O.m().
+       |[7:5..7:6): a => wq/O.m().(a)
        |[7:9..7:10): n => wq/O.n().
+       |[7:13..7:14): c => wq/O.m().(c)
        |""".stripMargin,
     "Occurrences",
   )
@@ -4102,17 +4216,17 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:6..6:7): K => wr/K#
        |[6:7..6:7):  => wr/K#`<init>`().
        |[6:8..6:9): x => wr/K#`<init>`().(x)
-       |[6:15..6:16): a => wr/K#update().(a)
+       |[6:15..6:16): a => wr/K#apply().(a)
        |[6:22..6:24): += => scala/Int#`+`(+4).
        |[7:6..7:7): K => wr/K#
        |[7:8..7:8):  => wr/K#`<init>`().
        |[7:9..7:10): x => wr/K#`<init>`().(x)
-       |[7:17..7:18): a => wr/K#update().(a)
+       |[7:17..7:18): a => wr/K#apply().(a)
        |[7:24..7:26): += => scala/Int#`+`(+4).
        |[8:6..8:7): K => wr/K#
        |[8:7..8:7):  => wr/K#`<init>`().
        |[8:8..8:9): x => wr/K#`<init>`().(x)
-       |[8:15..8:16): a => wr/K#update().(a)
+       |[8:15..8:16): a => wr/K#apply().(a)
        |[8:22..8:24): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -4168,6 +4282,8 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:18..6:19): v => ws/M#update().(v)
        |[7:2..7:3): m => ws/O.m.
        |[7:4..7:10): update => ws/M#update().
+       |[7:12..7:13): k => ws/M#update().(k)
+       |[7:19..7:20): v => ws/M#update().(v)
        |""".stripMargin,
     "Occurrences",
   )
@@ -4210,41 +4326,41 @@ class TargetedSuite extends SemanticdbSuite {
          |[3:26..3:26):  <= local2
          |[3:27..3:28): x <= local1
          |[3:30..3:33): Int => scala/Int#
-         |[3:36..3:37): C => local21
-         |[3:38..3:39): x => local20
+         |[3:36..3:37): C => local20
+         |[3:38..3:39): x => local84
          |[3:45..3:46): x => local1
          |[4:6..4:7): K => wt/K#
          |[4:8..4:8):  => wt/K#`<init>`().
          |[4:9..4:10): x => wt/K#`<init>`().(x)
-         |[4:26..4:27): C <= local22
-         |[4:27..4:27):  <= local24
-         |[4:28..4:29): x <= local23
+         |[4:26..4:27): C <= local21
+         |[4:27..4:27):  <= local23
+         |[4:28..4:29): x <= local22
          |[4:31..4:34): Int => scala/Int#
-         |[4:37..4:38): C => local43
-         |[4:39..4:40): x => local42
-         |[4:46..4:47): x => local23
+         |[4:37..4:38): C => local41
+         |[4:39..4:40): x => local85
+         |[4:46..4:47): x => local22
          |[6:6..6:7): X <= wt/X#
          |[6:8..6:8):  <= wt/X#`<init>`().
          |[6:16..6:17): K => wt/K#
          |[6:17..6:17):  => wt/K#`<init>`().
          |[6:18..6:19): x => wt/K#`<init>`().(x)
-         |[6:35..6:36): C <= local44
-         |[6:36..6:36):  <= local46
-         |[6:37..6:38): x <= local45
+         |[6:35..6:36): C <= local42
+         |[6:36..6:36):  <= local44
+         |[6:37..6:38): x <= local43
          |[6:40..6:43): Int => scala/Int#
-         |[6:46..6:47): C => local64
-         |[6:51..6:52): x => local45
+         |[6:46..6:47): C => local62
+         |[6:51..6:52): x => local43
          |[7:6..7:7): Y <= wt/Y#
          |[7:8..7:8):  <= wt/Y#`<init>`().
          |[7:16..7:17): K => wt/K#
          |[7:18..7:18):  => wt/K#`<init>`().
          |[7:19..7:20): x => wt/K#`<init>`().(x)
-         |[7:36..7:37): C <= local65
-         |[7:37..7:37):  <= local67
-         |[7:38..7:39): x <= local66
+         |[7:36..7:37): C <= local63
+         |[7:37..7:37):  <= local65
+         |[7:38..7:39): x <= local64
          |[7:41..7:44): Int => scala/Int#
-         |[7:47..7:48): C => local85
-         |[7:52..7:53): x => local66
+         |[7:47..7:48): C => local83
+         |[7:52..7:53): x => local64
          |""".stripMargin
     val expected212 =
       """|[0:8..0:10): wt <= wt/
@@ -4261,41 +4377,41 @@ class TargetedSuite extends SemanticdbSuite {
          |[3:26..3:26):  <= local2
          |[3:27..3:28): x <= local1
          |[3:30..3:33): Int => scala/Int#
-         |[3:36..3:37): C => local19
-         |[3:38..3:39): x => local18
+         |[3:36..3:37): C => local18
+         |[3:38..3:39): x => local76
          |[3:45..3:46): x => local1
          |[4:6..4:7): K => wt/K#
          |[4:8..4:8):  => wt/K#`<init>`().
          |[4:9..4:10): x => wt/K#`<init>`().(x)
-         |[4:26..4:27): C <= local20
-         |[4:27..4:27):  <= local22
-         |[4:28..4:29): x <= local21
+         |[4:26..4:27): C <= local19
+         |[4:27..4:27):  <= local21
+         |[4:28..4:29): x <= local20
          |[4:31..4:34): Int => scala/Int#
-         |[4:37..4:38): C => local39
-         |[4:39..4:40): x => local38
-         |[4:46..4:47): x => local21
+         |[4:37..4:38): C => local37
+         |[4:39..4:40): x => local77
+         |[4:46..4:47): x => local20
          |[6:6..6:7): X <= wt/X#
          |[6:8..6:8):  <= wt/X#`<init>`().
          |[6:16..6:17): K => wt/K#
          |[6:17..6:17):  => wt/K#`<init>`().
          |[6:18..6:19): x => wt/K#`<init>`().(x)
-         |[6:35..6:36): C <= local40
-         |[6:36..6:36):  <= local42
-         |[6:37..6:38): x <= local41
+         |[6:35..6:36): C <= local38
+         |[6:36..6:36):  <= local40
+         |[6:37..6:38): x <= local39
          |[6:40..6:43): Int => scala/Int#
-         |[6:46..6:47): C => local58
-         |[6:51..6:52): x => local41
+         |[6:46..6:47): C => local56
+         |[6:51..6:52): x => local39
          |[7:6..7:7): Y <= wt/Y#
          |[7:8..7:8):  <= wt/Y#`<init>`().
          |[7:16..7:17): K => wt/K#
          |[7:18..7:18):  => wt/K#`<init>`().
          |[7:19..7:20): x => wt/K#`<init>`().(x)
-         |[7:36..7:37): C <= local59
-         |[7:37..7:37):  <= local61
-         |[7:38..7:39): x <= local60
+         |[7:36..7:37): C <= local57
+         |[7:37..7:37):  <= local59
+         |[7:38..7:39): x <= local58
          |[7:41..7:44): Int => scala/Int#
-         |[7:47..7:48): C => local77
-         |[7:52..7:53): x => local60
+         |[7:47..7:48): C => local75
+         |[7:52..7:53): x => local58
          |""".stripMargin
     checkSection(
       "named arguments of constructors around a local case class",
@@ -4310,21 +4426,21 @@ class TargetedSuite extends SemanticdbSuite {
       """|[3:36..3:37): C => *.apply
          |  apply => local19
          |[4:37..4:38): C => *.apply
-         |  apply => local41
+         |  apply => local40
          |[6:46..6:47): C => *.apply
-         |  apply => local63
+         |  apply => local61
          |[7:47..7:48): C => *.apply
-         |  apply => local84
+         |  apply => local82
          |""".stripMargin
     val expected212 =
       """|[3:36..3:37): C => *.apply
          |  apply => local17
          |[4:37..4:38): C => *.apply
-         |  apply => local37
+         |  apply => local36
          |[6:46..6:47): C => *.apply
-         |  apply => local57
+         |  apply => local55
          |[7:47..7:48): C => *.apply
-         |  apply => local76
+         |  apply => local74
          |""".stripMargin
     checkSection(
       "named arguments of constructors around a local case class: synthetics",
@@ -4373,25 +4489,25 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:8..3:8):  => wu/K2#`<init>`().
        |[3:9..3:10): x => wu/K2#`<init>`().(x)
        |[3:16..3:17): y => wu/K2#`<init>`().(y)
-       |[3:23..3:24): a => wu/K2#update().(a)
+       |[3:23..3:24): a => wu/K2#apply().(a)
        |[3:30..3:32): += => scala/Int#`+`(+4).
        |[4:6..4:8): K2 => wu/K2#
        |[4:9..4:9):  => wu/K2#`<init>`().
        |[4:10..4:11): x => wu/K2#`<init>`().(x)
        |[4:18..4:19): y => wu/K2#`<init>`().(y)
-       |[4:26..4:27): a => wu/K2#update().(a)
+       |[4:26..4:27): a => wu/K2#apply().(a)
        |[4:33..4:35): += => scala/Int#`+`(+4).
        |[5:6..5:8): K2 => wu/K2#
        |[5:8..5:8):  => wu/K2#`<init>`().
        |[5:9..5:10): x => wu/K2#`<init>`().(x)
        |[5:16..5:17): y => wu/K2#`<init>`().(y)
-       |[5:23..5:24): a => wu/K2#update().(a)
+       |[5:23..5:24): a => wu/K2#apply().(a)
        |[5:30..5:32): += => scala/Int#`+`(+4).
        |[6:6..6:8): K2 => wu/K2#
        |[6:9..6:9):  => wu/K2#`<init>`().
        |[6:10..6:11): x => wu/K2#`<init>`().(x)
        |[6:18..6:19): y => wu/K2#`<init>`().(y)
-       |[6:26..6:27): a => wu/K2#update().(a)
+       |[6:26..6:27): a => wu/K2#apply().(a)
        |[6:33..6:35): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -4628,15 +4744,20 @@ class TargetedSuite extends SemanticdbSuite {
          |[12:2..12:3): m => wy/O.m.
          |[12:18..12:20): += => scala/Int#`+`(+4).
          |[13:2..13:3): m => wy/O.m.
+         |[13:4..13:5): k => wy/M#apply().(k)
          |[13:11..13:13): += => scala/Int#`+`(+4).
          |[14:2..14:3): m => wy/O.m.
          |[14:14..14:15): n => wy/O.n().
          |[14:17..14:19): += => scala/Int#`+`(+4).
          |""".stripMargin
+    val expected212 = expected.replace("[10:17", "[10:10..10:11): k => wy/M#apply().(k)\n[10:17")
+      .replace("[11:18", "[11:11..11:12): k => wy/M#apply().(k)\n[11:18")
+      .replace("[12:18", "[12:11..12:12): k => wy/M#apply().(k)\n[12:18")
+      .replace("[14:14", "[14:10..14:11): k => wy/M#apply().(k)\n[14:14")
     checkSection(
       "named arguments of an apply with an implicit list and +=",
       applyWithImplicitsAndOperatorAssignment,
-      expected,
+      ScalaVersion.getExpected(List(ScalaVersion.Scala212 -> expected212), expected),
       "Occurrences",
     )
   }
@@ -4744,6 +4865,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:2..6:3): m => wz/O.m.
        |[6:23..6:25): += => scala/Int#`+`(+4).
        |[7:2..7:3): m => wz/O.m.
+       |[7:9..7:10): k => wz/M#apply().(k)
        |[7:16..7:18): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -4820,12 +4942,16 @@ class TargetedSuite extends SemanticdbSuite {
          |[11:2..11:3): m => xa/O.m.
          |[11:23..11:25): += => scala/Int#`+`(+4).
          |[12:2..12:3): m => xa/O.m.
+         |[12:9..12:10): k => xa/M#apply().(k)
          |[12:16..12:18): += => scala/Int#`+`(+4).
          |""".stripMargin
+    val expected212 = expected.replace("[9:22", "[9:15..9:16): k => xa/M#apply().(k)\n[9:22")
+      .replace("[10:23", "[10:16..10:17): k => xa/M#apply().(k)\n[10:23")
+      .replace("[11:23", "[11:16..11:17): k => xa/M#apply().(k)\n[11:23")
     checkSection(
       "named arguments of an apply with type arguments, an implicit list and +=",
       applyWithTypeArgumentsImplicitsAndOperatorAssignment,
-      expected,
+      ScalaVersion.getExpected(List(ScalaVersion.Scala212 -> expected212), expected),
       "Occurrences",
     )
   }
@@ -4947,6 +5073,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[10:2..10:3): x => xb/O.x.
        |[10:18..10:20): += => scala/Int#`+`(+4).
        |[11:2..11:3): x => xb/O.x.
+       |[11:4..11:5): k => xb/M#apply().(k)
        |[11:11..11:13): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -5064,6 +5191,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[5:18..5:20): += => xd/B#`+=`().
        |[6:2..6:4): m2 => xd/O.m2.
        |[6:5..6:10): apply => xd/M2#apply().
+       |[6:12..6:13): k => xd/M2#apply().(k)
        |[6:19..6:21): += => xd/B#`+=`().
        |""".stripMargin,
     "Occurrences",
@@ -5111,6 +5239,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:18..4:26): toString => scala/Any#toString().
        |[5:2..5:4): md => xe/O.md.
        |[5:5..5:10): apply => xe/MD#apply().
+       |[5:12..5:13): k => xe/MD#apply().(k)
        |[5:19..5:27): toString => scala/Any#toString().
        |[6:2..6:4): md => xe/O.md.
        |[6:5..6:6): k => xe/MD#apply().(k)
@@ -5173,10 +5302,12 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:2..4:4): mk => xf/O.mk().
        |[4:5..4:6): y => xf/O.mk().(y)
        |[4:12..4:13): x => xf/O.mk().(x)
+       |[4:26..4:27): k => xf/M#apply().(k)
        |[4:33..4:35): += => scala/Int#`+`(+4).
        |[5:2..5:4): mk => xf/O.mk().
        |[5:5..5:6): y => xf/O.mk().(y)
        |[5:12..5:13): x => xf/O.mk().(x)
+       |[5:25..5:26): k => xf/M#apply().(k)
        |[5:32..5:34): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
