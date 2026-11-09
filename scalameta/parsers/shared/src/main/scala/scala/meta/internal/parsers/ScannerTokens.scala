@@ -380,7 +380,7 @@ private[meta] final class ScannerTokens(
       else if (head eq null) Left(xs)
       else {
         if (currNonTrivial) last.next = currRef(xs)
-        else if (multiEOL && mightStartStat(next))
+        else if (multiEOL && mightStartStat(next) && canProduceLF(xs))
           last.next = eolRefAt(xs, last.pointPos, multiEOL = true)
         Right((head, last))
       }
@@ -995,9 +995,12 @@ private[meta] final class ScannerTokens(
    * @param regions
    *   the regions that enclose the line end, the innermost first
    */
+  @tailrec
   def canProduceLF(regions: List[SepRegion]): Boolean = regions match {
     // a condition continues past a line end (see dotty's `InCond`)
     case (_: RegionControlCond) :: _ => false
+    // `try` and an inline `then` body defer to the enclosing region
+    case (RegionTry | RegionThen) :: rs => canProduceLF(rs)
     case Nil | (_: CanProduceLF) :: _ => true
     case _ => false
   }

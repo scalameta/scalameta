@@ -14117,7 +14117,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwDo [54..56)
          |Ident(d) [57..58)
          |Indentation.Outdent [59..59)
-         |LFLF [59..60)
          |KwDo [64..66)
          |Ident(k) [67..68)
          |LF [68..69)
@@ -17956,7 +17955,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |LF [68..69)
          |Ident(e) [75..76)
          |Indentation.Outdent [77..77)
-         |LFLF [77..78)
          |KwDo [82..84)
          |Ident(k) [85..86)
          |LF [86..87)
@@ -18504,7 +18502,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [37..37)
          |Ident(z) [46..47)
          |Indentation.Outdent [48..48)
-         |LFLF [48..49)
+         |InfixLF [48..49)
          |Ident(&&) [55..57)
          |Ident(w) [58..59)
          |KwThen [64..68)
@@ -18520,11 +18518,37 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [90..90)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `;` expected but `then` found
-         |    then c else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (x(y) && foo {
+         |    z
+         |  } && w) c else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(
+              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with an `if` whose `then` body holds a colon argument, the argument on the next line, a blank line, leading `&&` on the next line, `else` and the outer `then` on later lines, next statement") {
@@ -18558,7 +18582,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [41..41)
          |Ident(z) [52..53)
          |Indentation.Outdent [54..54)
-         |LFLF [54..55)
+         |InfixLF [54..55)
          |Ident(&&) [63..65)
          |Ident(w) [66..67)
          |KwElse [74..78)
@@ -18574,11 +18598,39 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [105..105)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `then` expected but `identifier` found
-         |        && w
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (if (a) foo {
+         |      z
+         |    } && w else d) c else e
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tif(
+              tname("a"),
+              tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")),
+              tname("d"),
+            ),
+            tname("c"),
+            tname("e"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with an `if` whose `then` body holds a colon argument, the argument on the next line, two blank lines, leading `&&` on the next line, `else` and the outer `then` on later lines, next statement") {
@@ -18613,7 +18665,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [41..41)
          |Ident(z) [52..53)
          |Indentation.Outdent [55..55)
-         |LFLF [55..56)
          |Ident(&&) [64..66)
          |Ident(w) [67..68)
          |KwElse [75..79)
@@ -18629,11 +18680,39 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [106..106)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `then` expected but `identifier` found
-         |        && w
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (if (a) foo {
+         |      z
+         |    } && w else d) c else e
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tif(
+              tname("a"),
+              tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")),
+              tname("d"),
+            ),
+            tname("c"),
+            tname("e"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`if` within parentheses with a colon argument in its `then` body, the argument on the next line with a comment, a blank line, leading `&&` on the next line, `else` on the next line, next statement") {
@@ -18667,7 +18746,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [40..40)
          |Ident(z) [51..52)
          |Indentation.Outdent [58..58)
-         |LFLF [58..59)
          |Ident(&&) [67..69)
          |Ident(w) [70..71)
          |KwElse [78..82)
@@ -18680,11 +18758,39 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [92..92)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `)` expected but `identifier` found
-         |        && w
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    g(if (a) foo {
+         |      z // c
+         |
+         |    } && w else d)
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tapply(
+            tname("g"),
+            tif(
+              tname("a"),
+              tinfix(tapply(tname("foo"), blk(tnameComments("z")()("// c"))), "&&", tname("w")),
+              tname("d"),
+            ),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` within parentheses with `try` and a colon argument after `yield`, the argument on the next line, a blank line, leading `&&` on the next line, next statement") {
@@ -18722,7 +18828,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [54..54)
          |Ident(z) [65..66)
          |Indentation.Outdent [67..67)
-         |LFLF [67..68)
+         |InfixLF [67..68)
          |Ident(&&) [76..78)
          |Ident(w) [79..80)
          |RightParen [80..81)
@@ -18733,11 +18839,37 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [88..88)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `)` expected but `identifier` found
-         |        && w)
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    g(for (x <- xs) yield try foo {
+         |      z
+         |    } && w)
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tapply(
+            tname("g"),
+            Term.ForYield(
+              Term.EnumeratorsBlock(List(Enumerator.Generator(patvar("x"), tname("xs")))),
+              Term.Try(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")), None, None),
+            ),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `for` with a colon argument after `do`, the argument on the next line, a blank line, leading `&&` on the next line, `then` and `else` on the next line, next statement") {
@@ -18774,7 +18906,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [48..48)
          |Ident(z) [59..60)
          |Indentation.Outdent [61..61)
-         |LFLF [61..62)
+         |InfixLF [61..62)
          |Ident(&&) [70..72)
          |Ident(w) [73..74)
          |KwThen [79..83)
@@ -18788,11 +18920,38 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [99..99)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `then` expected but `identifier` found
-         |        && w
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (for (x <- xs) foo {
+         |      z
+         |    } && w) c else d
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            Term.For(
+              Term.EnumeratorsBlock(List(Enumerator.Generator(patvar("x"), tname("xs")))),
+              tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` with braces within parentheses, a colon argument after `yield`, the argument on the next line, a blank line, leading `&&` on the next line, next statement") {
@@ -18829,7 +18988,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [52..52)
          |Ident(z) [63..64)
          |Indentation.Outdent [65..65)
-         |LFLF [65..66)
          |Ident(&&) [74..76)
          |Ident(w) [77..78)
          |RightParen [78..79)
@@ -18840,11 +18998,37 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [86..86)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `)` expected but `identifier` found
-         |        && w)
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    g(for (x <- xs) yield foo {
+         |      z
+         |    } && w)
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tapply(
+            tname("g"),
+            Term.ForYield(
+              Term.EnumeratorsBlock(List(Enumerator.Generator(patvar("x"), tname("xs")))),
+              tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")),
+            ),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("case guard: a colon argument, the argument on the next line, a blank line, leading `&&` and `=>` on the next line, next case") {
@@ -18877,7 +19061,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [46..46)
          |Ident(z) [55..56)
          |Indentation.Outdent [57..57)
-         |LFLF [57..58)
          |Ident(&&) [64..66)
          |Ident(w) [67..68)
          |RightArrow [69..71)
@@ -18892,11 +19075,36 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [90..90)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `=>` expected but `\n\n` found
-         |
-         |^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z
+         |    } && w => 1
+         |    case _ => 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w"))),
+            int(1),
+          ),
+          Case(patwildcard, None, int(2)),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("case guard: a colon argument, the argument on the next line, two blank lines, leading `&&` and `=>` on the next line, next case") {
@@ -18930,7 +19138,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [46..46)
          |Ident(z) [55..56)
          |Indentation.Outdent [58..58)
-         |LFLF [58..59)
          |Ident(&&) [65..67)
          |Ident(w) [68..69)
          |RightArrow [70..72)
@@ -18945,11 +19152,36 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [91..91)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `=>` expected but `\n\n` found
-         |
-         |^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z
+         |    } && w => 1
+         |    case _ => 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w"))),
+            int(1),
+          ),
+          Case(patwildcard, None, int(2)),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("case guard: a colon argument, the argument on the next line with a comment, a blank line, leading `&&` and `=>` on the next line, next case") {
@@ -18982,7 +19214,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [46..46)
          |Ident(z) [55..56)
          |Indentation.Outdent [62..62)
-         |LFLF [62..63)
          |Ident(&&) [69..71)
          |Ident(w) [72..73)
          |RightArrow [74..76)
@@ -18997,11 +19228,37 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [95..95)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `=>` expected but `\n\n` found
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z // c
          |
-         |^""".stripMargin
-    runTestError[Source](code, error)
+         |    } && w => 1
+         |    case _ => 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tinfix(tapply(tname("foo"), blk(tnameComments("z")()("// c"))), "&&", tname("w"))),
+            int(1),
+          ),
+          Case(patwildcard, None, int(2)),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: a colon lambda, its body on the next line, a blank line, leading `&&` on the next line, `then` and `else` on the next line, next statement") {
@@ -19037,7 +19294,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(>) [53..54)
          |Constant.Int(0) [55..56)
          |Indentation.Outdent [57..57)
-         |LFLF [57..58)
+         |InfixLF [57..58)
          |Ident(&&) [64..66)
          |Ident(w) [67..68)
          |KwThen [73..77)
@@ -19051,11 +19308,42 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [93..93)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `then` expected but `identifier` found
-         |      && w
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (xs.exists {
+         |      x => x > 0
+         |    } && w) c else d
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tinfix(
+              tapply(
+                tselect(tname("xs"), "exists"),
+                blk(tfunc(tparam("x"))(tinfix(tname("x"), ">", int(0)))),
+              ),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("a colon argument within parentheses after type arguments, the argument on the next line, a blank line, leading `&&` and `)` on the next line, next statement") {
@@ -19088,7 +19376,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [35..35)
          |Ident(z) [44..45)
          |Indentation.Outdent [46..46)
-         |LFLF [46..47)
          |Ident(&&) [53..55)
          |Ident(w) [56..57)
          |RightParen [57..58)
@@ -19099,11 +19386,34 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [65..65)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `)` expected but `identifier` found
-         |      && w)
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    g[Int](foo {
+         |      z
+         |    } && w)
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tapply(
+            tapplytype(tname("g"), pname("Int")),
+            tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`if` within parentheses with a colon argument in its `else` body, the argument on the next line, a blank line, leading `&&` and `)` on the next line, next statement") {
@@ -19138,7 +19448,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [47..47)
          |Ident(z) [58..59)
          |Indentation.Outdent [60..60)
-         |LFLF [60..61)
          |Ident(&&) [69..71)
          |Ident(w) [72..73)
          |RightParen [73..74)
@@ -19149,11 +19458,38 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [81..81)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `)` expected but `identifier` found
-         |        && w)
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    g(if (a) b else foo {
+         |      z
+         |    } && w)
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tapply(
+            tname("g"),
+            tif(
+              tname("a"),
+              tname("b"),
+              tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")),
+            ),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and nested colon arguments, the arguments on the next lines, a comment line, a blank line, leading `&&` on the next line, `then` and `else` on the next line, next statement") {
@@ -19191,7 +19527,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(z) [60..61)
          |Indentation.Outdent [61..61)
          |Indentation.Outdent [75..75)
-         |LFLF [75..76)
          |Ident(&&) [82..84)
          |Ident(w) [85..86)
          |KwThen [91..95)
@@ -19205,11 +19540,50 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [111..111)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:8: error: `then` expected but `identifier` found
-         |      && w
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (a && foo {
+         |      bar {
+         |        z
+         |      }
+         |      // c
+         |
+         |    } && w) c else d
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tinfix(
+              tinfix(
+                tname("a"),
+                "&&",
+                tapply(
+                  tname("foo"),
+                  blk(tapply(tname("bar"), blk(tname("z"))).toBuilder.endComment(Seq("// c")).result()),
+                ),
+              ),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`if` within parentheses with the condition in parentheses, a deeper `then` body in parentheses on the next line, `else` on that line, next statement") {
@@ -19856,7 +20230,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [34..34)
          |Ident(z) [43..44)
          |Indentation.Outdent [45..45)
-         |LFLF [45..46)
          |KwDo [50..52)
          |Ident(b) [53..54)
          |LF [54..55)
@@ -20138,7 +20511,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [45..45)
          |Ident(z) [54..55)
          |Indentation.Outdent [56..56)
-         |LFLF [56..57)
+         |InfixLF [56..57)
          |Ident(&&) [61..63)
          |Ident(w) [64..65)
          |KwThen [70..74)
@@ -20150,11 +20523,33 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [84..84)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `then` expected but `identifier` found
-         |    && w
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (try a finally foo {
+         |    z
+         |  } && w) c else d
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          Term.Try(
+            tname("a"),
+            None,
+            Some(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w"))),
+          ),
+          tname("c"),
+          tname("d"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and nested colon arguments, the arguments on the next lines, a blank line, leading `&&` at the column of the `if`, `then` and `else` on the next line") {
@@ -20190,7 +20585,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(z) [64..65)
          |Indentation.Outdent [66..66)
          |Indentation.Outdent [66..66)
-         |LFLF [66..67)
+         |InfixLF [66..67)
          |Ident(&&) [71..73)
          |Ident(w) [74..75)
          |KwThen [80..84)
@@ -20202,11 +20597,35 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [94..94)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `then` expected but `identifier` found
-         |    && w
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (a && foo {
+         |    bar {
+         |      z
+         |    }
+         |  } && w) c else d
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          tinfix(
+            tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tapply(tname("bar"), blk(tname("z")))))),
+            "&&",
+            tname("w"),
+          ),
+          tname("c"),
+          tname("d"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and nested colon arguments, the arguments on the next lines, a blank line, shallower leading `&&` on the next line, `then` and `else` on the next line") {
@@ -20242,7 +20661,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(z) [64..65)
          |Indentation.Outdent [66..66)
          |Indentation.Outdent [66..66)
-         |LFLF [66..67)
+         |InfixLF [66..67)
          |Ident(&&) [73..75)
          |Ident(w) [76..77)
          |KwThen [82..86)
@@ -20254,11 +20673,35 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [96..96)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `then` expected but `identifier` found
-         |      && w
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (a && foo {
+         |    bar {
+         |      z
+         |    }
+         |  } && w) c else d
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          tinfix(
+            tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tapply(tname("bar"), blk(tname("z")))))),
+            "&&",
+            tname("w"),
+          ),
+          tname("c"),
+          tname("d"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and three nested colon arguments, the arguments on the next lines, a blank line, leading `&&` at the column of the `if`, `then` and `else` on the next line, next definition") {
@@ -20300,7 +20743,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Outdent [85..85)
          |Indentation.Outdent [85..85)
          |Indentation.Outdent [85..85)
-         |LFLF [85..86)
+         |InfixLF [85..86)
          |Ident(&&) [90..92)
          |Ident(w) [93..94)
          |KwThen [99..103)
@@ -20317,11 +20760,45 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [125..125)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:8: error: `then` expected but `identifier` found
-         |    && w
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (a && foo {
+         |    bar {
+         |      baz {
+         |        z
+         |      }
+         |    }
+         |  } && w) c else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(
+              tinfix(
+                tname("a"),
+                "&&",
+                tapply(tname("foo"), blk(tapply(tname("bar"), blk(tapply(tname("baz"), blk(tname("z"))))))),
+              ),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with two `try` and a colon argument, the argument on the next line, a blank line, leading `&&` at the column of the `if`, `then` and `else` on the next line") {
@@ -20352,7 +20829,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [39..39)
          |Ident(z) [48..49)
          |Indentation.Outdent [50..50)
-         |LFLF [50..51)
+         |InfixLF [50..51)
          |Ident(&&) [55..57)
          |Ident(w) [58..59)
          |KwThen [64..68)
@@ -20364,11 +20841,33 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [78..78)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `then` expected but `identifier` found
-         |    && w
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (try try foo {
+         |    z
+         |  } && w) c else d
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          Term.Try(
+            Term.Try(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")), None, None),
+            None,
+            None,
+          ),
+          tname("c"),
+          tname("d"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("lambda within parentheses with `if`, `&&` and a colon argument, the argument on the next line, a blank line, leading `&&`, `then` and `else` on the next line") {
@@ -20400,7 +20899,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [39..39)
          |Ident(z) [48..49)
          |Indentation.Outdent [50..50)
-         |LFLF [50..51)
+         |InfixLF [50..51)
          |Ident(&&) [57..59)
          |Ident(w) [60..61)
          |KwThen [62..66)
@@ -20412,11 +20911,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [77..77)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `then` expected but `identifier` found
-         |      && w then 1 else 2)
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = g(x => if (a && foo {
+         |    z
+         |  } && w) 1 else 2)
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          tname("g"),
+          tfunc(tparam("x"))(tif(
+            tinfix(tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          )),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and a colon argument after the condition in parentheses, the argument on the next line, a blank line, leading `||` at the column of the `if`, `then` and `else` on the next line") {
@@ -20449,7 +20969,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [38..38)
          |Ident(z) [47..48)
          |Indentation.Outdent [49..49)
-         |LFLF [49..50)
+         |InfixLF [49..50)
          |Ident(||) [54..56)
          |Ident(w) [57..58)
          |KwThen [63..67)
@@ -20461,11 +20981,29 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [77..77)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `outdent` expected but `then` found
-         |    then c else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (a && foo {
+         |    z
+         |  } || w) c else d
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          tinfix(tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z")))), "||", tname("w")),
+          tname("c"),
+          tname("d"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `while` with a colon argument, the argument on the next line, a blank line, leading `&&` at the column of the `while`, `do` on the next line, next statement") {
@@ -20495,7 +21033,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [34..34)
          |Ident(z) [43..44)
          |Indentation.Outdent [45..45)
-         |LFLF [45..46)
+         |InfixLF [45..46)
          |Ident(&&) [50..52)
          |Ident(w) [53..54)
          |KwDo [59..61)
@@ -20507,11 +21045,31 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [70..70)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `do` expected but `identifier` found
-         |    && w
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while (foo {
+         |      z
+         |    } && w) b
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")), tname("b")),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("condition in parentheses with `try` and a colon argument, the argument on the next line, a blank line, leading `&&`, `)` and both bodies at the column of the `if`") {
@@ -20541,7 +21099,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [36..36)
          |Ident(z) [45..46)
          |Indentation.Outdent [47..47)
-         |LFLF [47..48)
+         |InfixLF [47..48)
          |Ident(&&) [52..54)
          |Ident(w) [55..56)
          |RightParen [56..57)
@@ -20553,11 +21111,29 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [67..67)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `)` expected but `identifier` found
-         |    && w) c else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (try foo {
+         |    z
+         |  } && w) c else d
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          Term.Try(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")), None, None),
+          tname("c"),
+          tname("d"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` in a case body with `&&` and a colon argument, the argument on the next line, a blank line, leading `&&` at the column of the `if`, `then` and `else` on the next line, next case") {
@@ -20596,7 +21172,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [60..60)
          |Ident(z) [71..72)
          |Indentation.Outdent [73..73)
-         |LFLF [73..74)
+         |InfixLF [73..74)
          |Ident(&&) [80..82)
          |Ident(w) [83..84)
          |KwThen [91..95)
@@ -20614,11 +21190,46 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [121..121)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `then` expected but `identifier` found
-         |      && w
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      if (a && foo {
+         |        z
+         |      } && w) c else d
+         |    case _ =>
+         |      e
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            int(1),
+            None,
+            tif(
+              tinfix(
+                tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                "&&",
+                tname("w"),
+              ),
+              tname("c"),
+              tname("d"),
+            ),
+          ),
+          Case(patwildcard, None, tname("e")),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` in a case body within braces with `&&` and a colon argument, the argument on the next line, a blank line, leading `&&` at the column of the `if`, `then` and `else` on the next line") {
@@ -20657,7 +21268,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [61..61)
          |Ident(z) [72..73)
          |Indentation.Outdent [74..74)
-         |LFLF [74..75)
+         |InfixLF [74..75)
          |Ident(&&) [81..83)
          |Ident(w) [84..85)
          |KwThen [92..96)
@@ -20670,11 +21281,43 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [110..110)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `then` expected but `identifier` found
-         |      && w
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case 1 =>
+         |      if (a && foo {
+         |        z
+         |      } && w) c else d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          tselect(tname("xs"), "map"),
+          Term.PartialFunction(List(Case(
+            int(1),
+            None,
+            tif(
+              tinfix(
+                tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                "&&",
+                tname("w"),
+              ),
+              tname("c"),
+              tname("d"),
+            ),
+          ))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("case guard in parentheses: a colon argument, the argument on the next line, a blank line, leading `&&`, `)` and `=>` on the next line, next case") {
@@ -20708,7 +21351,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [47..47)
          |Ident(z) [56..57)
          |Indentation.Outdent [58..58)
-         |LFLF [58..59)
          |Ident(&&) [65..67)
          |Ident(w) [68..69)
          |RightParen [69..70)
@@ -20724,11 +21366,36 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [92..92)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `)` expected but `identifier` found
-         |      && w) => 1
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z
+         |    } && w => 1
+         |    case _ => 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w"))),
+            int(1),
+          ),
+          Case(patwildcard, None, int(2)),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and a colon argument, the argument on the next line, a blank line, a comment line at the column of the argument, leading `&&` at the column of the `if`, `then` and `else` on the next line") {
@@ -20760,7 +21427,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [36..36)
          |Ident(z) [45..46)
          |Indentation.Outdent [60..60)
-         |LFLF [60..61)
+         |InfixLF [60..61)
          |Ident(&&) [65..67)
          |Ident(w) [68..69)
          |KwThen [74..78)
@@ -20772,11 +21439,35 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [88..88)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `then` expected but `identifier` found
-         |    && w
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (a && foo {
+         |    z
+         |
+         |    // c
+         |  } && w) c else d
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          tinfix(
+            tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tnameComments("z")()("// c")))),
+            "&&",
+            tname("w"),
+          ),
+          tname("c"),
+          tname("d"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`try` with a colon argument after `finally`, the argument on the next line, a blank line, next statement") {
@@ -21762,7 +22453,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [38..38)
          |Ident(z) [47..48)
          |Indentation.Outdent [49..49)
-         |LFLF [49..50)
          |KwDo [54..56)
          |Ident(b) [57..58)
          |LF [58..59)
@@ -21828,7 +22518,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [39..39)
          |Ident(z) [48..49)
          |Indentation.Outdent [50..50)
-         |LFLF [50..51)
+         |InfixLF [50..51)
          |Ident(&&) [57..59)
          |Ident(w) [60..61)
          |KwDo [66..68)
@@ -21840,11 +22530,34 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [77..77)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `do` expected but `identifier` found
-         |      && w
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while (x && foo {
+         |      z
+         |    } && w) c
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(
+            tinfix(tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tname("c"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and a colon argument after the parentheses, the argument on the next line, a blank line, leading `&&` at the column of the `if`, `then` and `else` on the next line, next statement") {
@@ -21881,7 +22594,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [41..41)
          |Ident(z) [50..51)
          |Indentation.Outdent [52..52)
-         |LFLF [52..53)
+         |InfixLF [52..53)
          |Ident(&&) [57..59)
          |Ident(w) [60..61)
          |KwThen [66..70)
@@ -21895,11 +22608,39 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [86..86)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `outdent` expected but `then` found
-         |    then c else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (x(y) && foo {
+         |      z
+         |    } && w) c else d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tinfix(
+              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and a colon lambda after the parentheses, its body on the next line, a blank line, shallower leading `&&` on the next line, `then` and `else` on the next line, next definition") {
@@ -21938,7 +22679,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [48..48)
          |Ident(z) [57..58)
          |Indentation.Outdent [59..59)
-         |LFLF [59..60)
+         |InfixLF [59..60)
          |Ident(&&) [66..68)
          |Ident(w) [69..70)
          |KwThen [75..79)
@@ -21954,11 +22695,41 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [101..101)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `;` expected but `then` found
-         |    then c else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (x(y) && xs.exists {
+         |    x => z
+         |  } && w) c else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(
+              tinfix(
+                tapply(tname("x"), tname("y")),
+                "&&",
+                tapply(tselect(tname("xs"), "exists"), blk(tfunc(tparam("x"))(tname("z")))),
+              ),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and nested colon arguments after the parentheses, the arguments on the next lines, a blank line, shallower leading `&&` on the next line, `then` and `else` on the next line, next definition") {
@@ -21998,7 +22769,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(z) [63..64)
          |Indentation.Outdent [65..65)
          |Indentation.Outdent [65..65)
-         |LFLF [65..66)
+         |InfixLF [65..66)
          |Ident(&&) [72..74)
          |Ident(w) [75..76)
          |KwThen [81..85)
@@ -22014,11 +22785,43 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [107..107)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `;` expected but `then` found
-         |    then c else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (x(y) && foo {
+         |    bar {
+         |      z
+         |    }
+         |  } && w) c else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(
+              tinfix(
+                tapply(tname("x"), tname("y")),
+                "&&",
+                tapply(tname("foo"), blk(tapply(tname("bar"), blk(tname("z"))))),
+              ),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and a colon argument after the parentheses, the argument on the next line, a blank line, a comment line, shallower leading `&&` on the next line, `then` and `else` on the next line, next definition") {
@@ -22054,7 +22857,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [37..37)
          |Ident(z) [46..47)
          |Indentation.Outdent [48..48)
-         |LFLF [48..60)
+         |InfixLF [59..60)
          |Ident(&&) [66..68)
          |Ident(w) [69..70)
          |KwThen [75..79)
@@ -22070,11 +22873,39 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [101..101)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `;` expected but `then` found
-         |    then c else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (x(y) && foo {
+         |    z
+         |  }
+         |    // c
+         |    && w) c else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(
+              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              Term.Name.newBuilder("&&").begComment(detachedComments("// c")).result(),
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("colon lambda within parentheses, its body on the next line, a blank line, leading `+` and `)` on the next line, next definition") {
@@ -22106,7 +22937,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [34..34)
          |Ident(x) [43..44)
          |Indentation.Outdent [45..45)
-         |LFLF [45..46)
          |Ident(+) [52..53)
          |Ident(b) [54..55)
          |RightParen [55..56)
@@ -22119,11 +22949,36 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [69..69)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `)` expected but `identifier` found
-         |      + b)
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = g(xs.map {
+         |    x => x
+         |  } + b)
+         |  def h = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            tinfix(
+              tapply(tselect(tname("xs"), "map"), blk(tfunc(tparam("x"))(tname("x")))),
+              "+",
+              tname("b"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("h"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` on the line after `if`, `&&` and a colon argument after the parentheses, the argument on the next line, a blank line, shallower leading `&&` on the next line, both `then` and `else` on the next lines, next statement") {
@@ -22164,7 +23019,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [50..50)
          |Ident(z) [61..62)
          |Indentation.Outdent [63..63)
-         |LFLF [63..64)
+         |InfixLF [63..64)
          |Ident(&&) [72..74)
          |Ident(w) [75..76)
          |KwThen [83..87)
@@ -22183,11 +23038,43 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [121..121)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:9: error: `outdent` expected but `then` found
-         |    then e else h
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (if (x(y) && foo {
+         |      z
+         |    } && w) c else d) e else h
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tif(
+              tinfix(
+                tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+                "&&",
+                tname("w"),
+              ),
+              tname("c"),
+              tname("d"),
+            ),
+            tname("e"),
+            tname("h"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and a colon argument after the parentheses, the argument on the next line, a blank line, a shallower expression in parentheses on the next line, `then` and `else` on the next line, next statement") {
@@ -22224,7 +23111,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [41..41)
          |Ident(z) [50..51)
          |Indentation.Outdent [52..52)
-         |LFLF [52..53)
          |LeftParen [59..60)
          |Ident(w) [60..61)
          |RightParen [61..62)
@@ -22239,11 +23125,39 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [87..87)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `outdent` expected but `then` found
-         |    then c else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (x(y) && foo {
+         |      z
+         |    }(w)) c else d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tinfix(
+              tapply(tname("x"), tname("y")),
+              "&&",
+              tapply(tapply(tname("foo"), blk(tname("z"))), tname("w")),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: a colon lambda, its body on the next line, a blank line, shallower leading `==` on the next line, `then` and `else` on the next line, next statement") {
@@ -22277,7 +23191,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [42..42)
          |Ident(x) [51..52)
          |Indentation.Outdent [53..53)
-         |LFLF [53..54)
+         |InfixLF [53..54)
          |Ident(==) [60..62)
          |Ident(w) [63..64)
          |KwThen [69..73)
@@ -22291,11 +23205,39 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [89..89)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `then` expected but `identifier` found
-         |      == w
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (xs.exists {
+         |      x => x
+         |    } == w) c else d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tinfix(
+              tapply(tselect(tname("xs"), "exists"), blk(tfunc(tparam("x"))(tname("x")))),
+              "==",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: after a statement with a leading `+` line, `&&` and a colon argument, the argument on the next line, a blank line, shallower leading `&&` on the next line, `then` and `else` on the next line") {
@@ -22336,7 +23278,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [60..60)
          |Ident(z) [69..70)
          |Indentation.Outdent [71..71)
-         |LFLF [71..72)
+         |InfixLF [71..72)
          |Ident(&&) [78..80)
          |Ident(w) [81..82)
          |KwThen [87..91)
@@ -22348,11 +23290,35 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [101..101)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:8: error: `then` expected but `identifier` found
-         |      && w
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    val v = a + b
+         |    if (x && foo {
+         |      z
+         |    } && w) c else d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Defn.Val(Nil, List(patvar("v")), None, tinfix(tname("a"), "+", tname("b"))),
+          tif(
+            tinfix(tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`try` within parentheses with a colon argument, the argument on the next line, a blank line, leading `+` and `)` on the next line") {
@@ -22380,7 +23346,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [30..30)
          |Ident(z) [37..38)
          |Indentation.Outdent [39..39)
-         |LFLF [39..40)
+         |InfixLF [39..40)
          |Ident(+) [44..45)
          |Ident(w) [46..47)
          |RightParen [47..48)
@@ -22388,11 +23354,28 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [49..49)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `)` expected but `identifier` found
-         |    + w)
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = g(try foo {
+         |    z
+         |  } + w)
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          tname("g"),
+          Term.Try(tinfix(tapply(tname("foo"), blk(tname("z"))), "+", tname("w")), None, None),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("lambda within parentheses with `try` and a colon argument, the argument on the next line, a blank line, leading `+` and `)` on the next line") {
@@ -22424,7 +23407,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [40..40)
          |Ident(z) [47..48)
          |Indentation.Outdent [49..49)
-         |LFLF [49..50)
+         |InfixLF [49..50)
          |Ident(+) [54..55)
          |Ident(w) [56..57)
          |RightParen [57..58)
@@ -22432,11 +23415,30 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [59..59)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `)` expected but `identifier` found
-         |    + w)
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = xs.map(x => try foo {
+         |    z
+         |  } + w)
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          tselect(tname("xs"), "map"),
+          tfunc(
+            tparam("x"),
+          )(Term.Try(tinfix(tapply(tname("foo"), blk(tname("z"))), "+", tname("w")), None, None)),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: top-level `def` with `if`, `&&` and a colon argument, the argument on the next line, a blank line, shallower leading `&&` on the next line, `then` and `else` on the next line") {
@@ -22460,7 +23462,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [20..20)
          |Ident(z) [25..26)
          |Indentation.Outdent [27..27)
-         |LFLF [27..28)
+         |InfixLF [27..28)
          |Ident(&&) [30..32)
          |Ident(w) [33..34)
          |KwThen [37..41)
@@ -22470,11 +23472,23 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [51..51)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `then` expected but `identifier` found
-         |  && w
-         |  ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|def f = if (a && foo {
+         |  z
+         |} && w) c else d
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tif(
+        tinfix(tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+        tname("c"),
+        tname("d"),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: top-level `def` with `&&` and a colon argument after the parentheses, the argument on the next line, a blank line, shallower leading `&&` on the next line, `then` and `else` on the next line") {
@@ -22503,7 +23517,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [25..25)
          |Ident(z) [30..31)
          |Indentation.Outdent [32..32)
-         |LFLF [32..33)
+         |InfixLF [32..33)
          |Ident(&&) [35..37)
          |Ident(w) [38..39)
          |KwThen [42..46)
@@ -22513,11 +23527,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [56..56)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: illegal start of definition `identifier`
-         |  && w
-         |  ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|def f = if (x(y) && foo {
+         |  z
+         |} && w) c else d
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tif(
+        tinfix(
+          tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+          "&&",
+          tname("w"),
+        ),
+        tname("c"),
+        tname("d"),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: top-level `val` with `&&` and a colon argument after the parentheses, the argument on the next line, a blank line, shallower leading `&&` on the next line, `then` and `else` on the next line, next definition") {
@@ -22547,7 +23577,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [25..25)
          |Ident(z) [30..31)
          |Indentation.Outdent [32..32)
-         |LFLF [32..33)
+         |InfixLF [32..33)
          |Ident(&&) [35..37)
          |Ident(w) [38..39)
          |KwThen [42..46)
@@ -22562,11 +23592,30 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [66..66)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: illegal start of definition `identifier`
-         |  && w
-         |  ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|val r = if (x(y) && foo {
+         |  z
+         |} && w) c else d
+         |def g = 1
+         |""".stripMargin
+    val tree = Source(List(
+      Defn.Val(
+        Nil,
+        List(patvar("r")),
+        None,
+        tif(
+          tinfix(
+            tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+            "&&",
+            tname("w"),
+          ),
+          tname("c"),
+          tname("d"),
+        ),
+      ),
+      Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+    ))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with `try` and a colon argument, the argument on the next line, a blank line, leading `&&` at the column of the `if`, `then` and `else` on the next line, next statement") {
@@ -22597,7 +23646,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [35..35)
          |Ident(z) [44..45)
          |Indentation.Outdent [46..46)
-         |LFLF [46..47)
+         |InfixLF [46..47)
          |Ident(&&) [51..53)
          |Ident(w) [54..55)
          |KwThen [60..64)
@@ -22611,11 +23660,35 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [80..80)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `then` expected but `identifier` found
-         |    && w
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (try foo {
+         |      z
+         |    } && w) c else d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            Term.Try(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")), None, None),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with `try` and a colon argument, the argument on the next line, a blank line, shallower leading `&&` on the next line, `then` and `else` on the next line, next definition") {
@@ -22644,7 +23717,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [31..31)
          |Ident(z) [40..41)
          |Indentation.Outdent [42..42)
-         |LFLF [42..43)
+         |InfixLF [42..43)
          |Ident(&&) [49..51)
          |Ident(w) [52..53)
          |KwThen [58..62)
@@ -22660,11 +23733,33 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [84..84)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:5: error: `then` expected but `identifier` found
-         |      && w
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (try foo {
+         |    z
+         |  } && w) c else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            Term.Try(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")), None, None),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `while` with `try` and a colon argument, the argument on the next line, a blank line, leading `&&` at the column of the `while`, `do` on the next line, next statement") {
@@ -22695,7 +23790,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [38..38)
          |Ident(z) [47..48)
          |Indentation.Outdent [49..49)
-         |LFLF [49..50)
+         |InfixLF [49..50)
          |Ident(&&) [54..56)
          |Ident(w) [57..58)
          |KwDo [63..65)
@@ -22707,11 +23802,34 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [74..74)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `do` expected but `identifier` found
-         |    && w
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while (try foo {
+         |      z
+         |    } && w) c
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(
+            Term.Try(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")), None, None),
+            tname("c"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and a colon argument after the parentheses, the argument on the next line with a comment, a blank line, shallower leading `&&` on the next line, `then` and `else` on the next line, next statement") {
@@ -22746,7 +23864,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [37..37)
          |Ident(z) [46..47)
          |Indentation.Outdent [53..53)
-         |LFLF [53..54)
          |Ident(&&) [60..62)
          |Ident(w) [63..64)
          |KwThen [69..73)
@@ -22762,11 +23879,42 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [95..95)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `;` expected but `then` found
-         |    then c else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (x(y) && foo {
+         |    z // c
+         |
+         |  } && w) c else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(
+              tinfix(
+                tapply(tname("x"), tname("y")),
+                "&&",
+                tapply(tname("foo"), blk(tnameComments("z")()("// c"))),
+              ),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and a colon argument after the parentheses, the argument on the next line, two blank lines, shallower leading `&&` on the next line, `then` and `else` on the next line, next statement") {
@@ -22802,7 +23950,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [37..37)
          |Ident(z) [46..47)
          |Indentation.Outdent [49..49)
-         |LFLF [49..50)
          |Ident(&&) [56..58)
          |Ident(w) [59..60)
          |KwThen [65..69)
@@ -22818,11 +23965,37 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [91..91)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `;` expected but `then` found
-         |    then c else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (x(y) && foo {
+         |    z
+         |  } && w) c else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(
+              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and a colon argument after the parentheses, the argument on the next line, a blank line, a comment line, a blank line, shallower leading `&&` on the next line, `then` and `else` on the next line, next statement") {
@@ -22859,7 +24032,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [37..37)
          |Ident(z) [46..47)
          |Indentation.Outdent [48..48)
-         |LFLF [48..61)
          |Ident(&&) [67..69)
          |Ident(w) [70..71)
          |KwThen [76..80)
@@ -22875,11 +24047,40 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [102..102)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:8: error: `;` expected but `then` found
-         |    then c else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (x(y) && foo {
+         |    z
+         |  }
+         |    // c
+         |
+         |    && w) c else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(
+              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              Term.Name.newBuilder("&&").begComment(detachedComments("// c")).result(),
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with `try` and a colon argument, the argument on the next line, two blank lines, leading `&&` at the column of the `if`, `then` and `else` on the next line, next statement") {
@@ -22911,7 +24112,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [35..35)
          |Ident(z) [44..45)
          |Indentation.Outdent [47..47)
-         |LFLF [47..48)
          |Ident(&&) [52..54)
          |Ident(w) [55..56)
          |KwThen [61..65)
@@ -22925,11 +24125,35 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [81..81)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `then` expected but `identifier` found
-         |    && w
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (try foo {
+         |      z
+         |    } && w) c else d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            Term.Try(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")), None, None),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`if` within parentheses with `try` and a colon argument in its `then` body, the argument on the next line, a blank line, leading `&&` on the next line, `else` on the next line, next statement") {
@@ -22964,7 +24188,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [44..44)
          |Ident(z) [55..56)
          |Indentation.Outdent [57..57)
-         |LFLF [57..58)
+         |InfixLF [57..58)
          |Ident(&&) [66..68)
          |Ident(w) [69..70)
          |KwElse [77..81)
@@ -22977,11 +24201,38 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [91..91)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `)` expected but `identifier` found
-         |        && w
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    g(if (a) try foo {
+         |      z
+         |    } && w else d)
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tapply(
+            tname("g"),
+            tif(
+              tname("a"),
+              Term.Try(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")), None, None),
+              tname("d"),
+            ),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with an `if` whose `then` body holds `try` and a colon argument, the argument on the next line, a blank line, leading `&&` on the next line, `else` and the outer `then` on later lines, next statement") {
@@ -23016,7 +24267,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [45..45)
          |Ident(z) [56..57)
          |Indentation.Outdent [58..58)
-         |LFLF [58..59)
+         |InfixLF [58..59)
          |Ident(&&) [67..69)
          |Ident(w) [70..71)
          |KwElse [78..82)
@@ -23032,11 +24283,39 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [109..109)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `then` expected but `identifier` found
-         |        && w
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (if (a) try foo {
+         |      z
+         |    } && w else d) c else e
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tif(
+              tname("a"),
+              Term.Try(tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")), None, None),
+              tname("d"),
+            ),
+            tname("c"),
+            tname("e"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with an `if` whose `then` body holds `try`, a deeper line in parentheses, `else` and the outer `then` on later lines, next statement") {
@@ -23065,7 +24344,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwThen [32..36)
          |KwTry [37..40)
          |Ident(b) [41..42)
-         |LF [42..43)
          |LeftParen [53..54)
          |Ident(c) [54..55)
          |RightParen [55..56)
@@ -23082,11 +24360,33 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [94..94)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `then` expected but `(` found
-         |          (c)
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (if (a) try b(c) else d) e else k
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tif(tname("a"), Term.Try(tapply(tname("b"), tname("c")), None, None), tname("d")),
+            tname("e"),
+            tname("k"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`if` within parentheses with `try` in its `then` body, a deeper line in parentheses, `else` on the next line, next statement") {
@@ -23115,7 +24415,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwThen [31..35)
          |KwTry [36..39)
          |Ident(b) [40..41)
-         |LF [41..42)
          |LeftParen [52..53)
          |Ident(c) [53..54)
          |RightParen [54..55)
@@ -23129,11 +24428,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [76..76)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:4: error: `)` expected but `(` found
-         |          (c)
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    g(if (a) try b(c) else d)
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tapply(
+            tname("g"),
+            tif(tname("a"), Term.Try(tapply(tname("b"), tname("c")), None, None), tname("d")),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `if` with `try` and a `catch` case on its line, a colon argument in the case body, the argument on the next line, a blank line, leading `&&` on the next line, `then` and `else` on the next line, next statement") {
@@ -23364,11 +24684,34 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [100..100)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `=>` expected but `identifier` found
-         |        w
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z
+         |    } w => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(patvar("y"), Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "w")), tname("c")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and a colon argument, the argument on the next line ending in `;`, `+` and an expression between the columns of the `if` and the argument, `then` and `else` on the next line, next statement") {

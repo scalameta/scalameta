@@ -3512,7 +3512,6 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Indentation.Indent [44..44)
          |Ident(z) [55..56)
          |Indentation.Outdent [57..57)
-         |LFLF [57..58)
          |Ident(b) [66..67)
          |RightParen [67..68)
          |LF [68..69)
@@ -3522,11 +3521,31 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |EOF [75..75)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `)` expected but `identifier` found
-         |        b)
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    g(throw foo {
+         |      z
+         |    } b)
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tapply(tname("g"), Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b"))),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`throw` at the end of a line within parentheses, a colon argument on the next line, the argument on the line after, a blank line, a definition and an expression at the column of the colon argument") {
@@ -3559,7 +3578,6 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Indentation.Indent [44..44)
          |Ident(z) [55..56)
          |Indentation.Outdent [57..57)
-         |LFLF [57..58)
          |KwVal [66..69)
          |Ident(c) [70..71)
          |Equals [72..73)
@@ -3620,11 +3638,35 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |EOF [92..92)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `then` expected but `identifier` found
-         |        b
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (throw foo {
+         |      z
+         |    } b) c else d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`throw` at the end of a line within a condition, a colon argument on the next line, the argument on the line after, a blank line, an expression at the column of the colon argument") {
@@ -3656,7 +3698,6 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Indentation.Indent [46..46)
          |Ident(z) [58..59)
          |Indentation.Outdent [60..60)
-         |LFLF [60..61)
          |Ident(b) [70..71)
          |KwThen [76..80)
          |Ident(c) [81..82)
@@ -3669,11 +3710,35 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |EOF [96..96)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `then` expected but `identifier` found
-         |         b
-         |         ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (throw foo {
+         |      z
+         |    } b) c else d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`throw` at the end of a line within a condition, a colon argument on the next line, the argument on the line after, a comment line, an expression at the column of the colon argument") {
@@ -3717,11 +3782,40 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |EOF [105..105)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `then` expected but `identifier` found
-         |        b
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (throw foo {
+         |      z
+         |    }
+         |      // c
+         |      b) c else d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            Term.Throw(Term.SelectPostfix(
+              tapply(tname("foo"), blk(tname("z"))),
+              Term.Name.newBuilder("b").begComment(detachedComments("// c")).result(),
+            )),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`throw` at the end of a line within an inline `then` body nested in a condition, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
@@ -3770,11 +3864,39 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |EOF [122..122)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `then` expected but `identifier` found
-         |          b
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (if (a) throw foo {
+         |      z
+         |    } b else d) c else e
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tif(
+              tname("a"),
+              Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+              tname("d"),
+            ),
+            tname("c"),
+            tname("e"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
 }

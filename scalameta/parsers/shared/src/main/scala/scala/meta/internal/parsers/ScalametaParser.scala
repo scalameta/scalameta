@@ -2833,7 +2833,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
           val op = termName("match")
           val lhs = getPrevLhs(op)
           Right(matchClause(lhs, getLhsStartPos(lhs)))
-        case _ if prev[Indentation.Outdent] && !inRegionParen => null
+        case _ if prev[Indentation.Outdent] && canProduceLF(in.currRegions) => null
         case t: Unquote =>
           val op = unquote[Term.Name](t)
           getPostfixOrNextRhs(op)
