@@ -2,6 +2,7 @@ package scala.meta
 
 import org.scalameta.invariants._
 import scala.meta.classifiers._
+import scala.meta.internal.NullableOps._
 import scala.meta.internal.prettyprinters._
 import scala.meta.internal.trees.FieldAnnotations._
 import scala.meta.internal.trees._
@@ -199,14 +200,14 @@ object Tree extends InternalTreeXtensions {
       @newField("4.17.4")
       newlinesAfter: Int = -1,
   ) extends Tree {
-    final def isScaladoc: Boolean = parts.headOption
-      .exists(x => x.value.length > 4 && x.value.startsWith("/**"))
-    final def isSingleline: Boolean = parts.headOption.exists(_.value.startsWith("//"))
+    final def isScaladoc: Boolean = parts.headOrNull
+      .nnHas(x => x.value.length > 4 && x.value.startsWith("/**"))
+    final def isSingleline: Boolean = parts.headOrNull.nnHas(_.value.startsWith("//"))
     final def getNewlinesAfter: Int =
       if (newlinesAfter > 0) newlinesAfter else if (isSingleline) 1 else 0
     final def hasNewlinesAfter: Boolean = newlinesAfter > 0 || isSingleline
     final def hasBlankAfter: Boolean = newlinesAfter > 1
-    final def isMultiline: Boolean = parts.headOption.exists { x =>
+    final def isMultiline: Boolean = parts.headOrNull.nnHas { x =>
       val part = x.value
       val len = part.length
       (len == 4 || len > 4 && part.charAt(2) != '*') && part.startsWith("/*")

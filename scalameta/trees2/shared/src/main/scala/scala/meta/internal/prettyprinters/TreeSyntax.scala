@@ -5,6 +5,7 @@ package prettyprinters
 import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta.classifiers._
 import scala.meta.inputs.Position
+import scala.meta.internal.NullableOps._
 import scala.meta.internal.tokens.Chars._
 import scala.meta.internal.trees._
 import scala.meta.prettyprinters._
@@ -1269,7 +1270,7 @@ object TreeSyntax {
           val (before, after) = commentsBeforeKeyword(c, body)
           if (before.isEmpty) afterPrev(printLeading(after, c.newlinesBefore))
           else {
-            val newlines = after.headOption.fold(0)(countNewlinesBefore)
+            val newlines = after.headOrNull.nnFold(0)(countNewlinesBefore)
             val res = withKeyword(printLeading(after, newlines))
             i(s(newlinesBefore(c, force = true), printComments(before), res), indent)
           }
@@ -1527,7 +1528,7 @@ object TreeSyntax {
     val (line, under) = t.values.splitAt(onLine)
     if (under.isEmpty || under.last.hasBlankAfter) printEndComments(t)
     else {
-      val blankBefore = line.lastOption.fold(t.hasBlankBefore)(_.hasBlankAfter)
+      val blankBefore = line.lastOrNull.nnFold(t.hasBlankBefore)(_.hasBlankAfter)
       val res = s(blank(blankBefore), printComments(under))
       val indented = indents match {
         case 0 => n(res)
