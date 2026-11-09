@@ -5,6 +5,8 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.trees.Origin
 
+import scala.annotation.nowarn
+
 // FIXME: https://github.com/scalatest/scalatest/issues/1112
 // I had to remove $ characters from all test names in this file.
 // This is because ScalaTest seems to erroneously consider dollars to be name terminators,
@@ -19,6 +21,7 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("rank-1 liftables") {
+    @nowarn("msg=never used|unused") // the quasiquote lifts with it
     implicit def custom: Lift[List[Int], Term.ArgClause] =
       Lift(lst => lst.map(x => q"$x".asInstanceOf[Term]))
     assertTree(q"foo(..${List(1, 2, 3)})")(tapply(tname("foo"), int(1), int(2), int(3)))
@@ -1870,6 +1873,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("mod\"var\"")(assertTree(mod"varparam")(Mod.VarParam()))
 
   test("1 enumerator\"pat <- expr\"") {
+    @nowarn("msg=never used|unused") // the pattern names every part
     val enumerator"$pat <- $expr" = enumerator"x <- xs"
     assertTree(pat)(patvar("x"))
   }
@@ -1887,6 +1891,7 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("1 enumerator\"pat = expr\"") {
+    @nowarn("msg=never used|unused") // the pattern names every part
     val enumerator"$pat = $expr" = enumerator"x = xs"
     assertTree(pat)(patvar("x"))
   }
@@ -2253,22 +2258,26 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("#2841 empty, with extends") {
+    @nowarn("msg=never used|unused") // the pattern names every part
     val q"..$mods object $ename extends $template" = q"object X extends Y"
     assertTree(template)(init("Y"))
     assertEquals(mods, Nil)
   }
 
   test("#2841 empty") {
+    @nowarn("msg=never used|unused") // the pattern names every part
     val q"..$mods object $ename $template" = q"object X extends Y"
     assertTree(template)(tplNoBody(init("Y")))
     assertEquals(mods, Nil)
   }
 
   test("#2841 non-empty, with extends")(intercept[MatchError] {
+    @nowarn("msg=never used|unused") // the pattern names every part
     val q"..$mods object $ename extends $template" = q"object X extends Y { def foo }"
   })
 
   test("#2841 non-empty, no extends") {
+    @nowarn("msg=never used|unused") // the pattern names every part
     val q"..$mods object $ename $template" = q"object X extends Y { def foo }"
     assertTree(template)(
       tpl(List(init("Y")), List(Decl.Def(Nil, tname("foo"), Nil, Nil, pname("Unit")))),
@@ -2277,6 +2286,7 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("#2841 empty, full sig") {
+    @nowarn("msg=never used|unused") // the pattern names every part
     val q"..$mods object $ename extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
       q"object X extends Y"
     assertEquals(mods, Nil)
@@ -2287,6 +2297,7 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("#2841 non-empty, full sig") {
+    @nowarn("msg=never used|unused") // the pattern names every part
     val q"..$mods object $ename extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
       q"object X extends Y { def foo }"
     assertEquals(mods, Nil)
@@ -2297,6 +2308,7 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("#2841 empty, partial sig") {
+    @nowarn("msg=never used|unused") // the pattern names every part
     val q"..$mods object $ename extends ..$parents { ..$stats }" = q"object X extends Y"
     assertEquals(mods, Nil)
     assertTrees(parents: _*)(init("Y"))
@@ -2304,6 +2316,7 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("#2841 non-empty, partial sig") {
+    @nowarn("msg=never used|unused") // the pattern names every part
     val q"..$mods object $ename extends ..$parents { ..$stats }" = q"object X extends Y { def foo }"
     assertEquals(mods, Nil)
     assertTrees(parents: _*)(init("Y"))

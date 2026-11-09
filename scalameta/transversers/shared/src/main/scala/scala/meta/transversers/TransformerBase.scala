@@ -1,6 +1,8 @@
 package scala.meta
 package transversers
 
+import scala.annotation.nowarn
+
 /**
  * Base of the generated [[Transformer]].
  *
@@ -23,6 +25,7 @@ private[meta] abstract class TransformerBase {
   // Reached with no pending children only if `apply` was invoked outside `transform`
   // (e.g. a subclass widened `apply` to public and called it): fail loudly rather
   // than fall into the recursive, overflow-prone path.
+  @nowarn("msg=never used|unused") // the generated code passes the child
   protected final def transformChild(tree: Tree): Tree = {
     if (pendingChildren eq null)
       throw new IllegalStateException("Transformer.apply must not be called directly; use transform")

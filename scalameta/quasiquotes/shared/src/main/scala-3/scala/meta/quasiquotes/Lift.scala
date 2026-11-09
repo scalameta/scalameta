@@ -3,7 +3,7 @@ package quasiquotes
 
 import scala.meta.common._
 
-import scala.annotation.implicitNotFound
+import scala.annotation.{implicitNotFound, nowarn}
 
 @implicitNotFound(msg = "don't know how to lift ${O} into ${I}")
 trait Lift[O, I] extends Convert[O, I]
@@ -32,6 +32,7 @@ object Lift {
     Lift(x => Some(lift(x)))
   implicit def liftSomeToList[O, I](implicit lift: Lift[O, I]): Lift[Some[O], List[I]] =
     Lift(_.toList.map(x => lift(x)))
+  @nowarn("msg=unused") // binary compatibility
   implicit def liftNoneToList[O, I](implicit lift: Lift[O, I]): Lift[None.type, List[I]] =
     Lift(_ => Nil)
   implicit def liftOptionToList[O, I](implicit lift: Lift[O, I]): Lift[Option[O], List[I]] =

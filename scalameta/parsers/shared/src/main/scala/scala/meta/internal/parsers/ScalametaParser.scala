@@ -18,7 +18,7 @@ import scala.meta.tokens.Token._
 import scala.meta.tokens._
 import scala.meta.trees.Origin
 
-import scala.annotation.tailrec
+import scala.annotation.{nowarn, tailrec}
 import scala.collection.immutable._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -1180,6 +1180,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
         case t => syntaxError("Macro quote must be followed by id, brace or bracket", at = t)
       }
     }
+    @nowarn("msg=never used|unused") // an extractor takes its scrutinee
     final def unapply(tok: MacroQuote): Some[Term] = Some(autoPos(get))
   }
 
@@ -3881,6 +3882,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     })(Term.ParamClause(Nil))
   }
 
+  @nowarn("msg=never used|unused") // commaSeparatedWithIndex passes the index
   def termParam(mod: Option[Mod.ParamsType] = None)(paramIdx: Int): Term.Param = autoPos {
     val mods = new ListBuffer[Mod]
     annotsBuf(mods, skipNewLines = false)

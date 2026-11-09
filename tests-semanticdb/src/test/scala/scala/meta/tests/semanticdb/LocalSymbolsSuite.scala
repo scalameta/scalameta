@@ -12,6 +12,7 @@ import scala.meta.metap.Format
 import java.io.File
 import java.nio.file.{Files, Path}
 
+import scala.annotation.nowarn
 import scala.collection.mutable
 import scala.tools.nsc.reporters.StoreReporter
 import scala.tools.nsc.{Global, Settings}
@@ -8208,6 +8209,7 @@ class LocalSymbolsSuite extends FunSuite {
 
   /* The places of a value in the body of a case: of a partial function, of a function of cases,
    * and of a method block for comparison. */
+  @nowarn("cat=unused-params") // the matrix passes the same arguments to every place
   private def casePlaces(kind: String, defn: String, use: String) = List(
     "body of a partial function" -> s"val p1: PartialFunction[Int, Int] = { case x => $defn; $use }",
     "body of a function of cases" -> s"val p2: Int => Int = { case x => $defn; $use }",

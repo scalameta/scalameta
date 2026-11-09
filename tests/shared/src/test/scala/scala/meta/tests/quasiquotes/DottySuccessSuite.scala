@@ -4,6 +4,8 @@ package quasiquotes
 
 import scala.meta._
 
+import scala.annotation.nowarn
+
 class DottySuccessSuite extends TreeSuiteBase {
 
   test("1 t\"(..tpes) => tpe [param clause]\"") {
@@ -21,6 +23,7 @@ class DottySuccessSuite extends TreeSuiteBase {
   private final val cparam = tparam("c", "Circle")
 
   test("extension quasiquotes: triple, no tparams") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
     val dialect: Dialect = null
     import dialects.Scala3
 
@@ -48,6 +51,7 @@ class DottySuccessSuite extends TreeSuiteBase {
   }
 
   test("extension quasiquotes: triple, with tparams") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
     val dialect: Dialect = null
     import dialects.Scala3
 
@@ -75,6 +79,7 @@ class DottySuccessSuite extends TreeSuiteBase {
   }
 
   test("extension quasiquotes: double, no tparams") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
     val dialect: Dialect = null
     import dialects.Scala3
 
@@ -93,6 +98,7 @@ class DottySuccessSuite extends TreeSuiteBase {
   }
 
   test("extension quasiquotes: double, with tparams") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
     val dialect: Dialect = null
     import dialects.Scala3
 
@@ -111,6 +117,7 @@ class DottySuccessSuite extends TreeSuiteBase {
   }
 
   test("extension quasiquotes: single, no tparams") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
     val dialect: Dialect = null
     import dialects.Scala3
 
@@ -131,6 +138,7 @@ class DottySuccessSuite extends TreeSuiteBase {
   }
 
   test("extension quasiquotes: single, with tparams") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
     val dialect: Dialect = null
     import dialects.Scala3
 

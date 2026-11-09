@@ -3,10 +3,13 @@ package scala.meta.tests.parsers
 import org.scalameta.logger
 import scala.meta._
 
+import scala.annotation.nowarn
+
 class XmlSuite extends ParseSuite {
 
   implicit val dialect: Dialect = dialects.Scala211
 
+  @nowarn("msg=never used|unused") // takes the arguments of checkToken
   def skip(original: String, expected: String)(implicit loc: munit.Location): Unit =
     test(logger.revealWhitespace(original).ignore) {}
 

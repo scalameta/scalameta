@@ -6,7 +6,7 @@ import scala.meta.inputs._
 import scala.meta.prettyprinters._
 
 import scala.Console._
-import scala.annotation.implicitNotFound
+import scala.annotation.{implicitNotFound, nowarn}
 
 trait PositionStyle
 object PositionStyle {
@@ -31,6 +31,7 @@ object Positions {
     def apply(input: T) = f(input)
   }
 
+  @nowarn("cat=unused-params") // public signature
   implicit def positionsTree[T <: Tree: Syntax](implicit
       positionStyle: PositionStyle,
       sliceStyle: SliceStyle,

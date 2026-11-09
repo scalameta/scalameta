@@ -1,7 +1,7 @@
 package org.scalameta
 package internal
 
-import scala.annotation.tailrec
+import scala.annotation.{nowarn, tailrec}
 
 trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder with ImplTransformers {
 
@@ -98,6 +98,7 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
   }
 
   def hygienicRef[T: TypeTag]: Tree = hygienicRef(symbolOf[T])
+  @nowarn("cat=unused-params") // `x` only infers `T`
   def hygienicRef[T <: Singleton: TypeTag](x: T): Tree = hygienicRef(symbolOf[T])
 
   def typeRef(cdef: ClassDef, requireHk: Boolean, requireWildcards: Boolean): Tree = {

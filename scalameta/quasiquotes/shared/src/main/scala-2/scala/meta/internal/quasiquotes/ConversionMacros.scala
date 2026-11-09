@@ -4,6 +4,7 @@ package quasiquotes
 
 import scala.meta.internal.trees.{Reflection => AstReflection}
 
+import scala.annotation.nowarn
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
@@ -57,6 +58,7 @@ class ConversionMacros(val c: Context) extends AstReflection {
     // For that to work, we just need to wrap the reification result into `Lift.unapply`!
     throw new Exception("This method should be unreachable")
 
+  @nowarn("cat=unused-params") // the macro definition fixes the signature
   def unliftApply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree =
     // NOTE: here we just disregard the expected outside type, because I can't find uses for it
     // duality is a fun thing, but it looks like here it just led me into a dead-end

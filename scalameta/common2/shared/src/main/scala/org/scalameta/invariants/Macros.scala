@@ -2,6 +2,7 @@ package org.scalameta.invariants
 
 import org.scalameta.internal.MacroHelpers
 
+import scala.annotation.nowarn
 import scala.reflect.macros.blackbox.Context
 
 class Macros(val c: Context) extends MacroHelpers {
@@ -19,6 +20,7 @@ class Macros(val c: Context) extends MacroHelpers {
       """
   }
 
+  @nowarn("cat=unused-params") // the macro definition fixes the signature
   def requireCast[U](ev: c.Tree)(U: c.WeakTypeTag[U]): c.Tree = {
     val q"$_($x)" = c.prefix.tree
     val clue = s"${showCode(x)} can not be cast to type ${showDecl(U.tpe.typeSymbol)}"

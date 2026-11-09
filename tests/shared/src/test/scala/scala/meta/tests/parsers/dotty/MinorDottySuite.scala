@@ -2,6 +2,8 @@ package scala.meta.tests.parsers.dotty
 
 import scala.meta._
 
+import scala.annotation.nowarn
+
 class MinorDottySuite extends BaseDottySuite {
 
   /**
@@ -96,6 +98,7 @@ class MinorDottySuite extends BaseDottySuite {
   ))
 
   test("opaque-type-bounded-alias-with-quasiquotes") {
+    @nowarn("msg=never used|unused")
     val dialect: Dialect = null // overrides implicit
     import dialects.Scala3
     runTestAssert[Stat]("opaque type Foo <: String = String")(

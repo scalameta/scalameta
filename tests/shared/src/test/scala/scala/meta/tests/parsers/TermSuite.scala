@@ -5,6 +5,7 @@ import scala.meta._
 import scala.meta.internal.trees.XtensionTreesName
 import scala.meta.tokenizers.TokenizerOptions
 
+import scala.annotation.nowarn
 import scala.language.implicitConversions
 
 class TermSuite extends ParseSuite {
@@ -1498,6 +1499,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("#3979 w/ grouped whitespace") {
+    @nowarn("msg=never used|unused") // runTestAssert does not read it
     implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = true)
 
     val code =
@@ -1530,6 +1532,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("#3979 w/ granular whitespace") {
+    @nowarn("msg=never used|unused") // runTestAssert does not read it
     implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = false)
 
     val code =

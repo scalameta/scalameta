@@ -7,6 +7,8 @@ import java.net._
 import java.nio.file.{Path, Paths}
 import java.nio.{file => nio}
 
+import scala.annotation.nowarn
+
 /** Wrapper around an absolute nio.Path. */
 sealed abstract case class AbsolutePath(toNIO: nio.Path) {
 
@@ -68,6 +70,7 @@ object AbsolutePath {
   def apply(path: String)(implicit cwd: AbsolutePath): AbsolutePath = apply(Paths.get(path))(cwd)
   def apply(path: Path)(implicit cwd: AbsolutePath): AbsolutePath =
     if (path.isAbsolute) new AbsolutePath(path) {} else cwd.resolve(path.toString)
+  @nowarn("cat=unused-params") // binary compatibility
   def fromAbsoluteUri(uri: URI)(implicit cwd: AbsolutePath): AbsolutePath = {
     require(uri.isAbsolute, "This method only works on absolute URIs at present.") // Limitation of Paths.get(URI)
     fromUri(uri)
