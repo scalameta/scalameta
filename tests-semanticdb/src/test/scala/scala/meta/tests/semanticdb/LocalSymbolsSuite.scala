@@ -1008,17 +1008,17 @@ class LocalSymbolsSuite extends FunSuite {
          |  Int => scala/Int#
          |b/UseOv.s. => val method s: Int
          |  Int => scala/Int#
-         |local0 => param x: Int
-         |  Int => scala/Int#
-         |local1 => abstract method f(x: Int): Int
-         |  x => local0
-         |  Int => scala/Int#
-         |local2 => param x: String
-         |  String => scala/Predef.String#
-         |local3 => abstract method f(x: String): Int
+         |local0 => abstract method f(x: Int): Int
          |  x => local2
+         |  Int => scala/Int#
+         |local1 => abstract method f(x: String): Int
+         |  x => local3
          |  String => scala/Predef.String#
          |  Int => scala/Int#
+         |local2 => param x: Int
+         |  Int => scala/Int#
+         |local3 => param x: String
+         |  String => scala/Predef.String#
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): UseOv <= b/UseOv.
@@ -1026,14 +1026,14 @@ class LocalSymbolsSuite extends FunSuite {
          |[2:10..2:11): a => a/
          |[2:12..2:14): Ov => a/Ov.
          |[2:15..2:16): o => a/Ov.o.
-         |[2:17..2:18): f => local1
-         |[2:19..2:20): x => local0
+         |[2:17..2:18): f => local0
+         |[2:19..2:20): x => local2
          |[3:6..3:7): s <= b/UseOv.s.
          |[3:10..3:11): a => a/
          |[3:12..3:14): Ov => a/Ov.
          |[3:15..3:16): o => a/Ov.o.
-         |[3:17..3:18): f => local3
-         |[3:19..3:20): x => local2
+         |[3:17..3:18): f => local1
+         |[3:19..3:20): x => local3
          |----
          |collisions List()
          |dangling List()
@@ -1049,17 +1049,17 @@ class LocalSymbolsSuite extends FunSuite {
          |  Int => scala/Int#
          |b/UseOv.s. => val method s: Int
          |  Int => scala/Int#
-         |local0 => param x: Int
-         |  Int => scala/Int#
-         |local1 => abstract method f(x: Int): Int
-         |  x => local0
-         |  Int => scala/Int#
-         |local2 => param x: String
-         |  String => scala/Predef.String#
-         |local3 => abstract method f(x: String): Int
+         |local0 => abstract method f(x: Int): Int
          |  x => local2
+         |  Int => scala/Int#
+         |local1 => abstract method f(x: String): Int
+         |  x => local3
          |  String => scala/Predef.String#
          |  Int => scala/Int#
+         |local2 => param x: Int
+         |  Int => scala/Int#
+         |local3 => param x: String
+         |  String => scala/Predef.String#
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): UseOv <= b/UseOv.
@@ -1067,14 +1067,14 @@ class LocalSymbolsSuite extends FunSuite {
          |[2:10..2:11): a => a/
          |[2:12..2:14): Ov => a/Ov.
          |[2:15..2:16): o => a/Ov.o.
-         |[2:17..2:18): f => local1
-         |[2:19..2:20): x => local0
+         |[2:17..2:18): f => local0
+         |[2:19..2:20): x => local2
          |[3:6..3:7): s <= b/UseOv.s.
          |[3:10..3:11): a => a/
          |[3:12..3:14): Ov => a/Ov.
          |[3:15..3:16): o => a/Ov.o.
-         |[3:17..3:18): f => local3
-         |[3:19..3:20): x => local2
+         |[3:17..3:18): f => local1
+         |[3:19..3:20): x => local3
          |----
          |collisions List()
          |dangling List()

@@ -2484,13 +2484,13 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
       load().linesIterator.filter(_.contains("): i ")).mkString("\n"),
       if (ScalaVersion.is212)
         """|[1:30..1:31): i <= local1
-           |[1:49..1:50): i => local18
+           |[1:49..1:50): i => local20
            |[1:64..1:65): i => local13
            |[1:71..1:72): i => local1
            |""".stripMargin
       else
         """|[1:30..1:31): i <= local1
-           |[1:49..1:50): i => local20
+           |[1:49..1:50): i => local22
            |[1:64..1:65): i => local14
            |[1:71..1:72): i => local1
            |""".stripMargin,

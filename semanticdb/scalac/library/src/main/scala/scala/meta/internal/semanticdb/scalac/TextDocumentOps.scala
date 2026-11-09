@@ -1,5 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
+import scala.meta.internal.NullableOps._
 import scala.meta.internal.inputs._
 import scala.meta.internal.scalacp._
 import scala.meta.internal.semanticdb.Implicits._
@@ -381,6 +382,18 @@ trait TextDocumentOps {
         private case class Rename(gtree: g.Tree, name: g.Name, start: Int, target: g.Symbol)
         // for each template, the getters with a tree in its body
         private val ggetterTrees = mutable.HashMap.empty[g.Template, Set[g.Symbol]]
+
+        /** a parameter of a named argument, and the rank of the application that passes it */
+        private final class NamedParam(var gparam: g.Symbol = null, var rank: Int = -1) {
+          def update(gparam: g.Symbol, rank: Int): Unit =
+            if (rank > this.rank) {
+              this.gparam = gparam
+              this.rank = rank
+            } else if (rank == this.rank && (this.gparam ne gparam)) this.gparam = g.NoSymbol
+        }
+
+        /** each named argument -> its parameter, or `NoSymbol` if two candidates are different */
+        private val gnamedParams = mutable.LinkedHashMap.empty[m.Term.Name, NamedParam]
         private lazy val grootImports = g.analyzer.rootContext(unit).imports.map(_.tree)
 
         private def gettersFor(t: g.Template) = ggetterTrees.getOrElseUpdate(
@@ -668,38 +681,6 @@ trait TextDocumentOps {
           }
           if (null eq mvar) null else mvar.name
         }
-        // the call whose arguments are at `offset`: past its function, or at its init or `new`
-        private def mcallAt(offset: Int): m.Tree = mendOf[m.Tree](offset) {
-          case t: m.Term => t.parent match {
-              case Some(p: m.Term.Apply) if p.fun eq t => p
-              case _ => null
-            }
-          case _ => null
-        } match {
-          case t: m.Tree => t
-          case _ => mstartOf[m.Tree](offset) {
-              case t: m.Init => t
-              case t: m.Term.New => t.init
-              case _ => null
-            }
-        }
-        private def tryNamedArg(gsym: g.Symbol, offsets: Int*): Unit = {
-          def tryNamedArgs(margs: m.Term.ArgClause): Unit = margs.values.foreach {
-            case t: m.Term.Assign => t.lhs match {
-                case mname: m.Term.Name => gsym.paramss
-                    .foreach(_.find(_.decodedName == mname.value).foreach(success(mname, _)))
-                case _ =>
-              }
-            case _ =>
-          }
-          if ((null ne gsym) && (gsym.isMethod || gsym.isConstructor)) offsets.foreach(offset =>
-            mcallAt(offset) match {
-              case t: m.Term.Apply => tryNamedArgs(t.argClause)
-              case t: m.Init => t.argClauses.foreach(tryNamedArgs)
-              case _ =>
-            },
-          )
-        }
 
         private def tryFindMtree(gtree: g.Tree): Unit = {
           val gpos = gtree.pos
@@ -775,8 +756,6 @@ trait TextDocumentOps {
               defineEvidence(gsym, gpoint)
             case _ =>
           }
-
-          tryNamedArg(gsym, gstart, gpoint)
 
           (gtree match {
             case gtree: g.Template => gtree.body.iterator.map(_.symbol)
@@ -1633,6 +1612,136 @@ trait TextDocumentOps {
           pos.trunc(i)
         }
 
+        /** the innermost tree that contains `offset`, or null */
+        private def mtreeAt(offset: Int): m.Tree = {
+          @tailrec
+          def iter(mtree: m.Tree): m.Tree =
+            if ((null eq mtree) || mtree.contains(offset)) mtree else iter(mtree.parentOrNull)
+          iter(mtrees.mbefore(offset))
+        }
+
+        /** the outermost named argument >= `gstart`, it value covering `gpos` */
+        private def mnamedArgAt(gpos: gu.Position, gstart: Int): m.Term.Assign = {
+          val gbeg = if (gpos.isRange) gpos.start else gpos.point
+          val gendIncl = if (gpos.isRange) gpos.end - 1 else gbeg
+          @inline
+          def isDone(mtree: m.Tree): Boolean = (null eq mtree) || mtree.pos.start < gstart
+          @tailrec
+          def iter(mtree: m.Tree)(res: m.Term.Assign): m.Term.Assign = {
+            val parent = mtree.parentOrNull
+            if (isDone(parent)) res
+            else iter(parent)(mtree match {
+              case t: m.Term.Assign
+                  if t.lhs.isInstanceOf[m.Term.Name] && parent.isInstanceOf[m.Term.ArgClause] &&
+                    t.rhs.containsIncl(gbeg, gendIncl) => t
+              case _ => res
+            })
+          }
+          val mtree = mtreeAt(gbeg)
+          if (isDone(mtree)) null else iter(mtree)(null)
+        }
+
+        /** the init of the constructor call that contains `mtree` outside its arguments, or null */
+        @tailrec
+        private def minitOf(mtree: m.Tree): m.Init = mtree match {
+          case null | _: m.Term.NewAnonymous | _: m.Term.ArgClause => null
+          case t: m.Init => t
+          case t: m.Term.New => t.init
+          case t: m.Mod.Annot => t.init
+          case t => minitOf(t.parentOrNull)
+        }
+
+        /** whether `marg` is in the last clause of the left side of `op=`, as in `a(i = 0) += 1` */
+        private def isOpAssignArg(marg: m.Term.Assign): Boolean = marg.parent match {
+          case Some(mclause) =>
+            val mlhs = mclause.parentOrNull match {
+              case t: m.Term.Apply => t
+              case t: m.Term.ApplyInfix => if (t.op.value == "apply") t else null
+              case t: m.Init => t.parent match {
+                  case Some(p: m.Term.New) if t.argClauses.lastOrNull eq mclause => p
+                  case _ => null
+                }
+              case _ => null
+            }
+            mlhs.parentOrNull match {
+              case p: m.Term.ApplyInfix => (p.lhs eq mlhs) && p.isAssignment
+              case p: m.Term.Select => (p.qual eq mlhs) && p.name.isAssignmentOp &&
+                (p.parent match {
+                  case Some(pp: m.Term.Apply) => pp.fun eq p
+                  case _ => false
+                })
+              case _ => false
+            }
+          case _ => false
+        }
+
+        /** adds a candidate if `marg` is a named arg and `gparams` contains a symbol for it */
+        private def tryNamedArg(marg: m.Tree, gparams: List[g.Symbol]): Unit = marg match {
+          case t: m.Term.Assign => t.lhs match {
+              case mname: m.Term.Name =>
+                val gparam = gparams.findOrNull(_.decodedName == mname.value)
+                if (null ne gparam) {
+                  val rank = if (isOpAssignArg(t)) genclosing.count(_.isInstanceOf[g.Apply]) else 0
+                  gnamedParams.getOrElseUpdate(mname, new NamedParam()).update(gparam, rank)
+                }
+              case _ =>
+            }
+          case _ =>
+        }
+
+        @tailrec
+        private def tryNamedClause(margs: List[m.Term], gparams: List[g.Symbol]): Unit = margs match {
+          case marg :: rest =>
+            tryNamedArg(marg, gparams)
+            tryNamedClause(rest, gparams)
+          case _ =>
+        }
+
+        /** adds the candidates of `marg` from each list of `gparamss` */
+        @tailrec
+        private def tryNamedArgInLists(marg: m.Tree, gparamss: List[List[g.Symbol]]): Unit =
+          gparamss match {
+            case gparams :: rest =>
+              tryNamedArg(marg, gparams)
+              tryNamedArgInLists(marg, rest)
+            case _ =>
+          }
+
+        /** adds the candidates of the values in `gargs` of a method application at `gstart` */
+        @tailrec
+        private def tryMethodArgs(gsym: g.Symbol, gstart: Int, gargs: List[g.Tree]): Unit =
+          gargs match {
+            case garg :: rest =>
+              val gpos = garg.pos
+              if ((null ne gpos) && gpos.isDefined) {
+                val marg = mnamedArgAt(gpos, gstart)
+                if (null ne marg) tryNamedArgInLists(marg, gsym.paramss)
+              }
+              tryMethodArgs(gsym, gstart, rest)
+            case _ =>
+          }
+
+        /** adds the candidates of an application with a range */
+        private def tryNamedArgs(gapp: g.Apply): Unit = {
+          val gsym = gapp.symbol
+          if (null ne gsym)
+            if (gsym.isConstructor) minitOf(mtreeAt(gapp.pos.point)) match {
+              case minit: m.Init =>
+                val mclauses = minit.argClauses
+                if (mclauses.exists(_.values.exists(_.isInstanceOf[m.Term.Assign]))) g
+                  .foreach2(mclauses.toList, gsym.paramss)((mclause, gparams) =>
+                    tryNamedClause(mclause.values, gparams),
+                  )
+              case _ =>
+            }
+            else if (gsym.isMethod) tryMethodArgs(gsym, gapp.pos.start, gapp.args)
+        }
+
+        /** records each named argument with its parameter, if the argument has one */
+        def successNamedArgs(): Unit = gnamedParams.foreach { case (mname, p) =>
+          if (p.gparam ne g.NoSymbol) success(mname, p.gparam)
+        }
+
         // the `map`, `flatMap`, `foreach` or `withFilter` that scalac calls for a `for`, or null
         @tailrec
         private def forMethod(gfun: g.Tree): g.Select = gfun match {
@@ -1738,8 +1847,8 @@ trait TextDocumentOps {
             }
           case _: g.GenericApply =>
             tryFindSynthetic(gtree)
-            gtree.pos match {
-              case p: gu.RangePosition => tryNamedArg(gtree.symbol, p.start, p.point)
+            gtree match {
+              case t: g.Apply if t.pos.isRange => tryNamedArgs(t)
               case _ =>
             }
             // fix #2040
@@ -1840,6 +1949,7 @@ trait TextDocumentOps {
 
       MyTreeIndexerTraverser(msource)
       MyDocumentTraverser.traverse(unit.body)
+      MyDocumentTraverser.successNamedArgs()
 
       object Synth {
         def cached(gt: g.Tree)(res: => Option[s.Synthetic]): Option[s.Synthetic] =
