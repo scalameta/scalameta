@@ -404,19 +404,15 @@ lazy val scalameta = projectMatrix.in(file("scalameta/scalameta")).settings(
 /* ======================== TESTS ======================== */
 lazy val semanticdbIntegration = projectMatrix.in(file("semanticdb/integration")).settings(
   description := "Sources to compile to build SemanticDB for tests.",
-  sharedSettings,
+  sharedBaseSettings,
   nonPublishableSettings,
-  // the sources in this project intentionally produce warnings to test the
-  // diagnostics pipeline in semanticdb-scalac.
-  scalacOptions -= "-Xfatal-warnings",
-  scalacOptions -= "-Wconf:cat=deprecation:is",
   scalacOptions += "-deprecation",
   scalacOptions ++= {
-    if (scalaVersion.value >= "2.13.14") Seq(
+    if (isScala212.value) Nil
+    else Seq(
       // "-Xsource:3",
       "-Xsource-features:leading-infix",
     )
-    else Nil
   },
   // only Unused.scala pins the warnings of unused definitions
   scalacOptions += {
@@ -451,7 +447,7 @@ lazy val semanticdbIntegration = projectMatrix.in(file("semanticdb/integration")
 ).dependsOn(semanticdbIntegrationMacros, semanticdbScalacPlugin)
 
 lazy val semanticdbIntegrationMacros = projectMatrix.in(file("semanticdb/integration-macros"))
-  .settings(sharedSettings, nonPublishableSettings, enableMacros).crossFullJvm(AllScala2Versions)
+  .settings(sharedBaseSettings, nonPublishableSettings, enableMacros).crossFullJvm(AllScala2Versions)
 
 lazy val testkit = projectMatrix.in(file("scalameta/testkit")).settings(
   moduleName := "testkit",
@@ -623,7 +619,7 @@ lazy val bench = projectMatrix.in(file("bench/scalameta")).enablePlugins(BuildIn
 lazy val sharedJvmSettings = Def
   .settings(sharedSettings, jvmPlatformSettings, scalaVersion := LatestScala213)
 
-lazy val sharedSettings = Def.settings(
+lazy val sharedBaseSettings = Def.settings(
   // version is set dynamically by sbt-dynver, but let's adjust it
   version := sys.props.get("scalameta.version").getOrElse {
     val curVersion = version.value
@@ -644,6 +640,18 @@ lazy val sharedSettings = Def.settings(
     else List(compilerPlugin(("org.scalamacros" % "paradise" % "2.1.1").cross(CrossVersion.full)))
   },
   scalacOptions ++= { if (isScala213.value) List("-Ymacro-annotations") else Nil },
+  scalacOptions ++= Seq("-feature", "-unchecked"),
+  Compile / doc / scalacOptions ++=
+    { if (!isScala3.value) Seq("-implicits", "-implicits-hide:.", "-groups") else Seq("-groups") },
+  Test / parallelExecution := false, // hello, reflection sync!!
+  logBuffered := false,
+  ThisBuild / watchTriggeredMessage := Watch.clearScreenOnTrigger,
+  evictionErrorLevel := sbt.util.Level.Warn,
+  incOptions := Def.uncached(incOptions.value.withLogRecompileOnMacro(false)),
+)
+
+lazy val sharedSettings = Def.settings(
+  sharedBaseSettings,
   scalacOptions ++= { if (isScala212.value) Nil else List("-Xfatal-warnings") },
   scalacOptions ++= { if (isScala213.value) List("-Wconf:cat=deprecation:is") else Nil },
   scalacOptions ++= {
@@ -662,14 +670,6 @@ lazy val sharedSettings = Def.settings(
     )
     else Nil
   },
-  scalacOptions ++= Seq("-feature", "-unchecked"),
-  Compile / doc / scalacOptions ++=
-    { if (!isScala3.value) Seq("-implicits", "-implicits-hide:.", "-groups") else Seq("-groups") },
-  Test / parallelExecution := false, // hello, reflection sync!!
-  logBuffered := false,
-  ThisBuild / watchTriggeredMessage := Watch.clearScreenOnTrigger,
-  evictionErrorLevel := sbt.util.Level.Warn,
-  incOptions := Def.uncached(incOptions.value.withLogRecompileOnMacro(false)),
 )
 
 def copyAssemblyJar = Def.task {
