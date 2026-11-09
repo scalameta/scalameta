@@ -1,6 +1,5 @@
 package scala.meta.tests.parsers.dotty
 
-import org.scalameta.invariants.InvariantFailedException
 import scala.meta._
 import scala.meta.tests.parsers.ParseSuite
 

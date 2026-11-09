@@ -6,7 +6,7 @@ import scala.meta.parsers.ParseException
 
 class TypeSuite extends ParseSuite {
 
-  import Type.{Name => _, _}
+  import Type._
 
   private def assertTpe(expr: String)(tree: => Tree)(implicit dialect: Dialect): Unit =
     assertTree(tpe(expr))(tree)

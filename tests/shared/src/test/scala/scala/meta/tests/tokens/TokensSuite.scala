@@ -26,8 +26,8 @@ class TokensSuite {
   val d6a: Seq[String] = d.zip(List(3, 4, 5)).zipWithIndex.map { case ((x, y), _) =>
     x.toString + y.toString
   }
-  val d6b: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.map { case ((x, y), _) => newToken }
-  val d6c: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.flatMap { case ((x, y), _) => d }
+  val d6b: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.map { case ((_, _), _) => newToken }
+  val d6c: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.flatMap { case ((_, _), _) => d }
   val d7a: Seq[(Token, Int)] = d.zipWithIndex
 
   // Return Tokens where possible when using collections API

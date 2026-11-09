@@ -6,8 +6,6 @@ import scala.meta.contrib._
 
 import scala.collection.mutable.ListBuffer
 
-import munit.FunSuite
-
 class TreeOpsSuite extends TreeSuiteBase {
   val a: Defn.Val = q"val x = 2"
 

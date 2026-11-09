@@ -4,8 +4,6 @@ package invariants
 import org.scalameta._
 import org.scalameta.invariants._
 
-import munit._
-
 class InvariantSuite extends TreeSuiteBase {
   test("more informative error messages")(
     interceptMessage[InvariantFailedException](

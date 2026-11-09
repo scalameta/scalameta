@@ -32,7 +32,7 @@ object ScalacParser {
   settings.classpath.append(files.mkString(":"))
 
   def canParseInput(input: String) = this.synchronized {
-    val run = new global.Run()
+    new global.Run()
     var fail = false
     import global.syntaxAnalyzer.Offset
     val cu = new global.CompilationUnit(global.newSourceFile(input))

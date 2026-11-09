@@ -2,7 +2,6 @@ package scala.meta.tests
 package api
 
 import org.scalameta.explore
-import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta.internal.trees.AstNamerMacros
 
 import scala.reflect.runtime.universe._

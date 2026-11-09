@@ -6,8 +6,8 @@ class MatchTypeSuite extends BaseDottySuite {
 
   implicit def parseBlock(code: String, dialect: Dialect): Stat = blockStat(code)(dialect)
 
-  test("simple") {
-    val intput = runTestAssert[Stat](
+  test("simple")(
+    runTestAssert[Stat](
       """|type Elem[X] = X match {
          |  case String => Char
          |  case Array[t] => t
@@ -21,11 +21,11 @@ class MatchTypeSuite extends BaseDottySuite {
         pname("X"),
         List(TypeCase(pname("String"), pname("Char")), TypeCase(papply("Array", "t"), pname("t"))),
       ),
-    ))
-  }
+    )),
+  )
 
   test("simple-indentation") {
-    val intput = runTestAssert[Stat](
+    runTestAssert[Stat](
       """|type Elem[X] = 
          |  X match
          |    case String => 

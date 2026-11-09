@@ -1,8 +1,6 @@
 package scala.meta.tests
 package prettyprinters
 
-import scala.meta._
-
 class PlatformSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("JVM has proper floats") {
     // this gives different results work in a JS runtime

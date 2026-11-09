@@ -1,7 +1,6 @@
 package scala.meta.tests
 package parsers
 
-import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta._
 import scala.meta.dialects.Sbt0137
 

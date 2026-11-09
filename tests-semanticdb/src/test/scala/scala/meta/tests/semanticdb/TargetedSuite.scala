@@ -97,7 +97,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  def <<foo>>(a: String): Unit = ()
        |}
        |""".stripMargin,
-    (doc, foo1, foo2, foo3) => {
+    (_, foo1, foo2, foo3) => {
       assertEquals(foo1, "g/ao.foo.")
       assertEquals(foo2, "g/ao.foo().")
       assertEquals(foo3, "g/ao.foo(+1).")
@@ -112,7 +112,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  def baseCase = <<foo>>(<<local>>, <<c>> = 3)
        |}
        |""".stripMargin,
-    (doc, foo1, local, c) => {
+    (_, foo1, local, c) => {
       assertEquals(foo1, "h/ao.foo().")
       assertEquals(local, "h/ao.local.")
       assertEquals(c, "h/ao.foo().(c)")
@@ -127,7 +127,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  def recursive = <<foo>>(<<local>>, <<c>> = <<foo>>(<<local>>, <<c>> = 3))
        |}
        |""".stripMargin,
-    (doc, foo1, local1, c1, foo2, local2, c2) => {
+    (_, foo1, local1, c1, foo2, local2, c2) => {
       assertEquals(foo1, "i/ao.foo().")
       assertEquals(foo2, "i/ao.foo().")
       assertEquals(local1, "i/ao.local.")
@@ -145,7 +145,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  val msg = <<Msg>>(<<bodyText>>, tail = "tail")
        |}
        |""".stripMargin,
-    (doc, msg, bodyText) => {
+    (_, msg, bodyText) => {
       assertEquals(msg, "j/ao.Msg.")
       assertEquals(bodyText, "j/ao.bodyText.")
     },
@@ -161,7 +161,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  unstableQual.<<foo>>(1, <<c>> = 1)
        |}
        |""".stripMargin,
-    (doc, foo, c) => {
+    (_, foo, c) => {
       assertEquals(foo, "k/target#foo().")
       assertEquals(c, "k/target#foo().(c)")
     },

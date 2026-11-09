@@ -1066,26 +1066,26 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("Ident.value for normal")("foo".asInput.parse[Term].get.tokens match {
-    case Tokens(bof, foo: Ident, eof) => assertEquals(foo.value, "foo")
+    case Tokens(_, foo: Ident, _) => assertEquals(foo.value, "foo")
   })
 
   test("Ident.value for backquoted")("`foo`".asInput.parse[Term].get.tokens match {
-    case Tokens(bof, foo: Ident, eof) =>
+    case Tokens(_, foo: Ident, _) =>
       assertEquals(foo.value, "foo")
       assertEquals(foo.syntax, "`foo`")
   })
 
   test("Interpolation.Id.value")(assertTokens(""" q"" """) {
-    case Tokens(bof, _, id: Interpolation.Id, _, _, _, _, eof) => assertEquals(id.value, "q")
+    case Tokens(_, _, id: Interpolation.Id, _, _, _, _, _) => assertEquals(id.value, "q")
   })
 
   test("Interpolation.Part.value")(assertTokens(""" q"foo" """) {
-    case Tokens(bof, _, _, _, part: Interpolation.Part, _, _, eof) => assertEquals(part.value, "foo")
+    case Tokens(_, _, _, _, part: Interpolation.Part, _, _, _) => assertEquals(part.value, "foo")
   })
 
   test("Interpolated tree parsed succesfully with windows newline")(
     assertTokens(""" q"foo"""" + "\r\n") {
-      case Tokens(bof, _, _, _, part: Interpolation.Part, _, crlf: CRLF, eof) =>
+      case Tokens(_, _, _, _, part: Interpolation.Part, _, crlf: CRLF, _) =>
         assertEquals(part.value, "foo")
         assertEquals(crlf.text, "\r\n")
         assertEquals(part.len, 3)
@@ -1111,7 +1111,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
 
   test("Interpolated tree parsed succesfully with unix newline")(
     assertTokens(""" q"foo"""" + "\n") {
-      case Tokens(bof, _, _, _, part: Interpolation.Part, _, lf: LF, eof) =>
+      case Tokens(_, _, _, _, part: Interpolation.Part, _, lf: LF, _) =>
         assertEquals(part.value, "foo")
         assertEquals(lf.syntax, "\n")
     },
@@ -1173,7 +1173,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
 
   }
 
-  test("Comment.value")(assertTokens("//foo") { case Tokens(bof, comment: Comment, eof) =>
+  test("Comment.value")(assertTokens("//foo") { case Tokens(_, comment: Comment, _) =>
     assertEquals(comment.value, "foo")
   })
 

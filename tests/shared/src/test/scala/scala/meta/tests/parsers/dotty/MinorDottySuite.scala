@@ -23,7 +23,7 @@ class MinorDottySuite extends BaseDottySuite {
 
     matchSubStructure[Stat](
       "open private trait C {}",
-      { case Defn.Trait(List(Mod.Open(), Mod.Private(anon)), Type.Name("C"), _, _, _) => () },
+      { case Defn.Trait(List(Mod.Open(), Mod.Private(_)), Type.Name("C"), _, _, _) => () },
     )
 
     matchSubStructure[Stat](

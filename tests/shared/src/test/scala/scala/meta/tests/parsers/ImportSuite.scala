@@ -1,13 +1,12 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta.Name.{Anonymous, Indeterminate}
-import scala.meta.{Name => _, _}
+import scala.meta.Name.Anonymous
+import scala.meta._
 
 class ImportSuite extends ParseSuite {
 
-  import Importee._
-  import Term.{Name => TermName, Select, Super, This}
+  import Term.{Select, Super, This}
 
   implicit val dialect: Dialect = dialects.Scala211
 
@@ -157,7 +156,7 @@ class ImportSuite extends ParseSuite {
                   checkTree(two, layout)(tree)
                   assertNoDiff(two.original, layout)
                 }
-              case x => fail(s"Not a package with 2 stats: ${pkg.structure}")
+              case _ => fail(s"Not a package with 2 stats: ${pkg.structure}")
             }
           case x => fail(s"Not a source with package: ${x.structure}")
         }
@@ -182,7 +181,7 @@ class ImportSuite extends ParseSuite {
               bImport.begComment.isEmpty,
               s"adjacent import must not duplicate the trailing comment: ${bImport.begComment}",
             )
-          case x => fail(s"Expected two imports: ${obtained.structure}")
+          case _ => fail(s"Expected two imports: ${obtained.structure}")
         }
     }
   }

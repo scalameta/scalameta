@@ -70,7 +70,7 @@ class SimpleTraverserSuite extends TreeSuiteBase {
   test("Tree.traverse") {
     var cnt = 0
     val tree0 = q"x + y"
-    tree0.traverse { case Term.Name(s) => cnt += 1 }
+    tree0.traverse { case Term.Name(_) => cnt += 1 }
     assertEquals(cnt, 3)
   }
 

@@ -1,7 +1,6 @@
 package scala.meta.tests
 package parsers
 
-import org.scalameta.invariants.InvariantFailedException
 import scala.meta._
 
 class PatSuite extends ParseSuite {

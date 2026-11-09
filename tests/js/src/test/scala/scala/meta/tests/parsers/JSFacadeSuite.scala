@@ -3,7 +3,6 @@ package parsers
 
 import scala.meta.parsers._
 
-import scala.collection.mutable
 import scala.scalajs.js
 
 import munit._

@@ -3,8 +3,6 @@ package scala.meta.tests.metacp
 import scala.meta.cli._
 import scala.meta.io._
 import scala.meta.metacp._
-import scala.meta.tests._
-import scala.meta.tests.semanticdb.ScalaVersion
 
 import java.nio.file._
 

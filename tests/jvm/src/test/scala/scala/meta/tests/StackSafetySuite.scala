@@ -18,12 +18,6 @@ class StackSafetySuite extends FunSuite {
 
   private val depth = 20000
 
-  private def expectStackOverflow(load: => Any): Unit =
-    try {
-      load
-      fail("expected StackOverflowError")
-    } catch { case _: StackOverflowError => }
-
   test("deeply nested tree - structural equality") {
     val a = TestHelpers.deepTree(depth)
     val b = TestHelpers.deepTree(depth)

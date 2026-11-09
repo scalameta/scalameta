@@ -5,9 +5,7 @@ import org.scalameta.logger
 import scala.meta.interactive.InteractiveSemanticdb._
 import scala.meta.internal.semanticdb.Print
 
-import scala.collection.SortedMap
 import scala.tools.nsc.interactive.Global
-import scala.util.Properties
 
 import munit.FunSuite
 

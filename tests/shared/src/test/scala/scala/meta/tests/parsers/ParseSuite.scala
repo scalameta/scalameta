@@ -216,7 +216,7 @@ abstract class ParseSuite extends TreeSuiteBase with CommonTrees {
       code: String,
       syntax: String,
       struct: String,
-      extraClue: String = "",
+      extraClue: String,
   )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): String = {
     val obtained: T = parser(code)
     val reprinted = assertSyntaxWithClue(obtained)(syntax)(

@@ -25,7 +25,7 @@ class MetacScalaLibrary extends FunSuite {
       Files.isDirectory(MetacScalaLibrary.library),
       s"${MetacScalaLibrary.library} is not a directory! Run `sbt download-scala-library`",
     )
-    val exit = MetacScalaLibrary.process(Array())
+    val exit = MetacScalaLibrary.process()
     require(exit == 0, "failed to compile scala-library")
   }
 }
@@ -33,9 +33,9 @@ object MetacScalaLibrary {
 
   private[MetacScalaLibrary] val library = Paths.get("target").resolve("scala-library")
     .resolve(s"scala-${BuildInfo.scalaVersion}").resolve("src").resolve("library").toAbsolutePath
-  def main(args: Array[String]): Unit = sys.exit(process(args))
+  def main(args: Array[String]): Unit = sys.exit(process())
   // Compile all of scala-library with metac and report any semanticdb errors.
-  def process(args: Array[String]): Int = {
+  def process(): Int = {
     assert(
       Files.isDirectory(library),
       s"$library is not a directory! Run `sbt download-scala-library`",

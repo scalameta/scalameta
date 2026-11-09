@@ -5,7 +5,6 @@ import scala.meta.internal.javacp._
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
 import scala.meta.io.AbsolutePath
-import scala.meta.testkit._
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.attribute.BasicFileAttributes
@@ -16,7 +15,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.tools.asm.tree.{ClassNode, FieldNode, MethodNode}
 import scala.util.control.NonFatal
 
-import munit.{FunSuite, Ignore}
+import munit.FunSuite
 
 class SignatureSuite extends FunSuite {
 

@@ -7,8 +7,6 @@ import scala.meta.tests.parsers.ParseSuite
 
 import scala.reflect.ClassTag
 
-import munit._
-
 class ChildrenSuite extends ParseSuite {
   test("Template.children") {
     val tree = stat(

@@ -9,7 +9,6 @@ package quasiquotes
 import org.scalameta.tests._
 import scala.meta.tests.TreeSuiteBase
 
-import munit._
 import typecheckError.Options.WithPositions
 
 // FIXME: https://github.com/scalatest/scalatest/issues/1112

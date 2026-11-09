@@ -1,7 +1,6 @@
 package scala.meta.tests
 package quasiquotes
 
-import org.scalameta.invariants.InvariantFailedException
 import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.trees.Origin

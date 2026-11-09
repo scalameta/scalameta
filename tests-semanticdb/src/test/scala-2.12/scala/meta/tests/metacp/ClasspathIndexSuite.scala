@@ -51,12 +51,12 @@ class ClasspathIndexSuite extends FunSuite {
 
   test("ignore non-existent") {
     val classpath = Classpath(PathIO.workingDirectory.resolve("doesnotexist.jar"))
-    val index = ClasspathIndex(classpath)
+    ClasspathIndex(classpath)
   }
 
   test("ignore classpath entry for files that are not jar/zip") {
     val classpath = Classpath(Paths.get(getClass().getResource("/metac.index").toURI()))
-    val index = ClasspathIndex(classpath)
+    ClasspathIndex(classpath)
   }
 
   // indexes the given resource jar, returning the index and whatever the

@@ -5,7 +5,6 @@ import scala.meta._
 import java.nio.file.{Files, Path, Paths}
 
 import scala.concurrent.duration
-import scala.language.postfixOps
 
 import munit.FunSuite
 import sys.process._
@@ -143,7 +142,7 @@ class CommunityDottySuite extends FunSuite {
         val taken = timeIt(fileContent.parse[Source].get)
         println("File marked as error but parsed correctly " + absPathString)
         TestStats(1, 1, None, taken, lines)
-      } catch { case e: Throwable => TestStats(1, 1, None, 0, 0) }
+      } catch { case _: Throwable => TestStats(1, 1, None, 0, 0) }
     else
       try {
         val taken = timeIt(fileContent.parse[Source].get)
