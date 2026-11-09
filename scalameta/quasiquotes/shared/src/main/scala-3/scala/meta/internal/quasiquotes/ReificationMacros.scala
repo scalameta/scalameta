@@ -3,14 +3,10 @@ package internal
 package quasiquotes
 
 import org.scalameta._
-import org.scalameta.adt.{Liftables => AdtLiftables}
-import org.scalameta.invariants._
-import scala.meta.dialects
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.parsers.Messages
 import scala.meta.internal.prettyprinters.TokensToString
 import scala.meta.internal.trees._
-import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection}
 import scala.meta.parsers._
 import scala.meta.quasiquotes._
 import scala.meta.tokenizers._
@@ -111,7 +107,7 @@ object ReificationMacros {
 class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuotes {
   rei =>
 
-  import scala.meta.inputs.{Position => MetaPosition, _}
+  import scala.meta.inputs.{Position => _, _}
   import scala.meta.{Dialect, Tree => MetaTree}
 
   import ReificationMacros._
@@ -417,7 +413,6 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                   loop(rest, Some(tree), Nil)
             case _ => acc.getOrElse {
                 val args = prefix.map(liftTree(_)).toList
-                val targs = List(TypeTree.of[T])
                 if mode.isTerm then
                   Select.overloaded(
                     '{ List }.asTerm,
@@ -528,7 +523,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
 
       def liftOrigin(origin: Origin): internalQuotes.reflect.Tree = origin match {
         case x: Origin.Partial => liftPartialOrigin(x.begTokenIdx, x.endTokenIdx).asTerm
-        case x => report.errorAndAbort("likely missing positions in the parser")
+        case _ => report.errorAndAbort("likely missing positions in the parser")
       }
 
       // Depending on pattern types, this is able to cause some custom errors to be thrown
@@ -549,7 +544,6 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
         }
     }
     implicit class XtensionQuasiHole(quasi: scala.meta.internal.trees.Quasi) {
-      import quotes.reflect._
       def termHole: TermHole = {
         val pos = quasi.pos.absolutize
         (mode: @unchecked) match
@@ -640,8 +634,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
           )
         returned.asTerm.tpe.asType match
           case '[t] =>
-            def thenp(inputExpr: Expr[Any])(using Quotes) = {
-              import quotes.reflect._
+            def thenp(using Quotes) =
               if isBooleanExtractor then '{ true }
               else
                 '{
@@ -656,13 +649,9 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
             def matchp(input: Expr[Any])(using Quotes) = {
               val matchTerm = Match(
                 input.asTerm,
-                List(
-                  CaseDef(pattern, None, thenp(input).asTerm),
-                  CaseDef(Wildcard(), None, elsep.asTerm),
-                ),
+                List(CaseDef(pattern, None, thenp.asTerm), CaseDef(Wildcard(), None, elsep.asTerm)),
               )
               if (isBooleanExtractor) matchTerm.asExprOf[Boolean] else matchTerm.asExprOf[Option[t]]
-            }
 
             val valDefsAsStatements = valDefs
               .map(_.asInstanceOf[Internal.internalQuotes.reflect.Statement])

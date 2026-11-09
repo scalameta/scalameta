@@ -7,8 +7,7 @@ final class Settings private (val scalacArgs: List[String]) {
 
   def withScalacArgs(scalacArgs: List[String]): Settings = copy(scalacArgs = scalacArgs)
 
-  private def copy(scalacArgs: List[String] = scalacArgs): Settings =
-    new Settings(scalacArgs = scalacArgs)
+  private def copy(scalacArgs: List[String]): Settings = new Settings(scalacArgs = scalacArgs)
 }
 
 object Settings {

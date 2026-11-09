@@ -13,7 +13,7 @@ case class AnyDiff(a: Any, b: Any) extends Exception {
       case e: Tree => e.pos.startLine
       case Some(t: Tree) => t.pos.startLine
       case lst: List[_] => lst match {
-          case (head: Tree) :: tail => head.pos.startLine
+          case (head: Tree) :: _ => head.pos.startLine
           case _ => -2
         }
       case _ => -2

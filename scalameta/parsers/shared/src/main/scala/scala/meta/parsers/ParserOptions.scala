@@ -9,7 +9,7 @@ final class ParserOptions private[meta] (
 ) {
   def withCaptureComments(value: Boolean): ParserOptions = privateCopy(captureComments = value)
 
-  private def privateCopy(captureComments: Boolean = this.captureComments): ParserOptions =
+  private def privateCopy(captureComments: Boolean): ParserOptions =
     new ParserOptions(captureComments = captureComments)
 }
 

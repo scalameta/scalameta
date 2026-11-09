@@ -93,7 +93,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             (parts, Mode.Pattern(isMultiline(parts.head), holes, unapplySelector))
         }
       catch {
-        case ex: Exception => c.abort(
+        case _: Exception => c.abort(
             c.macroApplication.pos,
             s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}",
           )
@@ -197,11 +197,6 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         val result = loop(mirror.RootPackage, name.stripSuffix("$").split(Array('.', '$')).toList)
         if (result.isModule) result.asModule.info else result.asClass.toType
       }
-  }
-
-  private implicit class XtensionRankedTree(tree: u.Tree) {
-    def wrap(rank: Int): u.Tree =
-      if (rank == 0) tree else AppliedTypeTree(tq"${definitions.ListClass}", List(tree.wrap(rank - 1)))
   }
 
   private def reifySkeleton(meta: MetaTree, mode: Mode, input: Input): ReflectTree = {

@@ -4,7 +4,7 @@ import scala.meta.io._
 
 import java.net.URI
 import java.nio.charset.Charset
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Paths}
 
 object PlatformFileIO {
 

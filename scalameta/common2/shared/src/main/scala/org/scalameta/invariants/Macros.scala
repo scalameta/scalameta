@@ -2,7 +2,6 @@ package org.scalameta.invariants
 
 import org.scalameta.internal.MacroHelpers
 
-import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 
 class Macros(val c: Context) extends MacroHelpers {
@@ -82,7 +81,6 @@ class Macros(val c: Context) extends MacroHelpers {
           case Nil => ???
           case prop :: Nil => prop.emit
           case prop :: rest =>
-            val restResult = c.freshName(TermName("restResult"))
             val restFailures = c.freshName(TermName("restFailures"))
             q"""
                 val $failures = ${prop.emit}

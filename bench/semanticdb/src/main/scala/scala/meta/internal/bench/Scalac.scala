@@ -18,7 +18,7 @@ object Scalac {
 
 trait Scalac {
   def runImpl(bs: BenchmarkState): Unit = {
-    val settings = mkSettings(bs)
+    val settings = mkSettings()
     val reporter = new StoreReporter
     val global = Global(settings, reporter)
     val run = new global.Run
@@ -28,7 +28,7 @@ trait Scalac {
       sys.error("compile failed")
     }
   }
-  def mkSettings(bs: BenchmarkState): Settings = {
+  def mkSettings(): Settings = {
     val settings = new Settings
     settings.outdir.value = Files.createTempDirectory("scalac_").toString
     settings.usejavacp.value = true
@@ -52,8 +52,8 @@ class ScalacBaseline extends Scalac {
 class ScalacRangepos extends Scalac {
   @Benchmark
   def run(bs: BenchmarkState): Unit = runImpl(bs)
-  override def mkSettings(bs: BenchmarkState): Settings = {
-    val settings = super.mkSettings(bs)
+  override def mkSettings(): Settings = {
+    val settings = super.mkSettings()
     settings.Yrangepos.value = true
     settings
   }

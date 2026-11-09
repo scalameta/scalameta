@@ -2,7 +2,6 @@ package scala.meta
 package internal
 package tokenizers
 
-import org.scalameta._
 import scala.meta.inputs._
 import scala.meta.tokenizers._
 import scala.meta.tokens._

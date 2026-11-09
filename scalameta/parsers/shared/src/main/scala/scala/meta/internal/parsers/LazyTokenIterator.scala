@@ -32,11 +32,6 @@ private[parsers] class LazyTokenIterator private (
     curr = getNextTokenRef()
   }
 
-  private def resetCurr(ref: TokenRef): Unit = {
-    prev.next = ref
-    curr = ref
-  }
-
   override def indenting: Boolean = curr.regions match {
     case (r: RegionLine) :: rs if curr.token.is[Token.AtEOL] =>
       // empty sepregions means we are at toplevel

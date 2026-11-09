@@ -10,7 +10,6 @@ import scala.meta.tokens.Token._
 
 object TokenStructure {
   def apply[T <: Token]: Structure[T] = Structure[Token] { x =>
-    implicit val dialect = x.dialect
     val text = x match {
       case t: Ident => t.value
       case t: Constant.Char => Chars.escape(t.value)

@@ -4,7 +4,6 @@ package tokenizers
 
 import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta.inputs._
-import scala.meta.internal.inputs._
 import scala.meta.internal.tokens.Chars._
 
 import scala.annotation.{switch, tailrec}

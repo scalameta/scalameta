@@ -8,7 +8,6 @@ import scala.meta.internal.{semanticdb => s}
 
 import scala.collection.mutable
 import scala.reflect.internal.{Flags => gf}
-import scala.{meta => m}
 
 trait SymbolInformationOps {
   self: SemanticdbOps =>

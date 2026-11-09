@@ -6,7 +6,6 @@ import scala.reflect.macros.blackbox.Context
 trait FreeLocalFinder {
   val c: Context
 
-  import c.internal._
   import c.internal.decorators._
   import c.universe._
 

@@ -3,7 +3,6 @@ package quasiquotes
 
 import scala.meta._
 import scala.meta.internal.quasiquotes._
-import scala.meta.internal.trees.quasiquote
 import scala.meta.parsers.Parse
 
 type QuasiquoteUnapply

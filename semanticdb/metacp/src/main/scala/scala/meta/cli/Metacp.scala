@@ -2,7 +2,6 @@ package scala.meta.cli
 
 import scala.meta.internal.cli.Args
 import scala.meta.internal.metacp._
-import scala.meta.io._
 import scala.meta.metacp._
 
 import java.io._

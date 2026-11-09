@@ -1,7 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.scalacp._
-import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.{KnownSymbols => ks}
 import scala.meta.internal.{semanticdb => s}
 

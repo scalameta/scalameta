@@ -12,7 +12,6 @@ trait Reflection extends AdtReflection {
 
   import u.Flag._
   import u._
-  import u.internal._
   import u.internal.decorators._
 
   def Protected: Modifiers = Modifiers(PROTECTED)
@@ -91,11 +90,11 @@ trait Reflection extends AdtReflection {
           result
         }
         override def traverse(tree: Tree): Unit = tree match {
-          case PackageDef(pid, stats) =>
+          case PackageDef(pid, _) =>
             if (pid.name == termNames.EMPTY_PACKAGE_NAME) super.traverse(tree)
             else drilldown(pid, inner = false)(super.traverse(tree))
           case ModuleDef(_, name, _) => drilldown(name, inner = false)(super.traverse(tree))
-          case ClassDef(Modifiers(_, _, anns), name, _, impl) =>
+          case ClassDef(Modifiers(_, _, anns), name, _, _) =>
             if (anns.exists(_.toString == "new ast()")) {
               if (inner) sys.error("@ast classes can't be inner: " + name)
               val q"$_ class $_[..$_] $_(...$paramss) extends { ..$_ } with ..$parents { $_ => ..$_ }" =

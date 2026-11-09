@@ -1,7 +1,6 @@
 package scala.meta.contrib.implicits
 
 import scala.meta._
-import scala.meta.contrib._
 import scala.meta.contrib.equality.{Structurally, Syntactically}
 
 trait SetExtensions {

@@ -192,8 +192,6 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
   @inline
   private def tryAheadNot[T: ClassTag]: Boolean = nextIf(!peek[T])
-  @inline
-  private def tryAheadNot[A: ClassTag, B: ClassTag]: Boolean = nextIf(!peek[A, B])
 
   private def unreachable(debuggees: Map[String, Any]): Nothing = UnreachableError.raise(debuggees)
   private def unreachable(tok: Token): Nothing = unreachable(Map("token" -> tok))
@@ -807,7 +805,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   private val selfArrows = new collection.mutable.BitSet
   private def markSelfArrow(idx: Int): Unit = if (options.captureComments) selfArrows += idx
 
-  private def commentsTrail(token: Token, idx: Int): Boolean = token match {
+  private def commentsTrail(token: Token): Boolean = token match {
     case _: SymbolicKeyword with ContKeyword | _: Comma | _: Semicolon | _: RightParen => true
     case _ => false
   }
@@ -934,7 +932,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       if (tokenAtNext.is[Colon]) if (nextNonHTrivia(next).isInstanceOf[AtEOLorF]) idx else next
       // the element after a comma takes the comments on lines of their own before it
       else if (tokenAtNext.is[Comma]) idx
-      else if (commentsTrail(tokenAtNext, next)) next
+      else if (commentsTrail(tokenAtNext)) next
       else {
         val indent = lineIndent(next) + 1
         val prev = prevNonTriviaAt(idx)
@@ -1084,12 +1082,6 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   @inline
   private def acceptOpt[T: ClassTag]: Boolean = nextIf(at[T])
 
-  private def acceptAs[T <: AnyRef: ClassTag]: T = {
-    val res = currToken.as[T]
-    if (res ne null) next()
-    res
-  }
-
   /** If current token is T consume it. */
   @inline
   private def acceptIf(unapply: Token => Boolean): Boolean = nextIf(unapply(currToken))
@@ -1170,7 +1162,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
             })
           case t: Ident if t.value.nonEmpty && QuotedSpliceContext.isInside() =>
             Some(autoPos(next(Term.SplicedMacroExpr(termName(t)))))
-          case t: KwThis if QuotedSpliceContext.isInside() =>
+          case _: KwThis if QuotedSpliceContext.isInside() =>
             Some(autoPos(next(Term.SplicedMacroExpr(anonThis()))))
           case _ => None
         }
@@ -1345,7 +1337,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     makeTupleTerm(getTupleSingleTerm(_))(lpPos, body)
 
   private def keepTupleType(single: Type): Boolean = single match {
-    case t: Type.TypedParam => dialect.allowNamedTuples
+    case _: Type.TypedParam => dialect.allowNamedTuples
     case _ => false
   }
 
@@ -1585,8 +1577,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     private def typeFuncOnArrow(
         paramPos: Int,
         params: List[Type],
-        allowCaptures: Boolean = false,
-        inParam: Boolean = false,
+        allowCaptures: Boolean,
+        inParam: Boolean,
     )(ctor: (Type.FuncParamClause, Type) => Type): Type = {
       val funcParams =
         autoEndPos(paramPos)(params.map(typeVar).reduceWith(Type.FuncParamClause.apply))
@@ -1672,8 +1664,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     private final def infixTypeRestImpl(
         t: Type,
         f: Type => Type,
-        inMatchType: Boolean = false,
-        inGivenSig: Boolean = false,
+        inMatchType: Boolean,
+        inGivenSig: Boolean,
     ): Type = {
       val ok = currToken match {
         case _: Unquote | InfixTypeIdent() => true
@@ -1700,8 +1692,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
     private final def infixTypeRestWithPrecedence(
         t: Type,
-        inMatchType: Boolean = false,
-        inGivenSig: Boolean = false,
+        inMatchType: Boolean,
+        inGivenSig: Boolean,
     ): Type = {
       import TypeInfixContext._
       val base = stack
@@ -2636,8 +2628,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   private def exprAfterSimple(
       term: Term,
       startPos: Int,
-      location: Location = NoStat,
-      allowRepeated: Boolean = false,
+      location: Location,
+      allowRepeated: Boolean,
   ): Term = {
     val postfix = postfixExpr(term, startPos, allowRepeated = allowRepeated)
     exprOtherRest(postfix, startPos, location, allowRepeated = allowRepeated)
@@ -3151,7 +3143,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     })(Term.ArgClause(Nil)),
   )
 
-  private def argumentExprsInParens(location: Location = NoStat): List[Term] =
+  private def argumentExprsInParens(location: Location): List[Term] =
     commaSeparated(argumentExpr(location))
 
   private def checkNoTripleDot[T <: Tree](tree: T): T = tree match {
@@ -3186,7 +3178,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   private def blockRaw(allowRepeated: Boolean = false): Term.Block =
     toBlockRaw(blockStatSeq(allowRepeated = allowRepeated))
 
-  private def blockMaybeRaw(allowRepeated: Boolean = false, keepBlock: Boolean = false): Term =
+  private def blockMaybeRaw(allowRepeated: Boolean = false, keepBlock: Boolean): Term =
     blockStatSeq(allowRepeated = allowRepeated) match {
       case (t: Term) :: Nil if !(keepBlock || hasDetachedCommentAfter(t)) => t
       case stats => toBlockRaw(stats)
@@ -3203,7 +3195,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
   private def blockOnIndent(keepBlock: Boolean = false): Term = {
     val keep = keepBlock ||
-      !prevToken.is[Colon] && !commentsTrail(prevToken, prevIndex) &&
+      !prevToken.is[Colon] && !commentsTrail(prevToken) &&
       continuesTree(prevToken, prevIndex) && isAfterDetachedComment(prevIndex)
     autoEndPosOpt(AfterPrevPos)(indentedOnOpen(blockMaybeRaw(keepBlock = keep)))
   }

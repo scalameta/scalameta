@@ -15,16 +15,15 @@ object Print {
   }
 
   def tpe(format: Format, tpe: Type, symtab: PrinterSymtab): String =
-    withInfoPrinter(format, TextDocument(), symtab)(printer => printer.pprint(tpe)).trim
+    withInfoPrinter(format, symtab)(printer => printer.pprint(tpe)).trim
 
   def constant(constant: Constant): String = {
     val symtab = PrinterSymtab.fromTextDocument(TextDocument())
-    withInfoPrinter(Format.Detailed, TextDocument(), symtab)(printer => printer.pprint(constant))
-      .trim
+    withInfoPrinter(Format.Detailed, symtab)(printer => printer.pprint(constant)).trim
   }
 
   def signature(format: Format, signature: Signature, symtab: PrinterSymtab): String =
-    withInfoPrinter(format, TextDocument(), symtab)(printer => printer.pprint(signature)).trim
+    withInfoPrinter(format, symtab)(printer => printer.pprint(signature)).trim
 
   def info(format: Format, info: SymbolInformation, symtab: PrinterSymtab): String =
     withPrinter(format, TextDocument().addSymbols(info), symtab)(printer => printer.pprint(info))
@@ -40,7 +39,7 @@ object Print {
   def tree(format: Format, doc: TextDocument, tree: Tree, symtab: PrinterSymtab): String =
     withPrinter(format, doc, symtab)(printer => printer.pprint(tree, None)).trim
 
-  private def withInfoPrinter(format: Format, doc: TextDocument, symtab: PrinterSymtab)(
+  private def withInfoPrinter(format: Format, symtab: PrinterSymtab)(
       fn: DocumentPrinter#InfoPrinter => Unit,
   ): String = withPrinter(format, TextDocument(), symtab) { printer =>
     val notes = new printer.InfoNotes()

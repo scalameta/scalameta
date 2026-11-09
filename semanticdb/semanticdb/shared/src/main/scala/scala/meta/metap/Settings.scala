@@ -23,14 +23,14 @@ object Settings {
     @tailrec
     def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] =
       args match {
-        case "--" :: rest => loop(settings, false, args)
+        case "--" :: _ => loop(settings, false, args)
         case "-compact" :: rest if allowOptions =>
           loop(settings.copy(format = Format.Compact), allowOptions = true, rest)
         case ("-detailed" | "-pretty") :: rest if allowOptions =>
           loop(settings.copy(format = Format.Detailed), allowOptions = true, rest)
         case "-proto" :: rest if allowOptions =>
           loop(settings.copy(format = Format.Proto), allowOptions = true, rest)
-        case flag :: rest if allowOptions && flag.startsWith("-") =>
+        case flag :: _ if allowOptions && flag.startsWith("-") =>
           reporter.err.println(s"unknown flag $flag")
           None
         case path :: rest =>
