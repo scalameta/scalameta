@@ -9,6 +9,7 @@ import scala.collection.mutable.ListBuffer
 import scala.language.experimental.macros
 import scala.math.Ordered.orderingToOrdered
 import scala.reflect.macros.whitebox.Context
+import scala.util.control.NonFatal
 
 // @ast is a specialized version of @org.scalameta.adt.leaf for scala.meta ASTs.
 class ast extends StaticAnnotation {
@@ -412,7 +413,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 implicit dialect: $DialectClass
             ): $mname.$builderName = {
               ..$checks
-              ..$body
+              ..${bodyReadBy(body, create)}
               $create
             }
             """
@@ -589,6 +590,14 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           internalBody += (if (isShared(p)) q"node.${internalize(p)} = ${p.name}" else storeField(p)),
         )
         internalBody += q"node"
+        // a top-level class constructs without a dialect: its applies take one for the signature
+        def dialectParam = { // must be def, so each symbol is unique
+          val annots =
+            if (!isTopLevel || (unusedAnnot eq NoType)) Nil
+            else List(q"new ${TypeTree(unusedAnnot)}")
+          val mods = Modifiers(IMPLICIT | PARAM, typeNames.EMPTY, annots)
+          ValDef(mods, TermName("dialect"), DialectClass, EmptyTree)
+        }
         val applyParamDefns = apiParams.map(asValDefn)
         val applyParamDecls = apiParams.map(asValDecl)
         val fullCtorParamDefns = privateParams.map(asValDefn) ++ params.map(asValDefn)
@@ -596,7 +605,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val withCommentsDefns = applyParamDefns ++ commentDefns
         val applyWithDialect =
           q"""
-          def apply(..$applyParamDefns)(implicit dialect: $DialectClass): $iname = {
+          def apply(..$applyParamDefns)($dialectParam): $iname = {
             $applyCall
           }
           """
@@ -609,7 +618,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val createWithComments =
           q"""
           @$deprecatedWithComments
-          def createWithComments(..$withCommentsDefns)(implicit dialect: $DialectClass): $iname = {
+          def createWithComments(..$withCommentsDefns)($dialectParam): $iname = {
             $withCommentsCall
           }
           """
@@ -652,7 +661,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           val fullCtorCall = fullCtorCallFromPartialPrivateParams(pp)
           val partialWithDialect =
             q"""
-            def apply(..$partialParamDecls)(implicit dialect: $DialectClass): $iname = {
+            def apply(..$partialParamDecls)($dialectParam): $iname = {
               $fullCtorCall
             }
             """
@@ -697,7 +706,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             defn.foreach(applyBodyBuilder += _)
           }
           val paramDefns = positionVersionedParams(applyParamsBuilder.result())
-          val applyBody = applyBodyBuilder.result()
+          val applyBody = bodyReadBy(applyBodyBuilder.result(), applyCall)
           val paramDecls = paramDefns.map(asValDecl)
 
           val verWithCommentsDefns = paramDefns ++ commentDefns
@@ -722,7 +731,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             """
             verMstats.primary +=
               q"""
-            def apply(..$paramDefns)(implicit dialect: $DialectClass): $iname = {
+            def apply(..$paramDefns)($dialectParam): $iname = {
               ..$applyBody
               $applyCall
             }
@@ -734,7 +743,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               val fullCtorCall = fullCtorCallFromPartialPrivateParams(pp)
               val partialWithDialect =
                 q"""
-              def apply(..$partialParamDecls)(implicit dialect: $DialectClass): $iname = {
+              def apply(..$partialParamDecls)($dialectParam): $iname = {
                 ..$applyBody
                 $fullCtorCall
               }
@@ -766,7 +775,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
             verMstats.primary +=
               q"""
-            def createWithComments(..$verWithCommentsDefns)(implicit dialect: $DialectClass): $iname = {
+            def createWithComments(..$verWithCommentsDefns)($dialectParam): $iname = {
               ..$applyBody
               $withCommentsCall
             }
@@ -858,7 +867,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             val res = this match {
               case $mname(0, tree) =>
                 ev.quasi(0, tree)
-              case $mname(rank, nested @ $mname(0, tree)) =>
+              case $mname(rank, nested @ $mname(0, _)) =>
                 ev.quasi(rank, nested.become[T])
               case _ =>
                 throw new Exception("complex ellipses are not supported yet")
@@ -1148,6 +1157,20 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       )
     }
   }
+
+  /** Returns the definitions of `body` that `call` reads, with every other statement. */
+  private def bodyReadBy(body: List[Tree], call: Tree): List[Tree] = body.filter {
+    case vd: ValDef => call.exists {
+        case x: Ident => x.name == vd.name
+        case _ => false
+      }
+    case _ => true
+  }
+
+  // `@unused` exists from 2.13 on
+  private lazy val unusedAnnot: Type =
+    try c.mirror.staticClass("scala.annotation.unused").asType.toType
+    catch { case ex: Throwable if NonFatal(ex) => NoType }
 
   private val deprecatedSince_4_9_0 = getDeprecatedAnno(Version(4, 9, 0))
   private val deprecatedWithComments =

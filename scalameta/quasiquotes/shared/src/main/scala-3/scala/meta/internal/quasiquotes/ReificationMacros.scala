@@ -313,7 +313,14 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
     val (psourceVal, psourceExpr) = getValRef("psource")('{
       new Origin.ParsedSource(Input.String(${ Expr(TokensToString.quasi(meta.tokens, input)) }))
     })
-    val valDefs = List(psourceVal)
+    // the source of a quasiquote that lifts only its holes stays unused
+    def valDefs(body: List[Tree]): List[ValDef] = {
+      val reads = new TreeAccumulator[Boolean] {
+        def foldTree(found: Boolean, tree: Tree)(owner: Symbol): Boolean = found ||
+          tree.symbol == psourceVal.symbol || foldOverTree(found, tree)(owner)
+      }
+      if (reads.foldTrees(false, body)(Symbol.spliceOwner)) List(psourceVal) else Nil
+    }
 
     object Internal extends TreeLifts(using quotes)(mode.isPattern, dialectExpr) {
       import internalQuotes.reflect._
@@ -598,9 +605,10 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
           case QuasiquoteType.Importee => TypeRepr.of[scala.meta.Importee]
           case QuasiquoteType.Source => TypeRepr.of[scala.meta.Source]
         resType.asType match
-          case '[t] =>
-            Block(valDefs, '{ scala.meta.internal.quasiquotes.Unlift[t]($internalResult) }.asTerm)
-              .asExprOf[t]
+          case '[t] => Block(
+              valDefs(List(internalResult.asTerm)),
+              '{ scala.meta.internal.quasiquotes.Unlift[t]($internalResult) }.asTerm,
+            ).asExprOf[t]
 
       case Mode.Pattern(_, holes, unapplySelector) =>
         import Internal.internalQuotes.reflect._
@@ -643,7 +651,6 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                     Some(${ returned.asExprOf[t] })
                   else None
                 }
-            }
             def elsep(using Quotes) = if (isBooleanExtractor) '{ false } else '{ scala.None }
 
             def matchp(input: Expr[Any])(using Quotes) = {
@@ -652,9 +659,11 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                 List(CaseDef(pattern, None, thenp.asTerm), CaseDef(Wildcard(), None, elsep.asTerm)),
               )
               if (isBooleanExtractor) matchTerm.asExprOf[Boolean] else matchTerm.asExprOf[Option[t]]
+            }
 
-            val valDefsAsStatements = valDefs
-              .map(_.asInstanceOf[Internal.internalQuotes.reflect.Statement])
+            val valDefsAsStatements =
+              valDefs((pattern :: args).asInstanceOf[List[quotes.reflect.Tree]])
+                .map(_.asInstanceOf[Internal.internalQuotes.reflect.Statement])
             val internalResult =
               if (isBooleanExtractor) Block(
                 valDefsAsStatements,
