@@ -724,10 +724,7 @@ private[meta] final class ScannerTokens(
               if !next.isAny[KwCatch, KwFinally] && canBeLeadingInfix != LeadingInfix.Yes &&
                 !isIndented(xs, nextIndent) => strip(xs)
           case (_: RegionGivenDecl) :: xs => strip(xs)
-          // as dotty's `InCond`, a condition continues past a line end
-          case (_: RegionControlCond) :: _ => null
-          case Nil | (_: CanProduceLF) :: _ => rs
-          case _ => null
+          case _ => if (canProduceLF(rs)) rs else null
         }
         val ok = eolPos >= 0 && mightStartStat(next, closeDelimOK = true) &&
           (canEndStat(prev) || isEndMarker())
@@ -991,6 +988,18 @@ private[meta] final class ScannerTokens(
         case null => nextToken(prevToken, prevPos, nextPos, sepRegionsOrig)
       }
     }
+  }
+
+  /**
+   * Returns true if a line end, or an outdent in its place, can end a statement in `regions`
+   * @param regions
+   *   the regions that enclose the line end, the innermost first
+   */
+  def canProduceLF(regions: List[SepRegion]): Boolean = regions match {
+    // a condition continues past a line end (see dotty's `InCond`)
+    case (_: RegionControlCond) :: _ => false
+    case Nil | (_: CanProduceLF) :: _ => true
+    case _ => false
   }
 
   /** Returns true if `cond` continues past `)` to the token at `pos`, as dotty's `toBeContinued` */
