@@ -1,6 +1,5 @@
 package scala.meta.tests.parsers
 
-import scala.meta.Dialect
 import scala.meta.parsers.Parse
 
 import scala.reflect.{ClassTag, classTag}

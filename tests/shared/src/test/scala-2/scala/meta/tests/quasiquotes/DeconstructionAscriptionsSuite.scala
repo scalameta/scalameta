@@ -1,10 +1,8 @@
 package scala.meta.tests
 package quasiquotes
 
-import org.scalameta.invariants.InvariantFailedException
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.meta.trees.Origin
 
 // Deconstructon ascription is a Scala 2 only feature for now,
 // so part of the shared SuccessSuite was moved to this Scala 2 only suite

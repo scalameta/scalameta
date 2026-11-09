@@ -3,8 +3,6 @@ package scala.meta.tests.parsers.dotty
 import scala.meta._
 import scala.meta.parsers.ParseException
 
-import munit.Location
-
 class TypeSuite extends BaseDottySuite {
 
   import Name.Anonymous

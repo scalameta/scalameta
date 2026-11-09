@@ -4,8 +4,6 @@ package trees
 import scala.meta._
 import scala.meta.internal.trees._
 
-import munit._
-
 class TreeSuite extends TreeSuiteBase {
 
   test("Name.unapply") {

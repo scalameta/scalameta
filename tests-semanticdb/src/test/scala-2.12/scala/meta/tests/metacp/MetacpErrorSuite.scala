@@ -8,8 +8,6 @@ import scala.meta.tests.cli.CliTestUtils
 
 import java.nio.file._
 
-import scala.collection.JavaConverters._
-
 import munit.FunSuite
 
 class MetacpErrorSuite extends FunSuite {

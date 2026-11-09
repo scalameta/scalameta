@@ -4,7 +4,6 @@ import scala.meta.cli._
 import scala.meta.testkit._
 import scala.meta.tests.metacp._
 
-import java.io._
 import java.nio.charset.StandardCharsets._
 import java.nio.file._
 

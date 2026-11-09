@@ -1,11 +1,8 @@
 package scala.meta.tests
 package inputs
 
-import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta._
 import scala.meta.internal.inputs._
-
-import munit._
 
 class FormatMessageSuite extends TreeSuiteBase {
   private def test(s: String)(expected: String)(implicit loc: munit.Location): Unit = {

@@ -2,7 +2,6 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import scala.meta.tokens.Token._
 
 import java.io._
 import java.nio.charset.StandardCharsets

@@ -19,12 +19,7 @@ abstract class PrintSuiteBase extends FunSuite {
     override def info(symbol: String): Option[SymbolInformation] = symtab.info(symbol)
   }
 
-  def checkDocument(
-      name: String,
-      original: String,
-      expected: String,
-      fn: s.TextDocument => Unit,
-  ): Unit = test(name) {
+  def checkDocument(name: String, original: String, fn: s.TextDocument => Unit): Unit = test(name) {
     val wrapped =
       s"""
 object Wrapped {
@@ -75,7 +70,6 @@ $original
     checkDocument(
       "synthetic - " + original,
       original,
-      expected,
       { doc =>
         val obtained = doc.synthetics
           .map(synthetic => Print.synthetic(Format.Compact, doc, synthetic, printerSymtab))
@@ -87,7 +81,6 @@ $original
     checkDocument(
       "trees - " + original,
       original,
-      expected,
       { doc =>
         val obtained = doc.synthetics
           .map(synthetic => Print.tree(Format.Compact, doc, synthetic.tree, printerSymtab))

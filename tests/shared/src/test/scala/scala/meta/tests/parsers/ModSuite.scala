@@ -456,56 +456,32 @@ class ModSuite extends ParseSuite {
     matchSubStructure[Stat](
       "private protected[foo] def foo = ???",
       {
-        case Defn.Def(
-              List(Mod.Private(anon), Mod.Protected(Name.Indeterminate("foo"))),
-              _,
-              _,
-              _,
-              _,
-              _,
-            ) => ()
+        case Defn
+              .Def(List(Mod.Private(_), Mod.Protected(Name.Indeterminate("foo"))), _, _, _, _, _) => ()
       },
     )
 
     matchSubStructure[Stat](
       "private[foo] protected def foo = ???",
       {
-        case Defn.Def(
-              List(Mod.Private(Name.Indeterminate("foo")), Mod.Protected(anon)),
-              _,
-              _,
-              _,
-              _,
-              _,
-            ) => ()
+        case Defn
+              .Def(List(Mod.Private(Name.Indeterminate("foo")), Mod.Protected(_)), _, _, _, _, _) => ()
       },
     )
 
     matchSubStructure[Stat](
       "protected private[foo] def foo = ???",
       {
-        case Defn.Def(
-              List(Mod.Protected(anon), Mod.Private(Name.Indeterminate("foo"))),
-              _,
-              _,
-              _,
-              _,
-              _,
-            ) => ()
+        case Defn
+              .Def(List(Mod.Protected(_), Mod.Private(Name.Indeterminate("foo"))), _, _, _, _, _) => ()
       },
     )
 
     matchSubStructure[Stat](
       "protected[foo] private def foo = ???",
       {
-        case Defn.Def(
-              List(Mod.Protected(Name.Indeterminate("foo")), Mod.Private(anon)),
-              _,
-              _,
-              _,
-              _,
-              _,
-            ) => ()
+        case Defn
+              .Def(List(Mod.Protected(Name.Indeterminate("foo")), Mod.Private(_)), _, _, _, _, _) => ()
       },
     )
 

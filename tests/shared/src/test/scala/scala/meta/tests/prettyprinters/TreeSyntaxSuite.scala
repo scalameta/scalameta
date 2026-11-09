@@ -26,7 +26,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     (first, second)
   }
 
-  private def testBlock(statStr: String, needNL: Boolean, syntaxStr: String = null)(implicit
+  private def testBlock(statStr: String, needNL: Boolean, syntaxStr: String)(implicit
       loc: munit.Location,
   ): Unit = {
     val stat = statStr.trim // make sure no trailing newlines
@@ -77,10 +77,9 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
   private def testBlockNoNL(t: String, expected: String = null)(implicit loc: munit.Location) =
     testBlock(t, false, expected)
 
-  private def testBlockAfterDef(f: String => Unit)(implicit loc: munit.Location): Unit =
-    Seq("val", "var", "def").foreach(f)
-  private def testBlockAfterClass(f: String => Unit)(implicit loc: munit.Location): Unit =
-    Seq("class", "object", "trait").foreach(f)
+  private def testBlockAfterDef(f: String => Unit): Unit = Seq("val", "var", "def").foreach(f)
+  private def testBlockAfterClass(f: String => Unit): Unit = Seq("class", "object", "trait")
+    .foreach(f)
 
   testBlockAfterDef(k => testBlockAddNL(s"$k foo: Int"))
   testBlockNoNL("class foo { self => }")

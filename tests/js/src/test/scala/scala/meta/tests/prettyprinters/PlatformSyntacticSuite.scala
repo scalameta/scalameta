@@ -3,8 +3,6 @@ package prettyprinters
 
 import scala.meta._
 
-import munit._
-
 class PlatformSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("JS floats are not JVM floats") {
     assert(Lit.Float(1.40f).syntax != "1.40f")

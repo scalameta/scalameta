@@ -2,8 +2,6 @@ package scala.meta.tests.metacp
 
 import scala.meta.AbsolutePath
 
-import java.io.{OutputStreamWriter, PrintStream}
-
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import coursier._
@@ -28,17 +26,13 @@ object Jars {
       org: String,
       artifact: String,
       version: String,
-      out: PrintStream = System.out,
       // If true, fetches the -sources.jar files instead of regular jar with classfiles.
       fetchSourceJars: Boolean = false,
       provided: List[ModuleID] = Nil,
-  ): List[AbsolutePath] = fetch(ModuleID(org, artifact, version) :: provided, out, fetchSourceJars)
+  ): List[AbsolutePath] = fetch(ModuleID(org, artifact, version) :: provided, fetchSourceJars)
 
-  def fetch(
-      modules: Iterable[ModuleID],
-      out: PrintStream,
-      fetchSourceJars: Boolean,
-  ): List[AbsolutePath] = Fetch().addDependencies(modules.map(_.toCoursier).toList: _*)
+  def fetch(modules: Iterable[ModuleID], fetchSourceJars: Boolean): List[AbsolutePath] = Fetch()
+    .addDependencies(modules.map(_.toCoursier).toList: _*)
     .addClassifiers((if (fetchSourceJars) Classifier.sources :: Nil else Nil): _*)
     .addRepositories(MavenRepository("https://scala-ci.typesafe.com/artifactory/scala-integration/"))
     .run().map(AbsolutePath(_)).toList

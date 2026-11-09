@@ -240,7 +240,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
       case t: Mod if s"Mod.${t.text.capitalize}" == t.productPrefix =>
       case t: Type.Param if t.text == t.name.value =>
       case t @ Term.Param(Nil, name, Some(tpe), _) if t.text == s"$name: $tpe" =>
-      case t @ Init(Type.Name(value), anon, Nil) if t.text == value =>
+      case t @ Init(Type.Name(value), _, Nil) if t.text == value =>
       case t: Importee.Wildcard if t.text == "_" =>
       case t: Pat.Wildcard if t.text == "_" =>
       case t @ Term.ArgClause(arg :: Nil, None) if t.text == arg.text =>

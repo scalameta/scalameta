@@ -1,8 +1,6 @@
 package scala.meta.tests
 package trees
 
-import org.scalameta.internal.ScalaCompat.EOL
-
 import scala.collection.mutable.ListBuffer
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}

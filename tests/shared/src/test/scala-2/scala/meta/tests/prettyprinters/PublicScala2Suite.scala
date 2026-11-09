@@ -3,9 +3,6 @@ package scala.meta.tests.prettyprinters
 import scala.meta._
 import scala.meta.tests.TreeSuiteBase
 
-import java.io._
-import java.nio.charset.Charset
-
 class PublicScala2Suite extends TreeSuiteBase {
 
   test("scala.meta.Tree.toString (quasiquotes)") {

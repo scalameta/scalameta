@@ -6,7 +6,6 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.{AbsolutePath, RelativePath}
 import scala.meta.metac
 import scala.meta.testkit.StringFS
-import scala.meta.tests.BuildInfo
 import scala.meta.tests.cli.CliTestUtils
 import scala.meta.tests.metacp.Library
 
