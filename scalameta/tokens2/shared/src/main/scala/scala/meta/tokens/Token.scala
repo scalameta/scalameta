@@ -7,6 +7,7 @@ import scala.meta.internal.prettyprinters._
 import scala.meta.internal.tokens._
 import scala.meta.prettyprinters._
 
+import scala.annotation.nowarn
 import scala.math.ScalaNumber
 
 // NOTE: `start` and `end` are String.substring-style,
@@ -372,7 +373,11 @@ object Token {
 
   implicit def classifiable[T <: Token]: Classifiable[T] = null
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
-  implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] = TokenSyntax.apply[T]
+  // binary compatibility; on the method, `@nowarn` does not take effect
+  implicit def showSyntax[T <: Token](implicit
+      @nowarn("cat=unused-params")
+      dialect: Dialect,
+  ): Syntax[T] = TokenSyntax.apply[T]
 
   val pureFunctionArrow = "->"
   val pureContextFunctionArrow = "?->"

@@ -619,6 +619,25 @@ lazy val bench = projectMatrix.in(file("bench/scalameta")).enablePlugins(BuildIn
 lazy val sharedJvmSettings = Def
   .settings(sharedSettings, jvmPlatformSettings, scalaVersion := LatestScala213)
 
+def unusedOptions = Def.setting {
+  val generated = "src=.*/src_managed/main/(protobuf|sbt-buildinfo)/.*"
+  // scalac 2.12 applies the first matching filter, and 2.13 and 3 the last
+  if (isScala213.value) List(
+    "-Wunused:imports,privates,locals,patvars,params",
+    s"-Wconf:cat=unused&$generated:s",
+    // TODO: remove when 2.12 support is removed, as 2.12 needs these imports
+    "-Wconf:cat=unused-imports&origin=scala[.]language[.]higherKinds:s",
+    "-Wconf:cat=unused-imports&origin=org[.]scalameta[.]collections[.]Conversions[.].*:s",
+  )
+  else if (isScala212.value) List(
+    // no patvars or params: 2.12 reports quasiquote pattern bindings and the parameters of hooks
+    "-Ywarn-unused:imports,privates,locals",
+    // 2.12 has no fatal warnings; it also reports the temporaries of named arguments
+    s"-Wconf:cat=unused&$generated:s,cat=unused-locals&msg=local val x[$$][0-9]+ :s,cat=unused:e",
+  )
+  else List("-Wunused:imports,privates,locals,params,patvars", s"-Wconf:id=E198&$generated:s")
+}
+
 lazy val sharedBaseSettings = Def.settings(
   // version is set dynamically by sbt-dynver, but let's adjust it
   version := sys.props.get("scalameta.version").getOrElse {
@@ -670,6 +689,7 @@ lazy val sharedSettings = Def.settings(
     )
     else Nil
   },
+  scalacOptions ++= unusedOptions.value,
 )
 
 def copyAssemblyJar = Def.task {

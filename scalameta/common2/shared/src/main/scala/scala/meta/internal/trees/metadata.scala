@@ -4,8 +4,8 @@ package trees
 
 import org.scalameta.adt.Metadata.Adt
 
-import scala.annotation.StaticAnnotation
 import scala.annotation.meta.getter
+import scala.annotation.{StaticAnnotation, nowarn}
 
 object Metadata {
   trait Ast extends Adt
@@ -17,5 +17,6 @@ object Metadata {
   class astField extends StaticAnnotation
   @getter
   class auxiliary extends StaticAnnotation
+  @nowarn("cat=unused-params") // macros read the argument from the tree
   class registry(paths: List[String]) extends StaticAnnotation
 }

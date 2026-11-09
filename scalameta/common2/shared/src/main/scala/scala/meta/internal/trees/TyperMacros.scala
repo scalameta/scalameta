@@ -5,6 +5,7 @@ package trees
 import org.scalameta.adt.{Reflection => AdtReflection}
 import org.scalameta.internal.{AdtHelpers, MacroHelpers}
 
+import scala.annotation.nowarn
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 
@@ -37,12 +38,14 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     q"()"
   }
 
+  @nowarn("cat=unused-params") // the macro definition fixes the signature
   def interfaceToApi[I, A](
       interface: c.Tree,
   )(implicit I: c.WeakTypeTag[I], A: c.WeakTypeTag[A]): c.Tree = q"$interface.asInstanceOf[$A]"
 
   def productPrefix[T](implicit T: c.WeakTypeTag[T]): c.Tree = q"${T.tpe.typeSymbol.asLeaf.prefix}"
 
+  @nowarn("cat=unused-params") // the macro definition fixes the signature
   def loadField(f: c.Tree, s: c.Tree): c.Tree = {
     def lazyLoad(fn: c.Tree => c.Tree) = {
       val q"$self.$finternalName" = f

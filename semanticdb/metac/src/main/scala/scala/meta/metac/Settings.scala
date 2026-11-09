@@ -2,6 +2,8 @@ package scala.meta.metac
 
 import scala.meta.cli._
 
+import scala.annotation.nowarn
+
 final class Settings private (val scalacArgs: List[String]) {
   private def this() = this(scalacArgs = Nil)
 
@@ -11,6 +13,7 @@ final class Settings private (val scalacArgs: List[String]) {
 }
 
 object Settings {
+  @nowarn("cat=unused-params") // binary compatibility
   def parse(args: List[String], reporter: Reporter): Option[Settings] = Some(new Settings(args))
 
   def apply(): Settings = new Settings()

@@ -1,8 +1,9 @@
 package scala.meta.internal.trees
 
-import scala.annotation.StaticAnnotation
+import scala.annotation.{StaticAnnotation, nowarn}
 
 // macros read the arguments of these annotations from the tree
+@nowarn("cat=unused-params")
 object FieldAnnotations {
   class newField(after: String) extends StaticAnnotation
   class replacedField(until: String, pos: Int = -1) extends StaticAnnotation

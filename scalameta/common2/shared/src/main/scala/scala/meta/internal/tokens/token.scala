@@ -2,17 +2,19 @@ package scala.meta
 package internal
 package tokens
 
-import scala.annotation.StaticAnnotation
+import scala.annotation.{StaticAnnotation, nowarn}
 import scala.collection.mutable.ListBuffer
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
 // @freeform and @fixed are specialized versions of @org.scalameta.adt.leaf for scala.meta tokens.
 
+@nowarn("cat=unused-params") // the macro reads the argument from the tree
 class freeform(name: String) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro TokenNamerMacros.freeform
 }
 
+@nowarn("cat=unused-params") // the macro reads the argument from the tree
 class fixed(name: String) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro TokenNamerMacros.fixed
 }

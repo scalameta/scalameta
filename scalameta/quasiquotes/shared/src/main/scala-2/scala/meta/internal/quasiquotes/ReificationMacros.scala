@@ -16,7 +16,7 @@ import scala.meta.tokenizers._
 import scala.meta.trees.Origin
 import scala.meta.{Tree => MetaTree}
 
-import scala.annotation.tailrec
+import scala.annotation.{nowarn, tailrec}
 import scala.collection.mutable
 import scala.language.implicitConversions
 import scala.reflect.macros.whitebox.Context
@@ -53,7 +53,9 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
 
   private val OriginModule = q"_root_.scala.meta.trees.Origin"
 
+  @nowarn("cat=unused-params") // the macro definition fixes the signature
   def apply(args: ReflectTree*)(dialect: ReflectTree): ReflectTree = expand(dialect)
+  @nowarn("cat=unused-params") // the macro definition fixes the signature
   def unapply(scrutinee: ReflectTree)(dialect: ReflectTree): ReflectTree = expand(dialect)
   def expand(dialectTree: ReflectTree): ReflectTree = {
     val (input, mode) = extractQuasiquotee()

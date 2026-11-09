@@ -4,6 +4,7 @@ import org.scalameta.adt.Metadata.Adt
 import org.scalameta.adt.{Reflection => AdtReflection}
 import scala.meta.internal.trees.AstNamerMacros
 
+import scala.annotation.nowarn
 import scala.language.experimental.macros
 import scala.language.implicitConversions
 import scala.reflect.macros.blackbox.Context
@@ -19,8 +20,11 @@ class LiftableMacros(val c: Context) extends AdtReflection {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.universe._
+  @nowarn("cat=unused-params") // a hook for subclasses
   def customAdts(root: Root): Option[List[Adt]] = None
+  @nowarn("cat=unused-params") // a hook for subclasses
   def customMatcher(adt: Adt, defName: TermName, localName: TermName): Option[DefDef] = None
+  @nowarn("cat=unused-params") // a hook for subclasses
   def customWrapper(adt: Adt, defName: TermName, localName: TermName, body: Tree): Option[Tree] =
     None
   def impl[T: WeakTypeTag](isPrivateOKExpr: c.Expr[Boolean]): c.Tree = {

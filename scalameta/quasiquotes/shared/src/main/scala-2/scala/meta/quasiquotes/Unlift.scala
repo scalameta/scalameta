@@ -3,7 +3,7 @@ package quasiquotes
 
 import scala.meta.common._
 
-import scala.annotation.implicitNotFound
+import scala.annotation.{implicitNotFound, nowarn}
 import scala.reflect.ClassTag
 
 @implicitNotFound(msg = "don't know how to unlift ${I} into ${O}")
@@ -32,6 +32,7 @@ object Unlift {
 
   implicit def unliftIdentity[I, O <: I: ClassTag]: Unlift[I, O] = Unlift { case x: O => x }
 
+  @nowarn("cat=unused-params") // binary compatibility
   implicit def unliftListToList[I, O: ClassTag](implicit
       unlift: Unlift[I, O],
   ): Unlift[List[I], List[O]] = Unlift { case x: List[I] => x.flatMap(unlift.apply) }

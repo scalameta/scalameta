@@ -2,6 +2,8 @@ package scala.meta.tests.parsers.dotty
 
 import scala.meta._
 
+import scala.annotation.nowarn
+
 class Scala3SyntaxSuite extends BaseDottySuite {
 
   test("given intOrd: Ord[Int] with \n{ def f(): Int = 1 }") {
@@ -33,6 +35,7 @@ class Scala3SyntaxSuite extends BaseDottySuite {
   }
 
   test("enum C extends A with B { case D }") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
     val dialect: Dialect = null
     import dialects.Scala3
     assertEquals(
@@ -47,6 +50,7 @@ class Scala3SyntaxSuite extends BaseDottySuite {
   }
 
   test("protected enum C extends A with B { case D }") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
     val dialect: Dialect = null
     import dialects.Scala3
     assertEquals(

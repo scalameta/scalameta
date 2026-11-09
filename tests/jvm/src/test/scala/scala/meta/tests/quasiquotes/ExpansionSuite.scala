@@ -6,6 +6,8 @@ import scala.meta.dialects.Scala213
 
 import java.io.DataInputStream
 
+import scala.annotation.nowarn
+
 import munit._
 
 // a quasiquote expands into the client's bytecode, so the names it calls must outlive a release
@@ -15,6 +17,7 @@ object ExpansionSuite {
   }
 
   object PatternExpansion {
+    @nowarn("msg=never used|unused") // a binding hole expands into the call this suite checks
     def matches(tree: Tree): Boolean = tree match {
       case q"if ($x) $y else $z" => true
       case _ => false

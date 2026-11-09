@@ -4,11 +4,12 @@ package parsers
 import scala.meta.inputs._
 import scala.meta.internal.parsers.ScalametaParser
 
-import scala.annotation.implicitNotFound
+import scala.annotation.{implicitNotFound, nowarn}
 
 @implicitNotFound(msg = "don't know how to parse into ${T}")
 trait Parse[T] {
   def apply(input: Input, dialect: Dialect): Parsed[T]
+  @nowarn("msg=never used|unused") // binary compatibility
   def apply(input: Input)(implicit dialect: Dialect, options: ParserOptions): Parsed[T] =
     apply(input, dialect) // fallback to the original method
 }

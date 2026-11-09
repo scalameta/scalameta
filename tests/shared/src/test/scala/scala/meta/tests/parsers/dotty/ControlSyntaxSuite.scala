@@ -5,6 +5,8 @@ import scala.meta.internal.parsers.{LazyTokenIterator, ScannerTokens}
 import scala.meta.tests.TestHelpers
 import scala.meta.tokenizers.TokenizerOptions
 
+import scala.annotation.nowarn
+
 class ControlSyntaxSuite extends BaseDottySuite {
 
   // --------------------------
@@ -4312,6 +4314,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3979 w/ grouped whitespace") {
+    @nowarn("msg=never used|unused") // runTestAssert does not read it
     implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = true)
 
     val code =
@@ -4378,6 +4381,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3979 w/ granular whitespace") {
+    @nowarn("msg=never used|unused") // runTestAssert does not read it
     implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = false)
 
     val code =

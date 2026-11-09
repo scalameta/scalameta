@@ -4,6 +4,8 @@ package trees
 import scala.meta._
 import scala.meta.internal.trees._
 
+import scala.annotation.nowarn
+
 class TreeSuite extends TreeSuiteBase {
 
   test("Name.unapply") {
@@ -96,6 +98,7 @@ class TreeSuite extends TreeSuiteBase {
     val tree = Defn
       .Def(Nil, "m", Nil, None, blk(Defn.Def(Mod.Inline() :: Nil, "n", Nil, None, Lit.Unit())))
     val copy = {
+      @nowarn("msg=never used|unused") // in scope to show that `copy` ignores it
       implicit val dialect: Dialect = dialects.Scala213
       tree.copy(body = tree.body)
     }

@@ -4,13 +4,14 @@ package trees
 
 import org.scalameta.internal.MacroHelpers
 
-import scala.annotation.StaticAnnotation
+import scala.annotation.{StaticAnnotation, nowarn}
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
 // Generates quasiquote definition boilerplate for a given interpolator
 // and then injects it into the annottee.
 // See usage examples in the `quasiquotes` project.
+@nowarn("cat=unused-params") // the macro reads the argument from the tree
 class quasiquote[T](qname: String) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro QuasiquoteMacros.impl
 }

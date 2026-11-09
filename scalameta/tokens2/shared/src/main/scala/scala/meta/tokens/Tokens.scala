@@ -7,6 +7,7 @@ import scala.meta.internal.prettyprinters._
 import scala.meta.internal.tokens.ScalaCompat.IndexedSeqOptimized
 import scala.meta.prettyprinters._
 
+import scala.annotation.nowarn
 import scala.collection.immutable
 import scala.reflect.ClassTag
 
@@ -322,6 +323,7 @@ object Tokens {
   implicit val listTokenToInput: Convert[List[Token], Input] =
     Convert(tokens => convertTokensToInput(Tokens(tokens.toArray)))
   implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]
+  @nowarn("cat=unused-params") // binary compatibility
   implicit def showSyntax[T <: Tokens](implicit dialect: Dialect): Syntax[T] = TokensSyntax.apply[T]
 
   private[meta] def skipFullIf(
