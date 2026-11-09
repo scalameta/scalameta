@@ -340,35 +340,43 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         Liftable((x: Option[T]) => Lifts.liftOptionTree(x))
       implicit def liftableOrigin[T <: Origin]: Liftable[T] = Liftable((x: T) => Lifts.liftOrigin(x))
     }
-    val valDefns = List(
-      q"""
-        val $sourceName = new $OriginModule.ParsedSource(
-          _root_.scala.meta.inputs.Input.String(${TokensToString.quasi(meta.tokens, input)})
-        )
-      """,
-    ).filter(_ ne null)
+    // the source of a quasiquote that lifts only its holes stays unused
+    def valDefns(body: ReflectTree) = {
+      val reads = body.exists {
+        case x: Ident => x.name == sourceName
+        case _ => false
+      }
+      if (reads)
+        q"""
+          val $sourceName = new $OriginModule.ParsedSource(
+            _root_.scala.meta.inputs.Input.String(${TokensToString.quasi(meta.tokens, input)})
+          )
+        """ :: Nil
+      else Nil
+    }
     mode match {
-      case Mode.Term(_, _) =>
+      case _: Mode.Term =>
+        val lifted = Lifts.liftTree(meta)
         val internalResult =
           q"""
           {
-            ..$valDefns
-            ${Lifts.liftTree(meta)}
+            ..${valDefns(lifted)}
+            $lifted
           }
         """
         if (sys.props("quasiquote.debug") != null) println(internalResult)
         // println(showRaw(internalResult))
         q"$InternalUnlift[${c.macroApplication.tpe}]($internalResult)"
-      case Mode.Pattern(_, holes, unapplySelector) =>
+      case mode: Mode.Pattern =>
         // inspired by https://github.com/densh/joyquote/blob/master/src/main/scala/JoyQuote.scala
         val pattern = Lifts.liftTree(meta)
         val (thenp, elsep) =
-          if (holes.isEmpty) (q"true", q"false")
+          if (mode.holes.isEmpty) (q"true", q"false")
           else {
             val reifers = new mutable.ListBuffer[ReflectTree]
             val patterns = new mutable.ListBuffer[ReflectTree]
             val terms = new mutable.ListBuffer[ReflectTree]
-            holes.foreach { h =>
+            mode.holes.foreach { h =>
               val name = TermName(QuasiquotePrefix + "$result$" + h.idx)
               reifers += h.reifier
               patterns += pq"_root_.scala.Some($name)"
@@ -390,9 +398,9 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         val internalResult =
           q"""
           new {
-            ..$valDefns
+            ..${valDefns(matchp)}
             def unapply(input: _root_.scala.meta.Tree) = $matchp
-          }.unapply($unapplySelector)
+          }.unapply(${mode.unapplySelector})
         """
         if (sys.props("quasiquote.debug") != null) println(internalResult)
         // println(showRaw(internalResult))

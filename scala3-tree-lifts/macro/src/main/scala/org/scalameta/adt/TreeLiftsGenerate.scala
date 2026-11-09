@@ -116,15 +116,11 @@ class TreeLiftsGenerateMacros(val c: Context)
          |package internal
          |package quasiquotes
          |
-         |import scala.runtime.ScalaRunTime
          |import scala.quoted._
          |import scala.{meta => sm}
          |import sm.internal.trees.Quasi
-         |import sm.internal.parsers.Absolutize._
-         |import sm.internal.parsers.Messages
          |import sm.trees.Origin
          |
-         |import scala.collection.mutable
          |import scala.annotation.tailrec
          |import scala.language.implicitConversions
          |
@@ -183,7 +179,7 @@ class TreeLiftsGenerateMacros(val c: Context)
     }
 
     res +=
-      """|  def liftableSubTree0[T <: sm.Tree](y: T)(using Quotes): Tree = y match {
+      """|  def liftableSubTree0[T <: sm.Tree](y: T): Tree = y match {
          |""".stripMargin
     adts.foreach { case (adt, name) => res += s"    case y : ${adt.tpe} => $name(y)\n" }
     res +=
@@ -250,7 +246,7 @@ class TreeLiftsGenerateMacros(val c: Context)
        |      case mType @ MethodType(_, _, res) => getResultType(res, hasImplicit || mType.isImplicit)
        |      case res => (res, hasImplicit)
        |    val apply = term.symbol.methodMember("apply").head
-       |    val (resType, hasImplicit) = getResultType(expr.asTerm.tpe.memberType(apply), hasImplicit = false)
+       |    val (resType, _) = getResultType(expr.asTerm.tpe.memberType(apply), hasImplicit = false)
        |    resType.asType match
        |      case '[t] =>
        |        if isPatternMode then
