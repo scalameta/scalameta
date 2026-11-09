@@ -193,7 +193,7 @@ lazy val semanticdbScalacCore = projectMatrix.in(file("semanticdb/scalac/library
   // exclude scala-library: the annotation pom pins a newer patch that would trip
   // SIP-51 on the earliest cross-built Scala versions.
   libraryDependencies +=
-    ("com.lihaoyi" %% "unroll-annotation" % "0.3.0").exclude("org.scala-lang", "scala-library"),
+    ("com.lihaoyi" %% "unroll-annotation" % "0.3.0").exclude("org.scala-lang" % "scala-library"),
 ).crossFullJvm(AllScala2Versions, deps = Seq(semanticdbShared, io)).enablePlugins(BuildInfoPlugin)
 
 def semanticdbSharedSettings = Def.settings(
@@ -767,7 +767,7 @@ lazy val mergeSettings = Def.settings(
         .map(x => x -> s"$shaded.$x")
       else List(s"$pkg.*" -> s"$shaded.$pkg.@1")
     }
-    options.withShadeRules(options.shadeRules :+ ShadeRule.rename(rules.sorted: _*).inAll)
+    options.withShadeRules(options.shadeRules :+ ShadeRule.rename(rules.sorted *).inAll)
   },
   Compile / Keys.`package` := Def.uncached {
     val slimJar = (Compile / Keys.`package`).value
