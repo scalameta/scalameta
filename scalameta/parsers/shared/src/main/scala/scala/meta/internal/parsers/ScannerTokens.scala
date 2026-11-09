@@ -620,7 +620,7 @@ private[meta] final class ScannerTokens(
         )
       case _: KwFor if !isPrevEndMarker() => currRef(RegionFor(next) :: sepRegions)
       case _: KwWhile if dialect.allowQuietSyntax && !isPrevEndMarker() =>
-        currRef(RegionWhile(next) :: sepRegions)
+        currRef(RegionWhile(next, inCondIndent(currPos, nextPos, sepRegions)) :: sepRegions)
       case _: KwIf if dialect.allowQuietSyntax && !isPrevEndMarker() =>
         currRef(dropRegionLine(sepRegions) match {
           case (r: RegionCaseExprPat) :: rs => new RegionCaseExprGuard(r.indent) :: rs
@@ -628,7 +628,7 @@ private[meta] final class ScannerTokens(
           case rs @ (_: RegionDelim) :: (_: RegionFor) :: _ => rs
           // a guard after a generator that left a region, such as that of `new` or `try`
           case rs if canEndStat(prev) && isForGuard(rs) => rs
-          case _ => RegionIf(next) :: sepRegions
+          case _ => RegionIf(next, inCondIndent(currPos, nextPos, sepRegions)) :: sepRegions
         })
       case _: KwThen => afterControlRef(sepRegions, RegionThen :: _)
       case _: KwElse if dialect.allowQuietSyntax =>
@@ -697,8 +697,7 @@ private[meta] final class ScannerTokens(
       case (r: RegionControl) :: rs if r.isNotTerminatingTokenIfOptional(curr) =>
         r match {
           case rc: RegionControlMaybeCond if prev.is[RightParen] =>
-            val cond = rc.asCond()
-            if (isCondContinued(cond, currPos)) cond :: rs else withBody(rc, rs)
+            if (isCondContinued(rc, currPos)) rc.asCond() :: rs else withBody(rc, rs)
           case RegionForMaybeParens if prev.is[RightParen] =>
             curr match {
               case _: LeftArrow => RegionForOther :: rs
@@ -839,6 +838,12 @@ private[meta] final class ScannerTokens(
                 OutdentInfo(r, if (done) rs else xs, done)
               } else null
             case _ if nextIndent >= r.indent => null // we stop here
+            // spec: keep `r` open at a leading infix deeper than the region of the condition
+            case xs if (dropRegionLine(xs) match {
+                  case (c: RegionControlCond) :: _ => nextIndent > c.inCondIndent &&
+                    canBeLeadingInfix == LeadingInfix.Yes
+                  case _ => false
+                }) => null
             // a condition continues to its `then` or `do`
             case (_: RegionControlCond) :: _ => OutdentInfo(r, rs)
             case (rc: RegionControl) :: xs =>
@@ -1073,8 +1078,27 @@ private[meta] final class ScannerTokens(
     case _ => false
   }
 
+  /**
+   * Returns [[RegionControlCond.inCondIndent]] for the condition after a keyword
+   * @param kwPos
+   *   the index of the `if` or `while`
+   * @param nextPos
+   *   the index of the token after the keyword
+   * @param regions
+   *   the regions that enclose the condition, the innermost first
+   */
+  private def inCondIndent(kwPos: Int, nextPos: Int, regions: List[SepRegion]): Int =
+    // without colon arguments or leading infix lines, the scanner never needs `inCondIndent`
+    if (!dialect.allowFewerBraces || !dialect.allowInfixOperatorAfterNL) Int.MaxValue
+    // if the condition starts with `{` or on the next line, it is a block with its own indent
+    else if (tokens(nextPos).is[LeftBrace] || countIndent(nextPos) >= 0) Int.MaxValue
+    else {
+      val first = nextNonHTriviaAt(math.max(0, prevAt(kwPos, !_.is[AtEOL])))
+      regions.foldLeft(countIndent(first))((x, r) => math.max(x, r.indent))
+    }
+
   /** Returns true if `cond` continues past `)` to the token at `pos`, as dotty's `toBeContinued` */
-  private def isCondContinued(cond: RegionControlCond, pos: Int): Boolean = {
+  private def isCondContinued(cond: RegionControlMaybeCond, pos: Int): Boolean = {
     val token = tokens(pos)
     // a token that cannot start a statement continues cond
     !mightStartStat(token) ||
@@ -1089,7 +1113,7 @@ private[meta] final class ScannerTokens(
   /** Returns true if `regions`, those of a `)`, end the condition before the body at `pos` */
   private[parsers] def isAtControlCondEnd(regions: List[SepRegion], pos: Int): Boolean =
     regions match {
-      case (rc: RegionControlMaybeCond) :: _ => !isCondContinued(rc.asCond(), pos)
+      case (rc: RegionControlMaybeCond) :: _ => !isCondContinued(rc, pos)
       case _ => false
     }
 
@@ -1199,7 +1223,7 @@ private[meta] final class ScannerTokens(
 
   /* the index of the token that ends `cond` if the condition continues to it from `pos`, or -1;
    * as dotty's `followedByToken`, the scan stops at a statement outside braces */
-  private def condEndAt(cond: RegionControlCond, pos: Int): Int = {
+  private def condEndAt(cond: RegionControlMaybeCond, pos: Int): Int = {
     @tailrec
     def iter(i: Int, braces: Int): Int = tokens(i) match {
       case _: Trivia => iter(i + 1, braces)
@@ -1207,7 +1231,7 @@ private[meta] final class ScannerTokens(
       case _: RightBrace => if (braces > 0) iter(i + 1, braces - 1) else -1
       case _: EOF | _: Xml.Start => -1
       case _ if braces > 0 => iter(i + 1, braces)
-      case t if cond.isTerminatingToken(t) => i
+      case t if cond.isCondTerminatingToken(t) => i
       case _: StatBegKeyword | _: ModifierKeyword | _: CtrlKeyword | _: Semicolon => -1 // dotty's `stopScanTokens`
       case _ => iter(i + 1, braces)
     }

@@ -13822,10 +13822,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Colon [36..37)
          |Indentation.Indent [37..37)
          |Ident(z) [46..47)
-         |Indentation.Outdent [47..47)
          |InfixLF [47..48)
          |Ident(&&) [54..56)
          |Ident(w) [57..58)
+         |Indentation.Outdent [58..58)
          |KwThen [63..67)
          |Ident(c) [68..69)
          |KwElse [70..74)
@@ -13842,8 +13842,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = if (x(y) && foo {
-         |    z
-         |  } && w) c else d
+         |    z && w
+         |  }) c else d
          |  def g = 1
          |}
          |""".stripMargin
@@ -13858,9 +13858,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
           None,
           tif(
             tinfix(
-              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              tapply(tname("x"), tname("y")),
               "&&",
-              tname("w"),
+              tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w")))),
             ),
             tname("c"),
             tname("d"),
@@ -18482,8 +18482,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = while (x(y) && foo {
-         |    z
-         |  } && w) c
+         |    z && w
+         |  }) c
          |  def g = 1
          |}
          |""".stripMargin
@@ -18498,9 +18498,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
           None,
           Term.While(
             tinfix(
-              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              tapply(tname("x"), tname("y")),
               "&&",
-              tname("w"),
+              tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w")))),
             ),
             tname("c"),
           ),
@@ -18523,8 +18523,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = if (x && foo {
-         |    z
-         |  } && w) c else d
+         |    z && w
+         |  }) c else d
          |  def g = 1
          |}
          |""".stripMargin
@@ -18538,7 +18538,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             tname("c"),
             tname("d"),
           ),
@@ -18561,8 +18561,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = while (x && foo {
-         |    z
-         |  } && w) c
+         |    z && w
+         |  }) c
          |  def g = 1
          |}
          |""".stripMargin
@@ -18576,7 +18576,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           Term.While(
-            tinfix(tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             tname("c"),
           ),
         ),
@@ -23995,8 +23995,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|object A {
          |  def f = if (x(y) && foo {
          |    z
-         |    // c
-         |  } && w) c else d
+         |      // c
+         |      && w
+         |  }) c else d
          |  def g = 1
          |}
          |""".stripMargin
@@ -24011,13 +24012,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
           None,
           tif(
             tinfix(
-              tinfix(
-                tapply(tname("x"), tname("y")),
-                "&&",
-                tapply(tname("foo"), blk(tnameComments("z")()("// c"))),
-              ),
+              tapply(tname("x"), tname("y")),
               "&&",
-              tname("w"),
+              tapply(tname("foo"), blk(tinfix(tnameComments("z")()("// c"), "&&", tname("w")))),
             ),
             tname("c"),
             tname("d"),
@@ -24026,7 +24023,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
     )))
-    runTestAssert[Source](code, layout)(tree)
+    parseAndCheckTree[Source](code, layout)(tree)
   }
 
   test("nested condition: `&&` and a colon argument after the parentheses in braces, the argument on the next line, shallower leading `&&` on the next line, `then` and `else` on the next line at the column of the `if`, next statement") {
@@ -24045,8 +24042,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|object A {
          |  def f = {
          |    if (x(y) && foo {
-         |      z
-         |    } && w) c else d
+         |      z && w
+         |    }) c else d
          |    g
          |  }
          |}
@@ -24062,9 +24059,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
         blk(
           tif(
             tinfix(
-              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              tapply(tname("x"), tname("y")),
               "&&",
-              tname("w"),
+              tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w")))),
             ),
             tname("c"),
             tname("d"),
@@ -24090,8 +24087,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|object A {
          |  def f = {
          |    if (x(y) && foo {
-         |      z
-         |    } && w) c else d
+         |      z && w
+         |    }) c else d
          |    g
          |  }
          |}
@@ -24107,9 +24104,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
         blk(
           tif(
             tinfix(
-              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              tapply(tname("x"), tname("y")),
               "&&",
-              tname("w"),
+              tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w")))),
             ),
             tname("c"),
             tname("d"),
@@ -24137,8 +24134,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  def f = {
          |    e
          |    if (x(y) && foo {
-         |      z
-         |    } && w) c else d
+         |      z && w
+         |    }) c else d
          |    g
          |  }
          |}
@@ -24155,9 +24152,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
           tname("e"),
           tif(
             tinfix(
-              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              tapply(tname("x"), tname("y")),
               "&&",
-              tname("w"),
+              tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w")))),
             ),
             tname("c"),
             tname("d"),
@@ -24183,8 +24180,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|object A {
          |  def f = {
          |    while (x(y) && foo {
-         |      z
-         |    } && w) c
+         |      z && w
+         |    }) c
          |    g
          |  }
          |}
@@ -24200,9 +24197,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
         blk(
           Term.While(
             tinfix(
-              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              tapply(tname("x"), tname("y")),
               "&&",
-              tname("w"),
+              tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w")))),
             ),
             tname("c"),
           ),
@@ -25707,8 +25704,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|object A { self =>
          |  def g = 1
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -25723,7 +25720,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -25748,8 +25745,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|object A { self =>
          |  def g = 1
          |  def f = 1 + (if (c && foo {
-         |    z
-         |  } && w) 1 else 2)
+         |    z && w
+         |  }) 1 else 2)
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -25767,11 +25764,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
             int(1),
             "+",
             tif(
-              tinfix(
-                tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
-                "&&",
-                tname("w"),
-              ),
+              tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
               int(1),
               int(2),
             ),
@@ -25798,8 +25791,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  def g = 1
          |  class B {
          |    def f = if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |  }
          |}
          |""".stripMargin
@@ -25820,11 +25813,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
             Nil,
             None,
             tif(
-              tinfix(
-                tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
-                "&&",
-                tname("w"),
-              ),
+              tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
               int(1),
               int(2),
             ),
@@ -25848,8 +25837,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|object A { self =>
          |  def g = 1
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -25864,7 +25853,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -25888,8 +25877,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|object A { self =>
          |  def g = 1
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -25904,7 +25893,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -25929,8 +25918,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|given A with { self =>
          |  def g = 1
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Given(
@@ -25947,7 +25936,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -25974,8 +25963,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  def h = xs.foreach {
          |    x => g(x)
          |    if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |  }
          |}
          |""".stripMargin
@@ -25992,11 +25981,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           blk(
             tfunc(tparam("x"))(tapply(tname("g"), tname("x"))),
             tif(
-              tinfix(
-                tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
-                "&&",
-                tname("w"),
-              ),
+              tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
               int(1),
               int(2),
             ),
@@ -26026,8 +26011,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |      Int => g(x)
          |    }
          |    if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |  }
          |}
          |""".stripMargin
@@ -26044,11 +26029,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           blk(
             tapply(tname("x"), blk(tfunc(tparam("Int"))(tapply(tname("g"), tname("x"))))),
             tif(
-              tinfix(
-                tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
-                "&&",
-                tname("w"),
-              ),
+              tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
               int(1),
               int(2),
             ),
@@ -26074,8 +26055,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|object O {
          |  def h = xs.foreach {
          |    x => if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |  }
          |}
          |""".stripMargin
@@ -26090,7 +26071,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         tapply(
           tselect("xs", "foreach"),
           blk(tfunc(tparam("x"))(tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ))),
@@ -26114,8 +26095,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|object O {
          |  def h = boundary {
          |    if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |  }
          |}
          |""".stripMargin
@@ -26130,7 +26111,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         tapply(
           tname("boundary"),
           blk(tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           )),
@@ -26156,8 +26137,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    g
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -26171,7 +26152,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26199,8 +26180,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |      x => g(x)
          |    }
          |    if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |  }
          |}
          |""".stripMargin
@@ -26215,7 +26196,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         blk(
           tapply(tname("run"), blk(tfunc(tparam("x"))(tapply(tname("g"), tname("x"))))),
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26243,8 +26224,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |      (x, y) => g(x)
          |    }
          |    if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |  }
          |}
          |""".stripMargin
@@ -26259,7 +26240,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         blk(
           tapply(tname("run"), blk(tfunc(tparam("x"), tparam("y"))(tapply(tname("g"), tname("x"))))),
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26289,8 +26270,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |    locally {
          |      if (c && foo {
-         |        z
-         |      } && w) 1 else 2
+         |        z && w
+         |      }) 1 else 2
          |    }
          |  }
          |}
@@ -26308,11 +26289,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           tapply(
             tname("locally"),
             blk(tif(
-              tinfix(
-                tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
-                "&&",
-                tname("w"),
-              ),
+              tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
               int(1),
               int(2),
             )),
@@ -26341,8 +26318,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |      x ?=> g(x)
          |    }
          |    if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |  }
          |}
          |""".stripMargin
@@ -26360,7 +26337,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
             blk(Term.ContextFunction(List(tparam("x")), tapply(tname("g"), tname("x")))),
           ),
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26385,8 +26362,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|object O {
          |  def h = boundary {
          |    if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |  }
          |}
          |""".stripMargin
@@ -26401,7 +26378,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         tapply(
           tname("boundary"),
           blk(tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           )),
@@ -26431,8 +26408,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Class(
@@ -26448,7 +26425,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26473,8 +26450,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  def h = {
          |    x: Int
          |    if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |  }
          |}
          |""".stripMargin
@@ -26489,7 +26466,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         blk(
           Term.Ascribe(tname("x"), pname("Int")),
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26537,8 +26514,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -26552,7 +26529,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26582,8 +26559,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -26597,7 +26574,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26626,8 +26603,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -26641,7 +26618,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26670,8 +26647,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -26685,7 +26662,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26735,8 +26712,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -26750,7 +26727,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26780,8 +26757,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -26795,7 +26772,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26825,8 +26802,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -26840,7 +26817,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26872,8 +26849,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -26887,7 +26864,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26919,8 +26896,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -26934,7 +26911,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -26964,8 +26941,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -26979,7 +26956,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27009,8 +26986,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -27024,7 +27001,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27054,8 +27031,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -27069,7 +27046,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27099,8 +27076,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -27114,7 +27091,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27144,8 +27121,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -27160,7 +27137,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27191,8 +27168,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -27210,7 +27187,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27243,8 +27220,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -27258,7 +27235,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27282,8 +27259,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|def h: Int = throw try g catch {
          |  case _ =>
          |    if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Def(
@@ -27297,7 +27274,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Pat.Wildcard(),
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27323,8 +27300,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|def h: Int = throw try g(a, b) catch {
          |  case _ =>
          |    if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Def(
@@ -27338,7 +27315,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Pat.Wildcard(),
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27362,8 +27339,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def h: Unit = throw while (a && b) if (c && foo {
-         |  z
-         |} && w) 1 else 2
+         |  z && w
+         |}) 1 else 2
          |""".stripMargin
     val tree = Source(List(Defn.Def(
       Nil,
@@ -27373,7 +27350,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Term.Throw(Term.While(
         tinfix(tname("a"), "&&", tname("b")),
         tif(
-          tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+          tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
           int(1),
           int(2),
         ),
@@ -27399,8 +27376,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  throw g(a, b) match {
          |    case _ =>
          |      if (c && foo {
-         |        z
-         |      } && w) 1 else 2
+         |        z && w
+         |      }) 1 else 2
          |  }
          |}
          |""".stripMargin
@@ -27415,7 +27392,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Pat.Wildcard(),
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27439,8 +27416,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|def h: Int = {
          |  throw if (a) if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Def(
@@ -27451,7 +27428,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       blk(Term.Throw(tif(
         tname("a"),
         tif(
-          tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+          tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
           int(1),
           int(2),
         ),
@@ -27481,8 +27458,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |*/ B =>
          |  def g = 1
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val layoutCRLF =
@@ -27494,8 +27471,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |  }
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Class(
@@ -27512,7 +27489,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27538,8 +27515,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|trait T { self =>
          |  def f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Trait(
@@ -27555,7 +27532,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Nil,
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27578,8 +27555,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|def h = xs.foreach { x =>
          |  val f = if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |  f
          |}
          |""".stripMargin
@@ -27596,11 +27573,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
             List(patvar("f")),
             None,
             tif(
-              tinfix(
-                tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
-                "&&",
-                tname("w"),
-              ),
+              tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
               int(1),
               int(2),
             ),
@@ -27625,8 +27598,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|def h: Int = {
          |  val v = a || (if (c && foo {
-         |    z
-         |  } && w) 1 else 2)
+         |    z && w
+         |  }) 1 else 2)
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Def(
@@ -27642,7 +27615,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           tname("a"),
           "||",
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27667,8 +27640,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|def h: Int = throw try g(a, b) catch {
          |  case _ =>
          |    if (c && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Def(
@@ -27682,7 +27655,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Pat.Wildcard(),
           None,
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -27707,8 +27680,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|def h: Int = {
          |  throw if (a.b) if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Def(
@@ -27719,7 +27692,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       blk(Term.Throw(Term.If(
         tselect("a", "b"),
         tif(
-          tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+          tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
           int(1),
           int(2),
         ),
@@ -27743,8 +27716,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|def h: Int = {
          |  throw for (x <- xs; y <- ys) if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Def(
@@ -27758,7 +27731,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Enumerator.Generator(patvar("y"), tname("ys")),
         ),
         tif(
-          tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+          tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
           int(1),
           int(2),
         ),
@@ -27782,8 +27755,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|def h: Int = {
          |  throw for (x <- xs; if p) yield if (c && foo {
-         |    z
-         |  } && w) 1 else 2
+         |    z && w
+         |  }) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Def(
@@ -27794,7 +27767,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       blk(Term.Throw(Term.ForYield(
         List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Guard(tname("p"))),
         tif(
-          tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+          tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
           int(1),
           int(2),
         ),
@@ -27815,8 +27788,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = if (xs.exists {
-         |    x => x > 0
-         |  } && ys.isEmpty) a else b
+         |    x => x > 0 && ys.isEmpty
+         |  }) a else b
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -27828,10 +27801,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
         Nil,
         None,
         tif(
-          tinfix(
-            tapply(tselect("xs", "exists"), blk(tfunc(tparam("x"))(tinfix(tname("x"), ">", int(0))))),
-            "&&",
-            tselect("ys", "isEmpty"),
+          tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("x"))(
+              tinfix(tinfix(tname("x"), ">", int(0)), "&&", tselect("ys", "isEmpty")),
+            )),
           ),
           tname("a"),
           tname("b"),
@@ -27853,8 +27827,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = if (xs.exists {
-         |    x => x > 0
-         |  } && ys.isEmpty) a else b
+         |    x => x > 0 && ys.isEmpty
+         |  }) a else b
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -27866,10 +27840,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
         Nil,
         None,
         tif(
-          tinfix(
-            tapply(tselect("xs", "exists"), blk(tfunc(tparam("x"))(tinfix(tname("x"), ">", int(0))))),
-            "&&",
-            tselect("ys", "isEmpty"),
+          tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("x"))(
+              tinfix(tinfix(tname("x"), ">", int(0)), "&&", tselect("ys", "isEmpty")),
+            )),
           ),
           tname("a"),
           tname("b"),
@@ -27891,8 +27866,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = if (xs.exists {
-         |    _ > 0
-         |  } && ys.isEmpty) a else b
+         |    _ > 0 && ys.isEmpty
+         |  }) a else b
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -27904,13 +27879,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
         Nil,
         None,
         tif(
-          tinfix(
-            tapply(
-              tselect("xs", "exists"),
-              blk(Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", int(0)))),
-            ),
-            "&&",
-            tselect("ys", "isEmpty"),
+          tapply(
+            tselect("xs", "exists"),
+            blk(Term.AnonymousFunction(
+              tinfix(tinfix(Term.Placeholder(), ">", int(0)), "&&", tselect("ys", "isEmpty")),
+            )),
           ),
           tname("a"),
           tname("b"),
@@ -27988,8 +27961,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |} else if (b) {
          |  y
          |} else if (c && foo {
-         |  z
-         |} && w) 1 else 2
+         |  z && w
+         |}) 1 else 2
          |""".stripMargin
     val tree = Source(List(Defn.Def(
       Nil,
@@ -28003,7 +27976,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           tname("b"),
           blk(tname("y")),
           tif(
-            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
             int(1),
             int(2),
           ),
@@ -28027,8 +28000,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = if (x(y) && foo {
-         |    z
-         |  } && w || v) c else d
+         |    z && w
+         |  } || v) c else d
          |  def g = 1
          |}
          |""".stripMargin
@@ -28044,9 +28017,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
           tif(
             tinfix(
               tinfix(
-                tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+                tapply(tname("x"), tname("y")),
                 "&&",
-                tname("w"),
+                tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w")))),
               ),
               "||",
               tname("v"),
@@ -28971,10 +28944,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Indentation.Indent [36..36)
          |Ident(z) [45..46)
          |Semicolon [46..47)
-         |Indentation.Outdent [47..47)
          |InfixLF [47..48)
          |Ident(+) [54..55)
          |Ident(w) [56..57)
+         |Indentation.Outdent [57..57)
          |KwThen [62..66)
          |Ident(c) [67..68)
          |KwElse [69..73)
@@ -28991,7 +28964,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  def f = {
          |    if (a && foo {
          |      z
-         |    } + w) c else d
+         |      +w
+         |    }) c else d
          |    g
          |  }
          |}
@@ -29006,7 +28980,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         None,
         blk(
           tif(
-            tinfix(tname("a"), "&&", tinfix(tapply(tname("foo"), blk(tname("z"))), "+", tname("w"))),
+            tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z"), unary("+", tname("w"))))),
             tname("c"),
             tname("d"),
           ),

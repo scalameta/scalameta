@@ -4540,8 +4540,8 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object A {
          |  def f = xs.map {
          |    x => if (x(y) && foo {
-         |      z
-         |    } && w) c else d
+         |      z && w
+         |    }) c else d
          |  }
          |  def k = 1
          |}
@@ -4559,9 +4559,9 @@ class FewerBracesSuite extends BaseDottySuite {
             tselect("xs", "map"),
             blk(tfunc(tparam("x"))(tif(
               tinfix(
-                tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+                tapply(tname("x"), tname("y")),
                 "&&",
-                tname("w"),
+                tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w")))),
               ),
               tname("c"),
               tname("d"),
