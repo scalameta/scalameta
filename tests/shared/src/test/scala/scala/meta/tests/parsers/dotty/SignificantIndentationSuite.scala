@@ -3419,6 +3419,161 @@ class SignificantIndentationSuite extends BaseDottySuite {
     assertEquals(endAtEof(source(code)), Nil)
   }
 
+  test("anonymous class: a continued `val`, a colon body, `+` at the column of the continuation") {
+    val code =
+      """|object A:
+         |  val e = 1
+         |    + q
+         |  val v = new B:
+         |      def x = 1
+         |    + 2
+         |  def h = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val e = 1 + q
+         |  val v = new B { def x = 1 } + 2
+         |  def h = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(Nil, List(patvar("e")), None, tinfix(int(1), "+", tname("q"))),
+        Defn.Val(
+          Nil,
+          List(patvar("v")),
+          None,
+          tinfix(
+            Term.NewAnonymous(tpl(List(init("B")), List(Defn.Def(Nil, tname("x"), Nil, None, int(1))))),
+            "+",
+            int(2),
+          ),
+        ),
+        Defn.Def(Nil, tname("h"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("anonymous class: a continued statement in a `case` body in braces, a colon body, `+` at the column of the continuation") {
+    val code =
+      """|object A:
+         |  def f = xs.map {
+         |    case 1 =>
+         |      val v = a
+         |        + b
+         |      new B:
+         |          def x = 1
+         |        + 2
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case 1 =>
+         |      val v = a + b
+         |      new B { def x = 1 } + 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          tselect("xs", "map"),
+          Term.PartialFunction(List(Case(
+            int(1),
+            None,
+            blk(
+              Defn.Val(Nil, List(patvar("v")), None, tinfix(tname("a"), "+", tname("b"))),
+              tinfix(
+                Term
+                  .NewAnonymous(tpl(List(init("B")), List(Defn.Def(Nil, tname("x"), Nil, None, int(1))))),
+                "+",
+                int(2),
+              ),
+            ),
+          ))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("match: a `case` body on the next line, leading infix at the column of the `case`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    y match
+         |      case 1 =>
+         |        a
+         |      + b
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `outdent` expected but `identifier` found
+         |      + b
+         |      ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("lambda in braces with a parameter on the line after the brace and a deeper next line, a shallower next statement") {
+    val code =
+      """|object O:
+         |  def h = xs.foreach {
+         |    x =>
+         |      g(x)
+         |    k(x)
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def h = xs.foreach {
+         |    x => g(x)
+         |    k(x)
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("h"),
+        Nil,
+        None,
+        tapply(
+          tselect("xs", "foreach"),
+          blk(tfunc(tparam("x"))(tapply(tname("g"), tname("x"))), tapply(tname("k"), tname("x"))),
+        ),
+      )),
+    )))
+    parseAndCheckTree[Source](code, layout)(tree)
+  }
+
+  test("a carriage return in the indent of the second definition of an indented object body") {
+    val code =
+      s"""|object O:
+          |  def f = 1
+          |  \rdef g = 2
+          |""".stripMargin
+    val layout =
+      """|object O { def f = 1 }
+         |def g = 2
+         |""".stripMargin
+    val tree = Source(List(
+      Defn.Object(Nil, tname("O"), tpl(Defn.Def(Nil, tname("f"), Nil, None, int(1)))),
+      Defn.Def(Nil, tname("g"), Nil, None, int(2)),
+    ))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
   test("`throw` at the end of a line within parentheses, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
     val code =
       """|object A:
