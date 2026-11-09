@@ -18470,6 +18470,155 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Source](code, layout)(tree)
   }
 
+  test("nested condition: `while` with `&&` and a colon argument after the parentheses, the argument on the next line, shallower leading `&&` on the next line, `do` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f = while (x)(y) && foo:
+         |        z
+         |      && w
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = while (x(y) && foo {
+         |    z
+         |  } && w) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.While(
+            tinfix(
+              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: `if` without parentheses with `&&` and a colon argument, the argument on the next line, shallower leading `&&` on the next line, `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f = if x && foo:
+         |        z
+         |      && w
+         |    then c else d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (x && foo {
+         |    z
+         |  } && w) c else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: `while` without parentheses with `&&` and a colon argument, the argument on the next line, shallower leading `&&` on the next line, `do` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f = while x && foo:
+         |        z
+         |      && w
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = while (x && foo {
+         |    z
+         |  } && w) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.While(
+            tinfix(tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: `&&` and a colon argument outside a condition, the argument on the next line, shallower leading `&&` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f = a && foo:
+         |        z
+         |      && w
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = a && foo {
+         |    z && w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
   test("nested condition: `&&` and a colon argument after the parentheses, the argument on the next line, a blank line, shallower leading `&&` on the next line, `then` and `else` on the next line, next statement") {
     val code =
       """|object A:
@@ -23828,6 +23977,4086 @@ class ControlSyntaxSuite extends BaseDottySuite {
           tname("g"),
         ),
       )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: `&&` and a colon argument after the parentheses, the argument on the next line, a comment line, shallower leading `&&` on the next line, `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f = if (x)(y) && foo:
+         |        z
+         |        // c
+         |      && w
+         |    then c else d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (x(y) && foo {
+         |    z
+         |    // c
+         |  } && w) c else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(
+              tinfix(
+                tapply(tname("x"), tname("y")),
+                "&&",
+                tapply(tname("foo"), blk(tnameComments("z")()("// c"))),
+              ),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: `&&` and a colon argument after the parentheses in braces, the argument on the next line, shallower leading `&&` on the next line, `then` and `else` on the next line at the column of the `if`, next statement") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    if (x)(y) && foo:
+         |        z
+         |      && w
+         |    then c else d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (x(y) && foo {
+         |      z
+         |    } && w) c else d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tinfix(
+              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: `&&` and a colon argument after the parentheses in an indented block, the argument on the next line, shallower leading `&&` on the next line, `then` and `else` on the next line at the column of the `if`, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if (x)(y) && foo:
+         |        z
+         |      && w
+         |    then c else d
+         |    g
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (x(y) && foo {
+         |      z
+         |    } && w) c else d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tinfix(
+              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: `&&` and a colon argument after the parentheses after a statement in an indented block, the argument on the next line, shallower leading `&&` on the next line, `then` and `else` on the next line at the column of the `if`, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    e
+         |    if (x)(y) && foo:
+         |        z
+         |      && w
+         |    then c else d
+         |    g
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    e
+         |    if (x(y) && foo {
+         |      z
+         |    } && w) c else d
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tname("e"),
+          tif(
+            tinfix(
+              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: `while` with `&&` and a colon argument after the parentheses in an indented block, the argument on the next line, shallower leading `&&` on the next line, `do` on the next line at the column of the `while`, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while (x)(y) && foo:
+         |        z
+         |      && w
+         |    do c
+         |    g
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    while (x(y) && foo {
+         |      z
+         |    } && w) c
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Term.While(
+            tinfix(
+              tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: `while` with parentheses at the line end, an argument in parentheses with `do` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while (a)
+         |      (x) do g
+         |    h
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |LeftParen [30..31)
+         |Ident(a) [31..32)
+         |RightParen [32..33)
+         |Indentation.Indent [33..33)
+         |LeftParen [40..41)
+         |Ident(x) [41..42)
+         |RightParen [42..43)
+         |KwDo [44..46)
+         |Ident(g) [47..48)
+         |Indentation.Outdent [48..48)
+         |LF [48..49)
+         |Ident(h) [53..54)
+         |Indentation.Outdent [54..54)
+         |Indentation.Outdent [54..54)
+         |EOF [55..55)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: `outdent` expected but `do` found
+         |      (x) do g
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with parentheses at the line end, an argument in braces with `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if (a)
+         |      { x } then 1 else 2
+         |    g
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |LeftParen [27..28)
+         |Ident(a) [28..29)
+         |RightParen [29..30)
+         |Indentation.Indent [30..30)
+         |LeftBrace [37..38)
+         |Ident(x) [39..40)
+         |RightBrace [41..42)
+         |KwThen [43..47)
+         |Constant.Int(1) [48..49)
+         |KwElse [50..54)
+         |Constant.Int(2) [55..56)
+         |Indentation.Outdent [56..56)
+         |LF [56..57)
+         |Ident(g) [61..62)
+         |Indentation.Outdent [62..62)
+         |Indentation.Outdent [62..62)
+         |EOF [63..63)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: `outdent` expected but `then` found
+         |      { x } then 1 else 2
+         |            ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `while` with parentheses at the line end, an argument in braces with `do` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while (a)
+         |      { x } do g
+         |    h
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |LeftParen [30..31)
+         |Ident(a) [31..32)
+         |RightParen [32..33)
+         |Indentation.Indent [33..33)
+         |LeftBrace [40..41)
+         |Ident(x) [42..43)
+         |RightBrace [44..45)
+         |KwDo [46..48)
+         |Ident(g) [49..50)
+         |Indentation.Outdent [50..50)
+         |LF [50..51)
+         |Ident(h) [55..56)
+         |Indentation.Outdent [56..56)
+         |Indentation.Outdent [56..56)
+         |EOF [57..57)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: `outdent` expected but `do` found
+         |      { x } do g
+         |            ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with parentheses at the line end, an argument in parentheses on the next line, `then` and `else` on the line after it, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if (a)
+         |      (x)
+         |    then 1 else 2
+         |    g
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |LeftParen [27..28)
+         |Ident(a) [28..29)
+         |RightParen [29..30)
+         |Indentation.Indent [30..30)
+         |LeftParen [37..38)
+         |Ident(x) [38..39)
+         |RightParen [39..40)
+         |Indentation.Outdent [40..40)
+         |KwThen [45..49)
+         |Constant.Int(1) [50..51)
+         |KwElse [52..56)
+         |Constant.Int(2) [57..58)
+         |LF [58..59)
+         |Ident(g) [63..64)
+         |Indentation.Outdent [64..64)
+         |Indentation.Outdent [64..64)
+         |EOF [65..65)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:5: error: `outdent` expected but `then` found
+         |    then 1 else 2
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `while` with parentheses at the line end, an argument in parentheses on the next line, `do` on the line after it, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while (a)
+         |      (x)
+         |    do g
+         |    h
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwWhile [24..29)
+         |LeftParen [30..31)
+         |Ident(a) [31..32)
+         |RightParen [32..33)
+         |Indentation.Indent [33..33)
+         |LeftParen [40..41)
+         |Ident(x) [41..42)
+         |RightParen [42..43)
+         |Indentation.Outdent [43..43)
+         |LF [43..44)
+         |KwDo [48..50)
+         |Ident(g) [51..52)
+         |LF [52..53)
+         |Ident(h) [57..58)
+         |Indentation.Outdent [58..58)
+         |Indentation.Outdent [58..58)
+         |EOF [59..59)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:6: error: `while` expected but `identifier` found
+         |    h
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with parentheses at the line end, a comment line, an argument in parentheses with `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if (a)
+         |      // c
+         |      (x) then 1 else 2
+         |    g
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwIf [24..26)
+         |LeftParen [27..28)
+         |Ident(a) [28..29)
+         |RightParen [29..30)
+         |Indentation.Indent [41..41)
+         |LeftParen [48..49)
+         |Ident(x) [49..50)
+         |RightParen [50..51)
+         |KwThen [52..56)
+         |Constant.Int(1) [57..58)
+         |KwElse [59..63)
+         |Constant.Int(2) [64..65)
+         |Indentation.Outdent [65..65)
+         |LF [65..66)
+         |Ident(g) [70..71)
+         |Indentation.Outdent [71..71)
+         |Indentation.Outdent [71..71)
+         |EOF [72..72)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:5: error: `outdent` expected but `then` found
+         |      (x) then 1 else 2
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with parentheses at the line end in braces, an argument in parentheses with `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    if (a)
+         |      (x) then 1 else 2
+         |    g
+         |  }
+         |}
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |LeftBrace [9..10)
+         |KwDef [13..16)
+         |Ident(f) [17..18)
+         |Equals [19..20)
+         |LeftBrace [21..22)
+         |KwIf [27..29)
+         |LeftParen [30..31)
+         |Ident(a) [31..32)
+         |RightParen [32..33)
+         |Indentation.Indent [33..33)
+         |LeftParen [40..41)
+         |Ident(x) [41..42)
+         |RightParen [42..43)
+         |KwThen [44..48)
+         |Constant.Int(1) [49..50)
+         |KwElse [51..55)
+         |Constant.Int(2) [56..57)
+         |Indentation.Outdent [57..57)
+         |LF [57..58)
+         |Ident(g) [62..63)
+         |LF [63..64)
+         |RightBrace [66..67)
+         |LF [67..68)
+         |RightBrace [68..69)
+         |EOF [70..70)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: `outdent` expected but `then` found
+         |      (x) then 1 else 2
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with parentheses at the line end after a statement in an indented block, an argument in parentheses with `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    e
+         |    if (a)
+         |      (x) then 1 else 2
+         |    g
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |Ident(e) [24..25)
+         |LF [25..26)
+         |KwIf [30..32)
+         |LeftParen [33..34)
+         |Ident(a) [34..35)
+         |RightParen [35..36)
+         |Indentation.Indent [36..36)
+         |LeftParen [43..44)
+         |Ident(x) [44..45)
+         |RightParen [45..46)
+         |KwThen [47..51)
+         |Constant.Int(1) [52..53)
+         |KwElse [54..58)
+         |Constant.Int(2) [59..60)
+         |Indentation.Outdent [60..60)
+         |LF [60..61)
+         |Ident(g) [65..66)
+         |Indentation.Outdent [66..66)
+         |Indentation.Outdent [66..66)
+         |EOF [67..67)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:5: error: `outdent` expected but `then` found
+         |      (x) then 1 else 2
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with parentheses at the line end on the line of the `def`, an argument in parentheses with `then` and `else` on the next line at a column before the `if`, next definition") {
+    val code =
+      """|object A:
+         |  def f = if (a)
+         |    (x) then 1 else 2
+         |  def g = 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |KwIf [20..22)
+         |LeftParen [23..24)
+         |Ident(a) [24..25)
+         |RightParen [25..26)
+         |Indentation.Indent [26..26)
+         |LeftParen [31..32)
+         |Ident(x) [32..33)
+         |RightParen [33..34)
+         |KwThen [35..39)
+         |Constant.Int(1) [40..41)
+         |KwElse [42..46)
+         |Constant.Int(2) [47..48)
+         |Indentation.Outdent [48..48)
+         |LF [48..49)
+         |KwDef [51..54)
+         |Ident(g) [55..56)
+         |Equals [57..58)
+         |Constant.Int(1) [59..60)
+         |Indentation.Outdent [60..60)
+         |EOF [61..61)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:3: error: `outdent` expected but `then` found
+         |    (x) then 1 else 2
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `while` with `==` after the parentheses in an indented `val` body, `do` on the next line at the column of the `val`, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val r =
+         |      while (a) == b
+         |    do g
+         |    r
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwVal [24..27)
+         |Ident(r) [28..29)
+         |Equals [30..31)
+         |Indentation.Indent [31..31)
+         |KwWhile [38..43)
+         |LeftParen [44..45)
+         |Ident(a) [45..46)
+         |RightParen [46..47)
+         |Ident(==) [48..50)
+         |Ident(b) [51..52)
+         |Indentation.Outdent [52..52)
+         |LF [52..53)
+         |KwDo [57..59)
+         |Ident(g) [60..61)
+         |LF [61..62)
+         |Ident(r) [66..67)
+         |Indentation.Outdent [67..67)
+         |Indentation.Outdent [67..67)
+         |EOF [68..68)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:6: error: `while` expected but `identifier` found
+         |    r
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` without parentheses with `==` in an indented `val` body, `then` and `else` on the next line at the column of the `val`, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val r =
+         |      if a == b
+         |    then 1 else 2
+         |    r
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwVal [24..27)
+         |Ident(r) [28..29)
+         |Equals [30..31)
+         |Indentation.Indent [31..31)
+         |KwIf [38..40)
+         |Ident(a) [41..42)
+         |Ident(==) [43..45)
+         |Ident(b) [46..47)
+         |Indentation.Outdent [47..47)
+         |KwThen [52..56)
+         |Constant.Int(1) [57..58)
+         |KwElse [59..63)
+         |Constant.Int(2) [64..65)
+         |LF [65..66)
+         |Ident(r) [70..71)
+         |Indentation.Outdent [71..71)
+         |Indentation.Outdent [71..71)
+         |EOF [72..72)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: `then` expected but `outdent` found
+         |      if a == b
+         |               ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `while` without parentheses with `==` in an indented `val` body, `do` on the next line at the column of the `val`, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val r =
+         |      while a == b
+         |    do g
+         |    r
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwVal [24..27)
+         |Ident(r) [28..29)
+         |Equals [30..31)
+         |Indentation.Indent [31..31)
+         |KwWhile [38..43)
+         |Ident(a) [44..45)
+         |Ident(==) [46..48)
+         |Ident(b) [49..50)
+         |Indentation.Outdent [50..50)
+         |LF [50..51)
+         |KwDo [55..57)
+         |Ident(g) [58..59)
+         |LF [59..60)
+         |Ident(r) [64..65)
+         |Indentation.Outdent [65..65)
+         |Indentation.Outdent [65..65)
+         |EOF [66..66)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: `do` expected but `outdent` found
+         |      while a == b
+         |                  ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with `==` after the parentheses in an indented `val` body, a blank line, `then` and `else` on the next line at the column of the `val`, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val r =
+         |      if (a) == b
+         |
+         |    then 1 else 2
+         |    r
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwVal [24..27)
+         |Ident(r) [28..29)
+         |Equals [30..31)
+         |Indentation.Indent [31..31)
+         |KwIf [38..40)
+         |LeftParen [41..42)
+         |Ident(a) [42..43)
+         |RightParen [43..44)
+         |Ident(==) [45..47)
+         |Ident(b) [48..49)
+         |Indentation.Outdent [50..50)
+         |KwThen [55..59)
+         |Constant.Int(1) [60..61)
+         |KwElse [62..66)
+         |Constant.Int(2) [67..68)
+         |LF [68..69)
+         |Ident(r) [73..74)
+         |Indentation.Outdent [74..74)
+         |Indentation.Outdent [74..74)
+         |EOF [75..75)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:6: error: `outdent` expected but `then` found
+         |    then 1 else 2
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with `==` after the parentheses in an indented `val` body, a comment line, `then` and `else` on the next line at the column of the `val`, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val r =
+         |      if (a) == b
+         |      // c
+         |    then 1 else 2
+         |    r
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwVal [24..27)
+         |Ident(r) [28..29)
+         |Equals [30..31)
+         |Indentation.Indent [31..31)
+         |KwIf [38..40)
+         |LeftParen [41..42)
+         |Ident(a) [42..43)
+         |RightParen [43..44)
+         |Ident(==) [45..47)
+         |Ident(b) [48..49)
+         |Indentation.Outdent [60..60)
+         |KwThen [65..69)
+         |Constant.Int(1) [70..71)
+         |KwElse [72..76)
+         |Constant.Int(2) [77..78)
+         |LF [78..79)
+         |Ident(r) [83..84)
+         |Indentation.Outdent [84..84)
+         |Indentation.Outdent [84..84)
+         |EOF [85..85)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:6: error: `outdent` expected but `then` found
+         |    then 1 else 2
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with `==` after the parentheses in an indented `val` body in braces, `then` and `else` on the next line at the column of the `val`, next statement") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    val r =
+         |      if (a) == b
+         |    then 1 else 2
+         |    r
+         |  }
+         |}
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |LeftBrace [9..10)
+         |KwDef [13..16)
+         |Ident(f) [17..18)
+         |Equals [19..20)
+         |LeftBrace [21..22)
+         |KwVal [27..30)
+         |Ident(r) [31..32)
+         |Equals [33..34)
+         |Indentation.Indent [34..34)
+         |KwIf [41..43)
+         |LeftParen [44..45)
+         |Ident(a) [45..46)
+         |RightParen [46..47)
+         |Ident(==) [48..50)
+         |Ident(b) [51..52)
+         |Indentation.Outdent [52..52)
+         |KwThen [57..61)
+         |Constant.Int(1) [62..63)
+         |KwElse [64..68)
+         |Constant.Int(2) [69..70)
+         |LF [70..71)
+         |Ident(r) [75..76)
+         |LF [76..77)
+         |RightBrace [79..80)
+         |LF [80..81)
+         |RightBrace [81..82)
+         |EOF [83..83)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:5: error: `}` expected but `then` found
+         |    then 1 else 2
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: a statement and an `if` with `==` after the parentheses in an indented `val` body, `then` and `else` on the next line at the column of the `val`, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val r =
+         |      e
+         |      if (a) == b
+         |    then 1 else 2
+         |    r
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwVal [24..27)
+         |Ident(r) [28..29)
+         |Equals [30..31)
+         |Indentation.Indent [31..31)
+         |Ident(e) [38..39)
+         |LF [39..40)
+         |KwIf [46..48)
+         |LeftParen [49..50)
+         |Ident(a) [50..51)
+         |RightParen [51..52)
+         |Ident(==) [53..55)
+         |Ident(b) [56..57)
+         |Indentation.Outdent [57..57)
+         |KwThen [62..66)
+         |Constant.Int(1) [67..68)
+         |KwElse [69..73)
+         |Constant.Int(2) [74..75)
+         |LF [75..76)
+         |Ident(r) [80..81)
+         |Indentation.Outdent [81..81)
+         |Indentation.Outdent [81..81)
+         |EOF [82..82)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:6: error: `outdent` expected but `then` found
+         |    then 1 else 2
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `if` with `==` after the parentheses in an indented `def` body, `then` and `else` on the next line at the column of the `def`, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    def h =
+         |      if (a) == b
+         |    then 1 else 2
+         |    h
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwDef [24..27)
+         |Ident(h) [28..29)
+         |Equals [30..31)
+         |Indentation.Indent [31..31)
+         |KwIf [38..40)
+         |LeftParen [41..42)
+         |Ident(a) [42..43)
+         |RightParen [43..44)
+         |Ident(==) [45..47)
+         |Ident(b) [48..49)
+         |Indentation.Outdent [49..49)
+         |KwThen [54..58)
+         |Constant.Int(1) [59..60)
+         |KwElse [61..65)
+         |Constant.Int(2) [66..67)
+         |LF [67..68)
+         |Ident(h) [72..73)
+         |Indentation.Outdent [73..73)
+         |Indentation.Outdent [73..73)
+         |EOF [74..74)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:5: error: `outdent` expected but `then` found
+         |    then 1 else 2
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("nested condition: `for` with a guard with `==` after the parentheses in an indented `val` body, `yield` on the next line at the column of the `val`, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val r =
+         |      for x <- xs if (a) == b
+         |    yield x
+         |    r
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |KwVal [24..27)
+         |Ident(r) [28..29)
+         |Equals [30..31)
+         |Indentation.Indent [31..31)
+         |KwFor [38..41)
+         |Ident(x) [42..43)
+         |LeftArrow [44..46)
+         |Ident(xs) [47..49)
+         |KwIf [50..52)
+         |LeftParen [53..54)
+         |Ident(a) [54..55)
+         |RightParen [55..56)
+         |Ident(==) [57..59)
+         |Ident(b) [60..61)
+         |Indentation.Outdent [61..61)
+         |KwYield [66..71)
+         |Ident(x) [72..73)
+         |LF [73..74)
+         |Ident(r) [78..79)
+         |Indentation.Outdent [79..79)
+         |Indentation.Outdent [79..79)
+         |EOF [80..80)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |      for x <- xs if (a) == b
+         |                             ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("leading infix after a colon argument: a continued statement, the argument in a `then` body, `&&` at the column of the continuation") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val v = a
+         |      + b
+         |    if c then a && foo:
+         |        z
+         |      && w
+         |    else d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    val v = a + b
+         |    if (c) a && foo {
+         |      z
+         |    } && w else d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Defn.Val(Nil, List(patvar("v")), None, tinfix(tname("a"), "+", tname("b"))),
+          Term.If(
+            tname("c"),
+            tinfix(tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tname("d"),
+            Nil,
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a continued statement, the argument in a `try` body, `&&` at the column of the continuation") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val v = a
+         |      + b
+         |    try a && foo:
+         |        z
+         |      && w
+         |    finally d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    val v = a + b
+         |    try a && foo {
+         |      z
+         |    } && w finally d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Defn.Val(Nil, List(patvar("v")), None, tinfix(tname("a"), "+", tname("b"))),
+          Term.Try(
+            tinfix(tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            Nil,
+            Some(tname("d")),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after an indented condition: a continued statement, a condition of two statements, `&&` at the column of the continuation") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val v = a
+         |      + b
+         |    if
+         |        val q = 1
+         |        q
+         |      && w
+         |    then c else d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    val v = a + b
+         |    if ({
+         |      val q = 1
+         |      q
+         |    } && w) c else d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Defn.Val(Nil, List(patvar("v")), None, tinfix(tname("a"), "+", tname("b"))),
+          Term.If(
+            tinfix(blk(Defn.Val(Nil, List(patvar("q")), None, int(1)), tname("q")), "&&", tname("w")),
+            tname("c"),
+            tname("d"),
+            Nil,
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after an indented `then` body: a continued statement, a body of two statements, `&&` at the column of the continuation") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val v = a
+         |      + b
+         |    if c then
+         |        val q = 1
+         |        q
+         |      && w
+         |    else d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    val v = a + b
+         |    if (c) {
+         |      val q = 1
+         |      q
+         |    } && w else d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Defn.Val(Nil, List(patvar("v")), None, tinfix(tname("a"), "+", tname("b"))),
+          Term.If(
+            tname("c"),
+            tinfix(blk(Defn.Val(Nil, List(patvar("q")), None, int(1)), tname("q")), "&&", tname("w")),
+            tname("d"),
+            Nil,
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a continued `val`, the argument in a `then` body of the next `def`, `&&` at the column of the continuation") {
+    val code =
+      """|object A:
+         |  val e = 1
+         |    + q
+         |  def h = if c then a && foo:
+         |      z
+         |    && w
+         |  else d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val e = 1 + q
+         |  def h = if (c) a && foo {
+         |    z
+         |  } && w else d
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(Nil, List(patvar("e")), None, tinfix(int(1), "+", tname("q"))),
+        Defn.Def(
+          Nil,
+          tname("h"),
+          Nil,
+          None,
+          Term.If(
+            tname("c"),
+            tinfix(tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tname("d"),
+            Nil,
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a continued `catch` case on the line of the `try`, the argument in a `then` body, `&&` at the column of the continuation") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val r = try a catch case _ => b
+         |      + c
+         |    if c then a && foo:
+         |        z
+         |      && w
+         |    else d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    val r = try a catch {
+         |      case _ =>
+         |        b + c
+         |    }
+         |    if (c) a && foo {
+         |      z
+         |    } && w else d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Defn.Val(
+            Nil,
+            List(patvar("r")),
+            None,
+            Term.Try(
+              tname("a"),
+              List(Case(Pat.Wildcard(), None, tinfix(tname("b"), "+", tname("c")))),
+              None,
+            ),
+          ),
+          tif(
+            tname("c"),
+            tinfix(tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            tname("d"),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a continued `catch` case on the line of the `try`, the argument in a `try` body, `&&` at the column of the continuation") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val r = try a catch case _ => b
+         |      + c
+         |    try a && foo:
+         |        z
+         |      && w
+         |    finally d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    val r = try a catch {
+         |      case _ =>
+         |        b + c
+         |    }
+         |    try a && foo {
+         |      z
+         |    } && w finally d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Defn.Val(
+            Nil,
+            List(patvar("r")),
+            None,
+            Term.Try(
+              tname("a"),
+              List(Case(Pat.Wildcard(), None, tinfix(tname("b"), "+", tname("c")))),
+              None,
+            ),
+          ),
+          Term.Try(
+            tinfix(tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            Nil,
+            Some(tname("d")),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a continued statement in a `case` body in braces, the argument in a `then` body, `&&` at the column of the continuation") {
+    val code =
+      """|object A:
+         |  def f = xs.map {
+         |    case 1 =>
+         |      val v = a
+         |        + b
+         |      if c then a && foo:
+         |          z
+         |        && w
+         |      else d
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case 1 =>
+         |      val v = a + b
+         |      if (c) a && foo {
+         |        z
+         |      } && w else d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          tselect("xs", "map"),
+          Term.PartialFunction(List(Case(
+            int(1),
+            None,
+            blk(
+              Defn.Val(Nil, List(patvar("v")), None, tinfix(tname("a"), "+", tname("b"))),
+              tif(
+                tname("c"),
+                tinfix(
+                  tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                  "&&",
+                  tname("w"),
+                ),
+                tname("d"),
+              ),
+            ),
+          ))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a continued statement in a `case` body in braces, the argument in a `try` body, `&&` at the column of the continuation") {
+    val code =
+      """|object A:
+         |  def f = xs.map {
+         |    case 1 =>
+         |      val v = a
+         |        + b
+         |      try a && foo:
+         |          z
+         |        && w
+         |      finally d
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case 1 =>
+         |      val v = a + b
+         |      try a && foo {
+         |        z
+         |      } && w finally d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          tselect("xs", "map"),
+          Term.PartialFunction(List(Case(
+            int(1),
+            None,
+            blk(
+              Defn.Val(Nil, List(patvar("v")), None, tinfix(tname("a"), "+", tname("b"))),
+              Term.Try(
+                tinfix(
+                  tinfix(tname("a"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                  "&&",
+                  tname("w"),
+                ),
+                Nil,
+                Some(tname("d")),
+              ),
+            ),
+          ))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a `case` after a `case` on the line of the brace, the argument in a condition in its body, `&&` at the column of the cases") {
+    val code =
+      """|object A:
+         |  def f = xs.map { case 0 => a
+         |    case 1 => if x && foo:
+         |        z
+         |    && w
+         |    then c else d
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case 0 => a
+         |    case 1 =>
+         |      if (x && foo {
+         |        z
+         |      } && w) c else d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          tselect(tname("xs"), "map"),
+          Term.PartialFunction(List(
+            Case(int(0), None, tname("a")),
+            Case(
+              int(1),
+              None,
+              tif(
+                tinfix(
+                  tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                  "&&",
+                  tname("w"),
+                ),
+                tname("c"),
+                tname("d"),
+              ),
+            ),
+          )),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a `catch` case after a case on the line of the brace, the argument in a condition in its body, `&&` at the column of the cases") {
+    val code =
+      """|object A:
+         |  def f = try a catch { case _: E => b
+         |    case _ => if x && foo:
+         |        z
+         |    && w
+         |    then c else d
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case _: E =>
+         |      b
+         |    case _ =>
+         |      if (x && foo {
+         |        z
+         |      } && w) c else d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.Try(
+          tname("a"),
+          List(
+            Case(Pat.Typed(Pat.Wildcard(), pname("E")), None, tname("b")),
+            Case(
+              Pat.Wildcard(),
+              None,
+              tif(
+                tinfix(
+                  tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                  "&&",
+                  tname("w"),
+                ),
+                tname("c"),
+                tname("d"),
+              ),
+            ),
+          ),
+          None,
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: `if` on a deeper statement line, the condition on the next line at the column of the `if`, a continuation line, a colon argument, leading `&&` at the column of the continuation") {
+    val code =
+      """|object A:
+         |  def f =
+         |    a
+         |      if
+         |      x
+         |        + y && foo:
+         |            z
+         |        && w
+         |      then c else d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    a
+         |    if (x + y && foo {
+         |      z
+         |    } && w) c else d
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tname("a"),
+          tif(
+            tinfix(
+              tinfix(tinfix(tname("x"), "+", tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+              "&&",
+              tname("w"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a generator after one on the line of the brace of a `for`, the argument in a condition, `&&` at the column of the generator") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for { a <- as
+         |          y <- if x && foo:
+         |              z
+         |          && w
+         |          then ys else zs
+         |    } yield y
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (a <- as; y <- if (x && foo {
+         |    z && w
+         |  }) ys else zs) yield y
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.ForYield(
+          List(
+            Enumerator.Generator(patvar("a"), tname("as")),
+            Enumerator.Generator(
+              patvar("y"),
+              tif(
+                tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
+                tname("ys"),
+                tname("zs"),
+              ),
+            ),
+          ),
+          tname("y"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a self type with a deeper next line, the argument in a condition, `&&` at the column of that line") {
+    val code =
+      """|object A:
+         |  self =>
+         |    def g = 1
+         |  def f = if c && foo:
+         |        z
+         |    && w
+         |  then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object A { self =>
+         |  def g = 1
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        self(tname("self")),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a self type with a deeper next line, a continuation line between the columns of the self type and that line, the argument in a condition in parentheses, `&&` deeper than that line") {
+    val code =
+      """|object A:
+         |  self =>
+         |      def g = 1
+         |  def f = 1 +
+         |   (if c && foo:
+         |        z
+         |       && w
+         |   then 1 else 2)
+         |""".stripMargin
+    val layout =
+      """|object A { self =>
+         |  def g = 1
+         |  def f = 1 + (if (c && foo {
+         |    z
+         |  } && w) 1 else 2)
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        self(tname("self")),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tinfix(
+            int(1),
+            "+",
+            tif(
+              tinfix(
+                tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                "&&",
+                tname("w"),
+              ),
+              int(1),
+              int(2),
+            ),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a self type with a deeper next line, a nested class, the argument in a condition in its body, `&&` between the columns of the class body and that line") {
+    val code =
+      """|object A:
+         |  self =>
+         |        def g = 1
+         |  class B:
+         |    def f = if c && foo:
+         |          z
+         |       && w
+         |    then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object A { self =>
+         |  def g = 1
+         |  class B {
+         |    def f = if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        self(tname("self")),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+        Defn.Class(
+          Nil,
+          pname("B"),
+          Nil,
+          ctor,
+          tpl(Defn.Def(
+            Nil,
+            tname("f"),
+            Nil,
+            None,
+            tif(
+              tinfix(
+                tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                "&&",
+                tname("w"),
+              ),
+              int(1),
+              int(2),
+            ),
+          )),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a self type with code after it on its line, the argument in a condition, `&&` deeper than the self type") {
+    val code =
+      """|object A:
+         |  self => def g = 1
+         |  def f = if c && foo:
+         |        z
+         |    && w
+         |  then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object A { self =>
+         |  def g = 1
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        self(tname("self")),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a self type with a next line at its column, the argument in a condition, `&&` deeper than the self type") {
+    val code =
+      """|object A:
+         |  self =>
+         |  def g = 1
+         |  def f = if c && foo:
+         |        z
+         |    && w
+         |  then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object A { self =>
+         |  def g = 1
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        self(tname("self")),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a self type with a deeper next line in a `given` body in braces after `with`, the argument in a condition, `&&` deeper than that line") {
+    val code =
+      """|given A with {
+         |  self =>
+         |    def g = 1
+         |  def f = if c && foo:
+         |        z
+         |      && w
+         |  then 1 else 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|given A with { self =>
+         |  def g = 1
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Given(
+      Nil,
+      anon,
+      Nil,
+      tpl(
+        List(init(pname("A"))),
+        self(tname("self")),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a lambda in braces with a parameter on the line after the brace and a deeper next line, the argument in a condition on a shallower line, `&&` at the column of that line") {
+    val code =
+      """|object O:
+         |  def h = xs.foreach {
+         |    x =>
+         |      g(x)
+         |    if c && foo:
+         |          z
+         |      && w
+         |    then 1 else 2
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def h = xs.foreach {
+         |    x => g(x)
+         |    if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("h"),
+        Nil,
+        None,
+        tapply(
+          tselect("xs", "foreach"),
+          blk(
+            tfunc(tparam("x"))(tapply(tname("g"), tname("x"))),
+            tif(
+              tinfix(
+                tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                "&&",
+                tname("w"),
+              ),
+              int(1),
+              int(2),
+            ),
+          ),
+        ),
+      )),
+    )))
+    parseAndCheckTree[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: `x: Int =>` on the line after a brace and a deeper next line, the argument in a condition on a shallower line, `&&` at the column of that line") {
+    val code =
+      """|object O:
+         |  def h = xs.foreach {
+         |    x: Int =>
+         |      g(x)
+         |    if c && foo:
+         |          z
+         |      && w
+         |    then 1 else 2
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def h = xs.foreach {
+         |    x {
+         |      Int => g(x)
+         |    }
+         |    if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("h"),
+        Nil,
+        None,
+        tapply(
+          tselect("xs", "foreach"),
+          blk(
+            tapply(tname("x"), blk(tfunc(tparam("Int"))(tapply(tname("g"), tname("x"))))),
+            tif(
+              tinfix(
+                tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                "&&",
+                tname("w"),
+              ),
+              int(1),
+              int(2),
+            ),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a lambda in braces with a parameter on the line after the brace, the argument in a condition in its body on the next line, `&&` deeper than the condition") {
+    val code =
+      """|object O:
+         |  def h = xs.foreach {
+         |    x =>
+         |      if c && foo:
+         |            z
+         |        && w
+         |      then 1 else 2
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def h = xs.foreach {
+         |    x => if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("h"),
+        Nil,
+        None,
+        tapply(
+          tselect("xs", "foreach"),
+          blk(tfunc(tparam("x"))(tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a colon block on the first line of a body, the argument in a condition in that block, `&&` deeper than the condition") {
+    val code =
+      """|object O:
+         |  def h =
+         |    boundary:
+         |      if c && foo:
+         |            z
+         |        && w
+         |      then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def h = boundary {
+         |    if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("h"),
+        Nil,
+        None,
+        tapply(
+          tname("boundary"),
+          blk(tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          )),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a colon block on the first line of an object body, the argument in a condition in a later definition, `&&` deeper than the definition") {
+    val code =
+      """|object O:
+         |  locally:
+         |    g
+         |  def f = if c && foo:
+         |        z
+         |    && w
+         |  then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  locally {
+         |    g
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("locally"), blk(tname("g"))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a colon lambda on the first line of a body and a deeper next line, the argument in a condition on a shallower line, `&&` between the columns of the condition and that line") {
+    val code =
+      """|object O:
+         |  def h =
+         |    run: x =>
+         |        g(x)
+         |    if c && foo:
+         |          z
+         |       && w
+         |    then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def h = {
+         |    run {
+         |      x => g(x)
+         |    }
+         |    if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("h"),
+        Nil,
+        None,
+        blk(
+          tapply(tname("run"), blk(tfunc(tparam("x"))(tapply(tname("g"), tname("x"))))),
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a colon lambda with parameters in parentheses on the first line of a body and a deeper next line, the argument in a condition on a shallower line, `&&` between the columns of the condition and that line") {
+    val code =
+      """|object O:
+         |  def h =
+         |    run: (x, y) =>
+         |        g(x)
+         |    if c && foo:
+         |          z
+         |       && w
+         |    then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def h = {
+         |    run {
+         |      (x, y) => g(x)
+         |    }
+         |    if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("h"),
+        Nil,
+        None,
+        blk(
+          tapply(tname("run"), blk(tfunc(tparam("x"), tparam("y"))(tapply(tname("g"), tname("x"))))),
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a colon lambda on the first line of a body and a deeper next line, the argument in a condition in a colon block on a shallower line, `&&` deeper than the condition") {
+    val code =
+      """|object O:
+         |  def h =
+         |    run: x =>
+         |        g(x)
+         |    locally:
+         |      if c && foo:
+         |            z
+         |        && w
+         |      then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def h = {
+         |    run {
+         |      x => g(x)
+         |    }
+         |    locally {
+         |      if (c && foo {
+         |        z
+         |      } && w) 1 else 2
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("h"),
+        Nil,
+        None,
+        blk(
+          tapply(tname("run"), blk(tfunc(tparam("x"))(tapply(tname("g"), tname("x"))))),
+          tapply(
+            tname("locally"),
+            blk(tif(
+              tinfix(
+                tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                "&&",
+                tname("w"),
+              ),
+              int(1),
+              int(2),
+            )),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a context colon lambda on the first line of a body and a deeper next line, the argument in a condition on a shallower line, `&&` between the columns of the condition and that line") {
+    val code =
+      """|object O:
+         |  def h =
+         |    run: x ?=>
+         |        g(x)
+         |    if c && foo:
+         |          z
+         |       && w
+         |    then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def h = {
+         |    run {
+         |      x ?=> g(x)
+         |    }
+         |    if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("h"),
+        Nil,
+        None,
+        blk(
+          tapply(
+            tname("run"),
+            blk(Term.ContextFunction(List(tparam("x")), tapply(tname("g"), tname("x")))),
+          ),
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a colon block and a blank line on the first lines of a body, the argument in a condition in that block, `&&` deeper than the condition") {
+    val code =
+      """|object O:
+         |  def h =
+         |    boundary:
+         |
+         |      if c && foo:
+         |            z
+         |        && w
+         |      then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def h = boundary {
+         |    if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("h"),
+        Nil,
+        None,
+        tapply(
+          tname("boundary"),
+          blk(tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          )),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a name and a colon at the end of the first line of a class body in braces, a lambda on a deeper next line, the argument in a condition, `&&` between the columns of the name and the lambda") {
+    val code =
+      """|class A {
+         |  self:
+         |    B =>
+         |      def g = 1
+         |  def f = if c && foo:
+         |        z
+         |     && w
+         |  then 1 else 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|class A {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      ctor,
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: an ascription on the first line of a body, the argument in a condition on the next line, `&&` deeper than the condition") {
+    val code =
+      """|object O:
+         |  def h =
+         |    x: Int
+         |    if c && foo:
+         |          z
+         |      && w
+         |    then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def h = {
+         |    x: Int
+         |    if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("h"),
+        Nil,
+        None,
+        blk(
+          Term.Ascribe(tname("x"), pname("Int")),
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a colon block with the colon on the next line, the argument in a condition in that block, `&&` deeper than the condition") {
+    val code =
+      """|object O:
+         |  def h =
+         |    boundary
+         |      :
+         |      if c && foo:
+         |            z
+         |        && w
+         |      then 1 else 2
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: expected fewer-braces method body
+         |      :
+         |      ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("leading infix after a colon argument: a name and a colon at the end of the first line of an object body in braces, a type and an arrow at the column of the name, the argument in a condition, `&&` between the columns of the name and the next line") {
+    val code =
+      """|object O {
+         |  self:
+         |  B =>
+         |      def g = 1
+         |  def f = if c && foo:
+         |        z
+         |     && w
+         |  then 1 else 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a name and a colon at the end of the first line of an object body in braces, a form feed, a type and an arrow on the next line deeper than the name, the argument in a condition, `&&` between the columns of the name and the next line") {
+    val code =
+      s"""|object O {
+          |  self:
+          |\f    B =>
+          |      def g = 1
+          |  def f = if c && foo:
+          |        z
+          |     && w
+          |  then 1 else 2
+          |}
+          |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a name, a colon, a form feed, a type and an arrow on the first line of an object body in braces, the argument in a condition, `&&` between the columns of the name and the next line") {
+    val code =
+      s"""|object O {
+          |  self:\f  B =>
+          |      def g = 1
+          |  def f = if c && foo:
+          |        z
+          |     && w
+          |  then 1 else 2
+          |}
+          |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a name, a colon, a carriage return, a type deeper than the name and an arrow on the first line of an object body in braces, the argument in a condition, `&&` between the columns of the name and the next line") {
+    val code =
+      s"""|object O {
+          |  self:\r    B =>
+          |      def g = 1
+          |  def f = if c && foo:
+          |        z
+          |     && w
+          |  then 1 else 2
+          |}
+          |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a name and a colon at the end of the first line of an object body in braces, a blank line, a type and an arrow at column 0, the argument in a condition, `&&` between the columns of the name and the next line") {
+    val code =
+      """|object O {
+         |  self:
+         |
+         |B =>
+         |      def g = 1
+         |  def f = if c && foo:
+         |        z
+         |     && w
+         |  then 1 else 2
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `identifier` expected but `\n\n` found
+         |  self:
+         |       ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("leading infix after a colon argument: a name and a colon at the end of the first line of an object body in braces indented with tabs, a type and an arrow on a deeper next line, the argument in a condition, `&&` between the columns of the type and the line after it") {
+    val code =
+      s"""|object O {
+          |\t\tself:
+          |\t\t\t\tB =>
+          |\t\t\t\t\t\tdef g = 1
+          |\t\tdef f = if c && foo:
+          |\t\t\t\t\t\t\t\tz
+          |\t\t\t\t\t&& w
+          |\t\tthen 1 else 2
+          |}
+          |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a name, a colon, a carriage return and a line feed at the end of the first line of an object body in braces, a type and an arrow on a deeper next line, the argument in a condition, `&&` between the columns of the type and the line after it") {
+    val code =
+      s"""|object O {
+          |  self:\r
+          |    B =>
+          |      def g = 1
+          |  def f = if c && foo:
+          |        z
+          |     && w
+          |  then 1 else 2
+          |}
+          |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a name and a colon at the end of the first line of an object body in braces, a type and an arrow on the next line indented as the name and a tab, the argument in a condition, `&&` between the columns of the type and the line after it") {
+    val code =
+      s"""|object O {
+          |  self:
+          |  \tB =>
+          |  \t\t\tdef g = 1
+          |  def f = if c && foo:
+          |        z
+          |     && w
+          |  then 1 else 2
+          |}
+          |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test {
+    "leading infix after a colon argument: a name and a colon at the end of the first line of an object body in braces indented with a space and a tab, a type and an arrow on the next line indented with a space and two tabs, the argument in a condition, `&&` between the columns of the type and the line after it"
+  } {
+    val code =
+      s"""|object O {
+          | \tself:
+          | \t\tB =>
+          | \t\t\t\tdef g = 1
+          | \tdef f = if c && foo:
+          | \t\t\t\t\t\t\tz
+          | \t\t\t\t&& w
+          | \tthen 1 else 2
+          |}
+          |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test {
+    "leading infix after a colon argument: a name and a colon at the end of the first line of an object body in braces indented with a space and a tab, a type and an arrow on the next line indented with a space, a tab and a space, the argument in a condition, `&&` between the columns of the type and the line after it"
+  } {
+    val code =
+      s"""|object O {
+          | \tself:
+          | \t B =>
+          | \t   def g = 1
+          | \tdef f = if c && foo:
+          | \t\t\t\t\t\t\tz
+          | \t\t\t\t&& w
+          | \tthen 1 else 2
+          |}
+          |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a form feed, a name and a colon on the first line of an object body in braces, a type and an arrow on a deeper next line, the argument in a condition, `&&` between the columns of the type and the line after it") {
+    val code =
+      s"""|object O {
+          |\f  self:
+          |    B =>
+          |      def g = 1
+          |  def f = if c && foo:
+          |        z
+          |     && w
+          |  then 1 else 2
+          |}
+          |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a carriage return, a name and a colon on the first line of an object body in braces, a type and an arrow on a deeper next line, the argument in a condition, `&&` between the columns of the type and the line after it") {
+    val code =
+      s"""|object O {
+          |\r  self:
+          |    B =>
+          |      def g = 1
+          |  def f = if c && foo:
+          |        z
+          |     && w
+          |  then 1 else 2
+          |}
+          |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: two spaces, a carriage return, a name and a colon on the first line of an object body in braces, a type and an arrow on a deeper next line, the argument in a condition, `&&` between the columns of the type and the line after it") {
+    val code =
+      s"""|object O {
+          |  \r  self:
+          |    B =>
+          |      def g = 1
+          |  def f = if c && foo:
+          |        z
+          |     && w
+          |  then 1 else 2
+          |}
+          |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: two spaces, a form feed, a name and a colon on the first line of an object body in braces, a type and an arrow on a deeper next line, the argument in a condition, `&&` between the columns of the type and the line after it") {
+    val code =
+      s"""|object O {
+          |  \f  self:
+          |    B =>
+          |      def g = 1
+          |  def f = if c && foo:
+          |        z
+          |     && w
+          |  then 1 else 2
+          |}
+          |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a comment, a name and a colon on the first line of an object body in braces, a type and an arrow on a deeper next line, the argument in a condition, `&&` between the columns of the type and the line after it") {
+    val code =
+      """|object O {
+         |  /* c */ self:
+         |    B =>
+         |      def g = 1
+         |  def f = if c && foo:
+         |        z
+         |     && w
+         |  then 1 else 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  /* c */ self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1))))))
+          .toBuilder.begComment(Seq("/* c */")).result(),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a multi-line comment after the brace of an object body, a name and a colon after it on its last line, a type and an arrow on a deeper next line, the argument in a condition, `&&` between the columns of the type and the line after it") {
+    val code =
+      """|object O { /* c
+         |  */ self:
+         |    B =>
+         |      def g = 1
+         |  def f = if c && foo:
+         |        z
+         |     && w
+         |  then 1 else 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  /* c
+         |  */ self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1))))))
+          .toBuilder.begComment(Seq(
+            """|/* c
+               |  */""".stripMargin,
+          )).result(),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test {
+    "leading infix after a colon argument: a name on the first line of an object body in braces, a colon on a deeper next line, a type and an arrow on the line after it, between the columns of the name and the colon, the argument in a condition, `&&` between the columns of the type and the line after it"
+  } {
+    val code =
+      """|object O {
+         |  self
+         |      :
+         |    B =>
+         |      def g = 1
+         |  def f = if c && foo:
+         |        z
+         |     && w
+         |  then 1 else 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  self {
+         |    B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        tapply(tname("self"), blk(tfunc(tparam("B"))(blk(Defn.Def(Nil, tname("g"), Nil, None, int(1)))))),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: `throw` at a line end, `try` and `catch` on a deeper next line, its case on a shallower line, the argument in a condition in the case, `&&` at the column of the `try`") {
+    val code =
+      """|def h: Int =
+         |  throw
+         |      try g catch
+         |    case _ => if c && foo:
+         |          z
+         |      && w
+         |    then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|def h: Int = throw try g catch {
+         |  case _ =>
+         |    if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("h"),
+      Nil,
+      Some(pname("Int")),
+      Term.Throw(Term.Try(
+        tname("g"),
+        List(Case(
+          Pat.Wildcard(),
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        )),
+        None,
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: `throw` at a line end, `try` and an argument list on a deeper next line, the list closing with `catch` on a shallower line, its case at that column, the argument in a condition in the case, `&&` at the column of the `try`") {
+    val code =
+      """|def h: Int =
+         |  throw
+         |      try g(a,
+         |    b) catch
+         |    case _ => if c && foo:
+         |          z
+         |      && w
+         |    then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|def h: Int = throw try g(a, b) catch {
+         |  case _ =>
+         |    if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("h"),
+      Nil,
+      Some(pname("Int")),
+      Term.Throw(Term.Try(
+        tapply(tname("g"), tname("a"), tname("b")),
+        List(Case(
+          Pat.Wildcard(),
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        )),
+        None,
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: `throw` at a line end, `while` and a condition on a deeper next line, the condition continued with `do` on a shallower line, the argument in a condition at that column, `&&` at the column of the `while`") {
+    val code =
+      """|def h: Unit =
+         |  throw
+         |      while a &&
+         |    b do
+         |    if c && foo:
+         |          z
+         |      && w
+         |    then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|def h: Unit = throw while (a && b) if (c && foo {
+         |  z
+         |} && w) 1 else 2
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("h"),
+      Nil,
+      Some(pname("Unit")),
+      Term.Throw(Term.While(
+        tinfix(tname("a"), "&&", tname("b")),
+        tif(
+          tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+          int(1),
+          int(2),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: `throw` at a line end in braces, an argument list on a deeper next line, the list closing with `match` and a case in braces on a shallower line, the argument in a condition in the case, `&&` between the columns of that line and the list") {
+    val code =
+      """|def h: Int = {
+         |  throw
+         |      g(a,
+         |    b) match { case _ => if c && foo:
+         |          z
+         |     && w
+         |    then 1 else 2
+         |    }
+         |}
+         |""".stripMargin
+    val layout =
+      """|def h: Int = {
+         |  throw g(a, b) match {
+         |    case _ =>
+         |      if (c && foo {
+         |        z
+         |      } && w) 1 else 2
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("h"),
+      Nil,
+      Some(pname("Int")),
+      blk(Term.Throw(Term.Match(
+        tapply(tname("g"), tname("a"), tname("b")),
+        List(Case(
+          Pat.Wildcard(),
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        )),
+      ))),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: `throw` at a line end in braces, `if` and a condition on a deeper next line, `then` and the argument in a condition on a shallower line, `&&` between the columns of `then` and the `if`") {
+    val code =
+      """|def h: Int = {
+         |  throw
+         |      if a
+         |  then if c && foo:
+         |         z
+         |    && w
+         |       then 1 else 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|def h: Int = {
+         |  throw if (a) if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("h"),
+      Nil,
+      Some(pname("Int")),
+      blk(Term.Throw(tif(
+        tname("a"),
+        tif(
+          tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+          int(1),
+          int(2),
+        ),
+      ))),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test {
+    "leading infix after a colon argument: a name and a colon at the end of the first line of a class body in braces, a multi-line comment on the next line that ends on the line of a type and an arrow, the argument in a condition, `&&` between the columns of the type and the line after it, with LF and with CR LF"
+  } {
+    val code =
+      """|class O {
+         |  self:
+         |   /*
+         |*/ B =>
+         |      def g = 1
+         |  def f = if c && foo:
+         |        z
+         |      && w
+         |  then 1 else 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|class O { self:
+         |  /*
+         |*/ B =>
+         |  def g = 1
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val layoutCRLF =
+      """|class O {
+         |  self {
+         |    /*
+         |*/ B => {
+         |      def g = 1
+         |    }
+         |  }
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Class(
+      Nil,
+      pname("O"),
+      Nil,
+      EmptyCtor(),
+      tpl(
+        self(tname("self"), pname("B").toBuilder.begComment(Seq("/*\n*/")).result()),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    val parsed = source(code)
+    assertStruct(parsed)(tree.structure)
+    assertNoDiff(parsed.reprint, layout)
+    assertNoDiff(source(code.replace("\n", "\r\n")).reprint.replace("\r\n", "\n"), layoutCRLF)
+  }
+
+  test("leading infix after a colon argument: a self type on the line of a trait's brace, the argument in a condition in a method body, `&&` between the columns of the condition and the argument") {
+    val code =
+      """|trait T { self =>
+         |  def f =
+         |    if c && foo:
+         |          z
+         |      && w
+         |    then 1 else 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|trait T { self =>
+         |  def f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Trait(
+      Nil,
+      pname("T"),
+      Nil,
+      EmptyCtor(),
+      tpl(
+        self(tname("self")),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a lambda in braces with a parameter on the line of the brace, the argument in a condition in its body, `&&` between the columns of the condition and the argument") {
+    val code =
+      """|def h = xs.foreach { x =>
+         |    val f = if c && foo:
+         |        z
+         |     && w
+         |     then 1 else 2
+         |    f
+         |  }
+         |""".stripMargin
+    val layout =
+      """|def h = xs.foreach { x =>
+         |  val f = if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |  f
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("h"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "foreach"),
+        blk(tfunc(tparam("x"))(blk(
+          Defn.Val(
+            Nil,
+            List(patvar("f")),
+            None,
+            tif(
+              tinfix(
+                tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                "&&",
+                tname("w"),
+              ),
+              int(1),
+              int(2),
+            ),
+          ),
+          tname("f"),
+        ))),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a line that starts with `||` and the argument in a condition in parentheses, `&&` between the columns of that line and the argument") {
+    val code =
+      """|def h: Int =
+         |  val v =
+         |      a
+         |    || (if c && foo:
+         |              z
+         |       && w
+         |    then 1 else 2)
+         |""".stripMargin
+    val layout =
+      """|def h: Int = {
+         |  val v = a || (if (c && foo {
+         |    z
+         |  } && w) 1 else 2)
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("h"),
+      Nil,
+      Some(pname("Int")),
+      blk(Defn.Val(
+        Nil,
+        List(patvar("v")),
+        None,
+        tinfix(
+          tname("a"),
+          "||",
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: `throw` at a line end, `try` and an argument list on a deeper next line, the list closing with `catch` on a line shallower than the `throw`, the argument in a condition in its case, `&&` between the columns of the case and the `try`") {
+    val code =
+      """|def h: Int =
+         |  throw
+         |      try g(a,
+         |  b) catch
+         |    case _ => if c && foo:
+         |                    z
+         |     && w
+         |    then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|def h: Int = throw try g(a, b) catch {
+         |  case _ =>
+         |    if (c && foo {
+         |      z
+         |    } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("h"),
+      Nil,
+      Some(pname("Int")),
+      Term.Throw(Term.Try(
+        tapply(tname("g"), tname("a"), tname("b")),
+        List(Case(
+          Pat.Wildcard(),
+          None,
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        )),
+        None,
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: `throw` at a line end in braces, `if` and a condition on a deeper next line, the condition continued with `.b` and `then` on a shallower line, the argument in a condition after `then`, `&&` between the columns of that line and the `if`") {
+    val code =
+      """|def h: Int = {
+         |  throw
+         |      if a
+         |    .b then if c && foo:
+         |                  z
+         |     && w
+         |    then 1 else 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|def h: Int = {
+         |  throw if (a.b) if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("h"),
+      Nil,
+      Some(pname("Int")),
+      blk(Term.Throw(Term.If(
+        tselect("a", "b"),
+        tif(
+          tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+          int(1),
+          int(2),
+        ),
+        Lit.Unit(),
+      ))),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: `throw` at a line end in braces, `for` and an enumerator on a deeper next line, a second enumerator and `do` on a shallower line, the argument in a condition after `do`, `&&` between the columns of that line and the `for`") {
+    val code =
+      """|def h: Int = {
+         |  throw
+         |      for x <- xs
+         |    y <- ys do if c && foo:
+         |                     z
+         |     && w
+         |    then 1 else 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|def h: Int = {
+         |  throw for (x <- xs; y <- ys) if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("h"),
+      Nil,
+      Some(pname("Int")),
+      blk(Term.Throw(Term.For(
+        List(
+          Enumerator.Generator(patvar("x"), tname("xs")),
+          Enumerator.Generator(patvar("y"), tname("ys")),
+        ),
+        tif(
+          tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+          int(1),
+          int(2),
+        ),
+      ))),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: `throw` at a line end in braces, `for` and an enumerator on a deeper next line, a guard on a shallower line, `yield` and the argument in a condition at that column, `&&` between the columns of that line and the `for`") {
+    val code =
+      """|def h: Int = {
+         |  throw
+         |      for x <- xs
+         |    if p
+         |    yield if c && foo:
+         |                z
+         |     && w
+         |    then 1 else 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|def h: Int = {
+         |  throw for (x <- xs; if p) yield if (c && foo {
+         |    z
+         |  } && w) 1 else 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("h"),
+      Nil,
+      Some(pname("Int")),
+      blk(Term.Throw(Term.ForYield(
+        List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Guard(tname("p"))),
+        tif(
+          tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+          int(1),
+          int(2),
+        ),
+      ))),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a lambda parameter at the end of the condition's line, its body on a deeper next line, `&&` four columns deeper than the `if`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if xs.exists: x =>
+         |          x > 0
+         |        && ys.isEmpty
+         |    then a else b
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (xs.exists {
+         |    x => x > 0
+         |  } && ys.isEmpty) a else b
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          tinfix(
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("x"))(tinfix(tname("x"), ">", int(0))))),
+            "&&",
+            tselect("ys", "isEmpty"),
+          ),
+          tname("a"),
+          tname("b"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a lambda parameter at the end of the condition's line, its body on a deeper next line, `&&` two columns deeper than the `if`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if xs.exists: x =>
+         |          x > 0
+         |      && ys.isEmpty
+         |    then a else b
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (xs.exists {
+         |    x => x > 0
+         |  } && ys.isEmpty) a else b
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          tinfix(
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("x"))(tinfix(tname("x"), ">", int(0))))),
+            "&&",
+            tselect("ys", "isEmpty"),
+          ),
+          tname("a"),
+          tname("b"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a placeholder lambda on a deeper next line, `&&` four columns deeper than the `if`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if xs.exists:
+         |          _ > 0
+         |        && ys.isEmpty
+         |    then a else b
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (xs.exists {
+         |    _ > 0
+         |  } && ys.isEmpty) a else b
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          tinfix(
+            tapply(
+              tselect("xs", "exists"),
+              blk(Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", int(0)))),
+            ),
+            "&&",
+            tselect("ys", "isEmpty"),
+          ),
+          tname("a"),
+          tname("b"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a `for` with its first generator on its line, a second generator on the next line, the argument in a condition after its arrow, `&&` deeper than that line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs
+         |        y <- if c && foo:
+         |            z
+         |          && w
+         |        then a else b
+         |    yield y
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; y <- if (c && foo {
+         |    z
+         |  } && w) a else b) yield y
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.ForYield(
+          List(
+            Enumerator.Generator(patvar("x"), tname("xs")),
+            Enumerator.Generator(
+              patvar("y"),
+              tif(
+                tinfix(
+                  tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))),
+                  "&&",
+                  tname("w"),
+                ),
+                tname("a"),
+                tname("b"),
+              ),
+            ),
+          ),
+          tname("y"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: `throw` at a line end, `if` and two `} else if` in braces on a deeper next line, the argument in the last condition, `&&` deeper than the `if`") {
+    val code =
+      """|def h: Int =
+         |  throw
+         |      if (a) {
+         |        x
+         |      } else if (b) {
+         |        y
+         |      } else if c && foo:
+         |            z
+         |        && w
+         |      then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|def h: Int = throw if (a) {
+         |  x
+         |} else if (b) {
+         |  y
+         |} else if (c && foo {
+         |  z
+         |} && w) 1 else 2
+         |""".stripMargin
+    val tree = Source(List(Defn.Def(
+      Nil,
+      tname("h"),
+      Nil,
+      Some(pname("Int")),
+      Term.Throw(tif(
+        tname("a"),
+        blk(tname("x")),
+        tif(
+          tname("b"),
+          blk(tname("y")),
+          tif(
+            tinfix(tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tname("z")))), "&&", tname("w")),
+            int(1),
+            int(2),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("nested condition: `&&` and a colon argument after the parentheses, the argument on the next line, shallower leading `&&` on the next line, a blank line, leading `||` on the next line, `then` and `else` on the next line, next statement") {
+    val code =
+      """|object A:
+         |  def f = if (x)(y) && foo:
+         |        z
+         |      && w
+         |
+         |      || v
+         |    then c else d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (x(y) && foo {
+         |    z
+         |  } && w || v) c else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tinfix(
+              tinfix(
+                tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tname("z")))),
+                "&&",
+                tname("w"),
+              ),
+              "||",
+              tname("v"),
+            ),
+            tname("c"),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
     )))
     runTestAssert[Source](code, layout)(tree)
   }
