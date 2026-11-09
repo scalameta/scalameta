@@ -116,6 +116,13 @@ sealed trait RegionControl extends RegionNonDelimNonIndented with CanProduceLF {
  */
 sealed trait RegionControlCond extends RegionControl {
   final def isTerminatingTokenRequired(): Boolean = true
+
+  /**
+   * Returns the largest indent of the keyword's line and of the regions that enclose the condition.
+   * Returns `Int.MaxValue` for a block, or if the dialect does not allow a colon argument or a
+   * leading infix.
+   */
+  def inCondIndent: Int
 }
 
 /**
@@ -126,6 +133,9 @@ sealed trait RegionControlMaybeCond extends RegionControl {
   final def isTerminatingTokenRequired(): Boolean = false
   def asCond(): RegionControlCond
   def asBody(): RegionControl
+
+  /** Returns true if `token` terminates the region that [[asCond]] returns */
+  def isCondTerminatingToken(token: Token): Boolean
 }
 
 sealed trait RegionWhile extends RegionControl {
@@ -133,13 +143,16 @@ sealed trait RegionWhile extends RegionControl {
   def isTerminatingToken(token: Token): Boolean = token.is[Token.KwDo]
 }
 object RegionWhile {
-  def apply(next: Token): RegionWhile =
-    if (next.is[Token.LeftParen]) RegionWhileMaybeCond else RegionWhileCond
+  def apply(next: Token, inCondIndent: Int): RegionWhile =
+    if (next.is[Token.LeftParen]) new RegionWhileMaybeCond(inCondIndent)
+    else new RegionWhileCond(inCondIndent)
 }
-case object RegionWhileCond extends RegionControlCond with RegionWhile
-case object RegionWhileMaybeCond extends RegionControlMaybeCond with RegionWhile {
-  def asCond(): RegionControlCond = RegionWhileCond
+final class RegionWhileCond(val inCondIndent: Int) extends RegionControlCond with RegionWhile
+final class RegionWhileMaybeCond(inCondIndent: Int)
+    extends RegionControlMaybeCond with RegionWhile {
+  def asCond(): RegionControlCond = new RegionWhileCond(inCondIndent)
   def asBody(): RegionControl = null
+  def isCondTerminatingToken(token: Token): Boolean = isTerminatingToken(token)
 }
 
 sealed trait RegionIf extends RegionControl {
@@ -147,15 +160,17 @@ sealed trait RegionIf extends RegionControl {
   def isTerminatingToken(token: Token): Boolean = token.isAny[Token.KwThen, Token.KwElse]
 }
 object RegionIf {
-  def apply(next: Token): RegionIf =
-    if (next.is[Token.LeftParen]) RegionIfMaybeCond else RegionIfCond
+  def apply(next: Token, inCondIndent: Int): RegionIf =
+    if (next.is[Token.LeftParen]) new RegionIfMaybeCond(inCondIndent)
+    else new RegionIfCond(inCondIndent)
 }
-case object RegionIfCond extends RegionControlCond with RegionIf {
+final class RegionIfCond(val inCondIndent: Int) extends RegionControlCond with RegionIf {
   override def isTerminatingToken(token: Token): Boolean = token.is[Token.KwThen]
 }
-case object RegionIfMaybeCond extends RegionControlMaybeCond with RegionIf {
-  def asCond(): RegionControlCond = RegionIfCond
+final class RegionIfMaybeCond(inCondIndent: Int) extends RegionControlMaybeCond with RegionIf {
+  def asCond(): RegionControlCond = new RegionIfCond(inCondIndent)
   def asBody(): RegionControl = RegionThen
+  def isCondTerminatingToken(token: Token): Boolean = token.is[Token.KwThen]
 }
 
 /**
