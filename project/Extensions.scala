@@ -13,11 +13,10 @@ import org.scalajs.linker.interface.StandardConfig
 import org.scalajs.sbtplugin.ScalaJSCrossVersion
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 
+import com.github.sbt.shading.ShadingPlugin
+import com.github.sbt.shading.ShadingPlugin.autoImport._
 import com.jsuereth.sbtpgp.PgpKeys
 import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport._
-
-import coursier.ShadingPlugin
-import coursier.ShadingPlugin.autoImport._
 
 /**
  * Settings a project gets for the platform it builds for, and the combinators that hand them out.
