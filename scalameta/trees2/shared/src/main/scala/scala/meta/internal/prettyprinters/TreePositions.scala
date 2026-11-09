@@ -45,14 +45,14 @@ object Positions {
       def loopField(x: Any, color: String): Show.Result = x match {
         case el: String => s(DoubleQuotes(el).colored(color))
         case el: Tree => loopTree(el)
-        case el: Nil.type => s("Nil".colored(color))
-        case el @ List(List()) => s("List(List())".colored(color))
+        case _: Nil.type => s("Nil".colored(color))
+        case List(List()) => s("List(List())".colored(color))
         case el: ::[_] => s(
             "List(".colored(color),
             r(el.map(el => loopField(el, color)), ", ".colored(color)),
             ")".colored(color),
           )
-        case el: None.type => s("None".colored(color))
+        case _: None.type => s("None".colored(color))
         case el: Some[_] => s("Some(".colored(color), loopField(el.get, color), ")".colored(color))
         case el => Show.literal(el.toString.colored(color))
       }

@@ -3,7 +3,6 @@ package scala.meta.internal.tokens
 import java.lang.{Character => JC}
 
 import scala.annotation.switch
-import scala.language.postfixOps
 
 /** Contains constants and classifier methods for characters */
 object Chars {

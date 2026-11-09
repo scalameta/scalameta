@@ -2,7 +2,6 @@ package scala.meta.internal.javacp.asm
 
 import scala.meta.internal.javacp._
 
-import scala.collection.JavaConverters._
 import scala.tools.asm.signature.SignatureVisitor
 
 class ClassSignatureVisitor extends TypedSignatureVisitor[ClassSignature] with TypeParametersVisitor {

@@ -4,7 +4,6 @@ import scala.{meta => m}
 
 trait SyntheticOps {
   self: SemanticdbOps =>
-  import g._
   import m.internal.{semanticdb => s}
   import s.Implicits._
 

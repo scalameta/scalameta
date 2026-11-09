@@ -647,7 +647,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           mstats1 += createWithComments
           mstats1LowPriority += applyWithoutDialect
         }
-        privateApplyParamss.foreach { case (pv, pp) =>
+        privateApplyParamss.foreach { case (_, pp) =>
           val partialParamDecls = pp.map(asValDecl) ++ applyParamDecls
           val fullCtorCall = fullCtorCallFromPartialPrivateParams(pp)
           val partialWithDialect =
@@ -729,7 +729,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             """
 
             val isApiShape = !addApply && paramDefns.map(_.name) == apiParams.map(_.name)
-            privateApplyParamss.foreach { case (pv, pp) =>
+            privateApplyParamss.foreach { case (_, pp) =>
               val partialParamDecls = pp.map(asValDecl) ++ paramDecls
               val fullCtorCall = fullCtorCallFromPartialPrivateParams(pp)
               val partialWithDialect =
@@ -915,12 +915,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def internalize(name: String): TermName = TermName(AdtHelpers.privateName(name))
   private def internalize(name: TermName): TermName = internalize(name.toString)
   private def internalize(vr: ValOrDefDef): TermName = internalize(vr.name)
-  private def setterName(name: String): TermName = TermName(AdtHelpers.setterName(name))
-  private def setterName(name: TermName): TermName = setterName(name.toString)
-  private def setterName(vr: ValOrDefDef): TermName = setterName(vr.name)
   private def getterName(name: String): TermName = TermName(AdtHelpers.getterName(name))
   private def getterName(name: TermName): TermName = getterName(name.toString)
-  private def getterName(vr: ValOrDefDef): TermName = getterName(vr.name)
 
   // a `@shared` field holds its value as it is: no parent, no lazy copy
   private def isShared(vr: ValOrDefDef): Boolean = vr.mods.annotations.exists {
@@ -945,7 +941,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def getDeferredModifiers(annots: List[Tree]): Modifiers =
     Modifiers(DEFERRED, typeNames.EMPTY, annots)
 
-  private def getModifiers(p: ValOrDefDef, flags: FlagSet, annots: List[Tree] = Nil): Modifiers =
+  private def getModifiers(p: ValOrDefDef, flags: FlagSet, annots: List[Tree]): Modifiers =
     Modifiers(flags, p.mods.privateWithin, annots ++ p.mods.annotations)
 
   private val astFieldAnnot = q"new $AstMetadataModule.astField"
@@ -964,7 +960,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     """
   }
 
-  private def declareGetter(p: ValOrDefDef, flags: FlagSet, annots: List[Tree] = Nil): Tree =
+  private def declareGetter(p: ValOrDefDef, flags: FlagSet, annots: List[Tree]): Tree =
     declareGetter(p.name, p.tpt, getModifiers(p, flags, annots))
 
   private def defineGetter(p: ValOrDefDef, flags: FlagSet, annots: List[Tree] = Nil): Tree =

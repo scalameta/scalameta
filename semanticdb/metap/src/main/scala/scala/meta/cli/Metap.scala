@@ -2,7 +2,6 @@ package scala.meta.cli
 
 import scala.meta.internal.cli.Args
 import scala.meta.internal.metap._
-import scala.meta.internal.semanticdb.TextDocument
 import scala.meta.metap._
 
 import java.io._

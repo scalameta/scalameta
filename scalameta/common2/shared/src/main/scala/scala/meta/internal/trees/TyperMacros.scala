@@ -104,8 +104,8 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     case AnyTpe() => q"$f"
     case PrimitiveTpe() => q"$f"
     case TreeTpe() => q"null"
-    case OptionTreeTpe(tpe) => q"null"
-    case ListTreeTpe(tpe) => q"null"
+    case OptionTreeTpe(_) => q"null"
+    case ListTreeTpe(_) => q"null"
     case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
   }
 

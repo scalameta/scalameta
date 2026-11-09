@@ -173,7 +173,7 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
   def none(annottees: Tree*): Tree = annottees.transformAnnottees {
     new ImplTransformer {
       override def transformModule(mdef: ModuleDef): ModuleDef = {
-        val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
+        val q"new $_(...$_).macroTransform(..$_)" = c.macroApplication
         val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" =
           mdef
         val manns1 = ListBuffer[Tree]() ++ mmods.annotations
@@ -203,7 +203,6 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
 
-  import c.internal._
   import c.internal.decorators._
   import c.universe._
 
@@ -219,8 +218,6 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
       var vars = sym.info.members.collect { case x: TermSymbol if !x.isMethod && x.isVar => x }
       vars = vars.filter(!_.hasAnnotation[AdtMetadata.byNeedField])
       vars.foreach(v => fail("leafs can't have mutable state: " + v.owner.fullName + "." + v.name))
-      val vals = sym.info.members.collect { case x: TermSymbol if !x.isMethod && !x.isVar => x }
-      vals.foreach(v => ())
     }
     check(T.tpe.typeSymbol.asClass)
     q"()"

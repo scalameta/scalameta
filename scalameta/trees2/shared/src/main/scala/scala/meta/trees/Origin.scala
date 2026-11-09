@@ -3,7 +3,6 @@ package scala.meta.trees
 import scala.meta.Dialect
 import scala.meta.common._
 import scala.meta.inputs._
-import scala.meta.tokenizers._
 import scala.meta.tokens._
 
 sealed trait Origin extends Optional {

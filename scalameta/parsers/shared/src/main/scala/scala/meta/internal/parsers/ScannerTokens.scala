@@ -359,7 +359,7 @@ private[meta] final class ScannerTokens(
         wasDone: Boolean = false,
         head: TokenRef = null,
         last: TokenRef = null,
-        multiEOL: Boolean = false,
+        multiEOL: Boolean,
     )(implicit f: List[SepRegion] => OutdentInfo): Either[List[SepRegion], (TokenRef, TokenRef)] =
       if (!wasDone) f(xs) match {
         case null => mkOutdentsOpt(xs, true, head, last, multiEOL)
@@ -853,7 +853,7 @@ private[meta] final class ScannerTokens(
            */
           def getIndentIfNeeded(sepRegions: List[SepRegion]): Either[List[SepRegion], TokenRef] = {
             def exceedsIndent = isIndented(sepRegions, nextIndent)
-            def emitIndentWith(ri: SepRegionIndented, rs: List[SepRegion], next: TokenRef = null) =
+            def emitIndentWith(ri: SepRegionIndented, rs: List[SepRegion], next: TokenRef) =
               Right(mkIndent(prevPos, indentPos, ri :: rs, next))
             def emitIndent(regions: List[SepRegion], next: TokenRef = null) =
               emitIndentWith(RegionIndent(nextIndent), regions, next)

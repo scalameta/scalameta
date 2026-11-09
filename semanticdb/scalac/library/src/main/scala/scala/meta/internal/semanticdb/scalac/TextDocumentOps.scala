@@ -247,8 +247,6 @@ trait TextDocumentOps {
 
       def addOccurrenceFromSemantic(mpos: m.Position, ssym: String, role: Role): Unit =
         if (ssym != Symbols.None) occurrences(mpos) = (ssym, role)
-      def addOccurrence(mpos: m.Position, gsym: g.Symbol, role: Role): Unit =
-        addOccurrenceFromSemantic(mpos, gsym.toSemantic, role)
 
       def setSamOccurrence(
           gsym: g.Symbol,

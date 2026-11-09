@@ -22,7 +22,7 @@ class ClassifierMacros(val c: Context) extends MacroHelpers {
           mdef
 
         def collectUnapplySig(stats: List[Tree]): Option[(Tree, Tree)] = stats
-          .collectFirst { case q"$_ def unapply[..$tparams]($_: $t): $ret = $_" => (t, ret) }
+          .collectFirst { case q"$_ def unapply[..$_]($_: $t): $ret = $_" => (t, ret) }
         val unapplySig = collectUnapplySig(mstats).orElse(collectUnapplySig(stats))
         val t = unapplySig match {
           case Some((t, _)) => t

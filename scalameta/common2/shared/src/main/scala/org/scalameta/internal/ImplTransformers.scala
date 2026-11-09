@@ -65,7 +65,7 @@ trait ImplTransformers {
         case (mdef @ ModuleDef(_, _, _)) :: rest =>
           if (!allowModules) failUexpectedAnnottees()
           transformModule(mdef) +: rest
-        case annottee :: rest => failUexpectedAnnottees()
+        case _ :: _ => failUexpectedAnnottees()
       }
       q"{ ..$expanded; () }"
     }

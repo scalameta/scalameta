@@ -34,7 +34,7 @@ object typecheckError {
     }
     val tree =
       try c.parse(s_code.replace("QQQ", "\"\"\""))
-      catch { case ex: ParseException => c.abort(c.enclosingPosition, "this code fails to parse") }
+      catch { case _: ParseException => c.abort(c.enclosingPosition, "this code fails to parse") }
     def format(ex: TypecheckException) =
       if (options.tpe.typeSymbol == symbolOf[Options.WithoutPositions.type]) ex.msg
       else if (options.tpe.typeSymbol == symbolOf[Options.WithPositions.type]) Position

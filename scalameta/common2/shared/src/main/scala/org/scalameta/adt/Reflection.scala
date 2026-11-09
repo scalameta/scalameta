@@ -14,7 +14,6 @@ trait Reflection {
   val mirror: u.Mirror
 
   import u._
-  import u.internal._
   import u.internal.decorators._
 
   implicit class XtensionAnnotatedSymbol(sym: Symbol) {

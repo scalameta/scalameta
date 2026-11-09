@@ -10,7 +10,6 @@ import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.{KnownSymbols => ks, Language => l}
 import scala.meta.internal.{semanticdb => s}
-import scala.meta.io.AbsolutePath
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -371,10 +370,10 @@ object Javacp {
       nextScope = nextScope.enter(typeParameter.identifier, symbol)
       TypeParameterInfo(typeParameter, symbol)
     }
-    nextScope -> infos.map(info => addTypeParameter(info, ownerSymbol, nextScope))
+    nextScope -> infos.map(info => addTypeParameter(info, nextScope))
   }
-  private def addTypeParameter(typeParameter: TypeParameterInfo, ownerSymbol: String, scope: Scope)(
-      implicit classSymbols: ClassSymbols,
+  private def addTypeParameter(typeParameter: TypeParameterInfo, scope: Scope)(implicit
+      classSymbols: ClassSymbols,
   ): s.SymbolInformation = {
     val typeParameters = typeParameter.value.upperBounds.map(fromJavaTypeSignature(_, scope))
     val upperBounds = typeParameters match {
@@ -396,11 +395,6 @@ object Javacp {
   }
 
   private case class MethodInfo(node: MethodNode, signature: MethodSignature)
-
-  private def asmNameToPath(asmName: String, base: AbsolutePath): AbsolutePath =
-    (asmName + Classfile.Suffix).split("/").foldLeft(base) { case (accum, filename) =>
-      accum.resolve(filename)
-    }
 
   private def sdisplayName(node: ClassNode): String =
     node.innerClasses.toScala.find(_.name == node.name) match {

@@ -1,6 +1,5 @@
 package scala.meta.internal.scalacp
 
-import org.scalameta.collections.Conversions._
 import scala.meta.internal.classpath._
 import scala.meta.internal.metacp._
 

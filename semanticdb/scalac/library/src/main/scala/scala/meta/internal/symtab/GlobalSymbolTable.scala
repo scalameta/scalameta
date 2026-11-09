@@ -9,7 +9,6 @@ import scala.meta.internal.semanticdb.SymbolInformation
 import scala.meta.io._
 import scala.meta.metacp._
 
-import scala.annotation.tailrec
 import scala.collection.concurrent.TrieMap
 import scala.reflect.NameTransformer
 

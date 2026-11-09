@@ -217,7 +217,7 @@ object TreeSyntax {
     }
     def guessHasElsep(t: Term.If): Boolean = t.elsep match {
       case Lit.Unit() => false
-      case e => true
+      case _ => true
     }
     def guessHasBraces(t: Pkg): Boolean = {
       @tailrec
@@ -457,7 +457,7 @@ object TreeSyntax {
         else s(mod, rsepWith(v)(printParam(_, mod.isEmpty)))
 
       // Type
-      case t: Type.AnonymousName => m(Path, s(""))
+      case _: Type.AnonymousName => m(Path, s(""))
       case t: Type.Name => m(Path, printMaybeBackquoted(t))
       case t: Type.CapSetName => m(Path, s(printMaybeBackquoted(t), "^"))
       case t: Type.Select => m(SimpleTyp, s(t.qual, kw("."), t.name))
@@ -509,7 +509,7 @@ object TreeSyntax {
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
           (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
         m(SimpleTyp, s(kw(if (useQM) "?" else "_"), spn(t.bounds)))
-      case t: Type.PatWildcard => m(SimpleTyp, kw("_"))
+      case _: Type.PatWildcard => m(SimpleTyp, kw("_"))
       case t: Type.Placeholder =>
         /* In order not to break existing tools `.syntax` should still return
          * `_` instead `?` unless specifically used.
@@ -848,7 +848,7 @@ object TreeSyntax {
       // Import
       case t: Importee.Name => s(t.name)
       case t: Importee.Given => s(kw("given"), " ", t.tpe)
-      case t: Importee.GivenAll => s(kw("given"))
+      case _: Importee.GivenAll => s(kw("given"))
       case t: Importee.Rename =>
         // a line break after `as` ends the importee, but after `=>` it does not
         val asOK = dialect.allowAsForImportRename && !hasBreaksAroundBegComments(t.rename)

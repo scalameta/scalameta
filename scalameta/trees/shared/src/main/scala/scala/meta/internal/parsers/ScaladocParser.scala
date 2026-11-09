@@ -171,8 +171,8 @@ object ScaladocParser {
   }
 
   // this is to be used at the start of a line
-  private def leadTextParser[$: P](indent: Int, mdOffset: Int = 0) =
-    !nextPartParser(indent, mdOffset) ~ textParser(indent, mdOffset)
+  private def leadTextParser[$: P](indent: Int, mdOffset: Int) = !nextPartParser(indent, mdOffset) ~
+    textParser(indent, mdOffset)
 
   private def tagParser[$: P](indent: Int): P[Tag] = P {
     def label = P((nl ~ !nextPartParser(indent)).? ~ hspaces0 ~ wordParser)

@@ -16,7 +16,7 @@ object StructurallyEqual {
       val ok: Boolean = (x, y) match {
         case (x, y) if x == null || y == null => x == null && y == null
         case (x: Some[_], y: Some[_]) => loop(x.get, y.get)
-        case (x: None.type, y: None.type) => true
+        case (_: None.type, _: None.type) => true
         case (xs: List[_], ys: List[_]) => xs.length == ys.length &&
           xs.zip(ys).forall { case (x, y) => loop(x, y) }
         case (x: Tree, y: Tree) =>
