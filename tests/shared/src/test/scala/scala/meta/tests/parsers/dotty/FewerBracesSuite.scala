@@ -3790,18 +3790,15 @@ class FewerBracesSuite extends BaseDottySuite {
          |  B)
          |""".stripMargin
     val layout =
-      """|def f = xs.map(_ {
-         |  A => B
-         |})
+      """|def f = xs.map(_: (A => B))
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(
-        tselect("xs", "map"),
-        Term.AnonymousFunction(tapply(Term.Placeholder(), blk(tfunc(tparam("A"))(tname("B"))))),
+      Term.AnonymousFunction(
+        tapply(tselect("xs", "map"), Term.Ascribe(Term.Placeholder(), pfunc("A")("B"))),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -3813,12 +3810,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |  C)
          |""".stripMargin
     val layout =
-      """|def f = g(1 {
-         |  A => C
-         |})
+      """|def f = g(1: (A => C))
          |""".stripMargin
-    val tree = Defn
-      .Def(Nil, tname("f"), Nil, None, tapply("g", tapply(lit(1), blk(tfunc(tparam("A"))(tname("C"))))))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, tapply("g", Term.Ascribe(lit(1), pfunc("A")("C"))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
