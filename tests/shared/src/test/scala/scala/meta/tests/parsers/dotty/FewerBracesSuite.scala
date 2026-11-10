@@ -3895,4 +3895,105 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("lambda parameter: function type, arrow at end of line") {
+    val code =
+      """|def f = (g: A =>
+         |  B) => g
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `;` expected but `=>` found
+         |  B) => g
+         |     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("lambda parameter: function type, lambda arrow on the next line") {
+    val code =
+      """|def f = (g: A =>
+         |  B)
+         |  => g
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `;` expected but `=>` found
+         |  => g
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("lambda parameter: function type, arrow at end of line, in an argument") {
+    val code =
+      """|def f = xs.map((g: A =>
+         |  B) => g)
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `)` expected but `=>` found
+         |  B) => g)
+         |     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("parens: case guard, select colon, lambda arrow at end of line") {
+    val code =
+      """|def f = x match
+         |  case y if (ys.exists: z =>
+         |      z.ok) => 1
+         |  case _ => 0
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if ys.exists {
+         |    z => z.ok
+         |  } => 1
+         |  case _ => 0
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tselect("z", "ok"))))),
+          int(1),
+        ),
+        Case(patwildcard, None, int(0)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: case guard, infix operand, typed name, function type arrow at end of line") {
+    val code =
+      """|def f = x match
+         |  case y if a && (g: A =>
+         |    B) => g => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if a && g {
+         |    A => B
+         |  } =>
+         |    g => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix("a", "&&", tapply("g", blk(tfunc(tparam("A"))(tname("B")))))),
+          tfunc(tparam("g"))(int(1)),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
