@@ -3357,13 +3357,12 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object A {
-         |  val y = (x op a /* c */ ) {
+         |  val y = x op a /* c */ {
          |    z => z
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c */"),
-    )("end Term.ApplyInfix, Term.ArgClause: /* c */")
+    )("end Term.Name: /* c */")
   }
 
   test("if: MLC between the condition and a brace body") {

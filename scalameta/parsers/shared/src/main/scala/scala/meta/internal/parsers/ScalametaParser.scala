@@ -2976,7 +2976,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
         def argClause = if (tok.is[LeftBrace]) getArgClauseOnBrace() else getArgClauseOnParen()
         val arguments = addPos(Term.Apply(t, argClause))
         simpleExprRest(arguments, canApply = true, startPos = startPos)
-      case _: Colon if canApply =>
+      case _: Colon =>
         val res = getFewerBracesApplyOnColon(t, startPos, okSingleLineLambda = true)
         if (res ne null) res else t
       case _: Underscore if canApply =>
@@ -3104,6 +3104,20 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     if (arg eq null) null else getApplyOnColonArg(fun, startPos, colonPos, arg)
   }
 
+  /** only with a colon argument, `(a)` becomes `a`, with the comments around its parentheses */
+  private def getFewerBracesApplyOnOperandColon(lpPos: Int, args: List[Term])(implicit
+      location: Location,
+  ): Term = {
+    val rpPos = prevIndex
+    val colonPos = currIndex
+    val arg = getFewerBracesArgOnColon(okSingleLineLambda = true)
+    if (arg eq null) null
+    else {
+      val fun = makeTupleTerm(getTupleSingleTerm(_))(lpPos, args, rpPos)
+      getApplyOnColonArg(fun, lpPos, colonPos, arg)
+    }
+  }
+
   private def getApplyOnColonArg(fun: Term, startPos: Int, colonPos: Int, arg: Term)(implicit
       location: Location,
   ): Term = {
@@ -3128,7 +3142,11 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
         // https://scala-lang.org/files/archive/spec/2.13/13-syntax-summary.html#context-free-syntax
         case _: EOL if !isBrace && !dialect.allowSignificantIndentation && tryAhead[LeftBrace] =>
           getRest()
-        case _ => makeTupleTerm { arg =>
+        case tok =>
+          // spec: a colon argument applies to the expression in parentheses
+          val app = if (tok.is[Colon]) getFewerBracesApplyOnOperandColon(lpPos, args) else null
+          if (app ne null) app
+          else makeTupleTerm { arg =>
             val res = arg match {
               case _: Term.PartialFunction if isBrace => arg // leave `_` in `{ case … }` to the caller
               case _ => maybeAnonymousFunction(arg)
