@@ -1300,21 +1300,25 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   final def commaSeparatedWithIndex[T <: Tree: AstInfo: ClassTag](part: Int => T): List[T] =
     tokenSeparated[Comma, T](sepFirst = false, part)
 
-  private def makeTuple[A <: Tree](lpPos: Int, body: List[A], zero: => A, tuple: List[A] => A)(
-      single: A => Either[List[A], A],
-  ): A = body match {
-    case Nil => autoEndPos(lpPos)(zero)
+  private def makeTuple[A <: Tree](
+      lpPos: Int,
+      body: List[A],
+      zero: => A,
+      tuple: List[A] => A,
+      rpPos: Int = prevIndex,
+  )(single: A => Either[List[A], A]): A = body match {
+    case Nil => atPos(lpPos, rpPos)(zero)
     case (q: Quasi) :: Nil if q.rank == 1 => copyPos(q)(tuple(body))
     case t :: Nil => single(t) match {
         case Right(x) =>
           if (options.captureComments) { // we are dropping parens: let's find comments outside them
             prependLeadingComments(x, lpPos)
-            if (prev[RightParen]) appendTrailingComments(x, prevIndex + 1, detached = false)
+            if (tokens(rpPos).is[RightParen]) appendTrailingComments(x, rpPos + 1, detached = false)
           }
           x
-        case Left(x) => autoEndPos(lpPos)(tuple(x))
+        case Left(x) => atPos(lpPos, rpPos)(tuple(x))
       }
-    case _ => autoEndPos(lpPos)(tuple(body))
+    case _ => atPos(lpPos, rpPos)(tuple(body))
   }
 
   private def getTupleSingleTerm(
@@ -1331,8 +1335,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
   private def makeTupleTerm(
       single: Term => Either[List[Term], Term],
-  )(lpPos: Int, body: List[Term]): Term =
-    makeTuple(lpPos, body, Lit.Unit(), Term.Tuple.apply)(single)
+  )(lpPos: Int, body: List[Term], rpPos: Int = prevIndex): Term =
+    makeTuple(lpPos, body, Lit.Unit(), Term.Tuple.apply, rpPos)(single)
 
   private def makeTupleTerm(lpPos: Int, body: List[Term]): Term =
     makeTupleTerm(getTupleSingleTerm(_))(lpPos, body)
