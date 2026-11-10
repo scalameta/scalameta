@@ -679,7 +679,15 @@ lazy val sharedSettings = Def.settings(
   scalacOptions ++= { if (isScala212.value) Nil else List("-Xfatal-warnings") },
   scalacOptions ++= { if (isScala213.value) List("-Wconf:cat=deprecation:is") else Nil },
   scalacOptions ++= {
-    if (isScala213.value) List("-opt:inline:scala.meta.**", "-Wopt:at-inline-failed")
+    val loader = scalaInstance.value.loader
+    val noInline = // scalac runs in sbt's JVM and reads that JDK's classes
+      try {
+        loader.loadClass("scala.tools.asm.Opcodes")
+          .getField(s"V${java.lang.Runtime.version.feature}")
+        false
+      } catch { case _: Throwable => true }
+    if (noInline) Nil
+    else if (isScala213.value) List("-opt:inline:scala.meta.**", "-Wopt:at-inline-failed")
     else if (isScala212.value) List("-opt:l:inline", "-opt-inline-from:scala.meta.**")
     else Nil
   },
