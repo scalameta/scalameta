@@ -3003,6 +3003,14 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
           val argOpt = tryGetArgAsLambdaBlock(true)
           if (argOpt eq null) syntaxError("expected fewer-braces method body", colon)
           argOpt
+        // spec: in parentheses, fewer-braces lambda arg might start only after certain tokens
+        case _ if inRegionParen && (prevToken match {
+              case t: Ident => t.value.isEmpty ||
+                !t.value.isAlphanumIdentifierNonEmpty && !t.text.isBackquotedNonEmpty
+              case _: RightParen | _: RightBracket | _: KwThis | _: KwSuper | _: KwNew |
+                  _: Unquote => false
+              case _ => true
+            }) => null
         case _ => tryAhead(tryGetArgAsLambdaBlock(true))
       }
     }
