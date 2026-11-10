@@ -3822,7 +3822,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |    x
          |""".stripMargin
     val layout =
-      """|def f = (1 + (new A)) {
+      """|def f = 1 + (new A) {
          |  x => x
          |}
          |""".stripMargin
@@ -3831,7 +3831,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("f"),
       Nil,
       None,
-      tapply(tinfix(lit(1), "+", Term.New(init("A"))), blk(tfunc(tparam("x"))(tname("x")))),
+      tinfix(lit(1), "+", tapply(Term.New(init("A")), blk(tfunc(tparam("x"))(tname("x"))))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -3842,17 +3842,12 @@ class FewerBracesSuite extends BaseDottySuite {
          |    x
          |""".stripMargin
     val layout =
-      """|def f = (a + b) {
+      """|def f = a + b {
          |  x => x
          |}
          |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tapply(tinfix("a", "+", "b"), blk(tfunc(tparam("x"))(tname("x")))),
-    )
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tinfix("a", "+", tapply("b", blk(tfunc(tparam("x"))(tname("x"))))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3862,11 +3857,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |    c
          |""".stripMargin
     val layout =
-      """|def f = (a + b) {
+      """|def f = a + b {
          |  c
          |}
          |""".stripMargin
-    val tree = Defn.Def(Nil, tname("f"), Nil, None, tapply(tinfix("a", "+", "b"), blk(tname("c"))))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, tinfix("a", "+", tapply("b", blk(tname("c")))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3879,11 +3874,25 @@ class FewerBracesSuite extends BaseDottySuite {
          |      x
          |  yield z
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `outdent` expected but `:` found
-         |    if a op (b): x =>
-         |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = for (z <- zs; if a op b {
+         |  x => x
+         |}) yield z
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.ForYield(
+        List(
+          Enumerator.Generator(patvar("z"), tname("zs")),
+          Enumerator.Guard(tinfix("a", "op", tapply("b", blk(tfunc(tparam("x"))(tname("x")))))),
+        ),
+        tname("z"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
