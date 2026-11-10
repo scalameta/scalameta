@@ -3097,13 +3097,16 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   )(implicit location: Location): Term = {
     val colonPos = currIndex
     val arg = getFewerBracesArgOnColon(okSingleLineLambda)
-    if (arg eq null) null
-    else {
-      val endPos = AutoPos.endIndex
-      val argClause = atPos(colonPos, endPos)(Term.ArgClause(arg :: Nil))
-      val arguments = atPos(startPos, endPos)(Term.Apply(fun, argClause))
-      simpleExprRest(arguments, canApply = true, startPos = startPos)
-    }
+    if (arg eq null) null else getApplyOnColonArg(fun, startPos, colonPos, arg)
+  }
+
+  private def getApplyOnColonArg(fun: Term, startPos: Int, colonPos: Int, arg: Term)(implicit
+      location: Location,
+  ): Term = {
+    val endPos = AutoPos.endIndex
+    val argClause = atPos(colonPos, endPos)(Term.ArgClause(arg :: Nil))
+    val arguments = atPos(startPos, endPos)(Term.Apply(fun, argClause))
+    simpleExprRest(arguments, canApply = true, startPos = startPos)
   }
 
   private def argumentExprsOrPrefixExpr()(implicit location: Location): Term = {
