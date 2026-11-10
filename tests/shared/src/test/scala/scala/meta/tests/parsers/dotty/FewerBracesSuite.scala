@@ -3784,4 +3784,42 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("parens: placeholder colon, function type arrow at end of line") {
+    val code =
+      """|def f = xs.map(_: A =>
+         |  B)
+         |""".stripMargin
+    val layout =
+      """|def f = xs.map(_ {
+         |  A => B
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "map"),
+        Term.AnonymousFunction(tapply(Term.Placeholder(), blk(tfunc(tparam("A"))(tname("B"))))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: literal colon, function type arrow at end of line") {
+    val code =
+      """|def f = g(1: A =>
+         |  C)
+         |""".stripMargin
+    val layout =
+      """|def f = g(1 {
+         |  A => C
+         |})
+         |""".stripMargin
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tapply("g", tapply(lit(1), blk(tfunc(tparam("A"))(tname("C"))))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
