@@ -2396,19 +2396,16 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
             inlineMatchClause(inlineMod())
           else {
             val startPos = currIndex
-            val t: Term = postfixExpr(startPos, allowRepeated)
-            exprOtherRest(t, startPos, location, allowRepeated)
+            val t: Term = postfixExpr(startPos, allowRepeated)(location)
+            exprOtherRest(t, startPos, allowRepeated)(location)
           }
       }
     }
     maybeAnonymousFunction(res, location)
   }
 
-  private def exprOtherRest(
-      prefix: Term,
-      startPos: Int,
+  private def exprOtherRest(prefix: Term, startPos: Int, allowRepeated: Boolean)(implicit
       location: Location,
-      allowRepeated: Boolean,
   ): Term = {
     @inline
     def addPos[T <: Tree](body: T) = autoEndPos(startPos)(body)
@@ -2626,14 +2623,11 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     }
   }
 
-  private def exprAfterSimple(
-      term: Term,
-      startPos: Int,
+  private def exprAfterSimple(term: Term, startPos: Int, allowRepeated: Boolean)(implicit
       location: Location,
-      allowRepeated: Boolean,
   ): Term = {
     val postfix = postfixExpr(term, startPos, allowRepeated = allowRepeated)
-    exprOtherRest(postfix, startPos, location, allowRepeated = allowRepeated)
+    exprOtherRest(postfix, startPos, allowRepeated = allowRepeated)
   }
 
   private def exprAfterSimpleInit(
@@ -2643,8 +2637,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       canApply: Boolean = false,
       allowRepeated: Boolean = false,
   ): Term = {
-    val simple = simpleExprRest(term, canApply = canApply, startPos = startPos)
-    exprAfterSimple(simple, startPos, location, allowRepeated = allowRepeated)
+    val simple = simpleExprRest(term, canApply = canApply, startPos = startPos)(location)
+    exprAfterSimple(simple, startPos, allowRepeated = allowRepeated)(location)
   }
 
   private def implicitClosure(location: Location): Term.Function = {
@@ -2750,9 +2744,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     case _ => null
   }
 
-  def postfixExpr(allowRepeated: Boolean): Term = postfixExpr(currIndex, allowRepeated)
+  def postfixExpr(allowRepeated: Boolean): Term = postfixExpr(currIndex, allowRepeated)(NoStat)
 
-  def postfixExpr(startPos: Int, allowRepeated: Boolean): Term = {
+  def postfixExpr(startPos: Int, allowRepeated: Boolean)(implicit location: Location): Term = {
     // Start the infix chain.
     // We'll use `a + b` as our running example.
     val rhs0 = prefixExpr(allowRepeated)
@@ -2760,7 +2754,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     postfixExpr(rhs0, startPos, allowRepeated)
   }
 
-  private def postfixExpr(rhs0: Term, startPos: Int, allowRepeated: Boolean): Term = {
+  private def postfixExpr(rhs0: Term, startPos: Int, allowRepeated: Boolean)(implicit
+      location: Location,
+  ): Term = {
     import TermInfixContext._
     val base = stack
 
@@ -2776,7 +2772,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       def getPrevLhs(op: Term.Name): Term = reduceStack(base, rhsK, rhsEndK, op)
 
       def getNextRhs(targs: => Type.ArgClause)(op: Term.Name) =
-        getNextRhsWith(op, targs, argumentExprsOrPrefixExpr(PostfixStat))
+        getNextRhsWith(op, targs, argumentExprsOrPrefixExpr())
 
       def getNextRhsWith(op: Term.Name, targs: Type.ArgClause, rhs: Term) = {
         val lhs = getPrevLhs(op)
@@ -2872,24 +2868,26 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     }
   }
 
-  def prefixExpr(allowRepeated: Boolean): Term = currToken match {
+  def prefixExpr(allowRepeated: Boolean)(implicit location: Location): Term = currToken match {
     case Unary(unary) =>
       val startPos = currIndex
       next()
       val res = simpleExpr0(allowRepeated = true, unary = unary)
       if (res ne null) res
-      else simpleExprRest(atPos(startPos)(Term.Name(unary.op)), canApply = true, startPos = startPos)
+      else simpleExprRest(atPos(startPos)(Term.Name(unary.op)), canApply = true, startPos)
     case _ => simpleExpr(allowRepeated)
   }
 
-  def simpleExpr(allowRepeated: Boolean): Term = {
+  def simpleExpr(allowRepeated: Boolean)(implicit location: Location): Term = {
     val res = simpleExpr0(allowRepeated)
     if (res ne null) res
     else throw ParseException(currToken.pos, "illegal start of simple expression")
   }
 
   // null if the current token cannot start a simple expression
-  private def simpleExpr0(allowRepeated: Boolean, unary: Unary = Unary.Noop): Term = {
+  private def simpleExpr0(allowRepeated: Boolean, unary: Unary = Unary.Noop)(implicit
+      location: Location,
+  ): Term = {
     var canApply = true
     val startPos = currIndex
     val unaryPos = prevIndex
@@ -2937,7 +2935,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   }
 
   @tailrec
-  private def simpleExprRest(t: Term, canApply: Boolean, startPos: Int): Term = {
+  private def simpleExprRest(t: Term, canApply: Boolean, startPos: Int)(implicit
+      location: Location,
+  ): Term = {
     @inline
     def addPos(body: Term): Term = autoEndPos(startPos)(body)
     currToken match {
@@ -3094,7 +3094,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       fun: Term,
       startPos: Int,
       okSingleLineLambda: Boolean = false,
-  ): Term = {
+  )(implicit location: Location): Term = {
     val colonPos = currIndex
     val arg = getFewerBracesArgOnColon(okSingleLineLambda)
     if (arg eq null) null
@@ -3106,14 +3106,14 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     }
   }
 
-  private def argumentExprsOrPrefixExpr(location: Location): Term = {
+  private def argumentExprsOrPrefixExpr()(implicit location: Location): Term = {
     val isBrace = at[LeftBrace]
     if (!isBrace && !at[LeftParen]) prefixExpr(allowRepeated = false)
     else {
       val lpPos = currIndex
       val args =
         if (isBrace) checkNoTripleDot(blockExprOnBrace(allowRepeated = true)) :: Nil
-        else inParensOnOpenOr(argumentExprsInParens(location))(Nil)
+        else inParensOnOpenOr(argumentExprsInParens(PostfixStat))(Nil)
       def getRest() = simpleExprRest(makeTupleTerm(lpPos, args), canApply = true, startPos = lpPos)
       currToken match {
         case _: Dot | _: OpenDelim | _: Underscore => getRest()
