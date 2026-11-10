@@ -3816,4 +3816,74 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("infix operand colon: new prefix, lambda arrow at end of line") {
+    val code =
+      """|def f = 1 + new A: x =>
+         |    x
+         |""".stripMargin
+    val layout =
+      """|def f = (1 + (new A)) {
+         |  x => x
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(tinfix(lit(1), "+", Term.New(init("A"))), blk(tfunc(tparam("x"))(tname("x")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix operand colon: parenthesized operand, lambda arrow at end of line") {
+    val code =
+      """|def f = a + (b): x =>
+         |    x
+         |""".stripMargin
+    val layout =
+      """|def f = (a + b) {
+         |  x => x
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(tinfix("a", "+", "b"), blk(tfunc(tparam("x"))(tname("x")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix operand colon: parenthesized operand, block on the next line") {
+    val code =
+      """|def f = a + (b):
+         |    c
+         |""".stripMargin
+    val layout =
+      """|def f = (a + b) {
+         |  c
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, tapply(tinfix("a", "+", "b"), blk(tname("c"))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix operand colon: parenthesized operand in a for guard, lambda arrow at end of line") {
+    val code =
+      """|def f =
+         |  for
+         |    z <- zs
+         |    if a op (b): x =>
+         |      x
+         |  yield z
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `:` found
+         |    if a op (b): x =>
+         |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }

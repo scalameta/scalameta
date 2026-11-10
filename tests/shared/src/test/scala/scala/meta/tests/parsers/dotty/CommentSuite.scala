@@ -3347,6 +3347,25 @@ class CommentSuite extends BaseDottySuite {
     )("end Term.ApplyInfix: /* c1 */")
   }
 
+  test("infix: MLC after an argument in parens, colon, lambda arrow at end of line") {
+    val code =
+      """|object A {
+         |  val y = x op (a) /* c */: z =>
+         |    z
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  val y = (x op a /* c */ ) {
+         |    z => z
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq("end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c */"),
+    )("end Term.ApplyInfix, Term.ArgClause: /* c */")
+  }
+
   test("if: MLC between the condition and a brace body") {
     val code =
       """|object A {
