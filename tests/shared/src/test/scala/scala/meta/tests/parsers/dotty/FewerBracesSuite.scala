@@ -3645,19 +3645,14 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def f = g(new A(1).foo: x => x)
          |""".stripMargin
     val layout =
-      """|def f = g(new A(1).foo {
-         |  x => x
-         |})
+      """|def f = g(new A(1).foo: (x => x))
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(
-        "g",
-        tapply(tselect(Term.New(init("A", List(lit(1)))), "foo"), blk(tfunc(tparam("x"))(tname("x")))),
-      ),
+      tapply("g", Term.Ascribe(tselect(Term.New(init("A", List(lit(1)))), "foo"), pfunc("x")("x"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -3667,9 +3662,7 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def f = g(new A + xs.map: x => x)
          |""".stripMargin
     val layout =
-      """|def f = g(new A + xs.map {
-         |  x => x
-         |})
+      """|def f = g(new A + xs.map: (x => x))
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
@@ -3678,11 +3671,7 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       tapply(
         "g",
-        tinfix(
-          Term.New(init("A")),
-          "+",
-          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))),
-        ),
+        Term.Ascribe(tinfix(Term.New(init("A")), "+", tselect("xs", "map")), pfunc("x")("x")),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -3697,7 +3686,8 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = {
-         |  val a = new A(1).foo {
+         |  val a = new A(1).foo
+         |  {
          |    x => x
          |  }
          |  a
@@ -3709,12 +3699,8 @@ class FewerBracesSuite extends BaseDottySuite {
       Nil,
       None,
       blk(
-        Defn.Val(
-          Nil,
-          List(patvar("a")),
-          None,
-          tapply(tselect(Term.New(init("A", List(lit(1)))), "foo"), blk(tfunc(tparam("x"))(tname("x")))),
-        ),
+        Defn.Val(Nil, List(patvar("a")), None, tselect(Term.New(init("A", List(lit(1)))), "foo")),
+        blk(tfunc(tparam("x"))(tname("x"))),
         tname("a"),
       ),
     )
@@ -3730,7 +3716,8 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = {
-         |  val a = new A(1).foo {
+         |  val a = new A(1).foo
+         |  {
          |    x => x
          |  }
          |}
@@ -3740,12 +3727,10 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("f"),
       Nil,
       None,
-      blk(Defn.Val(
-        Nil,
-        List(patvar("a")),
-        None,
-        tapply(tselect(Term.New(init("A", List(lit(1)))), "foo"), blk(tfunc(tparam("x"))(tname("x")))),
-      )),
+      blk(
+        Defn.Val(Nil, List(patvar("a")), None, tselect(Term.New(init("A", List(lit(1)))), "foo")),
+        blk(tfunc(tparam("x"))(tname("x"))),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }

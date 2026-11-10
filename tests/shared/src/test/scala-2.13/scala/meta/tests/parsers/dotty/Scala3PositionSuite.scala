@@ -3383,7 +3383,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.New new A(1)
        |Init A(1)
        |Term.ArgClause (1)
-       |Type.ArgClause   @@{ x => x }
+       |Type.ArgClause def f = new A(1) foo@@
        |Term.Block { x => x }
        |Term.Function x => x
        |Term.ParamClause x

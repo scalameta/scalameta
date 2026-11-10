@@ -648,7 +648,27 @@ private[meta] final class ScannerTokens(
       case _ => currRef(sepRegions)
     }
 
+    /** whether `curr` continues the class or the template of a `new` expression */
+    def continuesNew: Boolean = curr match {
+      case _: Ident | _: Unquote | _: KwThis | _: KwSuper => prev match {
+          case _: KwNew | _: Dot | _: Hash | _: KwWith | _: At | _: Ellipsis => true
+          case _ => false
+        }
+      case _: Dot => prev match {
+          case _: Ident | _: Unquote | _: KwThis | _: KwSuper => true
+          case _: RightBracket => // the qualifier of `super[T]` is one name
+            val open = prevNonTriviaAt(prevNonTriviaAt(prevPos))
+            tokens(open).is[LeftBracket] && prevNonTrivia(open).is[KwSuper]
+          case _ => false
+        }
+      case _: Colon => isAheadNewLine(currPos) // a colon at the line end starts a template body
+      // in a quasiquote, `..$a` stands for names, and `..@$a` for annotations
+      case _: OpenDelim | _: Hash | _: KwWith | _: At | _: Ellipsis => true
+      case _ => false
+    }
+
     def getNonTrivialRegions(regions: List[SepRegion]) = dropRegionLine(regions) match {
+      case RegionNewMark :: rs if !continuesNew => rs
       case RegionExtensionMark :: rs => curr match {
           case _: LeftBrace => RegionTemplateBody :: rs
           case _: LeftParen | _: LeftBracket => regions
