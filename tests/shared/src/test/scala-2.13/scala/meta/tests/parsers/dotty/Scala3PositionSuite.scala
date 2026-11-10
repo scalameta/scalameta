@@ -3374,4 +3374,21 @@ class Scala3PositionSuite extends BasePositionSuite {
     showFieldName = true,
   )
 
+  checkPositions[Stat](
+    """|def f = new A(1) foo
+       |  { x => x }
+       |""".stripMargin,
+    """|Term.ApplyInfix new A(1) foo
+       |  { x => x }
+       |Term.New new A(1)
+       |Init A(1)
+       |Term.ArgClause (1)
+       |Type.ArgClause   @@{ x => x }
+       |Term.Block { x => x }
+       |Term.Function x => x
+       |Term.ParamClause x
+       |Term.Param x
+       |""".stripMargin,
+  )
+
 }

@@ -3640,4 +3640,163 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestError[Source](code, error)
   }
 
+  test("parens: select colon after new prefix, arrow on the same line") {
+    val code =
+      """|def f = g(new A(1).foo: x => x)
+         |""".stripMargin
+    val layout =
+      """|def f = g(new A(1).foo {
+         |  x => x
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        "g",
+        tapply(tselect(Term.New(init("A", List(lit(1)))), "foo"), blk(tfunc(tparam("x"))(tname("x")))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: select colon after an infix new operand, arrow on the same line") {
+    val code =
+      """|def f = g(new A + xs.map: x => x)
+         |""".stripMargin
+    val layout =
+      """|def f = g(new A + xs.map {
+         |  x => x
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        "g",
+        tinfix(
+          Term.New(init("A")),
+          "+",
+          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("new prefix: select, brace on the next line, next statement") {
+    val code =
+      """|def f =
+         |  val a = new A(1).foo
+         |  { x => x }
+         |  a
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val a = new A(1).foo {
+         |    x => x
+         |  }
+         |  a
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("a")),
+          None,
+          tapply(tselect(Term.New(init("A", List(lit(1)))), "foo"), blk(tfunc(tparam("x"))(tname("x")))),
+        ),
+        tname("a"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("new prefix: select in braces, brace on the next line") {
+    val code =
+      """|def f = {
+         |  val a = new A(1).foo
+         |  { x => x }
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val a = new A(1).foo {
+         |    x => x
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(Defn.Val(
+        Nil,
+        List(patvar("a")),
+        None,
+        tapply(tselect(Term.New(init("A", List(lit(1)))), "foo"), blk(tfunc(tparam("x"))(tname("x")))),
+      )),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("new prefix: select, brace argument with a typed extractor pattern") {
+    val code =
+      """|def f = new A(1).foo { case Some(x): B => 1 }
+         |""".stripMargin
+    val layout =
+      """|def f = new A(1).foo {
+         |  case Some(x): B => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect(Term.New(init("A", List(lit(1)))), "foo"),
+        Term.PartialFunction(List(
+          Case(Pat.Typed(Pat.Extract(tname("Some"), List(patvar("x"))), pname("B")), None, lit(1)),
+        )),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("new prefix: select colon, case on the next line with a typed extractor pattern") {
+    val code =
+      """|def f = new A(1).foo:
+         |  case Some(x): B => 1
+         |""".stripMargin
+    val layout =
+      """|def f = new A(1).foo {
+         |  case Some(x): B => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect(Term.New(init("A", List(lit(1)))), "foo"),
+        Term.PartialFunction(List(
+          Case(Pat.Typed(Pat.Extract(tname("Some"), List(patvar("x"))), pname("B")), None, lit(1)),
+        )),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
