@@ -3900,11 +3900,11 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def f = (g: A =>
          |  B) => g
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `;` expected but `=>` found
-         |  B) => g
-         |     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = (g: A => B) => g
+         |""".stripMargin
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, tfunc(tparam("g", pfunc("A")("B")))(tname("g")))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("lambda parameter: function type, lambda arrow on the next line") {
@@ -3913,11 +3913,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |  B)
          |  => g
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `;` expected but `=>` found
-         |  => g
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = (g: A => B) => g
+         |""".stripMargin
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, tfunc(tparam("g", pfunc("A")("B")))(tname("g")))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("lambda parameter: function type, arrow at end of line, in an argument") {
@@ -3925,11 +3925,17 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def f = xs.map((g: A =>
          |  B) => g)
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `)` expected but `=>` found
-         |  B) => g)
-         |     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map((g: A => B) => g)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(tselect("xs", "map"), tfunc(tparam("g", pfunc("A")("B")))(tname("g"))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("parens: case guard, select colon, lambda arrow at end of line") {
@@ -3941,9 +3947,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = x match {
-         |  case y if ys.exists {
-         |    z => z.ok
-         |  } => 1
+         |  case y if (ys.exists: (z => z.ok)) => 1
          |  case _ => 0
          |}
          |""".stripMargin
@@ -3956,7 +3960,7 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("x"),
         Case(
           patvar("y"),
-          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tselect("z", "ok"))))),
+          Some(Term.Ascribe(tselect("ys", "exists"), pfunc("z")(pselect("z", "ok")))),
           int(1),
         ),
         Case(patwildcard, None, int(0)),
@@ -3973,9 +3977,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = x match {
-         |  case y if a && g {
-         |    A => B
-         |  } =>
+         |  case y if a && (g: (A => B)) =>
          |    g => 1
          |}
          |""".stripMargin
@@ -3988,7 +3990,7 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("x"),
         Case(
           patvar("y"),
-          Some(tinfix("a", "&&", tapply("g", blk(tfunc(tparam("A"))(tname("B")))))),
+          Some(tinfix("a", "&&", Term.Ascribe("g", pfunc("A")("B")))),
           tfunc(tparam("g"))(int(1)),
         ),
       ),
