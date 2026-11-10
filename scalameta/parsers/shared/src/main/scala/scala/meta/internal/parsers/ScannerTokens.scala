@@ -1045,6 +1045,18 @@ private[meta] final class ScannerTokens(
       case _ => false
     }
 
+  // the index of the delimiter that closes the one around `pos`, or -1
+  private[parsers] def findCloseDelim(pos: Int): Int = {
+    @tailrec
+    def iter(i: Int, depth: Int): Int = tokens(i) match {
+      case _: OpenDelim => iter(i + 1, depth + 1)
+      case _: CloseDelim => if (depth == 0) i else iter(i + 1, depth - 1)
+      case _: EOF => -1
+      case _ => iter(i + 1, depth)
+    }
+    iter(pos, 0)
+  }
+
   /* the index of the token that ends `cond` if the condition continues to it from `pos`, or -1;
    * as dotty's `followedByToken`, the scan stops at a statement outside braces */
   private def condEndAt(cond: RegionControlCond, pos: Int): Int = {

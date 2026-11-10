@@ -2816,6 +2816,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
         else {
           val argPos = currIndex
           (currToken match {
+            // dotc: a colon after an operator never types a lambda parameter
             case _: Colon => getFewerBracesArgOnColon()
             case _ => null
           }) match {
@@ -2986,7 +2987,10 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     }
   }
 
-  private def getFewerBracesArgOnColon(okSingleLineLambda: Boolean = false): Term =
+  private def getFewerBracesArgOnColon(
+      okSingleLineLambda: Boolean = false,
+      location: Location = NoStat,
+  ): Term =
     if (!dialect.allowFewerBraces) null
     else {
       val colonPos = currIndex
@@ -3015,6 +3019,11 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
                   _: Unquote => false
               case _ => true
             }) => null
+        // dotc: a colon in a parenthesized expression before `) =>` types a parameter
+        case _ if (location eq PostfixStat) && inRegionParen && {
+              val end = findCloseDelim(currIndex)
+              end >= 0 && tokens(nextNonTriviaAt(end)).is[FunctionArrow]
+            } => null
         case _ => tryAhead(tryGetArgAsLambdaBlock(true))
       }
     }
@@ -3100,7 +3109,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       okSingleLineLambda: Boolean = false,
   )(implicit location: Location): Term = {
     val colonPos = currIndex
-    val arg = getFewerBracesArgOnColon(okSingleLineLambda)
+    val arg = getFewerBracesArgOnColon(okSingleLineLambda, location)
     if (arg eq null) null else getApplyOnColonArg(fun, startPos, colonPos, arg)
   }
 
@@ -3110,7 +3119,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   ): Term = {
     val rpPos = prevIndex
     val colonPos = currIndex
-    val arg = getFewerBracesArgOnColon(okSingleLineLambda = true)
+    val arg = getFewerBracesArgOnColon(okSingleLineLambda = true, location)
     if (arg eq null) null
     else {
       val fun = makeTupleTerm(getTupleSingleTerm(_))(lpPos, args, rpPos)
