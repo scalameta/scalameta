@@ -17,14 +17,12 @@ object CommonTrees {
     final def tnameComments(name: String)(begComment: String*)(endComment: String*): Term.Name =
       Term.Name.newBuilder(name).begComment(begComment).endComment(endComment).result()
     final def tnameCapset(name: String) = Term.CapSetName(name)
-    final def tnameOrCapset(name: String): meta.Name with Term.Ref =
-      nameOrCapset(name, tname, tnameCapset)
+    final def tnameOrCapset(name: String): Term.Ref = nameOrCapset(name, tname, tnameCapset)
     implicit def implicitStringToTerm(obj: String): Term.Name = tname(obj)
 
     final def pname(name: String): Type.Name = Type.Name(name)
     final def pnameCapset(name: String) = Type.CapSetName(name)
-    final def pnameOrCapset(name: String): meta.Name with Type.Ref =
-      nameOrCapset(name, pname, pnameCapset)
+    final def pnameOrCapset(name: String): meta.Name = nameOrCapset(name, pname, pnameCapset)
     implicit def implicitStringToType(obj: String): Type.Name = pname(obj)
 
     final def comment(str: String): Tree.Comment = str :: Nil
