@@ -4,7 +4,9 @@ import scala.meta.internal.metacp._
 import scala.meta.internal.metap.PrinterSymtab
 import scala.meta.internal.scalacp.SymbolOps._
 import scala.meta.internal.scalacp.TypeOps._
+import scala.meta.internal.scalacp.{SymlinkChildren, Synthetics}
 import scala.meta.internal.semanticdb.Print
+import scala.meta.internal.{semanticdb => s}
 import scala.meta.metap.Format
 import scala.meta.tests.semanticdb.MetacpSnippets
 
@@ -87,6 +89,16 @@ class ScalacpSuite extends FunSuite with MetacpSnippets {
          |a/C#`<init>`(+1).(y) => param y: Int
          |""".stripMargin,
     )
+  }
+
+  private val ScalaInt = s.TypeRef(s.NoType, "scala/Int#", Nil)
+
+  private def setterParamSig(sig: s.Signature): s.Signature = Synthetics
+    .setterInfos(s.SymbolInformation("a/C#w().", signature = sig), SymlinkChildren).head.signature
+
+  test("#2450: setter of a getter with a method signature") {
+    val sig = s.MethodSignature(Some(s.Scope()), Nil, ScalaInt)
+    assertEquals(setterParamSig(sig), s.ValueSignature(ScalaInt))
   }
 
 }

@@ -55,6 +55,19 @@ class InfoPrinterSuite extends FunSuite {
   private def assertType(tpe: s.Type, expected: String): Unit =
     assertNoDiff(Print.tpe(Format.Compact, tpe, emptyPrinterSymtab), expected)
 
+  private def param(sym: String, name: String, tpe: s.Type): s.SymbolInformation = s
+    .SymbolInformation(
+      symbol = sym,
+      kind = s.SymbolInformation.Kind.PARAMETER,
+      displayName = name,
+      signature = s.ValueSignature(tpe),
+    )
+
+  private def scope(infos: s.SymbolInformation*): s.Scope = s.Scope(hardlinks = infos.toList)
+
+  private def assertSignature(sig: s.Signature, expected: String): Unit =
+    assertEquals(Print.signature(Format.Compact, sig, emptyPrinterSymtab), expected)
+
   test("info printer declaration style renders SemanticDB modifier and kind words") {
     val p = s.SymbolInformation.Property
     val info = s.SymbolInformation(
@@ -291,6 +304,19 @@ class InfoPrinterSuite extends FunSuite {
     val inner =
       applied(s.IntersectionType(List(ref("_empty_/F#"), ref("_empty_/G#"))), ref("_empty_/A#"))
     assertType(s.AnnotatedType(List(ann), inner), "(F & G)[A] @ann")
+  }
+
+  test("#2450: method signature with one group") {
+    val sig = s.MethodSignature(
+      Some(scope(typeParam("_empty_/f().[T]", "T"))),
+      List(
+        scope(param("_empty_/f().(x)", "x", ref("_empty_/A#"))),
+        scope(param("_empty_/f().(y)", "y", ref("_empty_/B#"))),
+      ),
+      ref("_empty_/C#"),
+      List(ref("_empty_/E#")),
+    )
+    assertSignature(sig, "[T](x: A)(y: B) throws E: C")
   }
 
 }
