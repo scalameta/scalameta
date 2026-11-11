@@ -3391,4 +3391,569 @@ class Scala3PositionSuite extends BasePositionSuite {
        |""".stripMargin,
   )
 
+  checkPositions[Stat](
+    """|def f = xs.map: x => x
+       |  .foo
+       |""".stripMargin,
+    """|Term.Select xs.map: x => x
+       |  .foo [8:xs.map: x => x...:29)
+       |Term.Apply xs.map: x => x [8:xs.map: x => x:22)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x => x [14<: x => x>22)
+       |Term.Function x => x [16:x => x:22)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: x => x
+       |  + 1
+       |""".stripMargin,
+    """|Term.ApplyInfix xs.map: x => x
+       |  + 1 [8:xs.map: x => x...:28)
+       |Term.Apply xs.map: x => x [8:xs.map: x => x:22)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x => x [14<: x => x>22)
+       |Term.Function x => x [16:x => x:22)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |Type.ArgClause   + @@1 [27::27)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    "def f = xs.map: x => x",
+    """|Term.Apply xs.map: x => x [8:xs.map: x => x:22)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x => x [14<: x => x>22)
+       |Term.Function x => x [16:x => x:22)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: x => y => x + y
+       |""".stripMargin,
+    """|Term.Apply xs.map: x => y => x + y [8:xs.map: x => y => x + y:31)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x => y => x + y [14<: x => y => x + y>31)
+       |Term.Function x => y => x + y [16:x => y => x + y:31)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |Term.Function y => x + y [21:y => x + y:31)
+       |Term.ParamClause y [21:y:22)
+       |Term.Param y [21:y:22)
+       |Term.ApplyInfix x + y [26:x + y:31)
+       |Type.ArgClause def f = xs.map: x => y => x + @@y [30::30)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: x => y =>
+       |  x + y
+       |""".stripMargin,
+    """|Term.Apply xs.map: x => y =>
+       |  x + y [8:xs.map: x => y =>...:33)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x => y =>
+       |  x + y [14<: x => y =>...>33)
+       |Term.Function x => y =>
+       |  x + y [16:x => y =>...:33)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |Term.Function y =>
+       |  x + y [21:y =>...:33)
+       |Term.ParamClause y [21:y:22)
+       |Term.Param y [21:y:22)
+       |Term.ApplyInfix x + y [28:x + y:33)
+       |Type.ArgClause   x + @@y [32::32)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: [T] => (x: T) =>
+       |  x
+       |""".stripMargin,
+    """|Term.Ascribe xs.map: [T] => (x: T) =>
+       |  x [8:xs.map: [T] => (x: T) =>...:36)
+       |Term.Select xs.map [8:xs.map:14)
+       |Type.PolyFunction [T] => (x: T) =>
+       |  x [16:[T] => (x: T) =>...:36)
+       |Type.ParamClause [T] [16:[T]:19)
+       |Type.ParamClause def f = xs.map: [T@@] => (x: T) => [18::18)
+       |Type.Bounds def f = xs.map: [T@@] => (x: T) => [18::18)
+       |Type.Function (x: T) =>
+       |  x [23:(x: T) =>...:36)
+       |Type.FuncParamClause (x: T) [23:(x: T):29)
+       |Type.TypedParam x: T [24:x: T:28)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map:
+       |  case y => y
+       |""".stripMargin,
+    """|Term.Apply xs.map:
+       |  case y => y [8:xs.map:...:29)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.PartialFunction :
+       |  case y => y [14<:...>29)
+       |Case case y => y [18:case y => y:29)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  case (a, b) => a
+       |""".stripMargin,
+    """|Term.PartialFunction case (a, b) => a [10:case (a, b) => a:26)
+       |Case case (a, b) => a [10:case (a, b) => a:26)
+       |Pat.Tuple (a, b) [15:(a, b):21)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: x => a + ys.map: y => y
+       |""".stripMargin,
+    """|Term.Apply xs.map: x => a + ys.map: y => y [8:xs.map: x => a + ys.map: y => y:39)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x => a + ys.map: y => y [14<: x => a + ys.map: y => y>39)
+       |Term.Function x => a + ys.map: y => y [16:x => a + ys.map: y => y:39)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |Term.ApplyInfix a + ys.map: y => y [21:a + ys.map: y => y:39)
+       |Type.ArgClause def f = xs.map: x => a + @@ys.map: y => y [25::25)
+       |Term.Apply ys.map: y => y [25:ys.map: y => y:39)
+       |Term.Select ys.map [25:ys.map:31)
+       |Term.Block : y => y [31<: y => y>39)
+       |Term.Function y => y [33:y => y:39)
+       |Term.ParamClause y [33:y:34)
+       |Term.Param y [33:y:34)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: x => foo(x,
+       |  1)
+       |""".stripMargin,
+    """|Term.Apply xs.map: x => foo(x,
+       |  1) [8:xs.map: x => foo(x,...:32)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x => foo(x,
+       |  1) [14<: x => foo(x,...>32)
+       |Term.Function x => foo(x,
+       |  1) [16:x => foo(x,...:32)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |Term.Apply foo(x,
+       |  1) [21:foo(x,...:32)
+       |Term.ArgClause (x,
+       |  1) [24:(x,...:32)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { x: Int =>
+       |  x + 1
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { x: Int =>
+       |  x + 1
+       |} [8:foo { x: Int =>...:33)
+       |Term.Block { x: Int =>
+       |  x + 1
+       |} [12:{ x: Int =>...:33)
+       |Term.Apply x: Int =>
+       |  x + 1 [14:x: Int =>...:31)
+       |Term.Block : Int =>
+       |  x + 1 [15<: Int =>...>31)
+       |Term.Function Int =>
+       |  x + 1 [17:Int =>...:31)
+       |Term.ParamClause Int [17:Int:20)
+       |Term.Param Int [17:Int:20)
+       |Term.ApplyInfix x + 1 [26:x + 1:31)
+       |Type.ArgClause   x + @@1 [30::30)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Source](
+    """|object A:
+       |  given Foo with { self: Bar => def f = 1 }
+       |""".stripMargin,
+    """|Defn.Object object A:
+       |  given Foo with { self: Bar => def f = 1 } [0:object A:...:53)
+       |Template :
+       |  given Foo with { self: Bar => def f = 1 } [8<:...>53)
+       |Template.Body :
+       |  given Foo with { self: Bar => def f = 1 } [8<:...>53)
+       |Defn.Given given Foo with { self: Bar => def f = 1 } [12:given Foo with { self: Bar => def f = 1 }:53)
+       |Template Foo with { self: Bar => def f = 1 } [18:Foo with { self: Bar => def f = 1 }:53)
+       |Template.Body { self: Bar => def f = 1 } [27:{ self: Bar => def f = 1 }:53)
+       |Self self: Bar => [29:self: Bar =>:41)
+       |Defn.Def def f = 1 [42:def f = 1:51)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { a }: x => x
+       |""".stripMargin,
+    """|Term.Apply foo { a }: x => x [8:foo { a }: x => x:25)
+       |Term.Apply foo { a } [8:foo { a }:17)
+       |Term.Block { a } [12:{ a }:17)
+       |Term.Block : x => x [17<: x => x>25)
+       |Term.Function x => x [19:x => x:25)
+       |Term.ParamClause x [19:x:20)
+       |Term.Param x [19:x:20)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map { implicit x: Int => x }
+       |""".stripMargin,
+    """|Term.Apply xs.map { implicit x: Int => x } [8:xs.map { implicit x: Int => x }:39)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block { implicit x: Int => x } [15:{ implicit x: Int => x }:39)
+       |Term.Function implicit x: Int => x [17:implicit x: Int => x:37)
+       |Term.ParamClause implicit x: Int [17:implicit x: Int:32)
+       |Term.Param implicit x: Int [17:implicit x: Int:32)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Source](
+    """|object A:
+       |  given f: Ord[Int] => Ord[List[Int]] = ???
+       |""".stripMargin,
+    """|Defn.Object object A:
+       |  given f: Ord[Int] => Ord[List[Int]] = ??? [0:object A:...:53)
+       |Template :
+       |  given f: Ord[Int] => Ord[List[Int]] = ??? [8<:...>53)
+       |Template.Body :
+       |  given f: Ord[Int] => Ord[List[Int]] = ??? [8<:...>53)
+       |Defn.GivenAlias given f: Ord[Int] => Ord[List[Int]] = ??? [12:given f: Ord[Int] => Ord[List[Int]] = ???:53)
+       |Member.ParamClauseGroup Ord[Int] => [21:Ord[Int] =>:32)
+       |Type.ParamClause   given f: @@Ord[Int] => Ord[List[Int]] = ??? [21::21)
+       |Term.ParamClause Ord[Int] [21:Ord[Int]:29)
+       |Term.Param Ord[Int] [21:Ord[Int]:29)
+       |Type.Apply Ord[Int] [21:Ord[Int]:29)
+       |Type.ArgClause [Int] [24:[Int]:29)
+       |Type.Apply Ord[List[Int]] [33:Ord[List[Int]]:47)
+       |Type.ArgClause [List[Int]] [36:[List[Int]]:47)
+       |Type.Apply List[Int] [37:List[Int]:46)
+       |Type.ArgClause [Int] [41:[Int]:46)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: x => try a catch case e => b
+       |  .foo
+       |""".stripMargin,
+    """|Term.Apply xs.map: x => try a catch case e => b
+       |  .foo [8:xs.map: x => try a catch case e => b...:51)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x => try a catch case e => b
+       |  .foo [14<: x => try a catch case e => b...>51)
+       |Term.Function x => try a catch case e => b
+       |  .foo [16:x => try a catch case e => b...:51)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |Term.Try try a catch case e => b
+       |  .foo [21:try a catch case e => b...:51)
+       |Term.CasesBlock case e => b
+       |  .foo [33:case e => b...:51)
+       |Case case e => b
+       |  .foo [33:case e => b...:51)
+       |Term.Select b
+       |  .foo [43:b...:51)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: x => x
+       |  // comment
+       |  .foo
+       |""".stripMargin,
+    """|Term.Select xs.map: x => x
+       |  // comment
+       |  .foo [8:xs.map: x => x...:42)
+       |Term.Apply xs.map: x => x [8:xs.map: x => x:22)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x => x [14<: x => x>22)
+       |Term.Function x => x [16:x => x:22)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = for (x <- xs.map: y => y) yield x
+       |""".stripMargin,
+    """|Term.ForYield for (x <- xs.map: y => y) yield x [8:for (x <- xs.map: y => y) yield x:41)
+       |Term.EnumeratorsBlock (x <- xs.map: y => y) [12:(x <- xs.map: y => y):33)
+       |Enumerator.Generator x <- xs.map: y => y [13:x <- xs.map: y => y:32)
+       |Term.Ascribe xs.map: y => y [18:xs.map: y => y:32)
+       |Term.Select xs.map [18:xs.map:24)
+       |Type.Function y => y [26:y => y:32)
+       |Type.FuncParamClause y [26:y:27)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: (x: Int,
+       |  y: Int) => x
+       |""".stripMargin,
+    """|Term.Apply xs.map: (x: Int,
+       |  y: Int) => x [8:xs.map: (x: Int,...:39)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : (x: Int,
+       |  y: Int) => x [14<: (x: Int,...>39)
+       |Term.Function (x: Int,
+       |  y: Int) => x [16:(x: Int,...:39)
+       |Term.ParamClause (x: Int,
+       |  y: Int) [16:(x: Int,...:34)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val x: Int = foo: y => y
+       |""".stripMargin,
+    """|Term.Apply foo: y => y [13:foo: y => y:24)
+       |Term.Block : y => y [16<: y => y>24)
+       |Term.Function y => y [18:y => y:24)
+       |Term.ParamClause y [18:y:19)
+       |Term.Param y [18:y:19)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: x => x match { case 1 => 2 }
+       |  .foo
+       |""".stripMargin,
+    """|Term.Select xs.map: x => x match { case 1 => 2 }
+       |  .foo [8:xs.map: x => x match { case 1 => 2 }...:51)
+       |Term.Apply xs.map: x => x match { case 1 => 2 } [8:xs.map: x => x match { case 1 => 2 }:44)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x => x match { case 1 => 2 } [14<: x => x match { case 1 => 2 }>44)
+       |Term.Function x => x match { case 1 => 2 } [16:x => x match { case 1 => 2 }:44)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |Term.Match x match { case 1 => 2 } [21:x match { case 1 => 2 }:44)
+       |Term.CasesBlock { case 1 => 2 } [29:{ case 1 => 2 }:44)
+       |Case case 1 => 2 [31:case 1 => 2:42)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Source](
+    """|object A:
+       |  this: B => def f = 1
+       |""".stripMargin,
+    """|Defn.Object object A:
+       |  this: B => def f = 1 [0:object A:...:32)
+       |Template :
+       |  this: B => def f = 1 [8<:...>32)
+       |Template.Body :
+       |  this: B => def f = 1 [8<:...>32)
+       |Self this: B => [12:this: B =>:22)
+       |Defn.Def def f = 1 [23:def f = 1:32)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: x => /* a
+       |  b */ x
+       |""".stripMargin,
+    """|Term.Apply xs.map: x => /* a
+       |  b */ x [8:xs.map: x => /* a...:34)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x => /* a
+       |  b */ x [14<: x => /* a...>34)
+       |Term.Function x => /* a
+       |  b */ x [16:x => /* a...:34)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val f = (xs.map: x => x)
+       |""".stripMargin,
+    """|Term.Ascribe xs.map: x => x [9:xs.map: x => x:23)
+       |Term.Select xs.map [9:xs.map:15)
+       |Type.Function x => x [17:x => x:23)
+       |Type.FuncParamClause x [17:x:18)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Source](
+    """|object A:
+       |  _: B => def f = 1
+       |""".stripMargin,
+    """|Defn.Object object A:
+       |  _: B => def f = 1 [0:object A:...:29)
+       |Template :
+       |  _: B => def f = 1 [8<:...>29)
+       |Template.Body :
+       |  _: B => def f = 1 [8<:...>29)
+       |Self _: B => [12:_: B =>:19)
+       |Defn.Def def f = 1 [20:def f = 1:29)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: x => // c
+       |  x + 1
+       |""".stripMargin,
+    """|Term.Apply xs.map: x => // c
+       |  x + 1 [8:xs.map: x => // c...:33)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x => // c
+       |  x + 1 [14<: x => // c...>33)
+       |Term.Function x => // c
+       |  x + 1 [16:x => // c...:33)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |Term.ApplyInfix x + 1 [28:x + 1:33)
+       |Type.ArgClause   x + @@1 [32::32)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = try a catch case e => b
+       |  .foo
+       |""".stripMargin,
+    """|Term.Try try a catch case e => b
+       |  .foo [8:try a catch case e => b...:38)
+       |Term.CasesBlock case e => b
+       |  .foo [20:case e => b...:38)
+       |Case case e => b
+       |  .foo [20:case e => b...:38)
+       |Term.Select b
+       |  .foo [30:b...:38)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = !1:
+       |  x => x
+       |""".stripMargin,
+    """|Term.ApplyUnary !1:
+       |  x => x [8:!1:...:20)
+       |Term.Apply 1:
+       |  x => x [9:1:...:20)
+       |Term.Block :
+       |  x => x [10<:...>20)
+       |Term.Function x => x [14:x => x:20)
+       |Term.ParamClause x [14:x:15)
+       |Term.Param x [14:x:15)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val x = y: Int ?=> Boolean
+       |""".stripMargin,
+    """|Term.Apply y: Int ?=> Boolean [8:y: Int ?=> Boolean:26)
+       |Term.Block : Int ?=> Boolean [9<: Int ?=> Boolean>26)
+       |Term.ContextFunction Int ?=> Boolean [11:Int ?=> Boolean:26)
+       |Term.ParamClause Int [11:Int:14)
+       |Term.Param Int [11:Int:14)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case 1 => a
+       |  case y: Int => b
+       |""".stripMargin,
+    """|Term.Match x match
+       |  case 1 => a
+       |  case y: Int => b [8:x match...:48)
+       |Term.CasesBlock case 1 => a
+       |  case y: Int => b [18:case 1 => a...:48)
+       |Case case 1 => a [18:case 1 => a:29)
+       |Case case y: Int => b [32:case y: Int => b:48)
+       |Pat.Typed y: Int [37:y: Int:43)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map: x =>  y => x + y
+       |""".stripMargin,
+    """|Term.Apply xs.map: x =>  y => x + y [8:xs.map: x =>  y => x + y:32)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block : x =>  y => x + y [14<: x =>  y => x + y>32)
+       |Term.Function x =>  y => x + y [16:x =>  y => x + y:32)
+       |Term.ParamClause x [16:x:17)
+       |Term.Param x [16:x:17)
+       |Term.Function y => x + y [22:y => x + y:32)
+       |Term.ParamClause y [22:y:23)
+       |Term.Param y [22:y:23)
+       |Term.ApplyInfix x + y [27:x + y:32)
+       |Type.ArgClause def f = xs.map: x =>  y => x + @@y [31::31)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = try a catch case e => b; c
+       |""".stripMargin,
+    """|Term.Try try a catch case e => b; c [8:try a catch case e => b; c:34)
+       |Term.CasesBlock case e => b; c [20:case e => b; c:34)
+       |Case case e => b; c [20:case e => b; c:34)
+       |Term.Block b; c [30:b; c:34)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  try a catch case e => b
+       |    c
+       |  d
+       |""".stripMargin,
+    """|Term.Block try a catch case e => b
+       |    c
+       |  d [10:try a catch case e => b...:43)
+       |Term.Try try a catch case e => b
+       |    c [10:try a catch case e => b...:39)
+       |Term.CasesBlock case e => b
+       |    c [22:case e => b...:39)
+       |Case case e => b
+       |    c [22:case e => b...:39)
+       |Term.Block b
+       |    c [32:b...:39)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
 }

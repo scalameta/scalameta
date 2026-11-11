@@ -202,6 +202,17 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(reprintTwice(code, dialects.Scala3), (printed, printed))
   }
 
+  test("colon and context function type: name prefix") {
+    val code = "object A { val x = tname: Int ?=> Boolean }"
+    val printed =
+      """|object A {
+         |  val x = tname {
+         |    Int ?=> Boolean
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (printed, printed))
+  }
+
   test("case body: a block with its own comment, printed without comments") {
     val body = Term.Block.newBuilder(List(tname("a"), tname("b"))).begComment(Seq("// c")).result()
     val tree = Term.Match(tname("x"), List(Case(int(1), None, body)), Nil)

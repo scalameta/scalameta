@@ -270,4 +270,16 @@ class DottySuccessSuite extends TreeSuiteBase {
     assertTree(quoted)(blk(tname("Foo"), lit("any message")))
   }
 
+  test("SIP-75 colon: lambda with spliced params") {
+    import dialects.Scala3
+    val ps = List(tparam("a"), tparam("b"))
+    val layout =
+      """|xs.map {
+         |  (a, b) => x
+         |}""".stripMargin
+    checkTree(q"xs.map: ..$ps => x", layout)(
+      tapply(tselect("xs", "map"), blk(tfunc(tparam("a"), tparam("b"))(tname("x")))),
+    )
+  }
+
 }
