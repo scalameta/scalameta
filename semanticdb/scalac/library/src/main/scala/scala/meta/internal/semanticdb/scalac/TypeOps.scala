@@ -149,8 +149,7 @@ trait TypeOps {
           s.TypeSignature(stparams, slo, shi)
         case gtpe: g.PolyType =>
           val gtparams = gtpe.typeParams
-          loop(gtpe.resultType) match {
-            case s.NoSignature => s.NoSignature
+          loop(gtpe.resultType) match { // match only what loop returns
             case t: s.ClassSignature =>
               val stparams = gtparams.sscope(linkMode)
               t.copy(typeParameters = Some(stparams))
@@ -164,6 +163,7 @@ trait TypeOps {
               val stparams = gtparams.sscope(HardlinkChildren)
               val stpe = t.tpe
               s.ValueSignature(s.UniversalType(Some(stparams), stpe))
+            case t => t
           }
         case g.NoType => s.NoSignature
         case g.ErrorType => s.NoSignature

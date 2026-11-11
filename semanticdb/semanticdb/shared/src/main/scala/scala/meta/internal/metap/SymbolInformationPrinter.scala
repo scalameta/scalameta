@@ -147,7 +147,7 @@ trait SymbolInformationPrinter extends BasePrinter {
           }
         }
       case sig: ValueSignature => pprint(sig.tpe)
-      case NoSignature => str("<?>")
+      case _ => str("<?>")
     }
 
     def pprint(tpe: Type): Unit = pprintTpe(tpe, outer = true)
