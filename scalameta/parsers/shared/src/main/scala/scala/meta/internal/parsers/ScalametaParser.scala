@@ -812,7 +812,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   private def markSelfArrow(idx: Int): Unit = if (options.captureComments) selfArrows += idx
 
   private def commentsTrail(token: Token): Boolean = token match {
-    case _: SymbolicKeyword with ContKeyword | _: Comma | _: Semicolon | _: RightParen => true
+    case t: SymbolicKeyword => t.is[ContKeyword]
+    case _: Comma | _: Semicolon | _: RightParen => true
     case _ => false
   }
 
@@ -1215,32 +1216,31 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     ellipsis(ell, extraSkip)
   }
 
-  def ellipsis[T <: Tree: AstInfo: ClassTag](ell: Ellipsis): T with Quasi = ellipsis(ell, {})
+  def ellipsis[T <: Tree: AstInfo: ClassTag](ell: Ellipsis): T = ellipsis(ell, {})
 
-  def ellipsis[T <: Tree: AstInfo: ClassTag](ell: Ellipsis, extraSkip: => Unit): T with Quasi =
-    autoPos {
-      if (!dialect.allowUnquotes) syntaxError(s"$dialect doesn't support ellipses", at = ell)
-      next()
-      extraSkip
-      // unquote returns a rank=0 quasi tree
-      val tree = currToken match {
-        case _: LeftParen => inParensOnOpen(unquote[T])
-        case _: LeftBrace => inBracesOnOpen(unquote[T])
-        case t: Unquote => unquote[T](t)
-        case t => syntaxError(s"$$, ( or { expected but ${t.name} found", at = t)
-      }
-      // NOTE: In the case of an unquote nested directly under ellipsis, we get a bit of a mixup.
-      // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
-      // For example, in `new { ..$stats }`, ellipsis's pt is List[Stat], but quasi's pt is Term.
-      // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
-      assert(
-        classTag[T].runtimeClass.isAssignableFrom(tree.pt),
-        s"ellipsis: $ell,\ntree: $tree,\nstructure: ${tree.structure}",
-      )
-      quasi[T](ell.rank, tree)
+  def ellipsis[T <: Tree: AstInfo: ClassTag](ell: Ellipsis, extraSkip: => Unit): T = autoPos {
+    if (!dialect.allowUnquotes) syntaxError(s"$dialect doesn't support ellipses", at = ell)
+    next()
+    extraSkip
+    // unquote returns a rank=0 quasi tree
+    val tree = currToken match {
+      case _: LeftParen => inParensOnOpen(unquote[T])
+      case _: LeftBrace => inBracesOnOpen(unquote[T])
+      case t: Unquote => unquote[T](t)
+      case t => syntaxError(s"$$, ( or { expected but ${t.name} found", at = t)
     }
+    // NOTE: In the case of an unquote nested directly under ellipsis, we get a bit of a mixup.
+    // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
+    // For example, in `new { ..$stats }`, ellipsis's pt is List[Stat], but quasi's pt is Term.
+    // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
+    assert(
+      classTag[T].runtimeClass.isAssignableFrom(tree.asInstanceOf[Quasi].pt),
+      s"ellipsis: $ell,\ntree: $tree,\nstructure: ${tree.structure}",
+    )
+    quasi[T](ell.rank, tree)
+  }
 
-  private def unquoteAt[T <: Tree: AstInfo](idx: Int, unquote: Token): T with Quasi = {
+  private def unquoteAt[T <: Tree: AstInfo](idx: Int, unquote: Token): T = {
     assert(unquote.input.chars(unquote.start + 1) != '$', "Expected unquote to start with $")
     val unquoteDialect = dialect.unquoteParentDialect
     if (null eq unquoteDialect) syntaxError(s"$dialect doesn't support unquotes", at = unquote)
@@ -1260,12 +1260,12 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     copyPos(parsed)(quasi[T](0, parsed))
   }
 
-  private def unquote[T <: Tree: AstInfo](unquote: Token): T with Quasi = {
+  private def unquote[T <: Tree: AstInfo](unquote: Token): T = {
     next()
     unquoteAt[T](prevIndex, unquote)
   }
 
-  def unquote[T <: Tree: AstInfo]: T with Quasi = currToken match {
+  def unquote[T <: Tree: AstInfo]: T = currToken match {
     case t: Unquote => unquote[T](t)
     case t => unreachable(t)
   }
@@ -3373,7 +3373,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
   def entrypointEnumerator(): Enumerator = enumerator()
 
-  private def generator(): Enumerator with Tree.WithBody = autoPos {
+  private def generator(): Enumerator = autoPos {
     if (acceptOpt[KwVal])
       deprecationWarning("val keyword in for comprehension is deprecated", at = prevToken)
     val isCase = acceptOpt[KwCase]
@@ -3970,10 +3970,10 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
         case t: Ellipsis => ellipsis[Term.Param](t, 1)
         case t: Unquote =>
           val name = unquote[Name](t)
-          if (endParamQuasi) name.become[Term.Param]
+          if (endParamQuasi) name.asInstanceOf[Quasi].become[Term.Param]
           else if (acceptOpt[Colon]) getParam(name, Some(getParamType))
           else if (at[Equals]) getParam(name, None)
-          else getParam(anonNameAt(name), Some(name.become[Type]))
+          else getParam(anonNameAt(name), Some(name.asInstanceOf[Quasi].become[Type]))
         case _ if !peek[Colon] => getParam(anonName(), Some(getParamType))
         case t: Ident =>
           val name = termName(t)
@@ -4822,7 +4822,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       case _: Underscore => withName(namePlaceholder())
       case t: Unquote =>
         val self = unquote[Self](t)
-        if (at[Colon]) withName(self.become[Name]) else withSelf(self)
+        if (at[Colon]) withName(self.asInstanceOf[Quasi].become[Name]) else withSelf(self)
       case _ => Left("expected identifier, `this' or unquote")
     }
   }
@@ -5347,12 +5347,12 @@ object ScalametaParser {
   }
 
   @inline
-  private def quasi[T <: Tree](rank: Int, tree: Tree)(implicit astInfo: AstInfo[T]): T with Quasi =
-    astInfo.quasi(rank, tree)
+  private def quasi[T <: Tree](rank: Int, tree: Tree)(implicit astInfo: AstInfo[T]): T = astInfo
+    .quasi(rank, tree)
 
-  private def reellipsis[T <: Tree: AstInfo](q: Quasi, rank: Int): T = {
-    val became = q.become[T].asInstanceOf[T with Quasi]
-    if (became.rank != rank) copyPos(became)(quasi[T](rank, became.tree)) else became
+  private def reellipsis[T <: Tree: AstInfo](q: Quasi, rank: Int): T = q.become[T] match {
+    case became: Quasi if became.rank != rank => copyPos(became)(quasi[T](rank, became.tree))
+    case became => became
   }
 
   private implicit class XtensionList[A <: Tree](private val list: List[A]) extends AnyVal {
