@@ -4016,4 +4016,557 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("block colon, literal on the next line") {
+    val code =
+      """|def f = { a }:
+         |  1
+         |""".stripMargin
+    val layout =
+      """|def f = ({
+         |  a
+         |}) {
+         |  1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, tapply(blk(tname("a")), blk(int(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: block colon, literal on the next line") {
+    val code =
+      """|def f = g({ a }:
+         |  1
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = g(({
+         |  a
+         |}) {
+         |  1
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, tapply("g", tapply(blk(tname("a")), blk(int(1)))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: block colon, lambda on the next line") {
+    val code =
+      """|def f = g({ a }:
+         |  y => y
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = g(({
+         |  a
+         |}) {
+         |  y => y
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("g", tapply(blk(tname("a")), blk(tfunc(tparam("y"))(tname("y"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("brace argument colon, literal on the next line") {
+    val code =
+      """|def f = xs.foo { a }:
+         |  1
+         |""".stripMargin
+    val layout =
+      """|def f = xs.foo {
+         |  a
+         |} {
+         |  1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(tapply(tselect("xs", "foo"), blk(tname("a"))), blk(int(1))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: brace argument colon, literal on the next line") {
+    val code =
+      """|def f = g(xs.foo { a }:
+         |  1
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = g(xs.foo {
+         |  a
+         |} {
+         |  1
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("g", tapply(tapply(tselect("xs", "foo"), blk(tname("a"))), blk(int(1)))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: brace argument colon, lambda on the next line") {
+    val code =
+      """|def f = g(xs.foo { a }:
+         |  y => y
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = g(xs.foo {
+         |  a
+         |} {
+         |  y => y
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        "g",
+        tapply(tapply(tselect("xs", "foo"), blk(tname("a"))), blk(tfunc(tparam("y"))(tname("y")))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("match colon, literal on the next line") {
+    val code =
+      """|def f = x match { case _ => g }:
+         |  1
+         |""".stripMargin
+    val layout =
+      """|def f = (x match {
+         |  case _ => g
+         |}) {
+         |  1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(tmatch(tname("x"), Case(patwildcard, None, tname("g"))), blk(int(1))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: match colon, literal on the next line") {
+    val code =
+      """|def f = g(x match { case _ => g }:
+         |  1
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = g((x match {
+         |  case _ => g
+         |}) {
+         |  1
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("g", tapply(tmatch(tname("x"), Case(patwildcard, None, tname("g"))), blk(int(1)))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: match colon, lambda on the next line") {
+    val code =
+      """|def f = g(x match { case _ => g }:
+         |  y => y
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = g((x match {
+         |  case _ => g
+         |}) {
+         |  y => y
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        "g",
+        tapply(
+          tmatch(tname("x"), Case(patwildcard, None, tname("g"))),
+          blk(tfunc(tparam("y"))(tname("y"))),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("new anonymous colon, literal on the next line") {
+    val code =
+      """|def f = new A {}:
+         |  1
+         |""".stripMargin
+    val layout =
+      """|def f = (new A {}) {
+         |  1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(Term.NewAnonymous(tpl(List(init("A")), Nil)), blk(int(1))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: new anonymous colon, literal on the next line") {
+    val code =
+      """|def f = g(new A {}:
+         |  1
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = g((new A {}) {
+         |  1
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("g", tapply(Term.NewAnonymous(tpl(List(init("A")), Nil)), blk(int(1)))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: new anonymous colon, lambda on the next line") {
+    val code =
+      """|def f = g(new A {}:
+         |  y => y
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = g((new A {}) {
+         |  y => y
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        "g",
+        tapply(Term.NewAnonymous(tpl(List(init("A")), Nil)), blk(tfunc(tparam("y"))(tname("y")))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix operand colon: block, type on the next line") {
+    val code =
+      """|def f = xs ++ { a }:
+         |  Int
+         |""".stripMargin
+    val layout =
+      """|def f = xs ++ ({
+         |  a
+         |}) {
+         |  Int
+         |}
+         |""".stripMargin
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tinfix("xs", "++", tapply(blk(tname("a")), blk(tname("Int")))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix operand colon: block, type on the next line, in an argument") {
+    val code =
+      """|def f = h(xs ++ { a }:
+         |  Int)
+         |""".stripMargin
+    val layout =
+      """|def f = h(xs ++ ({
+         |  a
+         |}) {
+         |  Int
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("h", tinfix("xs", "++", tapply(blk(tname("a")), blk(tname("Int"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix operand colon: block, lambda on the next line, in an argument") {
+    val code =
+      """|def f = h(xs ++ { a }:
+         |  y => y)
+         |""".stripMargin
+    val layout =
+      """|def f = h(xs ++ ({
+         |  a
+         |}) {
+         |  y => y
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("h", tinfix("xs", "++", tapply(blk(tname("a")), blk(tfunc(tparam("y"))(tname("y")))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix operand colon: brace argument, type on the next line") {
+    val code =
+      """|def f = xs ++ ys.foo { a }:
+         |  Int
+         |""".stripMargin
+    val layout =
+      """|def f = xs ++ ys.foo {
+         |  a
+         |} {
+         |  Int
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tinfix("xs", "++", tapply(tapply(tselect("ys", "foo"), blk(tname("a"))), blk(tname("Int")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("block colon, type on the next line at the same indent") {
+    val code =
+      """|def f =
+         |  { a }:
+         |  Int
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: expected fewer-braces method body
+         |  { a }:
+         |       ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("select colon, literal on the next line") {
+    val code =
+      """|def f = xs.map:
+         |  1
+         |""".stripMargin
+    val layout =
+      """|def f = xs.map {
+         |  1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, tapply(tselect("xs", "map"), blk(int(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("apply colon, literal on the next line") {
+    val code =
+      """|def f = g(1):
+         |  1
+         |""".stripMargin
+    val layout =
+      """|def f = g(1) {
+         |  1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, tapply(tapply("g", int(1)), blk(int(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("type apply colon, literal on the next line") {
+    val code =
+      """|def f = g[Int]:
+         |  1
+         |""".stripMargin
+    val layout =
+      """|def f = g[Int] {
+         |  1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, tapply(tapplytype("g", pname("Int")), blk(int(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: select colon, lambda on the next line") {
+    val code =
+      """|def f = g(xs.map:
+         |  y => y
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = g(xs.map {
+         |  y => y
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("g", tapply(tselect("xs", "map"), blk(tfunc(tparam("y"))(tname("y"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: apply colon, lambda on the next line") {
+    val code =
+      """|def f = h(g(1):
+         |  y => y
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = h(g(1) {
+         |  y => y
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("h", tapply(tapply("g", int(1)), blk(tfunc(tparam("y"))(tname("y"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: type apply colon, lambda on the next line") {
+    val code =
+      """|def f = h(g[Int]:
+         |  y => y
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = h(g[Int] {
+         |  y => y
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("h", tapply(tapplytype("g", pname("Int")), blk(tfunc(tparam("y"))(tname("y"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("parens: this colon, lambda on the next line") {
+    val code =
+      """|def f = g(this:
+         |  y => y
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = g(this {
+         |  y => y
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("g", tapply(Term.This(anon), blk(tfunc(tparam("y"))(tname("y"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("refinement: type alias, type apply colon, declaration on the next line") {
+    val code =
+      """|type T = A[Int]:
+         |  def f: Int
+         |""".stripMargin
+    val layout =
+      """|type T = A[Int] {
+         |  def f: Int
+         |}
+         |""".stripMargin
+    val tree = Defn.Type(
+      Nil,
+      pname("T"),
+      Nil,
+      Type.Refine(Some(papply("A", "Int")), List(Decl.Def(Nil, tname("f"), Nil, pname("Int")))),
+      noBounds,
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("refinement: type argument, name colon, declaration on the next line") {
+    val code =
+      """|type T = F[A:
+         |  def g: Int
+         |]
+         |""".stripMargin
+    val layout =
+      """|type T = F[A {
+         |  def g: Int
+         |}]
+         |""".stripMargin
+    val tree = Defn.Type(
+      Nil,
+      pname("T"),
+      Nil,
+      papply("F", Type.Refine(Some(pname("A")), List(Decl.Def(Nil, tname("g"), Nil, pname("Int"))))),
+      noBounds,
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("refinement: parameter type, name colon, declaration on the next line") {
+    val code =
+      """|def f(x: A:
+         |  def g: Int
+         |) = 1
+         |""".stripMargin
+    val layout =
+      """|def f(x: A {
+         |  def g: Int
+         |}) = 1
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      List(List(
+        tparam("x", Type.Refine(Some(pname("A")), List(Decl.Def(Nil, tname("g"), Nil, pname("Int"))))),
+      )),
+      None,
+      int(1),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
