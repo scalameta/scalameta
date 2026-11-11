@@ -1,4 +1,5 @@
 import org.scalameta.build.Extensions._
+import org.scalameta.build.ScalaPB._
 import org.scalameta.build.Versions._
 import org.scalameta.build._
 
@@ -802,24 +803,11 @@ lazy val mergeSettings = Def.settings(
   mimaCurrentClassfiles := fileOf.value((Compile / Keys.`package`).value),
 )
 
-// for SIP-51, the newest ScalaPB built against the earliest Scala 2.13.x we support
-def scalapbVersion = Def.setting(if (scalaVersion.value == "2.13.15") "0.11.17" else "0.11.20")
-
 lazy val protobufSettings = Def.settings(
   // sbt 2 puts managed sources in the sources jar already, and adding them duplicates the entries
-  Compile / PB.targets := Seq {
-    /* sbt-protoc loads the generator in a classloader of its own, so the meta-build needs no
-     * scalapb compilerplugin, whose Scala 3 build wants another protoc-bridge than sbt-protoc */
-    val artifact = protocbridge
-      .Artifact("com.thesamet.scalapb", "compilerplugin_2.13", scalapbVersion.value)
-    protocbridge.Target(
-      generator = protocbridge.SandboxedJvmGenerator
-        .forModule("scala", artifact, "scalapb.ScalaPbCodeGenerator$", Nil),
-      outputPath = (Compile / sourceManaged).value / "protobuf",
-      options = Seq("flat_package"), // what scalapb.gen(flatPackage = true) passes to protoc
-    )
-  },
-  Compile / PB.protoSources := Seq(file("semanticdb/semanticdb/shared/src/main/proto")),
+  Compile / PB.targets :=
+    Seq(scalapbTarget(Def.setting((Compile / sourceManaged).value / "protobuf")).value),
+  Compile / PB.protoSources := Seq(SemanticdbProtoDir),
   PB.additionalDependencies := Nil,
   libraryDependencies ++= {
     val pbruntime = "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion.value
