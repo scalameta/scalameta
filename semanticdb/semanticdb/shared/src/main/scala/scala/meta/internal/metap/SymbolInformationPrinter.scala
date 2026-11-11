@@ -129,8 +129,7 @@ trait SymbolInformationPrinter extends BasePrinter {
         if (sig.declarations.infos.nonEmpty) str(s"+${sig.declarations.infos.length} decls")
         if (inBraces) str(" }")
       case sig: MethodSignature =>
-        rep("[", sig.typeParameters.infos, ", ", "]")(pprintDefn)
-        rep("(", sig.parameterLists, ")(", ")")(params => rep(params.infos, ", ")(pprintDefn))
+        pprintClauses(sig.typeParameters, sig.parameterLists)
         rep(" throws ", sig.throws, ", ", "")(pprint)
         opt(": ", sig.returnType)(pprint)
       case sig: TypeSignature =>
@@ -238,6 +237,11 @@ trait SymbolInformationPrinter extends BasePrinter {
     private def pprintDefn(info: SymbolInformation): Unit = {
       notes.discover(info)
       pprint(info.symbol, Definition)
+    }
+
+    private def pprintClauses(typeParameters: Option[Scope], parameterLists: Seq[Scope]): Unit = {
+      rep("[", typeParameters.infos, ", ", "]")(pprintDefn)
+      rep("(", parameterLists, ")(", ")")(params => rep(params.infos, ", ")(pprintDefn))
     }
 
     protected sealed trait SymbolStyle
