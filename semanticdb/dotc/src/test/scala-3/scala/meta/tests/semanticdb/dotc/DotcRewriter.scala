@@ -114,6 +114,7 @@ object DotcRewriter {
         override def apply(tree: Tree): Unit = tree match {
           case t: Defn.Def if Removed(t.name.value) => edits += removal(text, t.pos)
           case t: Defn.Val if names(t.pats).exists(Removed) => edits += removal(text, t.pos)
+          // keep the annotation of an expression, so that DotcOutputSuite fails on it
           case t: Term.Annotate => apply(t.expr)
           case t: Mod.Annot if !kept(t) => edits += removal(text, t.pos)
           case t: Defn.Val if names(t.pats).exists(_.startsWith("_typemapper_")) =>
