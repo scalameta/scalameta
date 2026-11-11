@@ -233,12 +233,23 @@ trait SymbolTable {
   // resolvable method or a parameter type can't be reduced (so callers don't merge what they can't
   // compare).
   private def erasedSignature(method: String, env: Map[String, String]): Option[List[String]] =
-    method.signature[MethodSignature].flatMap { m =>
-      val types = m.parameterLists.iterator.flatMap(paramInfos).map(_.signature match {
-        case v: ValueSignature => erasure(v.tpe, env)
-        case _ => None
-      }).toList
-      if (types.forall(_.isDefined)) Some(types.flatten) else None
+    info(method) match {
+      case Some(si) =>
+        val clauses = si.signature match {
+          case m: MethodSignature => m.parameterLists.iterator
+          case _ => return None
+        }
+        val res = List.newBuilder[String]
+        val iter = clauses.flatMap(paramInfos)
+        while (iter.hasNext) iter.next().signature match {
+          case v: ValueSignature => erasure(v.tpe, env) match {
+              case Some(sym) => res += sym
+              case _ => return None
+            }
+          case _ => return None
+        }
+        Some(res.result())
+      case _ => None
     }
 
   private def paramInfos(scope: Scope): Iterator[SymbolInformation] =

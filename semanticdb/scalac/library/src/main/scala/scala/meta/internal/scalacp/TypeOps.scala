@@ -113,14 +113,14 @@ trait TypeOps {
           val slo = tpe.lower.toSemanticTpe
           val shi = tpe.upper.toSemanticTpe
           s.TypeSignature(stparams, slo, shi)
-        case tpe: PolyType => loop(tpe.typeRef) match {
-            case s.NoSignature => s.NoSignature
+        case tpe: PolyType => loop(tpe.typeRef) match { // match only what loop returns
             case t: s.ClassSignature => t.withTypeParameters(tpe.symbols.sscope(linkMode))
             case t: s.MethodSignature => t.withTypeParameters(tpe.symbols.sscope(linkMode))
             case t: s.TypeSignature => t.withTypeParameters(tpe.symbols.sscope(linkMode))
             case t: s.ValueSignature =>
               val stparams = tpe.symbols.sscope(HardlinkChildren)
               s.ValueSignature(s.UniversalType(Some(stparams), t.tpe))
+            case t => t
           }
         case NoType => s.NoSignature
         case other => s.ValueSignature(other.toSemanticTpe)

@@ -86,6 +86,7 @@ object MetacpOps {
         }
       case x: s.ValueSignature => visitType(x.tpe)
       case s.NoSignature => ()
+      case sig => sys.error(s"unexpected signature: $sig")
     }
     visitSignature(info.signature)
   }
