@@ -8,7 +8,7 @@ import scala.meta.internal.trees._
 import scala.meta.prettyprinters._
 import scala.meta.tokenizers._
 import scala.meta.tokens.Token._
-import scala.meta.tokens.{Token, TokenExtensions, Tokens}
+import scala.meta.tokens._
 
 import scala.annotation.tailrec
 
@@ -921,24 +921,27 @@ private[meta] final class ScannerTokens(
                 // check the previous token to avoid infinity loop
                 val ok = next.is[KwCase] && (sepRegions.headOrNull eq RegionCaseMark)
                 if (ok) emitIndent(sepRegions) else null
+              /*
+               * Colon with NL can appear in several contexts:
+               *   - after package/class/etc: handled with RegionColonEol
+               *   - after variable and before its type:
+               *     - within `def`, `val`, `var` declaration or definition: excluded with
+               *       RegionDefMark
+               *     - cast within an argument expression: doesn't allow newline as it can then be
+               *       confused with a fewer-braces invocation
+               *     - within self-type: not allowed by the compiler
+               *   - after fewer-braces method call: will apply if not handled otherwise
+               */
               case _: Colon =>
-                /**
-                 * Colon with NL can appear in several contexts:
-                 *   - after package/class/etc: handled with RegionColonEol
-                 *   - after variable and before its type:
-                 *     - within `def`, `val`, `var` declaration or definition: excluded with
-                 *       RegionDefMark
-                 *     - cast within an argument expression: doesn't allow newline as it can then be
-                 *       confused with a fewer-braces invocation
-                 *     - within self-type: not allowed by the compiler
-                 *   - after fewer-braces method call: will apply if not handled otherwise
-                 */
-                def couldBeFewerBraces(): Boolean = dialect.allowFewerBraces &&
+                def isFewerBraces(indented: Boolean): Boolean = dialect.allowFewerBraces && {
+                  val maybeRefineDcl = indented && next.isAny[KwVal, KwDef, KwType, Semicolon]
+                  maybeRefineDcl ||
                   (sepRegions match {
                     case (_: RegionBracket | _: RegionHasParamMark) :: _ => false
                     case (_: RegionParen) :: (_: RegionHasParamMark) :: _ => false
                     case _ => true
                   }) && isFewerBracesPrefix(prevNonTrivia(prevPos))
+                }
                 sepRegions match {
                   case (_: RegionTemplateDecl) :: rs =>
                     if (exceedsIndent) emitIndent(RegionTemplateBody :: rs)
@@ -946,17 +949,11 @@ private[meta] final class ScannerTokens(
                     else Right(lastWhitespaceToken(rs, nextIndent))
                   case (_: RegionDefDecl) :: _ => null
                   case _ if !exceedsIndent =>
-                    if (!couldBeFewerBraces()) null
+                    if (!isFewerBraces(indented = false)) null
                     else Right(lastWhitespaceToken(sepRegions, nextIndent))
                   case (_: RegionGivenDecl) :: rs => emitIndent(RegionTemplateBody :: rs)
                   case RegionColonMaybeFewerBraces :: rs => emitIndent(rs)
-                  case _ => next match {
-                      // RefineDcl
-                      case _: KwVal | _: KwDef | _: KwType | _: Semicolon => emitIndent(sepRegions)
-                      // fewer braces function (although could be self-type)
-                      case _ if couldBeFewerBraces() => emitIndent(sepRegions)
-                      case _ => null
-                    }
+                  case _ => if (isFewerBraces(indented = true)) emitIndent(sepRegions) else null
                 }
               case _ if !exceedsIndent => null
               case _: RightArrow => dropRegionLine(sepRegions) match {
