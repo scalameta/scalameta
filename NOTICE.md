@@ -168,3 +168,12 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
+
+# License notice for ScalaPB and Protocol Buffers
+
+`semanticdb-dotc` contains parts which are derived from
+[ScalaPB](https://github.com/scalapb/ScalaPB) and from
+[Protocol Buffers](https://github.com/protocolbuffers/protobuf).
+Their licenses are in
+[`LICENSE-ScalaPB.txt`](semanticdb/dotc/src/main/resources/META-INF/LICENSE-ScalaPB.txt) and
+[`LICENSE-protobuf.txt`](semanticdb/dotc/src/main/resources/META-INF/LICENSE-protobuf.txt).

@@ -109,7 +109,7 @@ def rootSettings = Def.settings(
     all(Seq(trees2, scala3TreeLiftsCodeGen, tests).flatMap(_.allProjects()).map(_._1.id + "/clean")),
   ),
   testAliasesFor(Scala213Versions, Scala212Versions),
-  scala3Aliases("tests", "testsJS", "testsNative"),
+  scala3Aliases("tests", "testsJS", "testsNative", "semanticdbDotc"),
   commands += mimaPublished,
   addCommandAlias("mima2_13", "mimaPublished " + PublishedScala213),
   addCommandAlias("mima2_12", "mimaPublished " + PublishedScala212),
@@ -151,6 +151,10 @@ def rootSettings = Def.settings(
   ),
   commands += Command.command("save-manifest")(s =>
     s"${testsSemanticdb.jvm(LatestScala213).id}/Test/runMain scala.meta.tests.semanticdb.SaveManifestTest" ::
+      s,
+  ),
+  commands += Command.command("save-dotc")(s =>
+    s"${semanticdbDotc.jvm(Scala3Published).id}/Test/runMain scala.meta.tests.semanticdb.dotc.SaveDotc" ::
       s,
   ),
   // can also be used to ensure sbt server has started
@@ -216,6 +220,13 @@ def semanticdbSharedSettings = Def.settings(
 lazy val semanticdbShared = projectMatrix.in(file("semanticdb/semanticdb"))
   .settings(semanticdbSharedSettings).dependsOn(scalameta)
   .crossAllPublished(TestedScalaVersions, PublishedScalaVersions)
+
+lazy val semanticdbDotc = projectMatrix.in(file("semanticdb/dotc")).configs(SemanticdbDotc.DotcGen)
+  .settings(sharedBaseSettings, SemanticdbDotc.settings).crossJvm(
+    Scala3Rows.map(_._1),
+    if (Platforms.shouldBuildPlatform(Platforms.JVM)) publishableSettings
+    else nonPublishableSettings,
+  ).dependsOn(semanticdbShared % Test)
 
 lazy val semanticdbScalacPlugin = projectMatrix.in(file("semanticdb/scalac/plugin")).settings(
   moduleName := "semanticdb-scalac",
