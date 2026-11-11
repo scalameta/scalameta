@@ -4,9 +4,11 @@ package quasiquotes
 import scala.meta._
 import scala.meta.dialects.Scala211
 
+/** Checks only at compile time that each quasiquote expands in a pattern and in an expression. */
 object RoundtripSuite {
   val tree: Tree = ???
-  tree match {
+
+  def terms = tree match {
     case q"$name.this" => q"$name.this"
     case q"$name.super" => q"$name.super"
     case q"super[$name]" => q"super[$name]"
@@ -47,6 +49,9 @@ object RoundtripSuite {
     case q"$expr _" => q"$expr _"
     case q"$expr: _*" => q"$expr: _*"
     case q"${lit: Lit}" => q"${lit: Lit}"
+  }
+
+  def types = tree match {
     case t"${name: Type.Name}" => t"${name: Type.Name}"
     case t"$ref.$tname" => t"$ref.$tname"
     case t"$tpe#$tname" => t"$tpe#$tname"
@@ -64,6 +69,9 @@ object RoundtripSuite {
     case t"_ >: $tpeopt1 <: $tpeopt2" => t"_ >: $tpeopt1 <: $tpeopt2"
     case t"=> $tpe" => t"=> $tpe"
     case t"$tpe*" => t"$tpe*"
+  }
+
+  def pats = tree match {
     case p"$pat1 @ $pat2" => p"$pat1 @ $pat2"
     case p"$pat1 | $pat2" => p"$pat1 | $pat2"
     case p"(..$patsnel)" => p"(..$patsnel)"
@@ -72,6 +80,9 @@ object RoundtripSuite {
     case p"$pat: $ptpe" => p"$pat: $ptpe"
     case p"$expr.$name" => p"$expr.$name"
     case p"case $pat if $expropt => $expr" => p"case $pat if $expropt => $expr"
+  }
+
+  def stats = tree match {
     case q"import ..$importersnel" => q"import ..$importersnel"
     case q"..$mods val ..$patsnel: $tpe" => q"..$mods val ..$patsnel: $tpe"
     case q"..$mods var ..$patsnel: $tpe" => q"..$mods var ..$patsnel: $tpe"
@@ -96,6 +107,9 @@ object RoundtripSuite {
     case q"package $ref { ..$stats }" => q"package $ref { ..$stats }"
     case q"..$mods def this(...$paramss)" => q"..$mods def this(...$paramss)"
     case q"..$mods def this(...$paramss) = $expr" => q"..$mods def this(...$paramss) = $expr"
+  }
+
+  def others = tree match {
     case param"..$mods $paramname: $tpeopt = $expropt" =>
       param"..$mods $paramname: $tpeopt = $expropt"
     case tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2" =>
