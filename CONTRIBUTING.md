@@ -76,6 +76,9 @@ Tips to make your edit/test/debug workflow as productive as possible:
   please review it thoroughly to ensure that the new expected behavior is correct.
   The name "expect tests" comes from
   [this blog post](https://blog.janestreet.com/testing-with-expectations/).
+- Use the sbt command `save-dotc` after a change to `semanticdb.proto` or to
+  ScalaPB's version. This command writes the classes of `semanticdb-dotc`;
+  review their diff.
 
 ## Ticket Guidelines
 
