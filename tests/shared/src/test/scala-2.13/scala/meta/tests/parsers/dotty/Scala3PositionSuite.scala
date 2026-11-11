@@ -3611,13 +3611,11 @@ class Scala3PositionSuite extends BasePositionSuite {
   checkPositions[Stat](
     """|def f = foo { a }: x => x
        |""".stripMargin,
-    """|Term.Apply foo { a }: x => x [8:foo { a }: x => x:25)
+    """|Term.Ascribe foo { a }: x => x [8:foo { a }: x => x:25)
        |Term.Apply foo { a } [8:foo { a }:17)
        |Term.Block { a } [12:{ a }:17)
-       |Term.Block : x => x [17<: x => x>25)
-       |Term.Function x => x [19:x => x:25)
-       |Term.ParamClause x [19:x:20)
-       |Term.Param x [19:x:20)
+       |Type.Function x => x [19:x => x:25)
+       |Type.FuncParamClause x [19:x:20)
        |""".stripMargin,
     showPosition = true,
   )
@@ -3864,15 +3862,11 @@ class Scala3PositionSuite extends BasePositionSuite {
     """|def f = !1:
        |  x => x
        |""".stripMargin,
-    """|Term.ApplyUnary !1:
+    """|Term.Ascribe !1:
        |  x => x [8:!1:...:20)
-       |Term.Apply 1:
-       |  x => x [9:1:...:20)
-       |Term.Block :
-       |  x => x [10<:...>20)
-       |Term.Function x => x [14:x => x:20)
-       |Term.ParamClause x [14:x:15)
-       |Term.Param x [14:x:15)
+       |Lit.WithUnary !1 [8:!1:10)
+       |Type.Function x => x [14:x => x:20)
+       |Type.FuncParamClause x [14:x:15)
        |""".stripMargin,
     showPosition = true,
   )

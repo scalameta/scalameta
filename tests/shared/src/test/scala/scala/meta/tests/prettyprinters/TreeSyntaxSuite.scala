@@ -193,12 +193,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("ascription: context function type") {
     val code = "object A { val x = true: Int ?=> Boolean }"
-    val printed =
-      """|object A {
-         |  val x = true {
-         |    Int ?=> Boolean
-         |  }
-         |}""".stripMargin.lf2nl
+    val printed = "object A { val x = true: (Int ?=> Boolean) }"
     assertEquals(reprintTwice(code, dialects.Scala3), (printed, printed))
   }
 

@@ -4022,13 +4022,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |  1
          |""".stripMargin
     val layout =
-      """|def f = ({
+      """|def f = {
          |  a
-         |}) {
-         |  1
-         |}
+         |}: 1
          |""".stripMargin
-    val tree = Defn.Def(Nil, tname("f"), Nil, None, tapply(blk(tname("a")), blk(int(1))))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Ascribe(blk(tname("a")), int(1)))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -4039,13 +4037,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |)
          |""".stripMargin
     val layout =
-      """|def f = g(({
+      """|def f = g({
          |  a
-         |}) {
-         |  1
-         |})
+         |}: 1)
          |""".stripMargin
-    val tree = Defn.Def(Nil, tname("f"), Nil, None, tapply("g", tapply(blk(tname("a")), blk(int(1)))))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, tapply("g", Term.Ascribe(blk(tname("a")), int(1))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -4056,19 +4052,12 @@ class FewerBracesSuite extends BaseDottySuite {
          |)
          |""".stripMargin
     val layout =
-      """|def f = g(({
+      """|def f = g({
          |  a
-         |}) {
-         |  y => y
-         |})
+         |}: (y => y))
          |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tapply("g", tapply(blk(tname("a")), blk(tfunc(tparam("y"))(tname("y"))))),
-    )
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tapply("g", Term.Ascribe(blk(tname("a")), pfunc("y")("y"))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -4080,16 +4069,14 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def f = xs.foo {
          |  a
-         |} {
-         |  1
-         |}
+         |}: 1
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(tapply(tselect("xs", "foo"), blk(tname("a"))), blk(int(1))),
+      Term.Ascribe(tapply(tselect("xs", "foo"), blk(tname("a"))), int(1)),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4103,16 +4090,14 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def f = g(xs.foo {
          |  a
-         |} {
-         |  1
-         |})
+         |}: 1)
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply("g", tapply(tapply(tselect("xs", "foo"), blk(tname("a"))), blk(int(1)))),
+      tapply("g", Term.Ascribe(tapply(tselect("xs", "foo"), blk(tname("a"))), int(1))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4126,19 +4111,14 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def f = g(xs.foo {
          |  a
-         |} {
-         |  y => y
-         |})
+         |}: (y => y))
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(
-        "g",
-        tapply(tapply(tselect("xs", "foo"), blk(tname("a"))), blk(tfunc(tparam("y"))(tname("y")))),
-      ),
+      tapply("g", Term.Ascribe(tapply(tselect("xs", "foo"), blk(tname("a"))), pfunc("y")("y"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4151,16 +4131,14 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def f = (x match {
          |  case _ => g
-         |}) {
-         |  1
-         |}
+         |}): 1
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(tmatch(tname("x"), Case(patwildcard, None, tname("g"))), blk(int(1))),
+      Term.Ascribe(tmatch(tname("x"), Case(patwildcard, None, tname("g"))), int(1)),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4174,16 +4152,14 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def f = g((x match {
          |  case _ => g
-         |}) {
-         |  1
-         |})
+         |}): 1)
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply("g", tapply(tmatch(tname("x"), Case(patwildcard, None, tname("g"))), blk(int(1)))),
+      tapply("g", Term.Ascribe(tmatch(tname("x"), Case(patwildcard, None, tname("g"))), int(1))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4197,9 +4173,7 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def f = g((x match {
          |  case _ => g
-         |}) {
-         |  y => y
-         |})
+         |}): (y => y))
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
@@ -4208,10 +4182,7 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       tapply(
         "g",
-        tapply(
-          tmatch(tname("x"), Case(patwildcard, None, tname("g"))),
-          blk(tfunc(tparam("y"))(tname("y"))),
-        ),
+        Term.Ascribe(tmatch(tname("x"), Case(patwildcard, None, tname("g"))), pfunc("y")("y")),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -4223,16 +4194,14 @@ class FewerBracesSuite extends BaseDottySuite {
          |  1
          |""".stripMargin
     val layout =
-      """|def f = (new A {}) {
-         |  1
-         |}
+      """|def f = new A {}: 1
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(Term.NewAnonymous(tpl(List(init("A")), Nil)), blk(int(1))),
+      Term.Ascribe(Term.NewAnonymous(tpl(List(init("A")), Nil)), int(1)),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4244,16 +4213,14 @@ class FewerBracesSuite extends BaseDottySuite {
          |)
          |""".stripMargin
     val layout =
-      """|def f = g((new A {}) {
-         |  1
-         |})
+      """|def f = g(new A {}: 1)
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply("g", tapply(Term.NewAnonymous(tpl(List(init("A")), Nil)), blk(int(1)))),
+      tapply("g", Term.Ascribe(Term.NewAnonymous(tpl(List(init("A")), Nil)), int(1))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4265,19 +4232,14 @@ class FewerBracesSuite extends BaseDottySuite {
          |)
          |""".stripMargin
     val layout =
-      """|def f = g((new A {}) {
-         |  y => y
-         |})
+      """|def f = g(new A {}: (y => y))
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(
-        "g",
-        tapply(Term.NewAnonymous(tpl(List(init("A")), Nil)), blk(tfunc(tparam("y"))(tname("y")))),
-      ),
+      tapply("g", Term.Ascribe(Term.NewAnonymous(tpl(List(init("A")), Nil)), pfunc("y")("y"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4288,14 +4250,12 @@ class FewerBracesSuite extends BaseDottySuite {
          |  Int
          |""".stripMargin
     val layout =
-      """|def f = xs ++ ({
+      """|def f = xs ++ {
          |  a
-         |}) {
-         |  Int
-         |}
+         |}: Int
          |""".stripMargin
     val tree = Defn
-      .Def(Nil, tname("f"), Nil, None, tinfix("xs", "++", tapply(blk(tname("a")), blk(tname("Int")))))
+      .Def(Nil, tname("f"), Nil, None, Term.Ascribe(tinfix("xs", "++", blk(tname("a"))), pname("Int")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -4305,18 +4265,16 @@ class FewerBracesSuite extends BaseDottySuite {
          |  Int)
          |""".stripMargin
     val layout =
-      """|def f = h(xs ++ ({
+      """|def f = h(xs ++ {
          |  a
-         |}) {
-         |  Int
-         |})
+         |}: Int)
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply("h", tinfix("xs", "++", tapply(blk(tname("a")), blk(tname("Int"))))),
+      tapply("h", Term.Ascribe(tinfix("xs", "++", blk(tname("a"))), pname("Int"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4327,18 +4285,16 @@ class FewerBracesSuite extends BaseDottySuite {
          |  y => y)
          |""".stripMargin
     val layout =
-      """|def f = h(xs ++ ({
+      """|def f = h(xs ++ {
          |  a
-         |}) {
-         |  y => y
-         |})
+         |}: (y => y))
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply("h", tinfix("xs", "++", tapply(blk(tname("a")), blk(tfunc(tparam("y"))(tname("y")))))),
+      tapply("h", Term.Ascribe(tinfix("xs", "++", blk(tname("a"))), pfunc("y")("y"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4351,16 +4307,14 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def f = xs ++ ys.foo {
          |  a
-         |} {
-         |  Int
-         |}
+         |}: Int
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tinfix("xs", "++", tapply(tapply(tselect("ys", "foo"), blk(tname("a"))), blk(tname("Int")))),
+      Term.Ascribe(tinfix("xs", "++", tapply(tselect("ys", "foo"), blk(tname("a")))), pname("Int")),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4371,11 +4325,13 @@ class FewerBracesSuite extends BaseDottySuite {
          |  { a }:
          |  Int
          |""".stripMargin
-    val error =
-      """|<input>:2: error: expected fewer-braces method body
-         |  { a }:
-         |       ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = {
+         |  a
+         |}: Int
+         |""".stripMargin
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Ascribe(blk(tname("a")), pname("Int")))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("select colon, literal on the next line") {

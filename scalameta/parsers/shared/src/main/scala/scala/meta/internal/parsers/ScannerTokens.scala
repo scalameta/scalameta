@@ -642,7 +642,8 @@ private[meta] final class ScannerTokens(
         currRef(RegionDefMark :: sepRegions)
       case _: Colon => sepRegions match {
           case RegionDefMark :: rs => currRef(RegionDefType :: rs)
-          case (_: RegionCaseExprGuard) :: _ if dialect.allowFewerBraces =>
+          case (_: RegionCaseExprGuard) :: _
+              if dialect.allowFewerBraces && isFewerBracesPrefix(prev, allowUnquote = true) =>
             // to distinguish `=>` from lambda and end of case expr
             currRef(RegionColonMaybeFewerBraces :: sepRegions)
           case _ if startsColonLambda(sepRegions) =>
@@ -935,12 +936,12 @@ private[meta] final class ScannerTokens(
               case _: Colon =>
                 def isFewerBraces(indented: Boolean): Boolean = dialect.allowFewerBraces && {
                   val maybeRefineDcl = indented && next.isAny[KwVal, KwDef, KwType, Semicolon]
-                  maybeRefineDcl ||
-                  (sepRegions match {
-                    case (_: RegionBracket | _: RegionHasParamMark) :: _ => false
-                    case (_: RegionParen) :: (_: RegionHasParamMark) :: _ => false
-                    case _ => true
-                  }) && isFewerBracesPrefix(prevNonTrivia(prevPos))
+                  (maybeRefineDcl ||
+                    (sepRegions match {
+                      case (_: RegionBracket | _: RegionHasParamMark) :: _ => false
+                      case (_: RegionParen) :: (_: RegionHasParamMark) :: _ => false
+                      case _ => true
+                    })) && isFewerBracesPrefix(prevNonTrivia(prevPos), allowUnquote = maybeRefineDcl)
                 }
                 sepRegions match {
                   case (_: RegionTemplateDecl) :: rs =>
@@ -1104,7 +1105,17 @@ private[meta] final class ScannerTokens(
     iter(pos, 0)
   }
 
-  private def isFewerBracesPrefix(token: Token): Boolean = token.isAny[Ident, CloseDelim, KwThis]
+  /** dotc: whether a colon after `token` might start a colon argument or a refinement */
+  private[parsers] def isFewerBracesPrefix(
+      token: Token,
+      allowUnquote: Boolean = false, // unquote masks the real token, so only caller can advise
+  ): Boolean = token match {
+    case _: Unquote => allowUnquote
+    case t: Ident => t.value.nonEmpty &&
+      (t.value.isAlphanumIdentifierNonEmpty || t.text.isBackquotedNonEmpty)
+    case _: RightParen | _: RightBracket | _: KwThis | _: KwSuper | _: KwNew => true
+    case _ => false
+  }
 
   /** whether `name: T` after `token` types `name`: a self type, a parameter, a pattern */
   private def precedesTypedName(token: Token): Boolean = token

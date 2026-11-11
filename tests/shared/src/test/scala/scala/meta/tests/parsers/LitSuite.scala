@@ -229,12 +229,11 @@ class LitSuite extends ParseSuite {
       """|!1:
          |  x => x
          |""".stripMargin
-    val layout =
-      """|!1 {
+    val error =
+      """|<input>:2: error: `;` expected but `=>` found
          |  x => x
-         |}""".stripMargin
-    val tree = unary("!", tapply(lit(1), blk(tfunc(tparam("x"))(tname("x")))))
-    runTestAssert[Stat](code, layout)(tree)
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("unary: !t before a colon with fewer braces") {
