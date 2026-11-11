@@ -117,7 +117,7 @@ jobs:
         run: sbt $'-J-Dline.separator=\r\n' tests2_13/testFull
         shell: bash
   
-  pr-jvm3L-sem213-other: # 3lts parser, mima; 2.13 semanticdb; scalafmt
+  pr-jvm3L-sem213-other: # 3lts parser, mima, semanticdb-dotc; 2.13 semanticdb; scalafmt
     runs-on: ubuntu-latest
     timeout-minutes: *timeout
     steps:
@@ -139,8 +139,11 @@ jobs:
       - if: ${{ !cancelled() }}
         run: sbt $'-J-Dline.separator=\r\n' testsSemanticdb2_13
         shell: bash
+      - if: ${{ !cancelled() }}
+        run: sbt $'-J-Dline.separator=\r\n' semanticdbDotc3_lts/testFull
+        shell: bash
 
-  pr-jvm3N-js2: # 3next parser; 2.x JS
+  pr-jvm3N-js2: # 3next parser, semanticdb-dotc; 2.x JS
     runs-on: ubuntu-latest
     timeout-minutes: *timeout
     steps:
@@ -149,6 +152,8 @@ jobs:
       - *sbt
       - *sbt_bootup
       - *testjvm3next
+      - if: ${{ !cancelled() }}
+        run: sbt semanticdbDotc3_next/testFull
       - if: ${{ !cancelled() }}
         run: sbt testsJS2_12/testFull
       - if: ${{ !cancelled() }}
@@ -197,6 +202,8 @@ jobs:
         run: sbt tests${{ matrix.binary }}_other
       - if: ${{ !cancelled() && startsWith(matrix.binary, '2_') }} # semanticdb is Scala 2 only
         run: sbt testsSemanticdb${{ matrix.binary }}_other
+      - if: ${{ !cancelled() && matrix.binary == '3' }} # semanticdb-dotc is Scala 3 only
+        run: sbt semanticdbDotc3_other
 
   post-windows: # Windows parser/JS/semanticdb (line-ending sensitivity)
     if: ${{ github.event_name == 'push' }}
