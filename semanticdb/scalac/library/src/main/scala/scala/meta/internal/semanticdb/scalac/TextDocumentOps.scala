@@ -85,6 +85,12 @@ trait TextDocumentOps {
             case _ =>
           }
         case t: g.TypeTreeWithDeferredRefCheck => traverse(t.check())
+        // traverse the typed copy of an argument of a Java annotation
+        case t if (t.tpe eq null) && !t.attachments.isEmpty =>
+          t.attachments.get(TypedAnnotArgTag) match {
+            case Some(a) => traverse(a.tree)
+            case _ => return false
+          }
         case _ => return false
       }
       true

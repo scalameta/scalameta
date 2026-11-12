@@ -3261,7 +3261,7 @@ Uri => semanticdb/integration/src/main/scala/example/Issue4505.scala
 Text => non-empty
 Language => Scala
 Symbols => 7 entries
-Occurrences => 13 entries
+Occurrences => 19 entries
 
 Symbols:
 example/Issue4505. => final object Issue4505 extends AnyRef { +3 decls }
@@ -3284,13 +3284,19 @@ Occurrences:
 [2:7..2:16): Issue4505 <= example/Issue4505.
 [4:9..4:19): Issue4505J => example/Issue4505J#
 [6:3..6:21): AnnotationWithEnum => example/Issue4505J#AnnotationWithEnum#
+[6:22..6:36): AnnotationEnum => example/Issue4505J#AnnotationEnum#
+[6:37..6:41): Val1 => example/Issue4505J#AnnotationEnum#Val1.
 [7:8..7:9): A <= example/Issue4505.A#
 [7:9..7:9):  <= example/Issue4505.A#`<init>`().
 [9:3..9:22): AnnotationWithClass => example/Issue4505J#AnnotationWithClass#
+[9:23..9:30): classOf => scala/Predef.classOf().
+[9:31..9:37): String => scala/Predef.String#
 [10:8..10:9): B <= example/Issue4505.B#
 [10:9..10:9):  <= example/Issue4505.B#`<init>`().
 [12:3..12:22): AnnotationWithClass => example/Issue4505J#AnnotationWithClass#
 [12:23..12:28): value => example/Issue4505J#AnnotationWithClass#value().
+[12:31..12:38): classOf => scala/Predef.classOf().
+[12:39..12:45): String => scala/Predef.String#
 [13:8..13:9): C <= example/Issue4505.C#
 [13:9..13:9):  <= example/Issue4505.C#`<init>`().
 
