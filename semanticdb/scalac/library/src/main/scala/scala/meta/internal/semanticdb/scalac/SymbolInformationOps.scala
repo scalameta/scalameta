@@ -148,57 +148,67 @@ trait SymbolInformationOps {
           } else if (gsym.isModule) gsym.moduleClass.info
           else gsym.info
         val ssig = gsig.toSemanticSig(linkMode, gsym)
-        if (gsym.isConstructor) ssig match {
-          case m: s.MethodSignature => m.copy(returnType = s.NoType)
-          case m: s.ExtendedMethodSignature => m.copy(returnType = s.NoType)
-          case m => m
-        }
-        // A local is a value, even a lazy getter or a private[this] pattern temporary
-        else if (kind.isLocal) ssig match {
+        // keep what the special cases did for a signature they did not expect
+        def unexpected: s.Signature =
+          if (gsym.isConstructor || kind.isLocal) ssig
+          else if (gsym.isScalacField)
+            if (ssig == s.NoSignature) ssig
+            else sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+          else if (gsym.isSelfParameter) gsym.owner.self.toSemanticTpe match {
+            case s.NoType => s.NoSignature
+            case stpe => s.ValueSignature(stpe)
+          }
+          else if (gsym.isClassfileAnnotation || gsym.hasFlag(gf.JAVA) && kind == k.TYPE_PARAMETER)
+            sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+          else ssig
+        ssig match {
           case ssig: s.MethodSignature =>
-            val ok = ssig.parameterLists.isEmpty && ssig.typeParameters.forall(_.symlinks.isEmpty)
-            if (ok) s.ValueSignature(ssig.returnType) else ssig
+            if (gsym.isConstructor) ssig.copy(returnType = s.NoType)
+            // A local is a value, even a lazy getter or a private[this] pattern temporary
+            else if (kind.isLocal) {
+              val ok = ssig.parameterLists.isEmpty && ssig.typeParameters.forall(_.symlinks.isEmpty)
+              if (ok) s.ValueSignature(ssig.returnType) else ssig
+            } else unexpected
           case ssig: s.ExtendedMethodSignature =>
-            val ok = ssig.paramClauseGroups
-              .forall(x => x.paramClauses.isEmpty && x.typeParamClause.forall(_.symlinks.isEmpty))
-            if (ok) s.ValueSignature(ssig.returnType) else ssig
-          case _ => ssig
-        }
-        else if (gsym.isScalacField) ssig match {
+            if (gsym.isConstructor) ssig.copy(returnType = s.NoType)
+            else if (kind.isLocal) {
+              val ok = ssig.paramClauseGroups
+                .forall(x => x.paramClauses.isEmpty && x.typeParamClause.forall(_.symlinks.isEmpty))
+              if (ok) s.ValueSignature(ssig.returnType) else ssig
+            } else unexpected
           case ssig: s.ValueSignature =>
-            val stparams = Some(s.Scope())
-            val sparamss = Nil
-            val sret = ssig.tpe
-            s.MethodSignature(stparams, sparamss, sret)
-          case s.Signature.Empty => s.NoSignature
-          case _ => sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
-        }
-        else if (gsym.isSelfParameter) gsym.owner.self.toSemanticTpe match {
-          case s.NoType => s.NoSignature
-          case stpe => s.ValueSignature(stpe)
-        }
-        else if (gsym.isClassfileAnnotation) ssig match {
+            if (kind.isLocal) ssig
+            else if (gsym.isScalacField) {
+              val stparams = Some(s.Scope())
+              val sparamss = Nil
+              val sret = ssig.tpe
+              s.MethodSignature(stparams, sparamss, sret)
+            } else if (gsym.isSelfParameter) gsym.owner.self.toSemanticTpe match {
+              case s.NoType => s.NoSignature
+              case stpe => s.ValueSignature(stpe)
+            }
+            else unexpected
           case ssig: s.ClassSignature =>
-            val parents1 = ssig.parents.flatMap {
-              case s.TypeRef(s.NoType, ks.Annotation, Nil) =>
-                Some(s.TypeRef(s.NoType, ks.Object, Nil))
-              case s.TypeRef(s.NoType, ks.ClassfileAnnotation, Nil) => None
-              case sother => Some(sother)
-            }
-            ssig.copy(parents = parents1)
-          case _ => sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
-        }
-        else if (gsym.hasFlag(gf.JAVA) && kind == k.TYPE_PARAMETER) ssig match {
+            if (gsym.isClassfileAnnotation) {
+              val parents1 = ssig.parents.flatMap {
+                case s.TypeRef(s.NoType, ks.Annotation, Nil) =>
+                  Some(s.TypeRef(s.NoType, ks.Object, Nil))
+                case s.TypeRef(s.NoType, ks.ClassfileAnnotation, Nil) => None
+                case sother => Some(sother)
+              }
+              ssig.copy(parents = parents1)
+            } else unexpected
           case ssig: s.TypeSignature =>
-            val upperBound1 = ssig.upperBound match {
-              case s.StructuralType(t: s.WithType, _) => s.IntersectionType(t.types)
-              case s.TypeRef(s.NoType, ks.Any, Nil) => s.TypeRef(s.NoType, ks.Object, Nil)
-              case sother => sother
-            }
-            ssig.copy(lowerBound = s.NoType, upperBound = upperBound1)
-          case _ => sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+            if (gsym.hasFlag(gf.JAVA) && kind == k.TYPE_PARAMETER) {
+              val upperBound1 = ssig.upperBound match {
+                case s.StructuralType(t: s.WithType, _) => s.IntersectionType(t.types)
+                case s.TypeRef(s.NoType, ks.Any, Nil) => s.TypeRef(s.NoType, ks.Object, Nil)
+                case sother => sother
+              }
+              ssig.copy(lowerBound = s.NoType, upperBound = upperBound1)
+            } else unexpected
+          case _ => unexpected
         }
-        else ssig
       }
 
     private def annotations: List[s.AnnotationTree] = {
