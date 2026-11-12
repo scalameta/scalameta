@@ -90,7 +90,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  ev => _empty_/t22.ev().
          |  stabilizer$2 => local1
          |  T => _empty_/B#T#
-         |[7:44..7:52): +: new L => *(ev[rassoc$1.T])
+         |[7:41..7:52): mk +: new L => *(ev[rassoc$1.T])
          |  ev => _empty_/t22.ev().
          |  rassoc$1 => local2
          |  T => _empty_/B#T#

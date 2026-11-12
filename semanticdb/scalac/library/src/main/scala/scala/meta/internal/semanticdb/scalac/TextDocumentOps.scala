@@ -1963,13 +1963,13 @@ trait TextDocumentOps {
             },
           )
 
-        def getCached(gt: g.Tree): Option[s.Synthetic] = cached(gt) {
+        def getCached(gt: g.Tree, gpos: gu.Position): Option[s.Synthetic] = cached(gt) {
           gt match {
             case t: g.ApplyImplicitView =>
-              val pos = t.toRange
+              val pos = gpos.toMeta.toRange
               syn(pos, getApplyImplicitView(t, pos))
             case t: g.ApplyToImplicitArgs =>
-              val pos = t.toRange
+              val pos = gpos.toMeta.toRange
               t.fun match {
                 case f: g.ApplyImplicitView => cached(f)(syn(getApplyImplicitView(f, pos)))
                     .flatMap(x => syn(pos, getApplyToImplicitArgs(t, x.tree)))
@@ -2101,7 +2101,8 @@ trait TextDocumentOps {
           })
 
         // use it when we don't want to output the original in `synthetics`
-        private def uncachedOrig(gt: g.Tree): s.Tree = gt.toSemanticOriginal
+        private def uncachedOrig(gt: g.Tree): s.Tree = sourcePos(gt).toMeta.toRange
+          .toSemanticOriginal
         private def cachedOrOrig(gt: g.Tree)(res: => Option[s.Synthetic]) = cached(gt)(res)
           .fold(uncachedOrig(gt))(_.tree)
 
@@ -2156,8 +2157,13 @@ trait TextDocumentOps {
         })
       }
 
-      def tryFindSynthetic(gtree: g.Tree): Unit =
-        if (config.synthetics.isOn && gtree.pos.isRange) Synth.getCached(gtree)
+      def tryFindSynthetic(gtree: g.Tree): Unit = if (config.synthetics.isOn) {
+        val gpos = gtree match {
+          case _: g.ApplyImplicitView | _: g.ApplyToImplicitArgs => sourcePos(gtree)
+          case _ => gtree.pos
+        }
+        if (gpos.isRange) Synth.getCached(gtree, gpos)
+      }
 
       // the information of every local that the document refers to, but an existential hardlink
       if (!config.symbols.isNone) {
@@ -2206,6 +2212,36 @@ trait TextDocumentOps {
 
   private def isSyntheticName(gt: g.Select): Boolean = gt.pos == gt.qualifier.pos &&
     syntheticName(gt.name)(true)(true)(false)
+
+  /** the source range of `gt` with the lifted operand that it refers to, or `NoPosition` */
+  @tailrec
+  private def liftedPos(gt: g.Tree, toUnion: gu.Position): gu.Position = gt match {
+    case t: g.ApplyToImplicitArgs => liftedPos(t.fun, toUnion)
+    case t: g.ApplyImplicitView => t.args match {
+        case arg :: Nil => liftedPos(arg, toUnion)
+        case _ => gu.NoPosition
+      }
+    case t: g.Apply if t.pos.isRange =>
+      t.args match {
+        case arg :: Nil if !arg.pos.isRange => liftedPos(arg, toUnion.union(t.pos))
+        case _ => gu.NoPosition
+      }
+    case t: g.Literal if !t.pos.isRange =>
+      t match {
+        case OriginalTreeOf(original) => liftedPos(original, toUnion)
+        case _ => gu.NoPosition
+      }
+    // take the val's range: only the compiler puts a reference inside the range of its own val
+    case t: g.Ident if !t.pos.isRange && t.hasSyntheticSymbol =>
+      val pos = t.symbol.pos
+      if (pos.includes(t.pos) && pos.source == t.pos.source) toUnion.union(pos) else gu.NoPosition
+    case _ => gu.NoPosition
+  }
+
+  private def sourcePos(gt: g.Tree): gu.Position = {
+    val pos = liftedPos(gt, gu.NoPosition)
+    if (pos.isRange) pos else gt.pos
+  }
 
   @tailrec
   private def isForFun(gt: g.Tree): Boolean = gt match {
