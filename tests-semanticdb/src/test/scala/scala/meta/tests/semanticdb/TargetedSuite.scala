@@ -1668,11 +1668,14 @@ class TargetedSuite extends SemanticdbSuite {
        |[1:7..1:8): X <= ux/X.
        |[2:3..2:19): SuppressWarnings => java/lang/SuppressWarnings#
        |[2:20..2:25): value => java/lang/SuppressWarnings#value().
+       |[2:28..2:33): Array => scala/Array.
        |[2:44..2:45): a <= ux/X.a().
        |[3:3..3:19): SuppressWarnings => java/lang/SuppressWarnings#
        |[3:21..3:26): value => java/lang/SuppressWarnings#value().
+       |[3:29..3:34): Array => scala/Array.
        |[3:45..3:46): b <= ux/X.b().
        |[4:3..4:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[4:20..4:25): Array => scala/Array.
        |[4:36..4:37): c <= ux/X.c().
        |""".stripMargin,
     "Occurrences",

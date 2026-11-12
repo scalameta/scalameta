@@ -204,6 +204,10 @@ trait SymbolOps {
     }
   }
 
+  /** whether `sym` is the class of a Java annotation */
+  // a method of the trait, so that a call allocates no wrapper
+  def isClassfileAnnotation(sym: g.Symbol): Boolean = sym.isClass && sym.hasFlag(gf.JAVA_ANNOTATION)
+
   implicit class XtensionGSymbol(sym: g.Symbol) {
 
     def ssym: String = sym.toSemantic
@@ -366,7 +370,7 @@ trait SymbolOps {
       if (sym.owner.isClass && !sym.isMethod) sym.getterIn(sym.owner) else g.NoSymbol
 
     def isUsefulSymbolInformation: Boolean = !isUselessSymbolInformation
-    def isClassfileAnnotation: Boolean = sym.isClass && sym.hasFlag(gf.JAVA_ANNOTATION)
+    def isClassfileAnnotation: Boolean = SymbolOps.this.isClassfileAnnotation(sym)
     def isDefaultParameter: Boolean = sym.hasFlag(gf.DEFAULTPARAM) && sym.hasFlag(gf.PARAM)
     def isDefaultMethod: Boolean = sym.isJavaDefined && sym.owner.isInterface && !sym.isDeferred &&
       !sym.isStatic
