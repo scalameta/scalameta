@@ -275,7 +275,7 @@ object Extensions {
       // one row at a time, so each one knows the version it is built for
       def settings(v: String) = rowSettings(VirtualAxis.jvm, v, jvmPlatformSettings, ss)
       val proj = scala2
-        .foldLeft(self.defaultAxes(bareAxes *))((m, v) => m.jvmPlatform(Seq(v), settings(v)))
+        .foldLeft(self.defaultAxes(bareAxes*))((m, v) => m.jvmPlatform(Seq(v), settings(v)))
       scala3.foldLeft(proj) { case (m, (v, axis, ss)) =>
         m.jvmPlatform(v, axis, settings(v.head) ++ ss)
       }
@@ -287,13 +287,13 @@ object Extensions {
         versions: Seq[String],
         ss: String => Seq[Def.SettingsDefinition] = _ => Nil,
         deps: Seq[ProjectMatrix] = Nil,
-    ): ProjectMatrix = versions.foldLeft(self.defaultAxes(fullAxes *)) { (matrix, v) =>
+    ): ProjectMatrix = versions.foldLeft(self.defaultAxes(fullAxes*)) { (matrix, v) =>
       val pv = getPublishedForScalaVersion(v)
       /* customRow hands each row its own Project, so a row states the dependency for its own
        * version. A module published per binary version has one row a full-cross row can name. */
       val conv = (p: Project) =>
         p.settings(rowSettings(VirtualAxis.jvm, v, jvmPlatformSettings, ss(v)))
-          .dependsOn(deps.map(_.jvm(pv)) *)
+          .dependsOn(deps.map(_.jvm(pv))*)
       matrix.customRow(
         autoScalaLibrary = true,
         scalaVersions = Seq(v),
@@ -306,7 +306,7 @@ object Extensions {
       val (scala2, scala3) = splitScala3(versions)
       def settings(v: String) = rowSettings(VirtualAxis.js, v, commonJsSettings, ss)
       val proj = jsScalaVersions(scala2)
-        .foldLeft(self.defaultAxes(bareAxes *))((m, v) => m.jsPlatform(Seq(v), settings(v)))
+        .foldLeft(self.defaultAxes(bareAxes*))((m, v) => m.jsPlatform(Seq(v), settings(v)))
       scala3.foldLeft(proj) { case (m, (v, axis, ss)) =>
         m.jsPlatform(v, axis, settings(v.head) ++ ss)
       }
@@ -316,7 +316,7 @@ object Extensions {
       val (scala2, scala3) = splitScala3(versions)
       def settings(v: String) = rowSettings(VirtualAxis.native, v, nativeSettings, ss)
       val proj = nativeScalaVersions(scala2)
-        .foldLeft(self.defaultAxes(bareAxes *))((m, v) => m.nativePlatform(Seq(v), settings(v)))
+        .foldLeft(self.defaultAxes(bareAxes*))((m, v) => m.nativePlatform(Seq(v), settings(v)))
       scala3.foldLeft(proj) { case (m, (v, axis, ss)) =>
         m.nativePlatform(v, axis, settings(v.head) ++ ss)
       }
