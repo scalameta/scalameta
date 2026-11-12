@@ -19,12 +19,14 @@ class ArgsSuite extends munit.FunSuite {
   }
 
   test("metap: -- before a path") {
-    // the loop never ends: it passes on the `--` instead of the arguments after it
     val parse = new Thread(() => metap.Settings.parse(List("--", "a.semanticdb"), Reporter()))
     parse.setDaemon(true)
     parse.start()
     parse.join(1000)
-    assert(parse.isAlive)
+    assert(!parse.isAlive)
+    val paths = metap.Settings.parse(List("--", "a.semanticdb"), Reporter())
+      .map(_.paths.map(_.toString))
+    assertEquals(paths, Some(List("a.semanticdb")))
   }
 
   test("metap: -- before two paths that start with -") {
@@ -33,7 +35,9 @@ class ArgsSuite extends munit.FunSuite {
     parse.setDaemon(true)
     parse.start()
     parse.join(1000)
-    assert(parse.isAlive)
+    assert(!parse.isAlive)
+    val paths = metap.Settings.parse(args, Reporter()).map(_.paths.map(_.toString))
+    assertEquals(paths, Some(List("-a.semanticdb", "-b.semanticdb")))
   }
 
 }
