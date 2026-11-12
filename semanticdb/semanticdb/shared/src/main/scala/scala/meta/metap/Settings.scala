@@ -23,7 +23,7 @@ object Settings {
     @tailrec
     def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] =
       args match {
-        case "--" :: _ => loop(settings, false, args)
+        case "--" :: rest => loop(settings, false, rest)
         case "-compact" :: rest if allowOptions =>
           loop(settings.copy(format = Format.Compact), allowOptions = true, rest)
         case ("-detailed" | "-pretty") :: rest if allowOptions =>
@@ -35,7 +35,7 @@ object Settings {
           None
         case path :: rest =>
           val paths1 = settings.paths ++ path.split(File.pathSeparator).map(Paths.get(_))
-          loop(settings.copy(paths = paths1), allowOptions = true, rest)
+          loop(settings.copy(paths = paths1), allowOptions, rest)
         case Nil => Some(settings)
       }
     loop(Settings(), true, args)
