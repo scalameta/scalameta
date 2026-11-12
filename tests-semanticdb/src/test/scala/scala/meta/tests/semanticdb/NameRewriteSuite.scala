@@ -4857,23 +4857,15 @@ class NameRewriteSuite extends SemanticdbSuite {
   synthetics(
     "right-associative operators under an implicit view",
     n69,
-    ScalaVersion.getExpected(
-      List {
-        ScalaVersion.Scala212 ->
-          """|[6:10..6:11): K => v(*)
-             |  v => _empty_/n69.v().
-             |[7:10..7:11): x => v(*)
-             |  v => _empty_/n69.v().
-             |[8:10..8:11): 3 => v(*)
-             |  v => _empty_/n69.v().
-             |[9:15..9:16): K => v(*)
-             |  v => _empty_/n69.v().
-             |""".stripMargin
-      },
-      """|[9:15..9:16): K => v(*)
-         |  v => _empty_/n69.v().
-         |""".stripMargin,
-    ),
+    """|[6:10..6:11): K => v(*)
+       |  v => _empty_/n69.v().
+       |[7:10..7:11): x => v(*)
+       |  v => _empty_/n69.v().
+       |[8:10..8:11): 3 => v(*)
+       |  v => _empty_/n69.v().
+       |[9:15..9:16): K => v(*)
+       |  v => _empty_/n69.v().
+       |""".stripMargin,
   )
 
   private val n70 =
@@ -5233,25 +5225,19 @@ class NameRewriteSuite extends SemanticdbSuite {
   synthetics(
     "right-associative operators on expressions under a view",
     n73,
-    ScalaVersion.getExpected(
-      List {
-        ScalaVersion.Scala212 ->
-          """|[7:10..7:13): o.x => v(*)
-             |  v => _empty_/n73.v().
-             |[8:10..8:14): f(1) => v(*)
-             |  v => _empty_/n73.v().
-             |[9:10..9:17): (x + 1) => v(*)
-             |  v => _empty_/n73.v().
-             |[10:12..10:13): x => v(*)
-             |  v => _empty_/n73.v().
-             |[11:10..11:11): 1 => v(*)
-             |  v => _empty_/n73.v().
-             |[11:15..11:16): x => v(*)
-             |  v => _empty_/n73.v().
-             |""".stripMargin
-      },
-      "",
-    ),
+    """|[7:10..7:13): o.x => v(*)
+       |  v => _empty_/n73.v().
+       |[8:10..8:14): f(1) => v(*)
+       |  v => _empty_/n73.v().
+       |[9:10..9:17): (x + 1) => v(*)
+       |  v => _empty_/n73.v().
+       |[10:12..10:13): x => v(*)
+       |  v => _empty_/n73.v().
+       |[11:10..11:11): 1 => v(*)
+       |  v => _empty_/n73.v().
+       |[11:15..11:16): x => v(*)
+       |  v => _empty_/n73.v().
+       |""".stripMargin,
   )
 
   private val n74 =
@@ -5374,9 +5360,14 @@ class NameRewriteSuite extends SemanticdbSuite {
              |  l => _empty_/n74.l().
              |""".stripMargin
       },
-      """|[9:10..9:14): List => *.apply[Int]
+      """|[8:10..8:11): x => w(*)(c)
+         |  w => _empty_/n74.w().
+         |  c => _empty_/n74.c.
+         |[9:10..9:14): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
+         |[9:10..9:17): List(1) => l(*)
+         |  l => _empty_/n74.l().
          |""".stripMargin,
     ),
   )
@@ -5476,45 +5467,25 @@ class NameRewriteSuite extends SemanticdbSuite {
   synthetics(
     "right-associative operators beside a view on the left operand",
     n75,
-    ScalaVersion.getExpected(
-      List {
-        ScalaVersion.Scala212 ->
-          """|[11:10..11:18): "s" +: r => *(c)
-             |  c => _empty_/n75.c.
-             |[12:10..12:11): x => v(*)
-             |  v => _empty_/n75.v().
-             |[12:10..12:16): x +: r => *(c)
-             |  c => _empty_/n75.c.
-             |[13:17..13:18): q => RQ(*)
-             |  RQ => _empty_/n75.RQ().
-             |[14:10..14:11): x => v(*)
-             |  v => _empty_/n75.v().
-             |[14:15..14:16): q => RQ(*)
-             |  RQ => _empty_/n75.RQ().
-             |[15:14..15:15): x => v(*)
-             |  v => _empty_/n75.v().
-             |[16:2..16:9): s +:= x => *(c)
-             |  c => _empty_/n75.c.
-             |[16:8..16:9): x => v(*)
-             |  v => _empty_/n75.v().
-             |""".stripMargin
-      },
-      """|[11:14..11:18): +: r => *(c)
-         |  c => _empty_/n75.c.
-         |[12:12..12:16): +: r => *(c)
-         |  c => _empty_/n75.c.
-         |[13:17..13:18): q => RQ(*)
-         |  RQ => _empty_/n75.RQ().
-         |[14:15..14:16): q => RQ(*)
-         |  RQ => _empty_/n75.RQ().
-         |[15:14..15:15): x => v(*)
-         |  v => _empty_/n75.v().
-         |[16:2..16:9): s +:= x => *(c)
-         |  c => _empty_/n75.c.
-         |[16:8..16:9): x => v(*)
-         |  v => _empty_/n75.v().
-         |""".stripMargin,
-    ),
+    """|[11:10..11:18): "s" +: r => *(c)
+       |  c => _empty_/n75.c.
+       |[12:10..12:11): x => v(*)
+       |  v => _empty_/n75.v().
+       |[12:10..12:16): x +: r => *(c)
+       |  c => _empty_/n75.c.
+       |[13:17..13:18): q => RQ(*)
+       |  RQ => _empty_/n75.RQ().
+       |[14:10..14:11): x => v(*)
+       |  v => _empty_/n75.v().
+       |[14:15..14:16): q => RQ(*)
+       |  RQ => _empty_/n75.RQ().
+       |[15:14..15:15): x => v(*)
+       |  v => _empty_/n75.v().
+       |[16:2..16:9): s +:= x => *(c)
+       |  c => _empty_/n75.c.
+       |[16:8..16:9): x => v(*)
+       |  v => _empty_/n75.v().
+       |""".stripMargin,
   )
 
   private val n76 =
@@ -5806,17 +5777,23 @@ class NameRewriteSuite extends SemanticdbSuite {
              |  apply => scala/collection/MapLike#apply().
              |""".stripMargin
       },
-      """|[12:20..12:24): +: r => toS(*)
+      """|[12:18..12:19): x => v(*)
+         |  v => _empty_/n76.v().
+         |[12:18..12:24): x +: r => toS(*)
          |  toS => _empty_/n76.toS().
-         |[13:20..13:24): +: r => toS(*)
+         |[13:18..13:19): K => v(*)
+         |  v => _empty_/n76.v().
+         |[13:18..13:24): K +: r => toS(*)
          |  toS => _empty_/n76.toS().
-         |[14:14..14:18): +: r => toS(*)
+         |[14:12..14:13): x => v(*)
+         |  v => _empty_/n76.v().
+         |[14:12..14:18): x +: r => toS(*)
          |  toS => _empty_/n76.toS().
-         |[15:22..15:33): +: Array(2) => Predef.copyArrayToImmutableIndexedSeq[Int](*)
+         |[15:20..15:33): 1 +: Array(2) => Predef.copyArrayToImmutableIndexedSeq[Int](*)
          |  Predef => scala/Predef.
          |  copyArrayToImmutableIndexedSeq => scala/LowPriorityImplicits2#copyArrayToImmutableIndexedSeq().
          |  Int => scala/Int#
-         |[15:22..15:33): +: Array(2) => *((`macro-expandee` : ClassTag[Int]))
+         |[15:20..15:33): 1 +: Array(2) => *((`macro-expandee` : ClassTag[Int]))
          |  ClassTag => scala/reflect/ClassTag#
          |  Int => scala/Int#
          |[15:22..15:33): +: Array(2) => *[Int]
@@ -5825,13 +5802,19 @@ class NameRewriteSuite extends SemanticdbSuite {
          |  apply => scala/Array.apply(+5).
          |[15:25..15:33): Array(2) => intArrayOps(*)
          |  intArrayOps => scala/Predef.intArrayOps().
-         |[16:12..16:16): +: q => *(c)
+         |[16:10..16:11): x => v(*)
+         |  v => _empty_/n76.v().
+         |[16:10..16:16): x +: q => *(c)
          |  c => _empty_/n76.c.
-         |[18:27..18:31): +: q => *(c)
+         |[17:10..17:26): { println(); x } => v(*)
+         |  v => _empty_/n76.v().
+         |[18:10..18:26): { println(); x } => v(*)
+         |  v => _empty_/n76.v().
+         |[18:10..18:31): { println(); x } +: q => *(c)
          |  c => _empty_/n76.c.
          |[20:10..20:21): x +: new B2 => *(c)
          |  c => _empty_/n76.c.
-         |[21:14..21:18): +: q => *(c)
+         |[21:10..21:18): "s" +: q => *(c)
          |  c => _empty_/n76.c.
          |[22:10..22:32): collection.mutable.Map => *.apply
          |  apply => scala/collection/MapFactory.Delegate#apply().
