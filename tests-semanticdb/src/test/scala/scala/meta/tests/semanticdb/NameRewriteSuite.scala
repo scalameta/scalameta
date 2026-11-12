@@ -5163,6 +5163,684 @@ class NameRewriteSuite extends SemanticdbSuite {
     ),
   )
 
+  private val n73 =
+    """|object n73 {
+       |  class R { def +:(s: String) = this }
+       |  implicit def v(i: Int): String = i.toString
+       |  object o { val x = 1 }
+       |  def f(i: Int) = i
+       |  val r = new R
+       |  val x = 2
+       |  val a = o.x +: r
+       |  val b = f(1) +: r
+       |  val c = (x + 1) +: r
+       |  val d = { x } +: r
+       |  val e = 1 +: x +: r
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "right-associative operators on expressions under a view",
+    n73,
+    """|[0:7..0:10): n73 <= _empty_/n73.
+       |[1:8..1:9): R <= _empty_/n73.R#
+       |[1:10..1:10):  <= _empty_/n73.R#`<init>`().
+       |[1:16..1:18): +: <= _empty_/n73.R#`+:`().
+       |[1:19..1:20): s <= _empty_/n73.R#`+:`().(s)
+       |[1:22..1:28): String => scala/Predef.String#
+       |[2:15..2:16): v <= _empty_/n73.v().
+       |[2:17..2:18): i <= _empty_/n73.v().(i)
+       |[2:20..2:23): Int => scala/Int#
+       |[2:26..2:32): String => scala/Predef.String#
+       |[2:35..2:36): i => _empty_/n73.v().(i)
+       |[2:37..2:45): toString => scala/Any#toString().
+       |[3:9..3:10): o <= _empty_/n73.o.
+       |[3:17..3:18): x <= _empty_/n73.o.x.
+       |[4:6..4:7): f <= _empty_/n73.f().
+       |[4:8..4:9): i <= _empty_/n73.f().(i)
+       |[4:11..4:14): Int => scala/Int#
+       |[4:18..4:19): i => _empty_/n73.f().(i)
+       |[5:6..5:7): r <= _empty_/n73.r.
+       |[5:14..5:15): R => _empty_/n73.R#
+       |[5:15..5:15):  => _empty_/n73.R#`<init>`().
+       |[6:6..6:7): x <= _empty_/n73.x.
+       |[7:6..7:7): a <= _empty_/n73.a.
+       |[7:10..7:11): o => _empty_/n73.o.
+       |[7:12..7:13): x => _empty_/n73.o.x.
+       |[7:14..7:16): +: => _empty_/n73.R#`+:`().
+       |[7:17..7:18): r => _empty_/n73.r.
+       |[8:6..8:7): b <= _empty_/n73.b.
+       |[8:10..8:11): f => _empty_/n73.f().
+       |[8:15..8:17): +: => _empty_/n73.R#`+:`().
+       |[8:18..8:19): r => _empty_/n73.r.
+       |[9:6..9:7): c <= _empty_/n73.c.
+       |[9:11..9:12): x => _empty_/n73.x.
+       |[9:13..9:14): + => scala/Int#`+`(+4).
+       |[9:18..9:20): +: => _empty_/n73.R#`+:`().
+       |[9:21..9:22): r => _empty_/n73.r.
+       |[10:6..10:7): d <= _empty_/n73.d.
+       |[10:12..10:13): x => _empty_/n73.x.
+       |[10:16..10:18): +: => _empty_/n73.R#`+:`().
+       |[10:19..10:20): r => _empty_/n73.r.
+       |[11:6..11:7): e <= _empty_/n73.e.
+       |[11:12..11:14): +: => _empty_/n73.R#`+:`().
+       |[11:15..11:16): x => _empty_/n73.x.
+       |[11:17..11:19): +: => _empty_/n73.R#`+:`().
+       |[11:20..11:21): r => _empty_/n73.r.
+       |""".stripMargin,
+  )
+
+  synthetics(
+    "right-associative operators on expressions under a view",
+    n73,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[7:10..7:13): o.x => v(*)
+             |  v => _empty_/n73.v().
+             |[8:10..8:14): f(1) => v(*)
+             |  v => _empty_/n73.v().
+             |[9:10..9:17): (x + 1) => v(*)
+             |  v => _empty_/n73.v().
+             |[10:12..10:13): x => v(*)
+             |  v => _empty_/n73.v().
+             |[11:10..11:11): 1 => v(*)
+             |  v => _empty_/n73.v().
+             |[11:15..11:16): x => v(*)
+             |  v => _empty_/n73.v().
+             |""".stripMargin
+      },
+      "",
+    ),
+  )
+
+  private val n74 =
+    """|object n74 {
+       |  class C
+       |  implicit val c: C = new C
+       |  class R { def +:(s: String) = this }
+       |  implicit def w(i: Int)(implicit c: C): String = i.toString
+       |  implicit def l(xs: List[Int]): String = xs.toString
+       |  val r = new R
+       |  val x = 2
+       |  val a = x +: r
+       |  val b = List(1) +: r
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "right-associative operators under a view with arguments",
+    n74,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n74 <= _empty_/n74.
+             |[1:8..1:9): C <= _empty_/n74.C#
+             |[1:9..1:9):  <= _empty_/n74.C#`<init>`().
+             |[2:15..2:16): c <= _empty_/n74.c.
+             |[2:18..2:19): C => _empty_/n74.C#
+             |[2:26..2:27): C => _empty_/n74.C#
+             |[2:27..2:27):  => _empty_/n74.C#`<init>`().
+             |[3:8..3:9): R <= _empty_/n74.R#
+             |[3:10..3:10):  <= _empty_/n74.R#`<init>`().
+             |[3:16..3:18): +: <= _empty_/n74.R#`+:`().
+             |[3:19..3:20): s <= _empty_/n74.R#`+:`().(s)
+             |[3:22..3:28): String => scala/Predef.String#
+             |[4:15..4:16): w <= _empty_/n74.w().
+             |[4:17..4:18): i <= _empty_/n74.w().(i)
+             |[4:20..4:23): Int => scala/Int#
+             |[4:34..4:35): c <= _empty_/n74.w().(c)
+             |[4:37..4:38): C => _empty_/n74.C#
+             |[4:41..4:47): String => scala/Predef.String#
+             |[4:50..4:51): i => _empty_/n74.w().(i)
+             |[4:52..4:60): toString => scala/Any#toString().
+             |[5:15..5:16): l <= _empty_/n74.l().
+             |[5:17..5:19): xs <= _empty_/n74.l().(xs)
+             |[5:21..5:25): List => scala/package.List#
+             |[5:26..5:29): Int => scala/Int#
+             |[5:33..5:39): String => scala/Predef.String#
+             |[5:42..5:44): xs => _empty_/n74.l().(xs)
+             |[5:45..5:53): toString => scala/collection/SeqLike#toString().
+             |[6:6..6:7): r <= _empty_/n74.r.
+             |[6:14..6:15): R => _empty_/n74.R#
+             |[6:15..6:15):  => _empty_/n74.R#`<init>`().
+             |[7:6..7:7): x <= _empty_/n74.x.
+             |[8:6..8:7): a <= _empty_/n74.a.
+             |[8:10..8:11): x => _empty_/n74.x.
+             |[8:12..8:14): +: => _empty_/n74.R#`+:`().
+             |[8:15..8:16): r => _empty_/n74.r.
+             |[9:6..9:7): b <= _empty_/n74.b.
+             |[9:10..9:14): List => scala/collection/immutable/List.
+             |[9:18..9:20): +: => _empty_/n74.R#`+:`().
+             |[9:21..9:22): r => _empty_/n74.r.
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n74 <= _empty_/n74.
+         |[1:8..1:9): C <= _empty_/n74.C#
+         |[1:9..1:9):  <= _empty_/n74.C#`<init>`().
+         |[2:15..2:16): c <= _empty_/n74.c.
+         |[2:18..2:19): C => _empty_/n74.C#
+         |[2:26..2:27): C => _empty_/n74.C#
+         |[2:27..2:27):  => _empty_/n74.C#`<init>`().
+         |[3:8..3:9): R <= _empty_/n74.R#
+         |[3:10..3:10):  <= _empty_/n74.R#`<init>`().
+         |[3:16..3:18): +: <= _empty_/n74.R#`+:`().
+         |[3:19..3:20): s <= _empty_/n74.R#`+:`().(s)
+         |[3:22..3:28): String => scala/Predef.String#
+         |[4:15..4:16): w <= _empty_/n74.w().
+         |[4:17..4:18): i <= _empty_/n74.w().(i)
+         |[4:20..4:23): Int => scala/Int#
+         |[4:34..4:35): c <= _empty_/n74.w().(c)
+         |[4:37..4:38): C => _empty_/n74.C#
+         |[4:41..4:47): String => scala/Predef.String#
+         |[4:50..4:51): i => _empty_/n74.w().(i)
+         |[4:52..4:60): toString => scala/Any#toString().
+         |[5:15..5:16): l <= _empty_/n74.l().
+         |[5:17..5:19): xs <= _empty_/n74.l().(xs)
+         |[5:21..5:25): List => scala/package.List#
+         |[5:26..5:29): Int => scala/Int#
+         |[5:33..5:39): String => scala/Predef.String#
+         |[5:42..5:44): xs => _empty_/n74.l().(xs)
+         |[5:45..5:53): toString => scala/collection/Seq#toString().
+         |[6:6..6:7): r <= _empty_/n74.r.
+         |[6:14..6:15): R => _empty_/n74.R#
+         |[6:15..6:15):  => _empty_/n74.R#`<init>`().
+         |[7:6..7:7): x <= _empty_/n74.x.
+         |[8:6..8:7): a <= _empty_/n74.a.
+         |[8:10..8:11): x => _empty_/n74.x.
+         |[8:12..8:14): +: => _empty_/n74.R#`+:`().
+         |[8:15..8:16): r => _empty_/n74.r.
+         |[9:6..9:7): b <= _empty_/n74.b.
+         |[9:10..9:14): List => scala/package.List.
+         |[9:18..9:20): +: => _empty_/n74.R#`+:`().
+         |[9:21..9:22): r => _empty_/n74.r.
+         |""".stripMargin,
+    ),
+  )
+
+  synthetics(
+    "right-associative operators under a view with arguments",
+    n74,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[8:10..8:11): x => w(*)(c)
+             |  w => _empty_/n74.w().
+             |  c => _empty_/n74.c.
+             |[9:10..9:14): List => *.apply[Int]
+             |  apply => scala/collection/immutable/List.apply().
+             |  Int => scala/Int#
+             |[9:10..9:17): List(1) => l(*)
+             |  l => _empty_/n74.l().
+             |""".stripMargin
+      },
+      """|[9:10..9:14): List => *.apply[Int]
+         |  apply => scala/collection/IterableFactory#apply().
+         |  Int => scala/Int#
+         |""".stripMargin,
+    ),
+  )
+
+  private val n75 =
+    """|object n75 {
+       |  class C
+       |  implicit val c: C = new C
+       |  class R { def +:(s: String)(implicit c: C) = this; def +(s: String) = this }
+       |  class Q
+       |  implicit class RQ(q: Q) { def +:(s: String) = q }
+       |  implicit def v(i: Int): String = i.toString
+       |  val r = new R
+       |  val q = new Q
+       |  val x = 2
+       |  var s = new R
+       |  val a = "s" +: r
+       |  val b = x +: r
+       |  val d = "s" +: q
+       |  val e = x +: q
+       |  val f = r + x
+       |  s +:= x
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "right-associative operators beside a view on the left operand",
+    n75,
+    """|[0:7..0:10): n75 <= _empty_/n75.
+       |[1:8..1:9): C <= _empty_/n75.C#
+       |[1:9..1:9):  <= _empty_/n75.C#`<init>`().
+       |[2:15..2:16): c <= _empty_/n75.c.
+       |[2:18..2:19): C => _empty_/n75.C#
+       |[2:26..2:27): C => _empty_/n75.C#
+       |[2:27..2:27):  => _empty_/n75.C#`<init>`().
+       |[3:8..3:9): R <= _empty_/n75.R#
+       |[3:10..3:10):  <= _empty_/n75.R#`<init>`().
+       |[3:16..3:18): +: <= _empty_/n75.R#`+:`().
+       |[3:19..3:20): s <= _empty_/n75.R#`+:`().(s)
+       |[3:22..3:28): String => scala/Predef.String#
+       |[3:39..3:40): c <= _empty_/n75.R#`+:`().(c)
+       |[3:42..3:43): C => _empty_/n75.C#
+       |[3:57..3:58): + <= _empty_/n75.R#`+`().
+       |[3:59..3:60): s <= _empty_/n75.R#`+`().(s)
+       |[3:62..3:68): String => scala/Predef.String#
+       |[4:8..4:9): Q <= _empty_/n75.Q#
+       |[4:9..4:9):  <= _empty_/n75.Q#`<init>`().
+       |[5:17..5:19): RQ <= _empty_/n75.RQ#
+       |[5:19..5:19):  <= _empty_/n75.RQ#`<init>`().
+       |[5:20..5:21): q <= _empty_/n75.RQ#`<init>`().(q)
+       |[5:20..5:21): q <= _empty_/n75.RQ#q.
+       |[5:23..5:24): Q => _empty_/n75.Q#
+       |[5:32..5:34): +: <= _empty_/n75.RQ#`+:`().
+       |[5:35..5:36): s <= _empty_/n75.RQ#`+:`().(s)
+       |[5:38..5:44): String => scala/Predef.String#
+       |[5:48..5:49): q => _empty_/n75.RQ#q.
+       |[6:15..6:16): v <= _empty_/n75.v().
+       |[6:17..6:18): i <= _empty_/n75.v().(i)
+       |[6:20..6:23): Int => scala/Int#
+       |[6:26..6:32): String => scala/Predef.String#
+       |[6:35..6:36): i => _empty_/n75.v().(i)
+       |[6:37..6:45): toString => scala/Any#toString().
+       |[7:6..7:7): r <= _empty_/n75.r.
+       |[7:14..7:15): R => _empty_/n75.R#
+       |[7:15..7:15):  => _empty_/n75.R#`<init>`().
+       |[8:6..8:7): q <= _empty_/n75.q.
+       |[8:14..8:15): Q => _empty_/n75.Q#
+       |[8:15..8:15):  => _empty_/n75.Q#`<init>`().
+       |[9:6..9:7): x <= _empty_/n75.x.
+       |[10:6..10:7): s <= _empty_/n75.s().
+       |[10:14..10:15): R => _empty_/n75.R#
+       |[10:15..10:15):  => _empty_/n75.R#`<init>`().
+       |[11:6..11:7): a <= _empty_/n75.a.
+       |[11:14..11:16): +: => _empty_/n75.R#`+:`().
+       |[11:17..11:18): r => _empty_/n75.r.
+       |[12:6..12:7): b <= _empty_/n75.b.
+       |[12:10..12:11): x => _empty_/n75.x.
+       |[12:12..12:14): +: => _empty_/n75.R#`+:`().
+       |[12:15..12:16): r => _empty_/n75.r.
+       |[13:6..13:7): d <= _empty_/n75.d.
+       |[13:14..13:16): +: => _empty_/n75.RQ#`+:`().
+       |[13:17..13:18): q => _empty_/n75.q.
+       |[14:6..14:7): e <= _empty_/n75.e.
+       |[14:10..14:11): x => _empty_/n75.x.
+       |[14:12..14:14): +: => _empty_/n75.RQ#`+:`().
+       |[14:15..14:16): q => _empty_/n75.q.
+       |[15:6..15:7): f <= _empty_/n75.f.
+       |[15:10..15:11): r => _empty_/n75.r.
+       |[15:12..15:13): + => _empty_/n75.R#`+`().
+       |[15:14..15:15): x => _empty_/n75.x.
+       |[16:2..16:3): s => _empty_/n75.`s_=`().
+       |[16:4..16:7): +:= => _empty_/n75.R#`+:`().
+       |[16:8..16:9): x => _empty_/n75.x.
+       |""".stripMargin,
+  )
+
+  synthetics(
+    "right-associative operators beside a view on the left operand",
+    n75,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[11:10..11:18): "s" +: r => *(c)
+             |  c => _empty_/n75.c.
+             |[12:10..12:11): x => v(*)
+             |  v => _empty_/n75.v().
+             |[12:10..12:16): x +: r => *(c)
+             |  c => _empty_/n75.c.
+             |[13:17..13:18): q => RQ(*)
+             |  RQ => _empty_/n75.RQ().
+             |[14:10..14:11): x => v(*)
+             |  v => _empty_/n75.v().
+             |[14:15..14:16): q => RQ(*)
+             |  RQ => _empty_/n75.RQ().
+             |[15:14..15:15): x => v(*)
+             |  v => _empty_/n75.v().
+             |[16:2..16:9): s +:= x => *(c)
+             |  c => _empty_/n75.c.
+             |[16:8..16:9): x => v(*)
+             |  v => _empty_/n75.v().
+             |""".stripMargin
+      },
+      """|[11:14..11:18): +: r => *(c)
+         |  c => _empty_/n75.c.
+         |[12:12..12:16): +: r => *(c)
+         |  c => _empty_/n75.c.
+         |[13:17..13:18): q => RQ(*)
+         |  RQ => _empty_/n75.RQ().
+         |[14:15..14:16): q => RQ(*)
+         |  RQ => _empty_/n75.RQ().
+         |[15:14..15:15): x => v(*)
+         |  v => _empty_/n75.v().
+         |[16:2..16:9): s +:= x => *(c)
+         |  c => _empty_/n75.c.
+         |[16:8..16:9): x => v(*)
+         |  v => _empty_/n75.v().
+         |""".stripMargin,
+    ),
+  )
+
+  private val n76 =
+    """|object n76 {
+       |  class C
+       |  implicit val c: C = new C
+       |  class R { def +:(s: String) = this }
+       |  class B { def +:(s: => String)(implicit c: C) = this }
+       |  implicit def toS(r: R): String = ""
+       |  implicit def v(i: Int): String = i.toString
+       |  def f(s: String) = s
+       |  final val K = 1
+       |  val r = new R
+       |  val q = new B
+       |  val x = 2
+       |  val a: String = x +: r
+       |  val b: String = K +: r
+       |  val d = f(x +: r)
+       |  val g: Seq[Int] = 1 +: Array(2)
+       |  val h = x +: q
+       |  val i = { println(); x } +: r
+       |  val j = { println(); x } +: q
+       |  class B2 { def +:(i: => Int)(implicit c: C) = this }
+       |  val k = x +: new B2
+       |  val l = "s" +: q
+       |  val m = collection.mutable.Map[String, Int]()
+       |  def n() = "a"
+       |  m(n()) += 1
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "right-associative operators under a view on the result",
+    n76,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n76 <= _empty_/n76.
+             |[1:8..1:9): C <= _empty_/n76.C#
+             |[1:9..1:9):  <= _empty_/n76.C#`<init>`().
+             |[2:15..2:16): c <= _empty_/n76.c.
+             |[2:18..2:19): C => _empty_/n76.C#
+             |[2:26..2:27): C => _empty_/n76.C#
+             |[2:27..2:27):  => _empty_/n76.C#`<init>`().
+             |[3:8..3:9): R <= _empty_/n76.R#
+             |[3:10..3:10):  <= _empty_/n76.R#`<init>`().
+             |[3:16..3:18): +: <= _empty_/n76.R#`+:`().
+             |[3:19..3:20): s <= _empty_/n76.R#`+:`().(s)
+             |[3:22..3:28): String => scala/Predef.String#
+             |[4:8..4:9): B <= _empty_/n76.B#
+             |[4:10..4:10):  <= _empty_/n76.B#`<init>`().
+             |[4:16..4:18): +: <= _empty_/n76.B#`+:`().
+             |[4:19..4:20): s <= _empty_/n76.B#`+:`().(s)
+             |[4:25..4:31): String => scala/Predef.String#
+             |[4:42..4:43): c <= _empty_/n76.B#`+:`().(c)
+             |[4:45..4:46): C => _empty_/n76.C#
+             |[5:15..5:18): toS <= _empty_/n76.toS().
+             |[5:19..5:20): r <= _empty_/n76.toS().(r)
+             |[5:22..5:23): R => _empty_/n76.R#
+             |[5:26..5:32): String => scala/Predef.String#
+             |[6:15..6:16): v <= _empty_/n76.v().
+             |[6:17..6:18): i <= _empty_/n76.v().(i)
+             |[6:20..6:23): Int => scala/Int#
+             |[6:26..6:32): String => scala/Predef.String#
+             |[6:35..6:36): i => _empty_/n76.v().(i)
+             |[6:37..6:45): toString => scala/Any#toString().
+             |[7:6..7:7): f <= _empty_/n76.f().
+             |[7:8..7:9): s <= _empty_/n76.f().(s)
+             |[7:11..7:17): String => scala/Predef.String#
+             |[7:21..7:22): s => _empty_/n76.f().(s)
+             |[8:12..8:13): K <= _empty_/n76.K.
+             |[9:6..9:7): r <= _empty_/n76.r.
+             |[9:14..9:15): R => _empty_/n76.R#
+             |[9:15..9:15):  => _empty_/n76.R#`<init>`().
+             |[10:6..10:7): q <= _empty_/n76.q.
+             |[10:14..10:15): B => _empty_/n76.B#
+             |[10:15..10:15):  => _empty_/n76.B#`<init>`().
+             |[11:6..11:7): x <= _empty_/n76.x.
+             |[12:6..12:7): a <= _empty_/n76.a.
+             |[12:9..12:15): String => scala/Predef.String#
+             |[12:18..12:19): x => _empty_/n76.x.
+             |[12:20..12:22): +: => _empty_/n76.R#`+:`().
+             |[12:23..12:24): r => _empty_/n76.r.
+             |[13:6..13:7): b <= _empty_/n76.b.
+             |[13:9..13:15): String => scala/Predef.String#
+             |[13:18..13:19): K => _empty_/n76.K.
+             |[13:20..13:22): +: => _empty_/n76.R#`+:`().
+             |[13:23..13:24): r => _empty_/n76.r.
+             |[14:6..14:7): d <= _empty_/n76.d.
+             |[14:10..14:11): f => _empty_/n76.f().
+             |[14:12..14:13): x => _empty_/n76.x.
+             |[14:14..14:16): +: => _empty_/n76.R#`+:`().
+             |[14:17..14:18): r => _empty_/n76.r.
+             |[15:6..15:7): g <= _empty_/n76.g.
+             |[15:9..15:12): Seq => scala/package.Seq#
+             |[15:13..15:16): Int => scala/Int#
+             |[15:22..15:24): +: => scala/collection/SeqLike#`+:`().
+             |[15:25..15:30): Array => scala/Array.
+             |[16:6..16:7): h <= _empty_/n76.h.
+             |[16:10..16:11): x => _empty_/n76.x.
+             |[16:12..16:14): +: => _empty_/n76.B#`+:`().
+             |[16:15..16:16): q => _empty_/n76.q.
+             |[17:6..17:7): i <= _empty_/n76.i.
+             |[17:12..17:19): println => scala/Predef.println().
+             |[17:23..17:24): x => _empty_/n76.x.
+             |[17:27..17:29): +: => _empty_/n76.R#`+:`().
+             |[17:30..17:31): r => _empty_/n76.r.
+             |[18:6..18:7): j <= _empty_/n76.j.
+             |[18:12..18:19): println => scala/Predef.println().
+             |[18:23..18:24): x => _empty_/n76.x.
+             |[18:27..18:29): +: => _empty_/n76.B#`+:`().
+             |[18:30..18:31): q => _empty_/n76.q.
+             |[19:8..19:10): B2 <= _empty_/n76.B2#
+             |[19:11..19:11):  <= _empty_/n76.B2#`<init>`().
+             |[19:17..19:19): +: <= _empty_/n76.B2#`+:`().
+             |[19:20..19:21): i <= _empty_/n76.B2#`+:`().(i)
+             |[19:26..19:29): Int => scala/Int#
+             |[19:40..19:41): c <= _empty_/n76.B2#`+:`().(c)
+             |[19:43..19:44): C => _empty_/n76.C#
+             |[20:6..20:7): k <= _empty_/n76.k.
+             |[20:10..20:11): x => _empty_/n76.x.
+             |[20:12..20:14): +: => _empty_/n76.B2#`+:`().
+             |[20:19..20:21): B2 => _empty_/n76.B2#
+             |[20:21..20:21):  => _empty_/n76.B2#`<init>`().
+             |[21:6..21:7): l <= _empty_/n76.l.
+             |[21:14..21:16): +: => _empty_/n76.B#`+:`().
+             |[21:17..21:18): q => _empty_/n76.q.
+             |[22:6..22:7): m <= _empty_/n76.m.
+             |[22:10..22:20): collection => scala/collection/
+             |[22:21..22:28): mutable => scala/collection/mutable/
+             |[22:29..22:32): Map => scala/collection/mutable/Map.
+             |[22:33..22:39): String => scala/Predef.String#
+             |[22:41..22:44): Int => scala/Int#
+             |[23:6..23:7): n <= _empty_/n76.n().
+             |[24:2..24:3): m => _empty_/n76.m.
+             |[24:4..24:5): n => _empty_/n76.n().
+             |[24:9..24:11): += => scala/Int#`+`(+4).
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n76 <= _empty_/n76.
+         |[1:8..1:9): C <= _empty_/n76.C#
+         |[1:9..1:9):  <= _empty_/n76.C#`<init>`().
+         |[2:15..2:16): c <= _empty_/n76.c.
+         |[2:18..2:19): C => _empty_/n76.C#
+         |[2:26..2:27): C => _empty_/n76.C#
+         |[2:27..2:27):  => _empty_/n76.C#`<init>`().
+         |[3:8..3:9): R <= _empty_/n76.R#
+         |[3:10..3:10):  <= _empty_/n76.R#`<init>`().
+         |[3:16..3:18): +: <= _empty_/n76.R#`+:`().
+         |[3:19..3:20): s <= _empty_/n76.R#`+:`().(s)
+         |[3:22..3:28): String => scala/Predef.String#
+         |[4:8..4:9): B <= _empty_/n76.B#
+         |[4:10..4:10):  <= _empty_/n76.B#`<init>`().
+         |[4:16..4:18): +: <= _empty_/n76.B#`+:`().
+         |[4:19..4:20): s <= _empty_/n76.B#`+:`().(s)
+         |[4:25..4:31): String => scala/Predef.String#
+         |[4:42..4:43): c <= _empty_/n76.B#`+:`().(c)
+         |[4:45..4:46): C => _empty_/n76.C#
+         |[5:15..5:18): toS <= _empty_/n76.toS().
+         |[5:19..5:20): r <= _empty_/n76.toS().(r)
+         |[5:22..5:23): R => _empty_/n76.R#
+         |[5:26..5:32): String => scala/Predef.String#
+         |[6:15..6:16): v <= _empty_/n76.v().
+         |[6:17..6:18): i <= _empty_/n76.v().(i)
+         |[6:20..6:23): Int => scala/Int#
+         |[6:26..6:32): String => scala/Predef.String#
+         |[6:35..6:36): i => _empty_/n76.v().(i)
+         |[6:37..6:45): toString => scala/Any#toString().
+         |[7:6..7:7): f <= _empty_/n76.f().
+         |[7:8..7:9): s <= _empty_/n76.f().(s)
+         |[7:11..7:17): String => scala/Predef.String#
+         |[7:21..7:22): s => _empty_/n76.f().(s)
+         |[8:12..8:13): K <= _empty_/n76.K.
+         |[9:6..9:7): r <= _empty_/n76.r.
+         |[9:14..9:15): R => _empty_/n76.R#
+         |[9:15..9:15):  => _empty_/n76.R#`<init>`().
+         |[10:6..10:7): q <= _empty_/n76.q.
+         |[10:14..10:15): B => _empty_/n76.B#
+         |[10:15..10:15):  => _empty_/n76.B#`<init>`().
+         |[11:6..11:7): x <= _empty_/n76.x.
+         |[12:6..12:7): a <= _empty_/n76.a.
+         |[12:9..12:15): String => scala/Predef.String#
+         |[12:18..12:19): x => _empty_/n76.x.
+         |[12:20..12:22): +: => _empty_/n76.R#`+:`().
+         |[12:23..12:24): r => _empty_/n76.r.
+         |[13:6..13:7): b <= _empty_/n76.b.
+         |[13:9..13:15): String => scala/Predef.String#
+         |[13:18..13:19): K => _empty_/n76.K.
+         |[13:20..13:22): +: => _empty_/n76.R#`+:`().
+         |[13:23..13:24): r => _empty_/n76.r.
+         |[14:6..14:7): d <= _empty_/n76.d.
+         |[14:10..14:11): f => _empty_/n76.f().
+         |[14:12..14:13): x => _empty_/n76.x.
+         |[14:14..14:16): +: => _empty_/n76.R#`+:`().
+         |[14:17..14:18): r => _empty_/n76.r.
+         |[15:6..15:7): g <= _empty_/n76.g.
+         |[15:9..15:12): Seq => scala/package.Seq#
+         |[15:13..15:16): Int => scala/Int#
+         |[15:22..15:24): +: => scala/collection/ArrayOps#`+:`().
+         |[15:25..15:30): Array => scala/Array.
+         |[16:6..16:7): h <= _empty_/n76.h.
+         |[16:10..16:11): x => _empty_/n76.x.
+         |[16:12..16:14): +: => _empty_/n76.B#`+:`().
+         |[16:15..16:16): q => _empty_/n76.q.
+         |[17:6..17:7): i <= _empty_/n76.i.
+         |[17:12..17:19): println => scala/Predef.println().
+         |[17:23..17:24): x => _empty_/n76.x.
+         |[17:27..17:29): +: => _empty_/n76.R#`+:`().
+         |[17:30..17:31): r => _empty_/n76.r.
+         |[18:6..18:7): j <= _empty_/n76.j.
+         |[18:12..18:19): println => scala/Predef.println().
+         |[18:23..18:24): x => _empty_/n76.x.
+         |[18:27..18:29): +: => _empty_/n76.B#`+:`().
+         |[18:30..18:31): q => _empty_/n76.q.
+         |[19:8..19:10): B2 <= _empty_/n76.B2#
+         |[19:11..19:11):  <= _empty_/n76.B2#`<init>`().
+         |[19:17..19:19): +: <= _empty_/n76.B2#`+:`().
+         |[19:20..19:21): i <= _empty_/n76.B2#`+:`().(i)
+         |[19:26..19:29): Int => scala/Int#
+         |[19:40..19:41): c <= _empty_/n76.B2#`+:`().(c)
+         |[19:43..19:44): C => _empty_/n76.C#
+         |[20:6..20:7): k <= _empty_/n76.k.
+         |[20:10..20:11): x => _empty_/n76.x.
+         |[20:12..20:14): +: => _empty_/n76.B2#`+:`().
+         |[20:19..20:21): B2 => _empty_/n76.B2#
+         |[20:21..20:21):  => _empty_/n76.B2#`<init>`().
+         |[21:6..21:7): l <= _empty_/n76.l.
+         |[21:14..21:16): +: => _empty_/n76.B#`+:`().
+         |[21:17..21:18): q => _empty_/n76.q.
+         |[22:6..22:7): m <= _empty_/n76.m.
+         |[22:10..22:20): collection => scala/collection/
+         |[22:21..22:28): mutable => scala/collection/mutable/
+         |[22:29..22:32): Map => scala/collection/mutable/Map.
+         |[22:33..22:39): String => scala/Predef.String#
+         |[22:41..22:44): Int => scala/Int#
+         |[23:6..23:7): n <= _empty_/n76.n().
+         |[24:2..24:3): m => _empty_/n76.m.
+         |[24:4..24:5): n => _empty_/n76.n().
+         |[24:9..24:11): += => scala/Int#`+`(+4).
+         |""".stripMargin,
+    ),
+  )
+
+  synthetics(
+    "right-associative operators under a view on the result",
+    n76,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[12:18..12:19): x => v(*)
+             |  v => _empty_/n76.v().
+             |[12:18..12:24): x +: r => toS(*)
+             |  toS => _empty_/n76.toS().
+             |[13:18..13:19): K => v(*)
+             |  v => _empty_/n76.v().
+             |[13:18..13:24): K +: r => toS(*)
+             |  toS => _empty_/n76.toS().
+             |[14:12..14:13): x => v(*)
+             |  v => _empty_/n76.v().
+             |[14:12..14:18): x +: r => toS(*)
+             |  toS => _empty_/n76.toS().
+             |[15:20..15:33): 1 +: Array(2) => *(fallbackCanBuildFrom(dummyImplicit))
+             |  fallbackCanBuildFrom => scala/FallbackArrayBuilding#fallbackCanBuildFrom().
+             |  dummyImplicit => scala/Predef.DummyImplicit.dummyImplicit().
+             |[15:22..15:33): +: Array(2) => *[Int, Seq[Int]]
+             |  Int => scala/Int#
+             |  Seq => scala/package.Seq#
+             |[15:25..15:30): Array => *.apply
+             |  apply => scala/Array.apply(+5).
+             |[15:25..15:33): Array(2) => intArrayOps(*)
+             |  intArrayOps => scala/Predef.intArrayOps().
+             |[16:10..16:11): x => v(*)
+             |  v => _empty_/n76.v().
+             |[16:10..16:16): x +: q => *(c)
+             |  c => _empty_/n76.c.
+             |[17:10..17:26): { println(); x } => v(*)
+             |  v => _empty_/n76.v().
+             |[18:10..18:26): { println(); x } => v(*)
+             |  v => _empty_/n76.v().
+             |[18:10..18:31): { println(); x } +: q => *(c)
+             |  c => _empty_/n76.c.
+             |[20:10..20:21): x +: new B2 => *(c)
+             |  c => _empty_/n76.c.
+             |[21:10..21:18): "s" +: q => *(c)
+             |  c => _empty_/n76.c.
+             |[22:10..22:32): collection.mutable.Map => *.apply
+             |  apply => scala/collection/generic/GenMapFactory#apply().
+             |[24:2..24:3): m => *.apply
+             |  apply => scala/collection/MapLike#apply().
+             |""".stripMargin
+      },
+      """|[12:20..12:24): +: r => toS(*)
+         |  toS => _empty_/n76.toS().
+         |[13:20..13:24): +: r => toS(*)
+         |  toS => _empty_/n76.toS().
+         |[14:14..14:18): +: r => toS(*)
+         |  toS => _empty_/n76.toS().
+         |[15:22..15:33): +: Array(2) => Predef.copyArrayToImmutableIndexedSeq[Int](*)
+         |  Predef => scala/Predef.
+         |  copyArrayToImmutableIndexedSeq => scala/LowPriorityImplicits2#copyArrayToImmutableIndexedSeq().
+         |  Int => scala/Int#
+         |[15:22..15:33): +: Array(2) => *((`macro-expandee` : ClassTag[Int]))
+         |  ClassTag => scala/reflect/ClassTag#
+         |  Int => scala/Int#
+         |[15:22..15:33): +: Array(2) => *[Int]
+         |  Int => scala/Int#
+         |[15:25..15:30): Array => *.apply
+         |  apply => scala/Array.apply(+5).
+         |[15:25..15:33): Array(2) => intArrayOps(*)
+         |  intArrayOps => scala/Predef.intArrayOps().
+         |[16:12..16:16): +: q => *(c)
+         |  c => _empty_/n76.c.
+         |[18:27..18:31): +: q => *(c)
+         |  c => _empty_/n76.c.
+         |[20:10..20:21): x +: new B2 => *(c)
+         |  c => _empty_/n76.c.
+         |[21:14..21:18): +: q => *(c)
+         |  c => _empty_/n76.c.
+         |[22:10..22:32): collection.mutable.Map => *.apply
+         |  apply => scala/collection/MapFactory.Delegate#apply().
+         |[24:2..24:3): m => *.apply
+         |  apply => scala/collection/MapOps#apply().
+         |""".stripMargin,
+    ),
+  )
+
   test("synthetic locals of a match after patmat") {
     computeDatabaseFromSnippet(
       """|object n72 {
