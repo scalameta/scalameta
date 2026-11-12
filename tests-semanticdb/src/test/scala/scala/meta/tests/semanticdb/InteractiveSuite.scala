@@ -341,4 +341,144 @@ class InteractiveSuite extends FunSuite {
        |""".stripMargin,
   )
 
+  val expectedIa1 =
+    """|interactive.scala
+       |-----------------
+       |
+       |Summary:
+       |Schema => SemanticDB v4
+       |Uri => interactive.scala
+       |Text => non-empty
+       |Language => Scala
+       |Symbols => 11 entries
+       |Occurrences => 18 entries
+       |Diagnostics => 1 entries
+       |
+       |Symbols:
+       |ia1/N# => @ann class N extends AnyRef { +1 decls }
+       |  ann => ia1/ann#
+       |  AnyRef => scala/AnyRef#
+       |ia1/N#`<init>`(). => primary ctor <init>()
+       |ia1/ann# => class ann extends Annotation with StaticAnnotation { +3 decls }
+       |  Annotation => scala/annotation/Annotation#
+       |  StaticAnnotation => scala/annotation/StaticAnnotation#
+       |ia1/ann#`<init>`(). => primary ctor <init>(a: Int, b: Int)
+       |  a => ia1/ann#`<init>`().(a)
+       |  Int => scala/Int#
+       |  b => ia1/ann#`<init>`().(b)
+       |ia1/ann#`<init>`().(a) => default param a: Int
+       |  Int => scala/Int#
+       |ia1/ann#`<init>`().(b) => default param b: Int
+       |  Int => scala/Int#
+       |ia1/ann#a. => private[this] val method a: Int
+       |  Int => scala/Int#
+       |ia1/ann#b. => private[this] val method b: Int
+       |  Int => scala/Int#
+       |ia1/ann. => synthetic final object ann extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |ia1/ann.`<init>$default$1`(). => synthetic method <init>$default$1: Int @uncheckedVariance
+       |  Int => scala/Int#
+       |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+       |ia1/ann.`<init>$default$2`(). => synthetic method <init>$default$2: Int @uncheckedVariance
+       |  Int => scala/Int#
+       |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+       |
+       |Occurrences:
+       |[0:8..0:11): ia1 <= ia1/
+       |[1:6..1:9): ann <= ia1/ann#
+       |[1:9..1:9):  <= ia1/ann#`<init>`().
+       |[1:10..1:11): a <= ia1/ann#`<init>`().(a)
+       |[1:10..1:11): a <= ia1/ann#a.
+       |[1:13..1:16): Int => scala/Int#
+       |[1:22..1:23): b <= ia1/ann#`<init>`().(b)
+       |[1:22..1:23): b <= ia1/ann#b.
+       |[1:25..1:28): Int => scala/Int#
+       |[1:42..1:47): scala => scala/
+       |[1:48..1:58): annotation => scala/annotation/
+       |[1:59..1:75): StaticAnnotation => scala/annotation/StaticAnnotation#
+       |[1:75..1:75):  => scala/annotation/Annotation#`<init>`().
+       |[2:1..2:4): ann => ia1/ann#
+       |[2:4..2:4):  => ia1/ann#`<init>`().
+       |[2:5..2:6): b => ia1/ann#`<init>`().(b)
+       |[2:18..2:19): N <= ia1/N#
+       |[2:19..2:19):  <= ia1/N#`<init>`().
+       |
+       |Diagnostics:
+       |[2:1..2:4) [warning] Usage of named or default arguments transformed this annotation
+       |constructor call into a block. The corresponding AnnotationInfo
+       |will contain references to local values and default getters instead
+       |of the actual argument trees
+       |""".stripMargin
+
+  check(
+    """|package ia1
+       |class ann(a: Int = 1, b: Int = 2) extends scala.annotation.StaticAnnotation
+       |@ann(b = 3) class N
+       |""".stripMargin,
+    """|interactive.scala
+       |-----------------
+       |
+       |Summary:
+       |Schema => SemanticDB v4
+       |Uri => interactive.scala
+       |Text => non-empty
+       |Language => Scala
+       |Symbols => 11 entries
+       |Occurrences => 18 entries
+       |
+       |Symbols:
+       |ia1/N# => @ann class N extends AnyRef { +1 decls }
+       |  ann => ia1/ann#
+       |  AnyRef => scala/AnyRef#
+       |ia1/N#`<init>`(). => primary ctor <init>()
+       |ia1/ann# => class ann extends Annotation with StaticAnnotation { +3 decls }
+       |  Annotation => scala/annotation/Annotation#
+       |  StaticAnnotation => scala/annotation/StaticAnnotation#
+       |ia1/ann#`<init>`(). => primary ctor <init>(@defaultArg a: Int, @defaultArg b: Int)
+       |  a => ia1/ann#`<init>`().(a)
+       |  defaultArg => scala/annotation/meta/defaultArg#
+       |  Int => scala/Int#
+       |  b => ia1/ann#`<init>`().(b)
+       |ia1/ann#`<init>`().(a) => @defaultArg default param a: Int
+       |  defaultArg => scala/annotation/meta/defaultArg#
+       |  Int => scala/Int#
+       |ia1/ann#`<init>`().(b) => @defaultArg default param b: Int
+       |  defaultArg => scala/annotation/meta/defaultArg#
+       |  Int => scala/Int#
+       |ia1/ann#a. => private[this] val method a: Int
+       |  Int => scala/Int#
+       |ia1/ann#b. => private[this] val method b: Int
+       |  Int => scala/Int#
+       |ia1/ann. => synthetic final object ann extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |ia1/ann.`<init>$default$1`(). => synthetic method <init>$default$1: Int @uncheckedVariance
+       |  Int => scala/Int#
+       |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+       |ia1/ann.`<init>$default$2`(). => synthetic method <init>$default$2: Int @uncheckedVariance
+       |  Int => scala/Int#
+       |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+       |
+       |Occurrences:
+       |[0:8..0:11): ia1 <= ia1/
+       |[1:6..1:9): ann <= ia1/ann#
+       |[1:9..1:9):  <= ia1/ann#`<init>`().
+       |[1:10..1:11): a <= ia1/ann#`<init>`().(a)
+       |[1:10..1:11): a <= ia1/ann#a.
+       |[1:13..1:16): Int => scala/Int#
+       |[1:22..1:23): b <= ia1/ann#`<init>`().(b)
+       |[1:22..1:23): b <= ia1/ann#b.
+       |[1:25..1:28): Int => scala/Int#
+       |[1:42..1:47): scala => scala/
+       |[1:48..1:58): annotation => scala/annotation/
+       |[1:59..1:75): StaticAnnotation => scala/annotation/StaticAnnotation#
+       |[1:75..1:75):  => scala/annotation/Annotation#`<init>`().
+       |[2:1..2:4): ann => ia1/ann#
+       |[2:4..2:4):  => ia1/ann#`<init>`().
+       |[2:5..2:6): b => ia1/ann#`<init>`().(b)
+       |[2:18..2:19): N <= ia1/N#
+       |[2:19..2:19):  <= ia1/N#`<init>`().
+       |""".stripMargin,
+    compat = List(ScalaVersion.Scala212 -> expectedIa1, ScalaVersion.AtMost213(15) -> expectedIa1),
+  )
+
 }
