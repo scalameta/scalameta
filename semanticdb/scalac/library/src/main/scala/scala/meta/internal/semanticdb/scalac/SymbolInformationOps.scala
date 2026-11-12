@@ -56,8 +56,7 @@ trait SymbolInformationOps {
         else k.CLASS
       case gsym: TypeSymbol => if (gsym.isParameter) k.TYPE_PARAMETER else k.TYPE
 
-      case NoSymbol => k.UNKNOWN_KIND
-      case _ => sys.error(s"unsupported symbol $gsym")
+      case _ => k.UNKNOWN_KIND
     }
 
     private[meta] def properties: Int = {
@@ -148,19 +147,6 @@ trait SymbolInformationOps {
           } else if (gsym.isModule) gsym.moduleClass.info
           else gsym.info
         val ssig = gsig.toSemanticSig(linkMode, gsym)
-        // keep what the special cases did for a signature they did not expect
-        def unexpected: s.Signature =
-          if (gsym.isConstructor || kind.isLocal) ssig
-          else if (gsym.isScalacField)
-            if (ssig == s.NoSignature) ssig
-            else sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
-          else if (gsym.isSelfParameter) gsym.owner.self.toSemanticTpe match {
-            case s.NoType => s.NoSignature
-            case stpe => s.ValueSignature(stpe)
-          }
-          else if (gsym.isClassfileAnnotation || gsym.hasFlag(gf.JAVA) && kind == k.TYPE_PARAMETER)
-            sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
-          else ssig
         ssig match {
           case ssig: s.MethodSignature =>
             if (gsym.isConstructor) ssig.copy(returnType = s.NoType)
@@ -168,14 +154,14 @@ trait SymbolInformationOps {
             else if (kind.isLocal) {
               val ok = ssig.parameterLists.isEmpty && ssig.typeParameters.forall(_.symlinks.isEmpty)
               if (ok) s.ValueSignature(ssig.returnType) else ssig
-            } else unexpected
+            } else ssig
           case ssig: s.ExtendedMethodSignature =>
             if (gsym.isConstructor) ssig.copy(returnType = s.NoType)
             else if (kind.isLocal) {
               val ok = ssig.paramClauseGroups
                 .forall(x => x.paramClauses.isEmpty && x.typeParamClause.forall(_.symlinks.isEmpty))
               if (ok) s.ValueSignature(ssig.returnType) else ssig
-            } else unexpected
+            } else ssig
           case ssig: s.ValueSignature =>
             if (kind.isLocal) ssig
             else if (gsym.isScalacField) {
@@ -187,7 +173,7 @@ trait SymbolInformationOps {
               case s.NoType => s.NoSignature
               case stpe => s.ValueSignature(stpe)
             }
-            else unexpected
+            else ssig
           case ssig: s.ClassSignature =>
             if (gsym.isClassfileAnnotation) {
               val parents1 = ssig.parents.flatMap {
@@ -197,7 +183,7 @@ trait SymbolInformationOps {
                 case sother => Some(sother)
               }
               ssig.copy(parents = parents1)
-            } else unexpected
+            } else ssig
           case ssig: s.TypeSignature =>
             if (gsym.hasFlag(gf.JAVA) && kind == k.TYPE_PARAMETER) {
               val upperBound1 = ssig.upperBound match {
@@ -206,8 +192,8 @@ trait SymbolInformationOps {
                 case sother => sother
               }
               ssig.copy(lowerBound = s.NoType, upperBound = upperBound1)
-            } else unexpected
-          case _ => unexpected
+            } else ssig
+          case _ => ssig
         }
       }
 

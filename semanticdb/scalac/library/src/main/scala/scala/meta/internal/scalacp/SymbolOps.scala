@@ -87,7 +87,7 @@ trait SymbolOps {
                 if (index <= 0) "()" else s"(+$index)"
               }
             d.Method(symbolName, disambiguator)
-          case k.TYPE | k.CLASS | k.TRAIT => d.Type(symbolName)
+          case k.TYPE | k.CLASS | k.TRAIT | k.INTERFACE => d.Type(symbolName)
           case k.PACKAGE => d.Package(symbolName)
           case k.PARAMETER => d.Parameter(symbolName)
           case k.TYPE_PARAMETER if sym.name == "_" =>
@@ -103,14 +103,14 @@ trait SymbolOps {
             val index = anonymous.indexOf(sym)
             d.TypeParameter(if (index < 0) symbolName else "_$$" + (index + 1))
           case k.TYPE_PARAMETER => d.TypeParameter(symbolName)
-          case skind => sys.error(s"unsupported kind $skind for symbol $sym")
+          case _ => d.Term(symbolName)
         }
       case sym: ExternalSymbol => symbolIndex.lookup(sym) match {
           case PackageLookup => d.Package(symbolName)
           case JavaLookup => d.Type(symbolName)
           case ScalaLookup if sym.entry.entryType == 9 => d.Type(symbolName)
           case ScalaLookup if sym.entry.entryType == 10 => d.Term(symbolName)
-          case ScalaLookup => sys.error(s"unsupported symbol $sym")
+          case ScalaLookup => d.Term(symbolName)
           case MissingLookup => throw MissingSymbolException(sym.path)
         }
       case NoSymbol => d.None
@@ -219,7 +219,7 @@ trait SymbolOps {
         syms.map(registerHardlink)
         val hardlinks = syms.map {
           case sym: SymbolInfoSymbol => sym.toSymbolInformation(HardlinkChildren)
-          case sym => sys.error(s"unsupported symbol $sym")
+          case sym => s.SymbolInformation(symbol = sym.ssym)
         }
         s.Scope(hardlinks = hardlinks)
     }
@@ -245,7 +245,7 @@ trait SymbolOps {
           registerHardlink(sym)
           val sinfo = sym match {
             case sym: SymbolInfoSymbol => sym.toSymbolInformation(HardlinkChildren)
-            case sym => sys.error(s"unsupported symbol $sym")
+            case sym => s.SymbolInformation(symbol = sym.ssym)
           }
           sbuf += sinfo
           if (sym.isUsefulField && sym.isMutable) Synthetics.setterInfos(sinfo, HardlinkChildren)

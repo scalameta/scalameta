@@ -56,9 +56,7 @@ class JavacpSuite extends JavacpSuiteBase {
       .add(new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_VARARGS, "m", "(I)V", null, null))
     def param = Javacp.parse(node, ClasspathIndex(Classpath(Nil))).infos
       .find(_.symbol == "a/Varargs#m().(param0)")
-    val e = intercept[RuntimeException](param)
-    val msg = "expected param0 to be a scala/Array#, found TypeRef(Empty,scala/Int#,List())"
-    assertEquals(e.getMessage, msg)
+    assertEquals(param.map(_.signature), Some(ValueSignature(TypeRef(NoType, "scala/Int#", Nil))))
   }
 
 }

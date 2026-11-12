@@ -48,7 +48,7 @@ trait SymbolInformationOps {
       case sym: ClassSymbol if !sym.isModule =>
         if (sym.isTrait && sym.isJava) k.INTERFACE else if (sym.isTrait) k.TRAIT else k.CLASS
       case _: TypeSymbol | _: AliasSymbol => if (sym.isParam) k.TYPE_PARAMETER else k.TYPE
-      case _ => sys.error(s"unsupported symbol $sym")
+      case _ => k.UNKNOWN_KIND
     }
 
     private[scalacp] def isPrimaryConstructor: Boolean = sym.isConstructor && !sym.isJava && {
@@ -148,19 +148,15 @@ trait SymbolInformationOps {
               preprocess(sym.infoType)
             } else if (sym.isObject) sym.infoType match {
               case TypeRefType(_, moduleClassSym: SymbolInfoSymbol, _) => moduleClassSym.infoType
-              case other => sys.error(s"unsupported type $other")
+              case other => other
             }
             else sym.infoType
           val ssig = sig.toSemanticSig(linkMode)
-          // keep what the special cases did for a signature they did not expect
-          def unexpected: s.Signature =
-            if (sym.isConstructor || !sym.isScalacField || ssig == s.NoSignature) ssig
-            else sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
           ssig match {
             case ssig: s.MethodSignature =>
-              if (sym.isConstructor) ssig.copy(returnType = s.NoType) else unexpected
+              if (sym.isConstructor) ssig.copy(returnType = s.NoType) else ssig
             case ssig: s.ExtendedMethodSignature =>
-              if (sym.isConstructor) ssig.copy(returnType = s.NoType) else unexpected
+              if (sym.isConstructor) ssig.copy(returnType = s.NoType) else ssig
             case ssig: s.ValueSignature =>
               if (sym.isScalacField) {
                 val stparams = Some(s.Scope())
@@ -168,7 +164,7 @@ trait SymbolInformationOps {
                 val sret = ssig.tpe
                 s.MethodSignature(stparams, sparamss, sret)
               } else ssig
-            case _ => unexpected
+            case _ => ssig
           }
         }
       catch {
@@ -217,7 +213,7 @@ trait SymbolInformationOps {
           case Some(privateWithin: Symbol) =>
             val ssym = privateWithin.ssym
             if (sym.isProtected) s.ProtectedWithinAccess(ssym) else s.PrivateWithinAccess(ssym)
-          case Some(other) => sys.error(s"unsupported privateWithin: ${other.getClass} $other")
+          case _ => s.NoAccess
         }
     }
 

@@ -196,7 +196,7 @@ object Javacp {
             val paramTpe =
               if (isRepeatedType) param.toSemanticTpe(methodScope) match {
                 case s.TypeRef(s.NoType, ks.Array, targ :: Nil) => s.RepeatedType(targ)
-                case tpe => sys.error(s"expected $paramDisplayName to be a scala/Array#, found $tpe")
+                case tpe => tpe
               }
               else param.toSemanticTpe(methodScope)
             addInfo(

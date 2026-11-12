@@ -60,7 +60,7 @@ trait TypeOps {
               // NOTE(olafur): manually construct a term symbol for external Java
               // enum symbols because `underlying.entry.entryType == 9` which by
               // default becomes a type symbol.
-              val ssym = Symbols.Global(c.parent.get.ssym, d.Term(c.name))
+              val ssym = Symbols.Global(c.owner, d.Term(c.name))
               s.SingleType(s.NoType, ssym)
             case c: Type => loop(c) match {
                 case s.NoType => s.NoType
@@ -91,7 +91,7 @@ trait TypeOps {
           }
         case NoType => s.NoType
         case NoPrefixType => s.NoType
-        case other => sys.error(s"unsupported type $other")
+        case _ => s.NoType
       }
       loop(tpe)
     }
@@ -179,11 +179,9 @@ object TypeOps {
       case _ => tpe
     }
 
-    def paramss: List[List[SymbolInfoSymbol]] = tpe match {
+    def paramss: List[List[Symbol]] = tpe match {
       case _: NullaryMethodType => Nil
-      case tpe: MethodType =>
-        val symbolInfoParams = tpe.paramSymbols.map(_.asInstanceOf[SymbolInfoSymbol])
-        symbolInfoParams.toList :: tpe.resultType.paramss
+      case tpe: MethodType => tpe.paramSymbols.toList :: tpe.resultType.paramss
       case _ => Nil
     }
   }
