@@ -3481,18 +3481,19 @@ class Scala3PositionSuite extends BasePositionSuite {
     """|def f = xs.map: [T] => (x: T) =>
        |  x
        |""".stripMargin,
-    """|Term.Ascribe xs.map: [T] => (x: T) =>
+    """|Term.Apply xs.map: [T] => (x: T) =>
        |  x [8:xs.map: [T] => (x: T) =>...:36)
        |Term.Select xs.map [8:xs.map:14)
-       |Type.PolyFunction [T] => (x: T) =>
+       |Term.Block : [T] => (x: T) =>
+       |  x [14<: [T] => (x: T) =>...>36)
+       |Term.PolyFunction [T] => (x: T) =>
        |  x [16:[T] => (x: T) =>...:36)
        |Type.ParamClause [T] [16:[T]:19)
        |Type.ParamClause def f = xs.map: [T@@] => (x: T) => [18::18)
        |Type.Bounds def f = xs.map: [T@@] => (x: T) => [18::18)
-       |Type.Function (x: T) =>
+       |Term.Function (x: T) =>
        |  x [23:(x: T) =>...:36)
-       |Type.FuncParamClause (x: T) [23:(x: T):29)
-       |Type.TypedParam x: T [24:x: T:28)
+       |Term.ParamClause (x: T) [23:(x: T):29)
        |""".stripMargin,
     showPosition = true,
   )

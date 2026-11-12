@@ -1178,6 +1178,25 @@ private[meta] final class ScannerTokens(
     arrow >= 0 && hasBodySameLine(arrow)
   }
 
+  /**
+   * true if a lambda follows `arrow` with its body on a later line. In parentheses, the scanner
+   * must also emit an indent before that line, as it must for a lambda with one arrow
+   * @param arrow
+   *   the index of the arrow of a lambda start
+   * @param regions
+   *   the regions at `arrow`, the innermost first
+   */
+  private[parsers] def isCurriedLambdaAfter(arrow: Int, regions: List[SepRegion]): Boolean = {
+    val nextArrow = colonLambdaArrowAt(nextNonHTriviaAt(arrow))
+    nextArrow >= 0 && !hasBodySameLine(nextArrow) &&
+    (regions match {
+      // the body is the first token after the line end
+      case (_: RegionParen) :: _ =>
+        isIndented(regions, countIndent(nextNonTriviaAt(nextAt(nextArrow, isHToken))))
+      case _ => true
+    })
+  }
+
   /* the index of the token that ends `cond` if the condition continues to it from `pos`, or -1;
    * as dotty's `followedByToken`, the scan stops at a statement outside braces */
   private def condEndAt(cond: RegionControlCond, pos: Int): Int = {

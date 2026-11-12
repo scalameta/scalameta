@@ -3034,7 +3034,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       def impl(f: (Term.ParamClause, Term) => Term.FunctionTerm) = {
         val bodyOpt =
           if (nextIfIndentAhead()) blockExprOnIndent()
-          else if (okSingleLine && !inRegionParen) next(expr())
+          else if (okSingleLine && !inRegionParen || isCurriedLambdaAfter(currIndex, in.currRegions))
+            next(expr())
           else null
         if (bodyOpt eq null) null else autoEndPos(paramPos)(f(params, bodyOpt))
       }
@@ -3046,7 +3047,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     }
     def getPolyFunction(params: Type.ParamClause): Term.PolyFunction =
       if (at[RightArrow]) {
-        val bodyOpt = if (nextIfIndentAhead()) blockExprOnIndent() else null
+        // spec: more lambda starts may follow `[T] =>`, before the indented body
+        val bodyOpt =
+          if (nextIfIndentAhead()) blockExprOnIndent() else tryAhead(tryGetArgAsLambda(okSingleLine))
         if (bodyOpt eq null) null else autoEndPos(paramPos)(Term.PolyFunction(params, bodyOpt))
       } else null
 
