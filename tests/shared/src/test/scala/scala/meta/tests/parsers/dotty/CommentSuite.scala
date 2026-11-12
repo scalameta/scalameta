@@ -7566,13 +7566,13 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = bar(
-         |  xs.map: (x => y =>
-         |  // c
-         |  x)
-         |)
+      """|def f = bar(xs.map {
+         |  x => y =>
+         |    // c
+         |    x
+         |})
          |""".stripMargin,
-    )("beg Type.Name: // c")
+    )("beg Term.Name: // c")
   }
 
   test("given: DSLC, colon at the end of its line, body") {

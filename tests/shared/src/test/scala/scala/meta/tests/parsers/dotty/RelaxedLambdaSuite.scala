@@ -1100,16 +1100,18 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |  x
          |""".stripMargin
     val layout =
-      """|def f = xs.map: ([T] => (x: T) => x)
+      """|def f = xs.map {
+         |  [T] => (x: T) => x
+         |}
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      Term.Ascribe(
+      tapply(
         tselect("xs", "map"),
-        ppolyfunc(pparam("T"))(pfunc(Type.TypedParam("x", "T", Nil))("x")),
+        blk(Term.PolyFunction(List(pparam("T")), tfunc(tparam("x", "T"))(tname("x")))),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -1121,11 +1123,25 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |    x
          |  .size
          |""".stripMargin
-    val error =
-      """|<input>:3: error: illegal start of definition `.`
-         |  .size
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map {
+         |  [T] => (x: T) => x
+         |}.size
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tselect(
+        tapply(
+          tselect("xs", "map"),
+          blk(Term.PolyFunction(List(pparam("T")), tfunc(tparam("x", "T"))(tname("x")))),
+        ),
+        "size",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 parens: select colon, curried lambda arrow at end of line") {
@@ -1134,14 +1150,16 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |  x)
          |""".stripMargin
     val layout =
-      """|def f = g(xs.map: (x => y => x))
+      """|def f = g(xs.map {
+         |  x => y => x
+         |})
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply("g", Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+      tapply("g", tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tfunc(tparam("y"))(tname("x")))))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1196,14 +1214,16 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |)
          |""".stripMargin
     val layout =
-      """|def f = bar(xs.map: (x => y => x))
+      """|def f = bar(xs.map {
+         |  x => y => x
+         |})
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply("bar", Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+      tapply("bar", tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tfunc(tparam("y"))(tname("x")))))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1259,14 +1279,16 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |  x
          |""".stripMargin
     val layout =
-      """|def f = xs foreach: (x => y => x)
+      """|def f = xs foreach {
+         |  x => y => x
+         |}
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      Term.Ascribe(tpostfix(tname("xs"), "foreach"), pfunc("x")(pfunc("y")("x"))),
+      tinfix(tname("xs"), tname("foreach"), blk(tfunc(tparam("x"))(tfunc(tparam("y"))(tname("x"))))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1277,14 +1299,16 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |  C)
          |""".stripMargin
     val layout =
-      """|def f = g(a: (A => B => C))
+      """|def f = g(a {
+         |  A => B => C
+         |})
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply("g", Term.Ascribe(tname("a"), pfunc("A")(pfunc("B")("C")))),
+      tapply("g", tapply("a", blk(tfunc(tparam("A"))(tfunc(tparam("B"))(tname("C")))))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1341,7 +1365,11 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |      x)
          |""".stripMargin
     val layout =
-      """|object O { def f = bar(a, xs.map: (x => y => x)) }
+      """|object O {
+         |  def f = bar(a, xs.map {
+         |    x => y => x
+         |  })
+         |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
       Nil,
@@ -1351,7 +1379,11 @@ class RelaxedLambdaSuite extends BaseDottySuite {
         tname("f"),
         Nil,
         None,
-        tapply("bar", tname("a"), Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+        tapply(
+          "bar",
+          tname("a"),
+          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tfunc(tparam("y"))(tname("x"))))),
+        ),
       )),
     )))
     runTestAssert[Source](code, layout)(tree)
@@ -1391,7 +1423,11 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |      x)
          |""".stripMargin
     val layout =
-      """|object O { def f = bar(a, xs.map: (x => y => x)) }
+      """|object O {
+         |  def f = bar(a, xs.map {
+         |    x => y => x
+         |  })
+         |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
       Nil,
@@ -1401,7 +1437,11 @@ class RelaxedLambdaSuite extends BaseDottySuite {
         tname("f"),
         Nil,
         None,
-        tapply("bar", tname("a"), Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+        tapply(
+          "bar",
+          tname("a"),
+          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tfunc(tparam("y"))(tname("x"))))),
+        ),
       )),
     )))
     runTestAssert[Source](code, layout)(tree)
@@ -1991,7 +2031,9 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |)
          |""".stripMargin
     val layout =
-      """|def f = bar(g(a, xs.map: (x => y => x)))
+      """|def f = bar(g(a, xs.map {
+         |  x => y => x
+         |}))
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
@@ -2000,7 +2042,11 @@ class RelaxedLambdaSuite extends BaseDottySuite {
       None,
       tapply(
         "bar",
-        tapply("g", tname("a"), Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+        tapply(
+          "g",
+          tname("a"),
+          tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tfunc(tparam("y"))(tname("x"))))),
+        ),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -2014,7 +2060,9 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |)
          |""".stripMargin
     val layout =
-      """|def f = bar(using xs.map: (x => y => x))
+      """|def f = bar(using xs.map {
+         |  x => y => x
+         |})
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
@@ -2024,7 +2072,7 @@ class RelaxedLambdaSuite extends BaseDottySuite {
       Term.Apply(
         tname("bar"),
         Term.ArgClause(
-          List(Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+          List(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tfunc(tparam("y"))(tname("x")))))),
           Some(Mod.Using()),
         ),
       ),
