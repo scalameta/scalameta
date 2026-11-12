@@ -91,7 +91,7 @@ class SignatureSuite extends SemanticdbSuite {
       """|j/K# => abstract interface K extends Object with Annotation
          |  Object => java/lang/Object#
          |  Annotation => java/lang/annotation/Annotation#
-         |java/lang/Deprecated# => @Documented @Retention @Target abstract interface Deprecated extends Object with Annotation
+         |java/lang/Deprecated# => @Documented @Retention @Target abstract interface Deprecated extends Object with Annotation { +2 decls }
          |  Documented => java/lang/annotation/Documented#
          |  Retention => java/lang/annotation/Retention#
          |  Target => java/lang/annotation/Target#

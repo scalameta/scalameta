@@ -1168,6 +1168,7 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[4:3..4:7): java => java/
              |[4:8..4:12): lang => java/lang/
              |[4:13..4:29): SuppressWarnings => java/lang/SuppressWarnings#
+             |[4:30..4:35): value => java/lang/SuppressWarnings#value().
              |[4:52..4:53): b <= _empty_/n25.b().
              |[5:3..5:19): SuppressWarnings => java/lang/SuppressWarnings#
              |[5:20..5:25): scala => scala/
@@ -1194,6 +1195,7 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[4:3..4:7): java => java/
          |[4:8..4:12): lang => java/lang/
          |[4:13..4:29): SuppressWarnings => java/lang/SuppressWarnings#
+         |[4:30..4:35): value => java/lang/SuppressWarnings#value().
          |[4:52..4:53): b <= _empty_/n25.b().
          |[5:3..5:19): SuppressWarnings => java/lang/SuppressWarnings#
          |[5:20..5:25): scala => scala/
@@ -1257,8 +1259,12 @@ class NameRewriteSuite extends SemanticdbSuite {
        |[8:3..8:9): Colors => issue1672/Colors#
        |[8:32..8:33): d <= _empty_/n77.d().
        |[9:3..9:8): Outer => issue1672/Outer#
+       |[9:13..9:18): Inner => issue1672/Inner#
        |[9:27..9:28): e <= _empty_/n77.e().
        |[10:3..10:8): Outer => issue1672/Outer#
+       |[10:9..10:14): value => issue1672/Outer#value().
+       |[10:21..10:26): Inner => issue1672/Inner#
+       |[10:27..10:32): value => issue1672/Inner#value().
        |[10:43..10:44): f <= _empty_/n77.f().
        |[11:3..11:6): Num => issue1672/Num#
        |[11:18..11:19): g <= _empty_/n77.g().
@@ -1449,15 +1455,21 @@ class NameRewriteSuite extends SemanticdbSuite {
        |[1:7..1:10): n81 <= _empty_/n81.
        |[2:12..2:13): S <= _empty_/n81.S.
        |[3:3..3:9): Inners => issue1672/Inners#
+       |[3:20..3:25): Inner => issue1672/Inner#
+       |[3:34..3:39): Inner => issue1672/Inner#
+       |[3:40..3:45): value => issue1672/Inner#value().
        |[3:59..3:60): a <= _empty_/n81.a().
        |[4:6..4:7): b <= _empty_/n81.b().
        |[4:8..4:9): s <= _empty_/n81.b().(s)
        |[4:11..4:27): SuppressWarnings => java/lang/SuppressWarnings#
        |[4:31..4:32): s => _empty_/n81.b().(s)
+       |[4:33..4:38): value => java/lang/SuppressWarnings#value().
        |[5:6..5:7): c <= _empty_/n81.c().
        |[5:8..5:9): o <= _empty_/n81.c().(o)
        |[5:11..5:16): Outer => issue1672/Outer#
        |[5:20..5:21): o => _empty_/n81.c().(o)
+       |[5:22..5:27): value => issue1672/Outer#value().
+       |[5:28..5:33): value => issue1672/Inner#value().
        |""".stripMargin,
   )
 
@@ -1531,12 +1543,16 @@ class NameRewriteSuite extends SemanticdbSuite {
        |[2:6..2:7): u <= _empty_/n84.u().
        |[2:9..2:12): Int => scala/Int#
        |[2:14..2:30): SuppressWarnings => java/lang/SuppressWarnings#
+       |[2:31..2:36): value => java/lang/SuppressWarnings#value().
        |[3:3..3:19): SuppressWarnings => java/lang/SuppressWarnings#
        |[3:42..3:43): a <= _empty_/n84.a().
        |[4:9..4:18): issue1672 => issue1672/
        |[5:6..5:7): v <= _empty_/n84.v().
        |[5:9..5:12): Int => scala/Int#
        |[5:14..5:19): Outer => issue1672/Outer#
+       |[5:20..5:25): value => issue1672/Outer#value().
+       |[5:32..5:37): Inner => issue1672/Inner#
+       |[5:38..5:43): value => issue1672/Inner#value().
        |""".stripMargin,
   )
 
