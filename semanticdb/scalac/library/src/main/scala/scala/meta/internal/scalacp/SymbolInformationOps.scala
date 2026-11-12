@@ -152,21 +152,24 @@ trait SymbolInformationOps {
             }
             else sym.infoType
           val ssig = sig.toSemanticSig(linkMode)
-          if (sym.isConstructor) ssig match {
-            case ssig: s.MethodSignature => ssig.copy(returnType = s.NoType)
-            case ssig: s.ExtendedMethodSignature => ssig.copy(returnType = s.NoType)
-            case _ => ssig
-          }
-          else if (sym.isScalacField) ssig match {
+          // keep what the special cases did for a signature they did not expect
+          def unexpected: s.Signature =
+            if (sym.isConstructor || !sym.isScalacField || ssig == s.NoSignature) ssig
+            else sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+          ssig match {
+            case ssig: s.MethodSignature =>
+              if (sym.isConstructor) ssig.copy(returnType = s.NoType) else unexpected
+            case ssig: s.ExtendedMethodSignature =>
+              if (sym.isConstructor) ssig.copy(returnType = s.NoType) else unexpected
             case ssig: s.ValueSignature =>
-              val stparams = Some(s.Scope())
-              val sparamss = Nil
-              val sret = ssig.tpe
-              s.MethodSignature(stparams, sparamss, sret)
-            case s.NoSignature => s.NoSignature
-            case _ => sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+              if (sym.isScalacField) {
+                val stparams = Some(s.Scope())
+                val sparamss = Nil
+                val sret = ssig.tpe
+                s.MethodSignature(stparams, sparamss, sret)
+              } else ssig
+            case _ => unexpected
           }
-          else ssig
         }
       catch {
         case ex: MissingSymbolException =>
