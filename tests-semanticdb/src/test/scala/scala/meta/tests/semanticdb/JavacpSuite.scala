@@ -1,8 +1,14 @@
 package scala.meta.tests.semanticdb
 
+import scala.meta.internal.classpath.ClasspathIndex
+import scala.meta.internal.javacp.Javacp
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.SymbolInformation.Property._
 import scala.meta.internal.semanticdb._
+import scala.meta.io.Classpath
+
+import scala.tools.asm.Opcodes
+import scala.tools.asm.tree.{ClassNode, MethodNode}
 
 class JavacpSuite extends JavacpSuiteBase {
 
@@ -39,6 +45,20 @@ class JavacpSuite extends JavacpSuiteBase {
     val symbols = List("com/javacp/annot/ClassAnnotation#", "com/javacp/Interface#", modifiers)
     val obtained = symbols.map(sym => sym -> infos(sym).isAnnotationInterface)
     assertEquals(obtained, symbols.zip(List(true, false, false)))
+  }
+
+  test("varargs method whose last parameter is not an array") {
+    val node = new ClassNode()
+    node.access = Opcodes.ACC_PUBLIC
+    node.name = "a/Varargs"
+    node.superName = "java/lang/Object"
+    node.methods
+      .add(new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_VARARGS, "m", "(I)V", null, null))
+    def param = Javacp.parse(node, ClasspathIndex(Classpath(Nil))).infos
+      .find(_.symbol == "a/Varargs#m().(param0)")
+    val e = intercept[RuntimeException](param)
+    val msg = "expected param0 to be a scala/Array#, found TypeRef(Empty,scala/Int#,List())"
+    assertEquals(e.getMessage, msg)
   }
 
 }
