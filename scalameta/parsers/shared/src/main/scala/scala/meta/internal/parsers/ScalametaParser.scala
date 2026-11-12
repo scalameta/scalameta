@@ -1004,7 +1004,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
   // the indentation of the line that holds the token at `idx`
   private def lineIndent(idx: Int): Int = {
-    val lineBeg = tokens.rskipIf(!_.is[AtEOL], idx, -1) + 1
+    val lineBeg = tokens.rskipIf(isHToken, idx, -1) + 1
     tokens.findNotOrNull(_.is[HSpace], lineBeg).start - tokens(lineBeg).start
   }
 
@@ -3034,8 +3034,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       def impl(f: (Term.ParamClause, Term) => Term.FunctionTerm) = {
         val bodyOpt =
           if (nextIfIndentAhead()) blockExprOnIndent()
-          else if (!okSingleLine || inRegionParen) null
-          else next(expr())
+          else if (okSingleLine && !inRegionParen) next(expr())
+          else null
         if (bodyOpt eq null) null else autoEndPos(paramPos)(f(params, bodyOpt))
       }
       currToken match {
@@ -3045,9 +3045,10 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       }
     }
     def getPolyFunction(params: Type.ParamClause): Term.PolyFunction =
-      if (at[RightArrow] && nextIfIndentAhead())
-        autoEndPos(paramPos)(Term.PolyFunction(params, blockExprOnIndent()))
-      else null
+      if (at[RightArrow]) {
+        val bodyOpt = if (nextIfIndentAhead()) blockExprOnIndent() else null
+        if (bodyOpt eq null) null else autoEndPos(paramPos)(Term.PolyFunction(params, bodyOpt))
+      } else null
 
     /**
      * We need to handle param and then open indented region, otherwise only the block will be

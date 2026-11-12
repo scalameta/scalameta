@@ -1238,6 +1238,7 @@ private[meta] object ScannerTokens {
   val isWhitespace: Token => Boolean = _.is[Whitespace]
   val isTrivia: Token => Boolean = _.is[Trivia]
   val isHTrivia: Token => Boolean = _.is[HTrivia]
+  val isHToken: Token => Boolean = !_.is[AtEOL]
 
   def multilineCommentIndent(t: Comment): Int = {
     val str: String = t.value
