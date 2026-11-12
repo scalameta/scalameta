@@ -152,6 +152,9 @@ abstract class SemanticdbSuite extends FunSuite {
 
   def occurrences(code: String, expected: String)(implicit loc: munit.Location): Unit =
     checkSection(code, expected, "Occurrences")
+  def occurrences(name: TestOptions, code: String, expected: String)(implicit
+      loc: munit.Location,
+  ): Unit = checkSection(name, code, expected, "Occurrences")
 
   def diagnostics(code: String, expected: String)(implicit loc: munit.Location): Unit =
     throw new UnsupportedOperationException(
