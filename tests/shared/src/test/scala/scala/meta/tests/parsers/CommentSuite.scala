@@ -8180,6 +8180,20 @@ class CommentSuite extends ParseSuite {
     )("end Defn.Val, Term.ApplyInfix, Term.ArgClause: /* c */")
   }
 
+  test("infix: MLC inside and after an argument in parens, ascription") {
+    val code =
+      """|object A {
+         |  val y = x op (a /* c1 */) /* c2 */: B
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A { val y = x op a /* c1 */ /* c2 */ : B }
+         |""".stripMargin,
+      reprinted = Seq("end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c1 */ /* c2 */"),
+    )("end Term.ApplyInfix, Term.ArgClause: /* c2 */", "end Term.Name: /* c1 */")
+  }
+
   test("infix: MLC after a tuple argument, operator") {
     val code =
       """|object A {

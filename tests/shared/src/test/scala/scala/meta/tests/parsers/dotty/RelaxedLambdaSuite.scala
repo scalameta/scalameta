@@ -472,6 +472,41 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("SIP-75 single-line lambda: new before else, leading select on the next line") {
+    val code =
+      """|def f = if c then new A else xs.map: x => x
+         |  .foo
+         |""".stripMargin
+    val layout =
+      """|def f = if (c) new A else xs.map {
+         |  x => x
+         |}.foo
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tif(
+        "c",
+        Term.New(init("A")),
+        tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))("x"))), "foo"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 colon: new prefix, type ascription") {
+    val code =
+      """|def f = new A: B
+         |""".stripMargin
+    val layout =
+      """|def f = new A: B
+         |""".stripMargin
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Ascribe(Term.New(init("A")), pname("B")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   test("SIP-75 colon: new prefix, function type ascription") {
     val code =
       """|def f = new A: B => C
@@ -483,6 +518,57 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |""".stripMargin
     val tree = Defn
       .Def(Nil, tname("f"), Nil, None, tapply(Term.New(init("A")), blk(tfunc(tparam("B"))(tname("C")))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 colon: new in a case body, typed extractor pattern in the next case") {
+    val code =
+      """|def f = x match { case 1 => new A; case Some(z): B => 1 }
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    new A
+         |  case Some(z): B =>
+         |    1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        "x",
+        Case(lit(1), None, Term.New(init("A"))),
+        Case(Pat.Typed(Pat.Extract(tname("Some"), List(patvar("z"))), pname("B")), None, lit(1)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 single-line lambda: new prefix alone on its line, select chain on the next") {
+    val code =
+      """|def f =
+         |  new A(1)
+         |    .foo: x => x
+         |  .bar
+         |""".stripMargin
+    val layout =
+      """|def f = new A(1).foo {
+         |  x => x
+         |}.bar
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tselect(
+        tapply(tselect(Term.New(init("A", List(lit(1)))), "foo"), blk(tfunc(tparam("x"))("x"))),
+        "bar",
+      ),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -522,6 +608,367 @@ class RelaxedLambdaSuite extends BaseDottySuite {
       None,
       tinfix(lit(1), "+", tapply(Term.New(init("A")), blk(tfunc(tparam("x"))(tname("x"))))),
     )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 single-line lambda: parenthesized operand of an infix operator") {
+    val code =
+      """|def f = a + (b): x => x
+         |""".stripMargin
+    val layout =
+      """|def f = a + b {
+         |  x => x
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tinfix(tname("a"), "+", tapply(tname("b"), blk(tfunc(tparam("x"))(tname("x"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 colon: parenthesized placeholder operand of an infix operator, type ascription") {
+    val code =
+      """|def f = a + (_ + 1): Int
+         |""".stripMargin
+    val layout =
+      """|def f = a + (_ + 1): Int
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Ascribe(
+        tinfix(tname("a"), "+", Term.AnonymousFunction(tinfix(Term.Placeholder(), "+", lit(1)))),
+        pname("Int"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon: new prefix with arguments, empty template body before an end marker") {
+    val code =
+      """|object A:
+         |  val f = new B(1):
+         |  end f
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val f = new B(1)
+         |  end f
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(Nil, List(patvar("f")), None, Term.New(init("B", List(lit(1))))),
+        Term.EndMarker(tname("f")),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("colon: new prefix with type arguments, empty template body before an end marker") {
+    val code =
+      """|object A:
+         |  val f = new B[T]:
+         |  end f
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val f = new B[T]
+         |  end f
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(Nil, List(patvar("f")), None, Term.New(init(papply("B", "T")))),
+        Term.EndMarker(tname("f")),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("colon: new type projection prefix, empty template body before an end marker") {
+    val code =
+      """|object A:
+         |  val f = new B#C:
+         |  end f
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val f = new B#C
+         |  end f
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(Nil, List(patvar("f")), None, Term.New(init(Type.Project(pname("B"), pname("C"))))),
+        Term.EndMarker(tname("f")),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("colon: new select prefix, empty template body before an end marker") {
+    val code =
+      """|object A:
+         |  val f = new a.B:
+         |  end f
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val f = new a.B
+         |  end f
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(Nil, List(patvar("f")), None, Term.New(init(pselect(tname("a"), "B")))),
+        Term.EndMarker(tname("f")),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("colon: new this prefix, empty template body before an end marker") {
+    val code =
+      """|object A:
+         |  val f = new this.B:
+         |  end f
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val f = new this.B
+         |  end f
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(Nil, List(patvar("f")), None, Term.New(init(pselect(Term.This(anon), "B")))),
+        Term.EndMarker(tname("f")),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("colon: new super prefix, empty template body before an end marker") {
+    val code =
+      """|object A:
+         |  val f = new super.B:
+         |  end f
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val f = new super.B
+         |  end f
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(Nil, List(patvar("f")), None, Term.New(init(pselect(Term.Super(anon, anon), "B")))),
+        Term.EndMarker(tname("f")),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("colon: new super[T] prefix, empty template body before an end marker") {
+    val code =
+      """|object A:
+         |  val f = new super[T].B:
+         |  end f
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val f = new super[T].B
+         |  end f
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("f")),
+          None,
+          Term.New(init(pselect(Term.Super(anon, Name.Indeterminate("T")), "B"))),
+        ),
+        Term.EndMarker(tname("f")),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("colon: new with this prefix, empty template body before an end marker") {
+    val code =
+      """|object A:
+         |  val f = new A with this.B:
+         |  end f
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val f = new A with this.B
+         |  end f
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("f")),
+          None,
+          Term.NewAnonymous(tpl(List(init("A"), init(pselect(Term.This(anon), "B"))), Nil)),
+        ),
+        Term.EndMarker(tname("f")),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("colon: new ellipsis unquote prefix, empty template body before an end marker") {
+    val code =
+      """|object A:
+         |  val f = new ..$inits:
+         |  end f
+         |""".stripMargin
+    val structure =
+      """|Defn.Object(
+         |  Nil,
+         |  Term.Name("A"),
+         |  Template(
+         |    None,
+         |    Nil,
+         |    Template.Body(
+         |      None,
+         |      List(
+         |        Defn.Val(
+         |          Nil,
+         |          List(
+         |            Pat.Var(Term.Name("f"))
+         |          ),
+         |          None,
+         |          Term.New(Init.Quasi(
+         |            1,
+         |            Init.Quasi(
+         |              0,
+         |              Term.Name("inits")
+         |            )
+         |          ))
+         |        ),
+         |        Term.EndMarker(Term.Name("f"))
+         |      )
+         |    ),
+         |    Nil
+         |  )
+         |)""".stripMargin
+    assertNoDiff(stat(code)(dialect.unquoteTerm(multiline = true)).structure, structure)
+  }
+
+  test("colon: new ellipsis annotation, empty template body before an end marker") {
+    val code =
+      """|object A:
+         |  val f = new A ..@$annots:
+         |  end f
+         |""".stripMargin
+    val structure =
+      """|Defn.Object(
+         |  Nil,
+         |  Term.Name("A"),
+         |  Template(
+         |    None,
+         |    Nil,
+         |    Template.Body(
+         |      None,
+         |      List(
+         |        Defn.Val(
+         |          Nil,
+         |          List(
+         |            Pat.Var(Term.Name("f"))
+         |          ),
+         |          None,
+         |          Term.New(Init(
+         |            Type.Annotate(
+         |              Type.Name("A"),
+         |              List(
+         |                Mod.Annot.Quasi(
+         |                  1,
+         |                  Mod.Annot.Quasi(
+         |                    0,
+         |                    Term.Name("annots")
+         |                  )
+         |                )
+         |              )
+         |            ),
+         |            Name.Anonymous(),
+         |            Nil
+         |          ))
+         |        ),
+         |        Term.EndMarker(Term.Name("f"))
+         |      )
+         |    ),
+         |    Nil
+         |  )
+         |)""".stripMargin
+    assertNoDiff(stat(code)(dialect.unquoteTerm(multiline = true)).structure, structure)
+  }
+
+  test("colon: new super[T] prefix, template body before a leading infix line") {
+    val code =
+      """|object A:
+         |  def f = new super[T].B:
+         |      def x = 1
+         |    + 1
+         |""".stripMargin
+    val layout = "object A { def f = new super[T].B { def x = 1 } + 1 }"
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tinfix(
+          Term.NewAnonymous(tpl(
+            List(init(pselect(Term.Super(anon, Name.Indeterminate("T")), "B"))),
+            List(Defn.Def(Nil, tname("x"), Nil, None, int(1))),
+          )),
+          "+",
+          int(1),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: new prefix colon, single-line lambda") {
+    val code =
+      """|def f = g(new A: x => x)
+         |""".stripMargin
+    val layout =
+      """|def f = g(new A: (x => x))
+         |""".stripMargin
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tapply("g", Term.Ascribe(Term.New(init("A")), pfunc("x")("x"))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -668,6 +1115,1023 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("SIP-75 multi-line polymorphic lambda: leading select on the next line") {
+    val code =
+      """|def f = xs.map: [T] => (x: T) =>
+         |    x
+         |  .size
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: illegal start of definition `.`
+         |  .size
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("SIP-75 parens: select colon, curried lambda arrow at end of line") {
+    val code =
+      """|def f = g(xs.map: x => y =>
+         |  x)
+         |""".stripMargin
+    val layout =
+      """|def f = g(xs.map: (x => y => x))
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("g", Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon on its own line, curried lambda arrow at end of line, body at the same indent") {
+    val code =
+      """|def f = bar(
+         |  xs.map: x => y =>
+         |  x
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = bar(xs.map: (x => y => x))
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("bar", Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon on its own line, curried lambda arrow at end of line, blank line, body at the same indent") {
+    val code =
+      """|def f = bar(
+         |  xs.map: x => y =>
+         |
+         |  x
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = bar(xs.map: (x => y => x))
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("bar", Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon on its own line, curried lambda arrow at end of line, blank line, body past the same indent") {
+    val code =
+      """|def f = bar(
+         |  xs.map: x => y =>
+         |
+         |    x
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = bar(xs.map: (x => y => x))
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("bar", Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: typed name on its own line, curried function type arrow at end of line, result at the same indent") {
+    val code =
+      """|def f = compose(
+         |  first: A => B =>
+         |  C,
+         |  second
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = compose(first: (A => B => C), second)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("compose", Term.Ascribe(tname("first"), pfunc("A")(pfunc("B")("C"))), tname("second")),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon, curried lambda arrow at end of line, body at the indent of the line with the parenthesis") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(xs.map: x => y =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|object O { def f = bar(xs.map: (x => y => x)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply("bar", Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 infix colon, curried lambda arrow at end of line") {
+    val code =
+      """|def f = xs foreach: x => y =>
+         |  x
+         |""".stripMargin
+    val layout =
+      """|def f = xs foreach: (x => y => x)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Ascribe(tpostfix(tname("xs"), "foreach"), pfunc("x")(pfunc("y")("x"))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: typed name colon, curried function type arrow at end of line") {
+    val code =
+      """|def f = g(a: A => B =>
+         |  C)
+         |""".stripMargin
+    val layout =
+      """|def f = g(a: (A => B => C))
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("g", Term.Ascribe(tname("a"), pfunc("A")(pfunc("B")("C")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon, curried lambda arrow at end of line, body in the first column") {
+    val code =
+      """|def f = bar(xs.map: x => y =>
+         |x)
+         |""".stripMargin
+    val layout =
+      """|def f = bar(xs.map: (x => y => x))
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("bar", Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after an argument line, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(a,
+         |    xs.map: x => y =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|object O { def f = bar(a, xs.map: (x => y => x)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply("bar", tname("a"), Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after an argument line, curried lambda arrow at end of line, body past the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(a,
+         |    xs.map: x => y =>
+         |      x)
+         |""".stripMargin
+    val layout =
+      """|object O { def f = bar(a, xs.map: (x => y => x)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply("bar", tname("a"), Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: deeper select colon after an argument line, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(a,
+         |      xs.map: x => y =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|object O { def f = bar(a, xs.map: (x => y => x)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply("bar", tname("a"), Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: deeper select colon after an argument line, curried lambda arrow at end of line, body at the same indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(a,
+         |      xs.map: x => y =>
+         |      x)
+         |""".stripMargin
+    val layout =
+      """|object O { def f = bar(a, xs.map: (x => y => x)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply("bar", tname("a"), Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test(
+    "SIP-75 parens: select colon on its own line, three lambda starts, body at the same indent",
+  ) {
+    val code =
+      """|def f = bar(
+         |  xs.map: x => y => z =>
+         |  x,
+         |  z
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = bar(xs.map: (x => y => z => x), z)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        "bar",
+        Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")(pfunc("z")("x")))),
+        tname("z"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon on its own line, polymorphic curried lambda, body at the same indent") {
+    val code =
+      """|def f = bar(
+         |  xs.map: [T] => x => y =>
+         |  x,
+         |  z
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = bar(xs.map: ([T] => x => y => x), z)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        "bar",
+        Term.Ascribe(
+          tselect("xs", "map"),
+          Type.PolyFunction(List(pparam("T")), pfunc("x")(pfunc("y")("x"))),
+        ),
+        tname("z"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: two select colons, curried lambda arrows at end of line, bodies at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(xs.map: x => y =>
+         |    x, xs.map: x => y =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|object O { def f = bar(xs.map: (x => y => x), xs.map: (x => y => x)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "bar",
+          Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x"))),
+          Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x"))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after a nested argument over two lines, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(g(a,
+         |      b), xs.map: x => y =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|object O { def f = bar(g(a, b), xs.map: (x => y => x)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "bar",
+          tapply("g", tname("a"), tname("b")),
+          Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x"))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after a nested argument whose line ends after its parenthesis, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(g(
+         |        a), xs.map: x => y =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|object O { def f = bar(g(a), xs.map: (x => y => x)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "bar",
+          tapply("g", tname("a")),
+          Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x"))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after a lambda argument in braces, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(g { a =>
+         |      a }, xs.map: x => y =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def f = bar(g {
+         |    a => a
+         |  }, xs.map: (x => y => x))
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "bar",
+          tapply("g", blk(tfunc(tparam("a"))(tname("a")))),
+          Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x"))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after a lambda argument in parentheses, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(g(a =>
+         |      a), xs.map: x => y =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|object O { def f = bar(g(a => a), xs.map: (x => y => x)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "bar",
+          tapply("g", tfunc(tparam("a"))(tname("a"))),
+          Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x"))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after a doubly nested argument over two lines, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(f(g(a,
+         |      b)), xs.map: x => y =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|object O { def f = bar(f(g(a, b)), xs.map: (x => y => x)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "bar",
+          tapply("f", tapply("g", tname("a"), tname("b"))),
+          Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x"))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after a doubly nested argument whose outer line ends after its parenthesis, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(f(
+         |      g(a,
+         |        b)), xs.map: x => y =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|object O { def f = bar(f(g(a, b)), xs.map: (x => y => x)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "bar",
+          tapply("f", tapply("g", tname("a"), tname("b"))),
+          Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x"))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after an argument in braces over two lines, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(f { g(a,
+         |      b) }, xs.map: x => y =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def f = bar(f {
+         |    g(a, b)
+         |  }, xs.map: (x => y => x))
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "bar",
+          tapply("f", blk(tapply("g", tname("a"), tname("b")))),
+          Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x"))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after a colon lambda argument, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(g(xs.map: a =>
+         |      a), ys.map: x => y =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def f = bar(g(xs.map {
+         |    a => a
+         |  }), ys.map: (x => y => x))
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "bar",
+          tapply("g", tapply(tselect("xs", "map"), blk(tfunc(tparam("a"))(tname("a"))))),
+          Term.Ascribe(tselect("ys", "map"), pfunc("x")(pfunc("y")("x"))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after a brace block whose first statement spans two lines, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f = foo { g(a,
+         |      b)
+         |    bar(c,
+         |      xs.map: u => v =>
+         |    u)
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def f = foo {
+         |    g(a, b)
+         |    bar(c, xs.map: (u => v => u))
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "foo",
+          blk(
+            tapply("g", tname("a"), tname("b")),
+            tapply("bar", tname("c"), Term.Ascribe(tselect("xs", "map"), pfunc("u")(pfunc("v")("u")))),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after for generators over two lines, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(for x <- xs
+         |            y <- ys
+         |        yield x, zs.map: u => v =>
+         |    u)
+         |""".stripMargin
+    val layout =
+      """|object O { def f = bar(for (x <- xs; y <- ys) yield x, zs.map: (u => v => u)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "bar",
+          Term.ForYield(
+            List(Enumerator.Generator(patvar("x"), "xs"), Enumerator.Generator(patvar("y"), "ys")),
+            tname("x"),
+          ),
+          Term.Ascribe(tselect("zs", "map"), pfunc("u")(pfunc("v")("u"))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after a comment over two lines, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    bar(/* a
+         |      */ xs.map: u => v =>
+         |    u)
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def f = bar( /* a
+         |      */ xs.map: (u => v => u))
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "bar",
+          Term.Ascribe.newBuilder(tselect("xs", "map"), pfunc("u")(pfunc("v")("u")))
+            .begComment(Seq("/* a\n      */")).result(),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon after an argument line in braces, curried lambda arrow at end of line, body at the braces indent") {
+    val code =
+      """|def f = {
+         |  bar(a,
+         |    xs.map: x => y =>
+         |  x)
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  bar(a, xs.map: (x => y => x))
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(tapply("bar", tname("a"), Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon in a case body, curried lambda arrow at end of line, body at the case indent") {
+    val code =
+      """|object O:
+         |  def f = x match
+         |    case a =>
+         |      bar(b,
+         |        xs.map: u => v =>
+         |      u)
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def f = x match {
+         |    case a =>
+         |      bar(b, xs.map: (u => v => u))
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.Match(
+          tname("x"),
+          List(Case(
+            patvar("a"),
+            None,
+            tapply("bar", tname("b"), Term.Ascribe(tselect("xs", "map"), pfunc("u")(pfunc("v")("u")))),
+          )),
+          Nil,
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon in the body of a lambda in braces, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f = foo { a =>
+         |    bar(b, xs.map: u => v =>
+         |    u)
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object O {
+         |  def f = foo {
+         |    a => bar(b, xs.map: (u => v => u))
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          "foo",
+          blk(tfunc(tparam("a"))(
+            tapply("bar", tname("b"), Term.Ascribe(tselect("xs", "map"), pfunc("u")(pfunc("v")("u")))),
+          )),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: select colon on an infix continuation line, curried lambda arrow at end of line, body at the same indent") {
+    val code =
+      """|object O:
+         |  val x = a +
+         |    bar(b, xs.map: u => v =>
+         |    u)
+         |""".stripMargin
+    val layout =
+      """|object O { val x = a + bar(b, xs.map: (u => v => u)) }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Val(
+        Nil,
+        List(patvar("x")),
+        None,
+        tinfix(
+          tname("a"),
+          "+",
+          tapply("bar", tname("b"), Term.Ascribe(tselect("xs", "map"), pfunc("u")(pfunc("v")("u")))),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 nested parens: select colon on the line of the inner parenthesis, curried lambda arrow at end of line, body at the outer indent") {
+    val code =
+      """|def f = bar(
+         |  g(xs.map: x => y =>
+         |  x)
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = bar(g(xs.map: (x => y => x)))
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply("bar", tapply("g", Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 nested parens: select colon after an argument line, curried lambda arrow at end of line, body past the outer indent") {
+    val code =
+      """|def f = bar(
+         |  g(a,
+         |    xs.map: x => y =>
+         |    x)
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = bar(g(a, xs.map: (x => y => x)))
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        "bar",
+        tapply("g", tname("a"), Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: using, select colon on the next line, curried lambda arrow at end of line, body at the same indent") {
+    val code =
+      """|def f = bar(using
+         |  xs.map: x => y =>
+         |  x
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = bar(using xs.map: (x => y => x))
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("bar"),
+        Term.ArgClause(
+          List(Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x")))),
+          Some(Mod.Using()),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 if condition: select colon after the parenthesis, curried lambda arrow at end of line, body at the statement indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    if (xs.exists: x => y =>
+         |    x) 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object O { def f = if (xs.exists: (x => y => x)) 1 else 2 }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.If(
+          Term.Ascribe(tselect("xs", "exists"), pfunc("x")(pfunc("y")("x"))),
+          lit(1),
+          lit(2),
+          Nil,
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 if condition: select colon on its own line, curried lambda arrow at end of line, body at the same indent") {
+    val code =
+      """|object O:
+         |  def f =
+         |    if (
+         |      xs.exists: x => y =>
+         |      x) 1 else 2
+         |""".stripMargin
+    val layout =
+      """|object O { def f = if (xs.exists: (x => y => x)) 1 else 2 }
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.If(
+          Term.Ascribe(tselect("xs", "exists"), pfunc("x")(pfunc("y")("x"))),
+          lit(1),
+          lit(2),
+          Nil,
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("SIP-75 tuple: select colon on its own line, curried lambda arrow at end of line, body at the same indent") {
+    val code =
+      """|def f = (
+         |  a,
+         |  xs.map: x => y =>
+         |  x
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = (a, xs.map: (x => y => x))
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Tuple(List(tname("a"), Term.Ascribe(tselect("xs", "map"), pfunc("x")(pfunc("y")("x"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: placeholder colon, curried function type arrow at end of line") {
+    val code =
+      """|def f = xs.map(_: A => B =>
+         |  C)
+         |""".stripMargin
+    val layout =
+      """|def f = xs.map(_: (A => B => C))
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.AnonymousFunction(
+        tapply(tselect("xs", "map"), Term.Ascribe(Term.Placeholder(), pfunc("A")(pfunc("B")("C")))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   test("SIP-75 single-line lambda: apply prefix, two params") {
     val code =
       """|def f = xs.foldLeft(0): (a, b) => a + b
@@ -686,6 +2150,123 @@ class RelaxedLambdaSuite extends BaseDottySuite {
         tapply(tselect("xs", "foldLeft"), lit(0)),
         blk(tfunc(tparam("a"), tparam("b"))(tinfix("a", "+", "b"))),
       ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 lambda parameter: curried function type, arrow at end of line") {
+    val code =
+      """|def f = (g: A => B =>
+         |  C) => g
+         |""".stripMargin
+    val layout =
+      """|def f = (g: A => B => C) => g
+         |""".stripMargin
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tfunc(tparam("g", pfunc("A")(pfunc("B")("C"))))(tname("g")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: case guard, argument colon, lambda arrow at end of line") {
+    val code =
+      """|def f = x match
+         |  case y if f(ys.exists: z =>
+         |      z.ok) => 1
+         |  case _ => 0
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if f(ys.exists {
+         |    z => z.ok
+         |  }) => 1
+         |  case _ => 0
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tname("f"),
+            tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tselect("z", "ok")))),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(0)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 parens: case guard, infix colon, lambda arrow at end of line") {
+    val code =
+      """|def f = x match
+         |  case y if (xs foreach: z =>
+         |      z.ok) => 1
+         |  case _ => 0
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs foreach {
+         |    z => z.ok
+         |  } => 1
+         |  case _ => 0
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(tname("xs"), tname("foreach"), blk(tfunc(tparam("z"))(tselect("z", "ok"))))),
+          int(1),
+        ),
+        Case(patwildcard, None, int(0)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 lambda parameter: curried function type, lambda arrow on the next line") {
+    val code =
+      """|def f = (g: A => B =>
+         |  C)
+         |  => g
+         |""".stripMargin
+    val layout =
+      """|def f = (g: A => B => C) => g
+         |""".stripMargin
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tfunc(tparam("g", pfunc("A")(pfunc("B")("C"))))(tname("g")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 multi-line curried lambda: leading select on the next line") {
+    val code =
+      """|def f = xs.map: x => y =>
+         |    x
+         |  .size
+         |""".stripMargin
+    val layout =
+      """|def f = xs.map {
+         |  x => y => x.size
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tfunc(tparam("y"))(tselect("x", "size"))))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
