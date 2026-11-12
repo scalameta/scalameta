@@ -1667,8 +1667,10 @@ class TargetedSuite extends SemanticdbSuite {
     """|[0:8..0:10): ux <= ux/
        |[1:7..1:8): X <= ux/X.
        |[2:3..2:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[2:20..2:25): value => java/lang/SuppressWarnings#value().
        |[2:44..2:45): a <= ux/X.a().
        |[3:3..3:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[3:21..3:26): value => java/lang/SuppressWarnings#value().
        |[3:45..3:46): b <= ux/X.b().
        |[4:3..4:19): SuppressWarnings => java/lang/SuppressWarnings#
        |[4:36..4:37): c <= ux/X.c().
@@ -2141,10 +2143,18 @@ class TargetedSuite extends SemanticdbSuite {
        |[1:25..1:30): Outer => issue1672/Outer#
        |[2:7..2:8): I <= vi/I.
        |[3:3..3:8): Outer => issue1672/Outer#
+       |[3:9..3:14): value => issue1672/Outer#value().
+       |[3:21..3:26): Inner => issue1672/Inner#
+       |[3:27..3:32): value => issue1672/Inner#value().
        |[3:45..3:46): a <= vi/I.a().
        |[4:3..4:8): Outer => issue1672/Outer#
+       |[4:10..4:15): value => issue1672/Outer#value().
+       |[4:22..4:27): Inner => issue1672/Inner#
+       |[4:29..4:34): value => issue1672/Inner#value().
        |[4:47..4:48): b <= vi/I.b().
        |[5:3..5:8): Outer => issue1672/Outer#
+       |[5:13..5:18): Inner => issue1672/Inner#
+       |[5:19..5:24): value => issue1672/Inner#value().
        |[5:37..5:38): c <= vi/I.c().
        |""".stripMargin,
     "Occurrences",

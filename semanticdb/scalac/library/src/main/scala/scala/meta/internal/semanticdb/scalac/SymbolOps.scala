@@ -217,8 +217,8 @@ trait SymbolOps {
     def isSyntheticConstructor: Boolean = {
       val owner = sym.owner
       sym.isConstructor &&
-      (owner.isModuleClass || owner.hasAllFlags(gf.JAVA | gf.INTERFACE) || owner.hasJavaEnumFlag) ||
-      sym.name == g.TermName(GenBCode.CLASS_CONSTRUCTOR_NAME) || owner.isClassfileAnnotation
+      (owner.isModuleClass || owner.hasAllFlags(gf.JAVA | gf.INTERFACE) || owner.hasJavaEnumFlag ||
+        owner.isClassfileAnnotation) || sym.name == g.TermName(GenBCode.CLASS_CONSTRUCTOR_NAME)
     }
     def isLocalChild: Boolean = sym.name == g.tpnme.LOCAL_CHILD
     def isSyntheticValueClassCompanion: Boolean =
@@ -671,8 +671,10 @@ trait SymbolOps {
           val sym = t.symbol
           // the tree of a method has the skolems of the type parameters of its signature
           add(sym.deSkolemize)
-          traverseAnnotations(t)
-          if (t.isInstanceOf[g.MemberDef] && sym.isSynthetic) syntheticDepth += 1
+          if (t.isInstanceOf[g.MemberDef]) {
+            traverseAnnotations(sym)
+            if (sym.isSynthetic) syntheticDepth += 1
+          }
         // scalac desugars `val Some(a) = x` into `x match { case Some(a) => a }`, the pattern first
         case t: g.Match => t.cases match {
             case c :: Nil => c.body match {

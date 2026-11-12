@@ -10,7 +10,7 @@ object Issue4505/*<=example.Issue4505.*/ {
   @AnnotationWithClass/*=>example.Issue4505J#AnnotationWithClass#*/(classOf[String])
   class B/*<=example.Issue4505.B#*/
 
-  @AnnotationWithClass/*=>example.Issue4505J#AnnotationWithClass#*/(value = classOf[String])
+  @AnnotationWithClass/*=>example.Issue4505J#AnnotationWithClass#*/(value/*=>example.Issue4505J#AnnotationWithClass#value().*/ = classOf[String])
   class C/*<=example.Issue4505.C#*/
 
 }

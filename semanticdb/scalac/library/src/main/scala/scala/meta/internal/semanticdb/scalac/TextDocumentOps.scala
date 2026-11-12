@@ -48,6 +48,7 @@ trait TextDocumentOps {
 
   // walks each tree once, as a document does: its expandee, its original, itself, its children
   private[scalac] abstract class DocumentTraverser(source: gu.SourceFile) extends g.Traverser {
+
     // macro expandees can have cycles, keep tracks of visited nodes.
     protected val isVisited = mutable.Set.empty[g.Tree]
 
@@ -79,7 +80,7 @@ trait TextDocumentOps {
           t.tpe match {
             case tpe: g.AnnotatedType => tpe.annotations.foreach { ann =>
                 val gpos = ann.original.pos
-                if (gpos.isRange && gpos.source == source) traverse(ann.original)
+                if (gpos.isRange && gpos.source == source) traverseAnnotation(ann)
               }
             case _ =>
           }
@@ -89,11 +90,37 @@ trait TextDocumentOps {
       true
     }
 
-    protected def traverseAnnotations(gtree: g.Tree): Unit = gtree match {
-      case t: g.MemberDef if t.symbol != null =>
-        t.symbol.annotations.foreach(ann => traverse(ann.original))
+    protected def traverseAnnotations(gsym: g.Symbol): Unit =
+      if (null ne gsym) gsym.annotations.foreach(traverseAnnotation)
+    protected def traverseAnnotations(gtree: g.MemberDef): Unit = traverseAnnotations(gtree.symbol)
+
+    /** traverses the original of `ann` and of each annotation nested in its arguments */
+    private def traverseAnnotation(ann: g.AnnotationInfo): Unit = {
+      traverse(ann.original)
+      traverseNestedAnnotations(ann.assocs)
+    }
+
+    @tailrec
+    private def traverseNestedAnnotations(gassocs: List[(g.Name, g.ClassfileAnnotArg)]): Unit =
+      gassocs match {
+        case gassoc :: rest =>
+          traverseNestedAnnotation(gassoc._2)
+          traverseNestedAnnotations(rest)
+        case _ =>
+      }
+
+    private def traverseNestedAnnotation(garg: g.ClassfileAnnotArg): Unit = garg match {
+      case t: g.NestedAnnotArg => traverseAnnotation(t.annInfo)
+      case t: g.ArrayAnnotArg =>
+        val gargs = t.args
+        var i = 0
+        while (i < gargs.length) {
+          traverseNestedAnnotation(gargs(i))
+          i += 1
+        }
       case _ =>
     }
+
   }
 
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
@@ -1728,10 +1755,15 @@ trait TextDocumentOps {
             if (gsym.isConstructor) minitOf(mtreeAt(gapp.pos.point)) match {
               case minit: m.Init =>
                 val mclauses = minit.argClauses
-                if (mclauses.exists(_.values.exists(_.isInstanceOf[m.Term.Assign]))) g
-                  .foreach2(mclauses.toList, gsym.paramss)((mclause, gparams) =>
+                if (mclauses.exists(_.values.exists(_.isInstanceOf[m.Term.Assign]))) {
+                  val gowner = gsym.owner
+                  val ctorParamss =
+                    if (!gowner.isClassfileAnnotation) gsym.paramss
+                    else gowner.info.decls.toList.filter(!_.isConstructor) :: Nil
+                  g.foreach2(mclauses.toList, ctorParamss)((mclause, gparams) =>
                     tryNamedClause(mclause.values, gparams),
                   )
+                }
               case _ =>
             }
             else if (gsym.isMethod) tryMethodArgs(gsym, gapp.pos.start, gapp.args)

@@ -3261,7 +3261,7 @@ Uri => semanticdb/integration/src/main/scala/example/Issue4505.scala
 Text => non-empty
 Language => Scala
 Symbols => 7 entries
-Occurrences => 12 entries
+Occurrences => 13 entries
 
 Symbols:
 example/Issue4505. => final object Issue4505 extends AnyRef { +3 decls }
@@ -3290,6 +3290,7 @@ Occurrences:
 [10:8..10:9): B <= example/Issue4505.B#
 [10:9..10:9):  <= example/Issue4505.B#`<init>`().
 [12:3..12:22): AnnotationWithClass => example/Issue4505J#AnnotationWithClass#
+[12:23..12:28): value => example/Issue4505J#AnnotationWithClass#value().
 [13:8..13:9): C <= example/Issue4505.C#
 [13:9..13:9):  <= example/Issue4505.C#`<init>`().
 
