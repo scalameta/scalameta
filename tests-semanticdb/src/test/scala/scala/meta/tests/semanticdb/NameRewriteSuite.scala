@@ -1215,6 +1215,417 @@ class NameRewriteSuite extends SemanticdbSuite {
     ),
   )
 
+  private val n77 =
+    """|import issue1672._
+       |object n77 {
+       |  final val S = "a"
+       |  final val I = 1
+       |  class Q
+       |  @SuppressWarnings(Array(S)) def a = 1
+       |  @Shade(Color.RED) def b = 1
+       |  @Shade(issue1672.Color.RED) def c = 1
+       |  @Colors(Array(Color.RED)) def d = 1
+       |  @Outer(new Inner(S)) def e = 1
+       |  @Outer(value = new Inner(value = S)) def f = 1
+       |  @Num(I + 1) def g = 1
+       |  @Num(n77.I + 1) def h = 1
+       |  @SuppressWarnings(Array(S + "x")) def i = 1
+       |  @example.Issue4505J.AnnotationWithClass(classOf[String]) def j = 1
+       |  @example.Issue4505J.AnnotationWithClass(classOf[Q]) def k = 1
+       |  val o = (Array(S), Color.RED, I + 1, n77.I + 1, S + "x", classOf[String], classOf[Q])
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "names in arguments of Java annotations",
+    n77,
+    """|[0:7..0:16): issue1672 => issue1672/
+       |[1:7..1:10): n77 <= _empty_/n77.
+       |[2:12..2:13): S <= _empty_/n77.S.
+       |[3:12..3:13): I <= _empty_/n77.I.
+       |[4:8..4:9): Q <= _empty_/n77.Q#
+       |[4:9..4:9):  <= _empty_/n77.Q#`<init>`().
+       |[5:3..5:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[5:34..5:35): a <= _empty_/n77.a().
+       |[6:3..6:8): Shade => issue1672/Shade#
+       |[6:24..6:25): b <= _empty_/n77.b().
+       |[7:3..7:8): Shade => issue1672/Shade#
+       |[7:9..7:18): issue1672 => issue1672/
+       |[7:19..7:24): Color => issue1672/Color#
+       |[7:25..7:28): RED => issue1672/Color#RED.
+       |[7:34..7:35): c <= _empty_/n77.c().
+       |[8:3..8:9): Colors => issue1672/Colors#
+       |[8:32..8:33): d <= _empty_/n77.d().
+       |[9:3..9:8): Outer => issue1672/Outer#
+       |[9:27..9:28): e <= _empty_/n77.e().
+       |[10:3..10:8): Outer => issue1672/Outer#
+       |[10:43..10:44): f <= _empty_/n77.f().
+       |[11:3..11:6): Num => issue1672/Num#
+       |[11:18..11:19): g <= _empty_/n77.g().
+       |[12:3..12:6): Num => issue1672/Num#
+       |[12:7..12:10): n77 => _empty_/n77.
+       |[12:11..12:12): I => _empty_/n77.I.
+       |[12:22..12:23): h <= _empty_/n77.h().
+       |[13:3..13:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[13:40..13:41): i <= _empty_/n77.i().
+       |[14:3..14:10): example => example/
+       |[14:11..14:21): Issue4505J => example/Issue4505J#
+       |[14:22..14:41): AnnotationWithClass => example/Issue4505J#AnnotationWithClass#
+       |[14:63..14:64): j <= _empty_/n77.j().
+       |[15:3..15:10): example => example/
+       |[15:11..15:21): Issue4505J => example/Issue4505J#
+       |[15:22..15:41): AnnotationWithClass => example/Issue4505J#AnnotationWithClass#
+       |[15:58..15:59): k <= _empty_/n77.k().
+       |[16:6..16:7): o <= _empty_/n77.o.
+       |[16:11..16:16): Array => scala/Array.
+       |[16:17..16:18): S => _empty_/n77.S.
+       |[16:21..16:26): Color => issue1672/Color#
+       |[16:27..16:30): RED => issue1672/Color#RED.
+       |[16:32..16:33): I => _empty_/n77.I.
+       |[16:34..16:35): + => scala/Int#`+`(+4).
+       |[16:39..16:42): n77 => _empty_/n77.
+       |[16:43..16:44): I => _empty_/n77.I.
+       |[16:45..16:46): + => scala/Int#`+`(+4).
+       |[16:50..16:51): S => _empty_/n77.S.
+       |[16:52..16:53): + => java/lang/String#`+`().
+       |[16:59..16:66): classOf => scala/Predef.classOf().
+       |[16:67..16:73): String => scala/Predef.String#
+       |[16:76..16:83): classOf => scala/Predef.classOf().
+       |[16:84..16:85): Q => _empty_/n77.Q#
+       |""".stripMargin,
+  )
+
+  synthetics(
+    "names in arguments of Java annotations",
+    n77,
+    """|[16:11..16:16): Array => *.apply[String]
+       |  apply => scala/Array.apply().
+       |  String => java/lang/String#
+       |[16:11..16:19): Array(S) => *((`macro-expandee` : ClassTag[String]))
+       |  ClassTag => scala/reflect/ClassTag#
+       |  String => java/lang/String#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "places of a Java annotation",
+    """|object n78 {
+       |  final val S = "a"
+       |  @SuppressWarnings(Array(S)) class C(@SuppressWarnings(Array(S)) val p: Int)
+       |  @SuppressWarnings(Array(S)) object O
+       |  @SuppressWarnings(Array(S)) val v = 1
+       |  def m(@SuppressWarnings(Array(S)) x: Int) = x
+       |  def t[@SuppressWarnings(Array(S)) T] = 1
+       |  def l = { @SuppressWarnings(Array(S)) def k = 1; k }
+       |  def u: Int @SuppressWarnings(Array(S)) = 1
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): n78 <= _empty_/n78.
+       |[1:12..1:13): S <= _empty_/n78.S.
+       |[2:3..2:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[2:36..2:37): C <= _empty_/n78.C#
+       |[2:37..2:37):  <= _empty_/n78.C#`<init>`().
+       |[2:39..2:55): SuppressWarnings => java/lang/SuppressWarnings#
+       |[2:70..2:71): p <= _empty_/n78.C#`<init>`().(p)
+       |[2:70..2:71): p <= _empty_/n78.C#p.
+       |[2:73..2:76): Int => scala/Int#
+       |[3:3..3:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[3:37..3:38): O <= _empty_/n78.O.
+       |[4:3..4:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[4:34..4:35): v <= _empty_/n78.v.
+       |[5:6..5:7): m <= _empty_/n78.m().
+       |[5:9..5:25): SuppressWarnings => java/lang/SuppressWarnings#
+       |[5:36..5:37): x <= _empty_/n78.m().(x)
+       |[5:39..5:42): Int => scala/Int#
+       |[5:46..5:47): x => _empty_/n78.m().(x)
+       |[6:6..6:7): t <= _empty_/n78.t().
+       |[6:9..6:25): SuppressWarnings => java/lang/SuppressWarnings#
+       |[6:36..6:37): T <= _empty_/n78.t().[T]
+       |[7:6..7:7): l <= _empty_/n78.l().
+       |[7:13..7:29): SuppressWarnings => java/lang/SuppressWarnings#
+       |[7:44..7:45): k <= local0
+       |[7:51..7:52): k => local0
+       |[8:6..8:7): u <= _empty_/n78.u().
+       |[8:9..8:12): Int => scala/Int#
+       |[8:14..8:30): SuppressWarnings => java/lang/SuppressWarnings#
+       |""".stripMargin,
+  )
+
+  private val n79 =
+    """|object n79a { final val S = "a"; final val T = "b" }
+       |object n79 {
+       |  import n79a.{S => R, T}
+       |  @SuppressWarnings(Array(R, T)) def a = 1
+       |  val o = Array(R, T)
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "renamed imports in arguments of Java annotations",
+    n79,
+    """|[0:7..0:11): n79a <= _empty_/n79a.
+       |[0:24..0:25): S <= _empty_/n79a.S.
+       |[0:43..0:44): T <= _empty_/n79a.T.
+       |[1:7..1:10): n79 <= _empty_/n79.
+       |[2:9..2:13): n79a => _empty_/n79a.
+       |[2:15..2:16): S => _empty_/n79a.S.
+       |[2:23..2:24): T => _empty_/n79a.T.
+       |[3:3..3:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[3:37..3:38): a <= _empty_/n79.a().
+       |[4:6..4:7): o <= _empty_/n79.o.
+       |[4:10..4:15): Array => scala/Array.
+       |[4:16..4:17): R => _empty_/n79a.S.
+       |[4:19..4:20): T => _empty_/n79a.T.
+       |""".stripMargin,
+  )
+
+  synthetics(
+    "renamed imports in arguments of Java annotations",
+    n79,
+    """|[4:10..4:15): Array => *.apply[String]
+       |  apply => scala/Array.apply().
+       |  String => java/lang/String#
+       |[4:10..4:21): Array(R, T) => *((`macro-expandee` : ClassTag[String]))
+       |  ClassTag => scala/reflect/ClassTag#
+       |  String => java/lang/String#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "constants in a Scala classfile annotation",
+    """|object n80 {
+       |  final val L = 1L
+       |  @SerialVersionUID(value = L) class X
+       |  @SerialVersionUID(n80.L) class Y
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n80 <= _empty_/n80.
+             |[1:12..1:13): L <= _empty_/n80.L.
+             |[2:3..2:19): SerialVersionUID => scala/SerialVersionUID#
+             |[2:19..2:19):  => scala/SerialVersionUID#`<init>`().
+             |[2:20..2:25): value => scala/SerialVersionUID#`<init>`().(value)
+             |[2:37..2:38): X <= _empty_/n80.X#
+             |[2:38..2:38):  <= _empty_/n80.X#`<init>`().
+             |[3:3..3:19): SerialVersionUID => scala/SerialVersionUID#
+             |[3:19..3:19):  => scala/SerialVersionUID#`<init>`().
+             |[3:20..3:23): n80 => _empty_/n80.
+             |[3:24..3:25): L => _empty_/n80.L.
+             |[3:33..3:34): Y <= _empty_/n80.Y#
+             |[3:34..3:34):  <= _empty_/n80.Y#`<init>`().
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n80 <= _empty_/n80.
+         |[1:12..1:13): L <= _empty_/n80.L.
+         |[2:3..2:19): SerialVersionUID => scala/SerialVersionUID#
+         |[2:19..2:19):  => scala/SerialVersionUID#`<init>`().
+         |[2:20..2:25): value => scala/SerialVersionUID#`<init>`().(value)
+         |[2:28..2:29): L => _empty_/n80.L.
+         |[2:37..2:38): X <= _empty_/n80.X#
+         |[2:38..2:38):  <= _empty_/n80.X#`<init>`().
+         |[3:3..3:19): SerialVersionUID => scala/SerialVersionUID#
+         |[3:19..3:19):  => scala/SerialVersionUID#`<init>`().
+         |[3:20..3:23): n80 => _empty_/n80.
+         |[3:24..3:25): L => _empty_/n80.L.
+         |[3:33..3:34): Y <= _empty_/n80.Y#
+         |[3:34..3:34):  <= _empty_/n80.Y#`<init>`().
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "nested Java annotations in an array and references to elements",
+    """|import issue1672._
+       |object n81 {
+       |  final val S = "a"
+       |  @Inners(Array(new Inner(S), new Inner(value = "b"))) def a = 1
+       |  def b(s: SuppressWarnings) = s.value
+       |  def c(o: Outer) = o.value.value()
+       |}
+       |""".stripMargin,
+    """|[0:7..0:16): issue1672 => issue1672/
+       |[1:7..1:10): n81 <= _empty_/n81.
+       |[2:12..2:13): S <= _empty_/n81.S.
+       |[3:3..3:9): Inners => issue1672/Inners#
+       |[3:59..3:60): a <= _empty_/n81.a().
+       |[4:6..4:7): b <= _empty_/n81.b().
+       |[4:8..4:9): s <= _empty_/n81.b().(s)
+       |[4:11..4:27): SuppressWarnings => java/lang/SuppressWarnings#
+       |[4:31..4:32): s => _empty_/n81.b().(s)
+       |[5:6..5:7): c <= _empty_/n81.c().
+       |[5:8..5:9): o <= _empty_/n81.c().(o)
+       |[5:11..5:16): Outer => issue1672/Outer#
+       |[5:20..5:21): o => _empty_/n81.c().(o)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "Java annotations in blocks of a template body",
+    """|object n82 {
+       |  final val S = "a"
+       |  def t(n: String)(b: => Int) = b
+       |  locally { @SuppressWarnings(Array(S)) def k = 1; k }
+       |  t("x") { @SuppressWarnings(Array(S)) def k = 1; k }
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): n82 <= _empty_/n82.
+       |[1:12..1:13): S <= _empty_/n82.S.
+       |[2:6..2:7): t <= _empty_/n82.t().
+       |[2:8..2:9): n <= _empty_/n82.t().(n)
+       |[2:11..2:17): String => scala/Predef.String#
+       |[2:19..2:20): b <= _empty_/n82.t().(b)
+       |[2:25..2:28): Int => scala/Int#
+       |[2:32..2:33): b => _empty_/n82.t().(b)
+       |[3:2..3:9): locally => scala/Predef.locally().
+       |[3:13..3:29): SuppressWarnings => java/lang/SuppressWarnings#
+       |[3:44..3:45): k <= local0
+       |[3:51..3:52): k => local0
+       |[4:2..4:3): t => _empty_/n82.t().
+       |[4:12..4:28): SuppressWarnings => java/lang/SuppressWarnings#
+       |[4:43..4:44): k <= local1
+       |[4:50..4:51): k => local1
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a polymorphic Scala annotation without type arguments",
+    """|import java.io.IOException
+       |object n83 {
+       |  @throws(classOf[IOException]) def a = 1
+       |  @throws(classOf[java.io.IOException]) def b = 1
+       |}
+       |""".stripMargin,
+    """|[0:7..0:11): java => java/
+       |[0:12..0:14): io => java/io/
+       |[0:15..0:26): IOException => java/io/IOException#
+       |[1:7..1:10): n83 <= _empty_/n83.
+       |[2:3..2:9): throws => scala/throws#
+       |[2:9..2:9):  => scala/throws#`<init>`(+1).
+       |[2:10..2:17): classOf => scala/Predef.classOf().
+       |[2:18..2:29): IOException => java/io/IOException#
+       |[2:36..2:37): a <= _empty_/n83.a().
+       |[3:3..3:9): throws => scala/throws#
+       |[3:9..3:9):  => scala/throws#`<init>`(+1).
+       |[3:10..3:17): classOf => scala/Predef.classOf().
+       |[3:18..3:22): java => java/
+       |[3:23..3:25): io => java/io/
+       |[3:26..3:37): IOException => java/io/IOException#
+       |[3:44..3:45): b <= _empty_/n83.b().
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a named argument and a type argument in Java annotations",
+    """|object n84 {
+       |  final val S = "a"
+       |  def u: Int @SuppressWarnings(value = Array(S)) = 1
+       |  @SuppressWarnings(Array[String](S)) def a = 1
+       |  import issue1672._
+       |  def v: Int @Outer(value = new Inner(value = S)) = 1
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): n84 <= _empty_/n84.
+       |[1:12..1:13): S <= _empty_/n84.S.
+       |[2:6..2:7): u <= _empty_/n84.u().
+       |[2:9..2:12): Int => scala/Int#
+       |[2:14..2:30): SuppressWarnings => java/lang/SuppressWarnings#
+       |[3:3..3:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[3:42..3:43): a <= _empty_/n84.a().
+       |[4:9..4:18): issue1672 => issue1672/
+       |[5:6..5:7): v <= _empty_/n84.v().
+       |[5:9..5:12): Int => scala/Int#
+       |[5:14..5:19): Outer => issue1672/Outer#
+       |""".stripMargin,
+  )
+
+  private val n85 =
+    """|object n85 {
+       |  final val S = "a"
+       |  class C[T](x: T)
+       |  @SuppressWarnings(Array(S)) def a = new C(new C(new C(1)))
+       |  val b = new n85.C(new C[C[Array[String]]](new C(Array(S))))
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "nested constructor calls beside a Java annotation",
+    n85,
+    """|[0:7..0:10): n85 <= _empty_/n85.
+       |[1:12..1:13): S <= _empty_/n85.S.
+       |[2:8..2:9): C <= _empty_/n85.C#
+       |[2:10..2:11): T <= _empty_/n85.C#[T]
+       |[2:12..2:12):  <= _empty_/n85.C#`<init>`().
+       |[2:13..2:14): x <= _empty_/n85.C#`<init>`().(x)
+       |[2:13..2:14): x <= _empty_/n85.C#x.
+       |[2:16..2:17): T => _empty_/n85.C#[T]
+       |[3:3..3:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[3:34..3:35): a <= _empty_/n85.a().
+       |[3:42..3:43): C => _empty_/n85.C#
+       |[3:43..3:43):  => _empty_/n85.C#`<init>`().
+       |[3:48..3:49): C => _empty_/n85.C#
+       |[3:49..3:49):  => _empty_/n85.C#`<init>`().
+       |[3:54..3:55): C => _empty_/n85.C#
+       |[3:55..3:55):  => _empty_/n85.C#`<init>`().
+       |[4:6..4:7): b <= _empty_/n85.b.
+       |[4:14..4:17): n85 => _empty_/n85.
+       |[4:18..4:19): C => _empty_/n85.C#
+       |[4:19..4:19):  => _empty_/n85.C#`<init>`().
+       |[4:24..4:25): C => _empty_/n85.C#
+       |[4:26..4:27): C => _empty_/n85.C#
+       |[4:28..4:33): Array => scala/Array#
+       |[4:34..4:40): String => scala/Predef.String#
+       |[4:43..4:43):  => _empty_/n85.C#`<init>`().
+       |[4:48..4:49): C => _empty_/n85.C#
+       |[4:49..4:49):  => _empty_/n85.C#`<init>`().
+       |[4:50..4:55): Array => scala/Array.
+       |[4:56..4:57): S => _empty_/n85.S.
+       |""".stripMargin,
+  )
+
+  synthetics(
+    "nested constructor calls beside a Java annotation",
+    n85,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[4:50..4:55): Array => *.apply[String]
+             |  apply => scala/Array.apply().
+             |  String => java/lang/String#
+             |[4:50..4:58): Array(S) => *((`macro-expandee` : ClassTag[String]))
+             |  ClassTag => scala/reflect/ClassTag#
+             |  String => java/lang/String#
+             |""".stripMargin
+      },
+      """|[4:50..4:55): Array => *.apply[String]
+         |  apply => scala/Array.apply().
+         |  String => scala/Predef.String#
+         |[4:50..4:58): Array(S) => *((`macro-expandee` : ClassTag[String]))
+         |  ClassTag => scala/reflect/ClassTag#
+         |  String => scala/Predef.String#
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "a Java annotation on a case class parameter",
+    """|object n86 {
+       |  final val S = "a"
+       |  case class K(@SuppressWarnings(Array(S)) p: Int)
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): n86 <= _empty_/n86.
+       |[1:12..1:13): S <= _empty_/n86.S.
+       |[2:13..2:14): K <= _empty_/n86.K#
+       |[2:14..2:14):  <= _empty_/n86.K#`<init>`().
+       |[2:16..2:32): SuppressWarnings => java/lang/SuppressWarnings#
+       |[2:43..2:44): p <= _empty_/n86.K#`<init>`().(p)
+       |[2:43..2:44): p <= _empty_/n86.K#p.
+       |[2:46..2:49): Int => scala/Int#
+       |""".stripMargin,
+  )
+
   occurrences(
     "string interpolators on constants",
     """|object n26 {

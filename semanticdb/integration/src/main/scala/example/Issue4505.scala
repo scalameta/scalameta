@@ -10,4 +10,7 @@ object Issue4505 {
   @AnnotationWithClass(classOf[String])
   class B
 
+  @AnnotationWithClass(value = classOf[String])
+  class C
+
 }

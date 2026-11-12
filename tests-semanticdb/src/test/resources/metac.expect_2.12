@@ -3260,11 +3260,11 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Issue4505.scala
 Text => non-empty
 Language => Scala
-Symbols => 5 entries
-Occurrences => 9 entries
+Symbols => 7 entries
+Occurrences => 12 entries
 
 Symbols:
-example/Issue4505. => final object Issue4505 extends AnyRef { +2 decls }
+example/Issue4505. => final object Issue4505 extends AnyRef { +3 decls }
   AnyRef => scala/AnyRef#
 example/Issue4505.A# => @AnnotationWithEnum class A extends AnyRef { +1 decls }
   AnnotationWithEnum => example/Issue4505J#AnnotationWithEnum#
@@ -3274,6 +3274,10 @@ example/Issue4505.B# => @AnnotationWithClass class B extends AnyRef { +1 decls }
   AnnotationWithClass => example/Issue4505J#AnnotationWithClass#
   AnyRef => scala/AnyRef#
 example/Issue4505.B#`<init>`(). => primary ctor <init>()
+example/Issue4505.C# => @AnnotationWithClass class C extends AnyRef { +1 decls }
+  AnnotationWithClass => example/Issue4505J#AnnotationWithClass#
+  AnyRef => scala/AnyRef#
+example/Issue4505.C#`<init>`(). => primary ctor <init>()
 
 Occurrences:
 [0:8..0:15): example <= example/
@@ -3285,6 +3289,9 @@ Occurrences:
 [9:3..9:22): AnnotationWithClass => example/Issue4505J#AnnotationWithClass#
 [10:8..10:9): B <= example/Issue4505.B#
 [10:9..10:9):  <= example/Issue4505.B#`<init>`().
+[12:3..12:22): AnnotationWithClass => example/Issue4505J#AnnotationWithClass#
+[13:8..13:9): C <= example/Issue4505.C#
+[13:9..13:9):  <= example/Issue4505.C#`<init>`().
 
 semanticdb/integration/src/main/scala/example/Issue5939Metals.scala
 -------------------------------------------------------------------
