@@ -3365,6 +3365,37 @@ class CommentSuite extends BaseDottySuite {
     )("end Term.Name: /* c */")
   }
 
+  test("infix: MLC inside and after an argument in parens, ascription") {
+    val code =
+      """|object A {
+         |  val y = x op (a /* c1 */) /* c2 */: B
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A { val y = x op a /* c1 */ /* c2 */ : B }
+         |""".stripMargin,
+      reprinted = Seq("end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c1 */ /* c2 */"),
+    )("end Term.ApplyInfix, Term.ArgClause: /* c2 */", "end Term.Name: /* c1 */")
+  }
+
+  test("infix: MLC after an argument in parens, colon lambda") {
+    val code =
+      """|object A {
+         |  val y = x op (a) /* c */: z => z
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  val y = x op a /* c */ {
+         |    z => z
+         |  }
+         |}
+         |""".stripMargin,
+    )("end Term.Name: /* c */")
+  }
+
   test("if: MLC between the condition and a brace body") {
     val code =
       """|object A {
@@ -7502,6 +7533,46 @@ class CommentSuite extends BaseDottySuite {
          |}
          |""".stripMargin,
     )("beg Term.ArgClause, Term.Block: // c")
+  }
+
+  test("fewer braces: DSLC before a curried lambda body in parens, body at the indent of the colon") {
+    val code =
+      """|def f = bar(
+         |  xs.map: x => y =>
+         |    // c
+         |  x
+         |)
+         |""".stripMargin
+    checkComments(
+      code,
+      """|def f = bar(
+         |  xs.map: (x => y =>
+         |  // c
+         |  x)
+         |)
+         |""".stripMargin,
+    )("beg Type.Name: // c")
+  }
+
+  test(
+    "fewer braces: DSLC before a curried lambda body in parens, body past the indent of the colon",
+  ) {
+    val code =
+      """|def f = bar(
+         |  xs.map: x => y =>
+         |  // c
+         |    x
+         |)
+         |""".stripMargin
+    checkComments(
+      code,
+      """|def f = bar(
+         |  xs.map: (x => y =>
+         |  // c
+         |  x)
+         |)
+         |""".stripMargin,
+    )("beg Type.Name: // c")
   }
 
   test("given: DSLC, colon at the end of its line, body") {
