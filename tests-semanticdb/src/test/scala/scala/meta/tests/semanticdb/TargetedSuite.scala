@@ -720,7 +720,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val conversionOfNamedArguments =
+  private val conversionOfNamedArguments =
     """|package uh
        |import scala.language.implicitConversions
        |object H {
@@ -960,7 +960,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Occurrences",
   )
 
-  val implicitArgumentsNextToNamedArguments =
+  private val implicitArgumentsNextToNamedArguments =
     """|package ul
        |object L {
        |  implicit val i: Int = 0
@@ -1436,7 +1436,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Occurrences",
   )
 
-  val viewOfNamedValue =
+  private val viewOfNamedValue =
     """|package ut
        |import scala.language.implicitConversions
        |class S
@@ -1489,7 +1489,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val viewOfNamedCall =
+  private val viewOfNamedCall =
     """|package uu
        |import scala.language.implicitConversions
        |class S
@@ -1753,7 +1753,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Occurrences",
   )
 
-  val viewOfConstructorCall =
+  private val viewOfConstructorCall =
     """|package va
        |import scala.language.implicitConversions
        |class S
@@ -2059,7 +2059,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Occurrences",
   )
 
-  val extensionOfImplicitClass =
+  private val extensionOfImplicitClass =
     """|package vg
        |object G {
        |  implicit class E(n: Int) { def ext(x: Int) = n + x }
@@ -2368,7 +2368,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Occurrences",
   )
 
-  val updateWithVariableIndex =
+  private val updateWithVariableIndex =
     """|package vn
        |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
        |object N {
@@ -2479,7 +2479,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val updateWithOperatorAndVariableIndex =
+  private val updateWithOperatorAndVariableIndex =
     """|package vo
        |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
        |object O {
@@ -2554,7 +2554,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val updateWithOperatorAndNamedCallInIndex =
+  private val updateWithOperatorAndNamedCallInIndex =
     """|package vp
        |object O {
        |  def h(x: Int) = x
@@ -2618,7 +2618,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val updateOfElementWithMemberOperator =
+  private val updateOfElementWithMemberOperator =
     """|package vq
        |class B { def +=(y: Int) = this }
        |class M { def apply(k: Int) = new B; def update(k: Int, b: B): Unit = () }
@@ -2681,7 +2681,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val updateWithOperatorAndOtherIndexName =
+  private val updateWithOperatorAndOtherIndexName =
     """|package vr
        |class M { def apply(k: Int): Int = k; def update(j: Int, v: Int): Unit = () }
        |object O {
@@ -2785,7 +2785,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Occurrences",
   )
 
-  val implicitConstructorClause =
+  private val implicitConstructorClause =
     """|package vu
        |class K(x: Int)(implicit i: Int)
        |object O {
@@ -3133,7 +3133,7 @@ class TargetedSuite extends SemanticdbSuite {
     )
   }
 
-  val operatorOnMethodResult =
+  private val operatorOnMethodResult =
     """|package vz
        |class B { def +=(y: Int) = this }
        |object O {
@@ -3175,7 +3175,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val updateWithOtherIndexName =
+  private val updateWithOtherIndexName =
     """|package wa
        |class M { def apply(k: Int): Int = k; def update(j: Int, v: Int): Unit = () }
        |object O {
@@ -3225,7 +3225,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val operatorOnWrittenUpdate =
+  private val operatorOnWrittenUpdate =
     """|package wb
        |class B { def +=(y: Int) = this }
        |object O {
@@ -3267,7 +3267,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val updateOfMethodResult =
+  private val updateOfMethodResult =
     """|package wc
        |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
        |object C {
@@ -3539,7 +3539,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Occurrences",
   )
 
-  val dottedOperatorOnUpdate =
+  private val dottedOperatorOnUpdate =
     """|package wh
        |class M { def apply(k: Int): Int = k; def update(j: Int, v: Int): Unit = () }
        |object O {
@@ -3608,7 +3608,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val defaultOfEarlierClause =
+  private val defaultOfEarlierClause =
     """|package wi
        |object O {
        |  def m(a: Int)(b: Int = a, c: Int = 0) = 0
@@ -3655,7 +3655,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val qualifiedConstructors =
+  private val qualifiedConstructors =
     """|package wj
        |package p {
        |  class L(x: Int)
@@ -3760,7 +3760,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val qualifiedConstructorsWithTypeArguments =
+  private val qualifiedConstructorsWithTypeArguments =
     """|package wk
        |package p {
        |  class G[T](x: T)
@@ -3822,7 +3822,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val constructorsWithLongerQualifier =
+  private val constructorsWithLongerQualifier =
     """|package wl
        |package a {
        |  package b {
@@ -3886,7 +3886,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val dottedOperatorOnResultWithMember =
+  private val dottedOperatorOnResultWithMember =
     """|package wm
        |class B { def +=(y: Int) = this }
        |class M { def apply(k: Int) = new B }
@@ -3952,7 +3952,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val dottedOperatorOnUpdateOfMethodResult =
+  private val dottedOperatorOnUpdateOfMethodResult =
     """|package wn
        |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
        |object C {
@@ -4017,7 +4017,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val dottedOperatorOnApply =
+  private val dottedOperatorOnApply =
     """|package wo
        |object O {
        |  val arr = Array(1)
@@ -4056,7 +4056,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val constructorDefaultOfEarlierClause =
+  private val constructorDefaultOfEarlierClause =
     """|package wp
        |class K(a: Int)(b: Int = a, c: Int = 0)
        |class X extends K(a = 5)(c = 1)
@@ -4139,7 +4139,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val variableNextToDefaultOfEarlierClause =
+  private val variableNextToDefaultOfEarlierClause =
     """|package wq
        |object O {
        |  def m(a: Int)(b: Int = a, c: Int = 0) = 0
@@ -4192,7 +4192,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val operatorOnLaterClauseOfNew =
+  private val operatorOnLaterClauseOfNew =
     """|package wr
        |class K(x: Int) {
        |  def apply(a: Int): Int = a
@@ -4252,7 +4252,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val writtenApplyWithOperatorAssignment =
+  private val writtenApplyWithOperatorAssignment =
     """|package ws
        |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
        |object O {
@@ -4312,7 +4312,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val constructorsAroundLocalCaseClass =
+  private val constructorsAroundLocalCaseClass =
     """|package wt
        |class K(x: Int)
        |object O {
@@ -4323,59 +4323,61 @@ class TargetedSuite extends SemanticdbSuite {
        |class Y extends K (x = { case class C(x: Int); C(2).x })
        |""".stripMargin
 
-  {
-    val expected =
-      """|[0:8..0:10): wt <= wt/
-         |[1:6..1:7): K <= wt/K#
-         |[1:7..1:7):  <= wt/K#`<init>`().
-         |[1:8..1:9): x <= wt/K#`<init>`().(x)
-         |[1:8..1:9): x <= wt/K#x.
-         |[1:11..1:14): Int => scala/Int#
-         |[2:7..2:8): O <= wt/O.
-         |[3:6..3:7): K => wt/K#
-         |[3:7..3:7):  => wt/K#`<init>`().
-         |[3:8..3:9): x => wt/K#`<init>`().(x)
-         |[3:25..3:26): C <= local0
-         |[3:26..3:26):  <= local2
-         |[3:27..3:28): x <= local1
-         |[3:30..3:33): Int => scala/Int#
-         |[3:36..3:37): C => local20
-         |[3:38..3:39): x => local84
-         |[3:45..3:46): x => local1
-         |[4:6..4:7): K => wt/K#
-         |[4:8..4:8):  => wt/K#`<init>`().
-         |[4:9..4:10): x => wt/K#`<init>`().(x)
-         |[4:26..4:27): C <= local21
-         |[4:27..4:27):  <= local23
-         |[4:28..4:29): x <= local22
-         |[4:31..4:34): Int => scala/Int#
-         |[4:37..4:38): C => local41
-         |[4:39..4:40): x => local85
-         |[4:46..4:47): x => local22
-         |[6:6..6:7): X <= wt/X#
-         |[6:8..6:8):  <= wt/X#`<init>`().
-         |[6:16..6:17): K => wt/K#
-         |[6:17..6:17):  => wt/K#`<init>`().
-         |[6:18..6:19): x => wt/K#`<init>`().(x)
-         |[6:35..6:36): C <= local42
-         |[6:36..6:36):  <= local44
-         |[6:37..6:38): x <= local43
-         |[6:40..6:43): Int => scala/Int#
-         |[6:46..6:47): C => local62
-         |[6:51..6:52): x => local43
-         |[7:6..7:7): Y <= wt/Y#
-         |[7:8..7:8):  <= wt/Y#`<init>`().
-         |[7:16..7:17): K => wt/K#
-         |[7:18..7:18):  => wt/K#`<init>`().
-         |[7:19..7:20): x => wt/K#`<init>`().(x)
-         |[7:36..7:37): C <= local63
-         |[7:37..7:37):  <= local65
-         |[7:38..7:39): x <= local64
-         |[7:41..7:44): Int => scala/Int#
-         |[7:47..7:48): C => local83
-         |[7:52..7:53): x => local64
-         |""".stripMargin
-    val expected212 =
+  checkSection(
+    "named arguments of constructors around a local case class",
+    constructorsAroundLocalCaseClass,
+    """|[0:8..0:10): wt <= wt/
+       |[1:6..1:7): K <= wt/K#
+       |[1:7..1:7):  <= wt/K#`<init>`().
+       |[1:8..1:9): x <= wt/K#`<init>`().(x)
+       |[1:8..1:9): x <= wt/K#x.
+       |[1:11..1:14): Int => scala/Int#
+       |[2:7..2:8): O <= wt/O.
+       |[3:6..3:7): K => wt/K#
+       |[3:7..3:7):  => wt/K#`<init>`().
+       |[3:8..3:9): x => wt/K#`<init>`().(x)
+       |[3:25..3:26): C <= local0
+       |[3:26..3:26):  <= local2
+       |[3:27..3:28): x <= local1
+       |[3:30..3:33): Int => scala/Int#
+       |[3:36..3:37): C => local20
+       |[3:38..3:39): x => local84
+       |[3:45..3:46): x => local1
+       |[4:6..4:7): K => wt/K#
+       |[4:8..4:8):  => wt/K#`<init>`().
+       |[4:9..4:10): x => wt/K#`<init>`().(x)
+       |[4:26..4:27): C <= local21
+       |[4:27..4:27):  <= local23
+       |[4:28..4:29): x <= local22
+       |[4:31..4:34): Int => scala/Int#
+       |[4:37..4:38): C => local41
+       |[4:39..4:40): x => local85
+       |[4:46..4:47): x => local22
+       |[6:6..6:7): X <= wt/X#
+       |[6:8..6:8):  <= wt/X#`<init>`().
+       |[6:16..6:17): K => wt/K#
+       |[6:17..6:17):  => wt/K#`<init>`().
+       |[6:18..6:19): x => wt/K#`<init>`().(x)
+       |[6:35..6:36): C <= local42
+       |[6:36..6:36):  <= local44
+       |[6:37..6:38): x <= local43
+       |[6:40..6:43): Int => scala/Int#
+       |[6:46..6:47): C => local62
+       |[6:51..6:52): x => local43
+       |[7:6..7:7): Y <= wt/Y#
+       |[7:8..7:8):  <= wt/Y#`<init>`().
+       |[7:16..7:17): K => wt/K#
+       |[7:18..7:18):  => wt/K#`<init>`().
+       |[7:19..7:20): x => wt/K#`<init>`().(x)
+       |[7:36..7:37): C <= local63
+       |[7:37..7:37):  <= local65
+       |[7:38..7:39): x <= local64
+       |[7:41..7:44): Int => scala/Int#
+       |[7:47..7:48): C => local83
+       |[7:52..7:53): x => local64
+       |""".stripMargin,
+    "Occurrences",
+    ScalaVersion.Scala212 ->
       """|[0:8..0:10): wt <= wt/
          |[1:6..1:7): K <= wt/K#
          |[1:7..1:7):  <= wt/K#`<init>`().
@@ -4425,27 +4427,23 @@ class TargetedSuite extends SemanticdbSuite {
          |[7:41..7:44): Int => scala/Int#
          |[7:47..7:48): C => local75
          |[7:52..7:53): x => local58
-         |""".stripMargin
-    checkSection(
-      "named arguments of constructors around a local case class",
-      constructorsAroundLocalCaseClass,
-      ScalaVersion.getExpected(List(ScalaVersion.Scala212 -> expected212), expected),
-      "Occurrences",
-    )
-  }
+         |""".stripMargin,
+  )
 
-  {
-    val expected =
-      """|[3:36..3:37): C => *.apply
-         |  apply => local19
-         |[4:37..4:38): C => *.apply
-         |  apply => local40
-         |[6:46..6:47): C => *.apply
-         |  apply => local61
-         |[7:47..7:48): C => *.apply
-         |  apply => local82
-         |""".stripMargin
-    val expected212 =
+  checkSection(
+    "named arguments of constructors around a local case class: synthetics",
+    constructorsAroundLocalCaseClass,
+    """|[3:36..3:37): C => *.apply
+       |  apply => local19
+       |[4:37..4:38): C => *.apply
+       |  apply => local40
+       |[6:46..6:47): C => *.apply
+       |  apply => local61
+       |[7:47..7:48): C => *.apply
+       |  apply => local82
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
       """|[3:36..3:37): C => *.apply
          |  apply => local17
          |[4:37..4:38): C => *.apply
@@ -4454,16 +4452,10 @@ class TargetedSuite extends SemanticdbSuite {
          |  apply => local55
          |[7:47..7:48): C => *.apply
          |  apply => local74
-         |""".stripMargin
-    checkSection(
-      "named arguments of constructors around a local case class: synthetics",
-      constructorsAroundLocalCaseClass,
-      ScalaVersion.getExpected(List(ScalaVersion.Scala212 -> expected212), expected),
-      "Synthetics",
-    )
-  }
+         |""".stripMargin,
+  )
 
-  val operatorOnConstructorWithTwoLists =
+  private val operatorOnConstructorWithTwoLists =
     """|package wu
        |class K2(x: Int)(y: Int) { def apply(a: Int): Int = a; def update(a: Int, v: Int): Unit = () }
        |object O {
@@ -4533,7 +4525,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val memberOperatorOnNew =
+  private val memberOperatorOnNew =
     """|package wv
        |class B(x: Int) { def +=(y: Int) = this }
        |object O {
@@ -4584,7 +4576,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val infixApplyWithOperatorAssignment =
+  private val infixApplyWithOperatorAssignment =
     """|package ww
        |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
        |object O {
@@ -4634,7 +4626,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val constructorsAroundXmlLiterals =
+  private val constructorsAroundXmlLiterals =
     """|package wx
        |class E(label: scala.xml.Elem)
        |class A(key: scala.xml.Elem)
@@ -4700,7 +4692,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val applyWithImplicitsAndOperatorAssignment =
+  private val applyWithImplicitsAndOperatorAssignment =
     """|package wy
        |class I
        |class M {
@@ -4719,8 +4711,53 @@ class TargetedSuite extends SemanticdbSuite {
        |}
        |""".stripMargin
 
-  {
-    val expected =
+  checkSection(
+    "named arguments of an apply with an implicit list and +=",
+    applyWithImplicitsAndOperatorAssignment,
+    """|[0:8..0:10): wy <= wy/
+       |[1:6..1:7): I <= wy/I#
+       |[1:7..1:7):  <= wy/I#`<init>`().
+       |[2:6..2:7): M <= wy/M#
+       |[2:8..2:8):  <= wy/M#`<init>`().
+       |[3:6..3:11): apply <= wy/M#apply().
+       |[3:12..3:13): k <= wy/M#apply().(k)
+       |[3:15..3:18): Int => scala/Int#
+       |[3:29..3:30): i <= wy/M#apply().(i)
+       |[3:32..3:33): I => wy/I#
+       |[3:36..3:39): Int => scala/Int#
+       |[3:42..3:43): k => wy/M#apply().(k)
+       |[4:6..4:12): update <= wy/M#update().
+       |[4:13..4:14): k <= wy/M#update().(k)
+       |[4:16..4:19): Int => scala/Int#
+       |[4:21..4:22): v <= wy/M#update().(v)
+       |[4:24..4:27): Int => scala/Int#
+       |[4:38..4:39): i <= wy/M#update().(i)
+       |[4:41..4:42): I => wy/I#
+       |[4:45..4:49): Unit => scala/Unit#
+       |[6:7..6:8): O <= wy/O.
+       |[7:15..7:16): i <= wy/O.i.
+       |[7:18..7:19): I => wy/I#
+       |[7:26..7:27): I => wy/I#
+       |[7:27..7:27):  => wy/I#`<init>`().
+       |[8:6..8:7): m <= wy/O.m.
+       |[8:14..8:15): M => wy/M#
+       |[8:15..8:15):  => wy/M#`<init>`().
+       |[9:6..9:7): n <= wy/O.n().
+       |[10:2..10:3): m => wy/O.m.
+       |[10:17..10:19): += => scala/Int#`+`(+4).
+       |[11:2..11:3): m => wy/O.m.
+       |[11:18..11:20): += => scala/Int#`+`(+4).
+       |[12:2..12:3): m => wy/O.m.
+       |[12:18..12:20): += => scala/Int#`+`(+4).
+       |[13:2..13:3): m => wy/O.m.
+       |[13:4..13:5): k => wy/M#apply().(k)
+       |[13:11..13:13): += => scala/Int#`+`(+4).
+       |[14:2..14:3): m => wy/O.m.
+       |[14:14..14:15): n => wy/O.n().
+       |[14:17..14:19): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+    ScalaVersion.Scala212 ->
       """|[0:8..0:10): wy <= wy/
          |[1:6..1:7): I <= wy/I#
          |[1:7..1:7):  <= wy/I#`<init>`().
@@ -4751,60 +4788,42 @@ class TargetedSuite extends SemanticdbSuite {
          |[8:15..8:15):  => wy/M#`<init>`().
          |[9:6..9:7): n <= wy/O.n().
          |[10:2..10:3): m => wy/O.m.
+         |[10:10..10:11): k => wy/M#apply().(k)
          |[10:17..10:19): += => scala/Int#`+`(+4).
          |[11:2..11:3): m => wy/O.m.
+         |[11:11..11:12): k => wy/M#apply().(k)
          |[11:18..11:20): += => scala/Int#`+`(+4).
          |[12:2..12:3): m => wy/O.m.
+         |[12:11..12:12): k => wy/M#apply().(k)
          |[12:18..12:20): += => scala/Int#`+`(+4).
          |[13:2..13:3): m => wy/O.m.
          |[13:4..13:5): k => wy/M#apply().(k)
          |[13:11..13:13): += => scala/Int#`+`(+4).
          |[14:2..14:3): m => wy/O.m.
+         |[14:10..14:11): k => wy/M#apply().(k)
          |[14:14..14:15): n => wy/O.n().
          |[14:17..14:19): += => scala/Int#`+`(+4).
-         |""".stripMargin
-    val expected212 = expected.replace("[10:17", "[10:10..10:11): k => wy/M#apply().(k)\n[10:17")
-      .replace("[11:18", "[11:11..11:12): k => wy/M#apply().(k)\n[11:18")
-      .replace("[12:18", "[12:11..12:12): k => wy/M#apply().(k)\n[12:18")
-      .replace("[14:14", "[14:10..14:11): k => wy/M#apply().(k)\n[14:14")
-    checkSection(
-      "named arguments of an apply with an implicit list and +=",
-      applyWithImplicitsAndOperatorAssignment,
-      ScalaVersion.getExpected(List(ScalaVersion.Scala212 -> expected212), expected),
-      "Occurrences",
-    )
-  }
+         |""".stripMargin,
+  )
 
-  {
-    val expected =
-      """|[10:17..10:21): += 5 => *(i)
-         |  i => wy/O.i.
-         |[11:18..11:22): += 5 => *(i)
-         |  i => wy/O.i.
-         |[12:18..12:22): += 5 => *(i)
-         |  i => wy/O.i.
-         |[13:2..13:3): m => *.apply
-         |  apply => wy/M#apply().
-         |[13:2..13:15): m(k = 0) += 5 => *(i)
-         |  i => wy/O.i.
-         |[14:17..14:21): += 5 => *(i)
-         |  i => wy/O.i.
-         |""".stripMargin
-    val expected21315 =
-      """|[10:20..10:21): 5 => *(i)
-         |  i => wy/O.i.
-         |[11:21..11:22): 5 => *(i)
-         |  i => wy/O.i.
-         |[12:21..12:22): 5 => *(i)
-         |  i => wy/O.i.
-         |[13:2..13:3): m => *.apply
-         |  apply => wy/M#apply().
-         |[13:2..13:15): m(k = 0) += 5 => *(i)
-         |  i => wy/O.i.
-         |[14:20..14:21): 5 => *(i)
-         |  i => wy/O.i.
-         |""".stripMargin
-    val expected212 =
+  checkSection(
+    "named arguments of an apply with an implicit list and +=: synthetics",
+    applyWithImplicitsAndOperatorAssignment,
+    """|[10:17..10:21): += 5 => *(i)
+       |  i => wy/O.i.
+       |[11:18..11:22): += 5 => *(i)
+       |  i => wy/O.i.
+       |[12:18..12:22): += 5 => *(i)
+       |  i => wy/O.i.
+       |[13:2..13:3): m => *.apply
+       |  apply => wy/M#apply().
+       |[13:2..13:15): m(k = 0) += 5 => *(i)
+       |  i => wy/O.i.
+       |[14:17..14:21): += 5 => *(i)
+       |  i => wy/O.i.
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
       """|[10:2..10:3): m => *.apply
          |  apply => wy/M#apply().
          |[10:20..10:21): 5 => *(i)
@@ -4825,19 +4844,24 @@ class TargetedSuite extends SemanticdbSuite {
          |  apply => wy/M#apply().
          |[14:20..14:21): 5 => *(i)
          |  i => wy/O.i.
-         |""".stripMargin
-    checkSection(
-      "named arguments of an apply with an implicit list and +=: synthetics",
-      applyWithImplicitsAndOperatorAssignment,
-      ScalaVersion.getExpected(
-        List(ScalaVersion.Scala212 -> expected212, ScalaVersion.AtMost213(15) -> expected21315),
-        expected,
-      ),
-      "Synthetics",
-    )
-  }
+         |""".stripMargin,
+    ScalaVersion.AtMost213(15) ->
+      """|[10:20..10:21): 5 => *(i)
+         |  i => wy/O.i.
+         |[11:21..11:22): 5 => *(i)
+         |  i => wy/O.i.
+         |[12:21..12:22): 5 => *(i)
+         |  i => wy/O.i.
+         |[13:2..13:3): m => *.apply
+         |  apply => wy/M#apply().
+         |[13:2..13:15): m(k = 0) += 5 => *(i)
+         |  i => wy/O.i.
+         |[14:20..14:21): 5 => *(i)
+         |  i => wy/O.i.
+         |""".stripMargin,
+  )
 
-  val applyWithTypeArgumentsAndOperatorAssignment =
+  private val applyWithTypeArgumentsAndOperatorAssignment =
     """|package wz
        |class M { def apply[T](k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
        |object O {
@@ -4900,7 +4924,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val applyWithTypeArgumentsImplicitsAndOperatorAssignment =
+  private val applyWithTypeArgumentsImplicitsAndOperatorAssignment =
     """|package xa
        |class I
        |class M {
@@ -4917,8 +4941,50 @@ class TargetedSuite extends SemanticdbSuite {
        |}
        |""".stripMargin
 
-  {
-    val expected =
+  checkSection(
+    "named arguments of an apply with type arguments, an implicit list and +=",
+    applyWithTypeArgumentsImplicitsAndOperatorAssignment,
+    """|[0:8..0:10): xa <= xa/
+       |[1:6..1:7): I <= xa/I#
+       |[1:7..1:7):  <= xa/I#`<init>`().
+       |[2:6..2:7): M <= xa/M#
+       |[2:8..2:8):  <= xa/M#`<init>`().
+       |[3:6..3:11): apply <= xa/M#apply().
+       |[3:12..3:13): T <= xa/M#apply().[T]
+       |[3:15..3:16): k <= xa/M#apply().(k)
+       |[3:18..3:21): Int => scala/Int#
+       |[3:32..3:33): i <= xa/M#apply().(i)
+       |[3:35..3:36): I => xa/I#
+       |[3:39..3:42): Int => scala/Int#
+       |[3:45..3:46): k => xa/M#apply().(k)
+       |[4:6..4:12): update <= xa/M#update().
+       |[4:13..4:14): k <= xa/M#update().(k)
+       |[4:16..4:19): Int => scala/Int#
+       |[4:21..4:22): v <= xa/M#update().(v)
+       |[4:24..4:27): Int => scala/Int#
+       |[4:38..4:39): i <= xa/M#update().(i)
+       |[4:41..4:42): I => xa/I#
+       |[4:45..4:49): Unit => scala/Unit#
+       |[6:7..6:8): O <= xa/O.
+       |[7:15..7:16): i <= xa/O.i.
+       |[7:18..7:19): I => xa/I#
+       |[7:26..7:27): I => xa/I#
+       |[7:27..7:27):  => xa/I#`<init>`().
+       |[8:6..8:7): m <= xa/O.m.
+       |[8:14..8:15): M => xa/M#
+       |[8:15..8:15):  => xa/M#`<init>`().
+       |[9:2..9:3): m => xa/O.m.
+       |[9:22..9:24): += => scala/Int#`+`(+4).
+       |[10:2..10:3): m => xa/O.m.
+       |[10:23..10:25): += => scala/Int#`+`(+4).
+       |[11:2..11:3): m => xa/O.m.
+       |[11:23..11:25): += => scala/Int#`+`(+4).
+       |[12:2..12:3): m => xa/O.m.
+       |[12:9..12:10): k => xa/M#apply().(k)
+       |[12:16..12:18): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+    ScalaVersion.Scala212 ->
       """|[0:8..0:10): xa <= xa/
          |[1:6..1:7): I <= xa/I#
          |[1:7..1:7):  <= xa/I#`<init>`().
@@ -4949,54 +5015,37 @@ class TargetedSuite extends SemanticdbSuite {
          |[8:14..8:15): M => xa/M#
          |[8:15..8:15):  => xa/M#`<init>`().
          |[9:2..9:3): m => xa/O.m.
+         |[9:15..9:16): k => xa/M#apply().(k)
          |[9:22..9:24): += => scala/Int#`+`(+4).
          |[10:2..10:3): m => xa/O.m.
+         |[10:16..10:17): k => xa/M#apply().(k)
          |[10:23..10:25): += => scala/Int#`+`(+4).
          |[11:2..11:3): m => xa/O.m.
+         |[11:16..11:17): k => xa/M#apply().(k)
          |[11:23..11:25): += => scala/Int#`+`(+4).
          |[12:2..12:3): m => xa/O.m.
          |[12:9..12:10): k => xa/M#apply().(k)
          |[12:16..12:18): += => scala/Int#`+`(+4).
-         |""".stripMargin
-    val expected212 = expected.replace("[9:22", "[9:15..9:16): k => xa/M#apply().(k)\n[9:22")
-      .replace("[10:23", "[10:16..10:17): k => xa/M#apply().(k)\n[10:23")
-      .replace("[11:23", "[11:16..11:17): k => xa/M#apply().(k)\n[11:23")
-    checkSection(
-      "named arguments of an apply with type arguments, an implicit list and +=",
-      applyWithTypeArgumentsImplicitsAndOperatorAssignment,
-      ScalaVersion.getExpected(List(ScalaVersion.Scala212 -> expected212), expected),
-      "Occurrences",
-    )
-  }
+         |""".stripMargin,
+  )
 
-  {
-    val expected =
-      """|[9:22..9:26): += 5 => *(i)
-         |  i => xa/O.i.
-         |[10:23..10:27): += 5 => *(i)
-         |  i => xa/O.i.
-         |[11:23..11:27): += 5 => *(i)
-         |  i => xa/O.i.
-         |[12:2..12:3): m => *.apply[Nothing]
-         |  apply => xa/M#apply().
-         |  Nothing => scala/Nothing#
-         |[12:2..12:20): m[Int](k = 0) += 5 => *(i)
-         |  i => xa/O.i.
-         |""".stripMargin
-    val expected21315 =
-      """|[9:25..9:26): 5 => *(i)
-         |  i => xa/O.i.
-         |[10:26..10:27): 5 => *(i)
-         |  i => xa/O.i.
-         |[11:26..11:27): 5 => *(i)
-         |  i => xa/O.i.
-         |[12:2..12:3): m => *.apply[Nothing]
-         |  apply => xa/M#apply().
-         |  Nothing => scala/Nothing#
-         |[12:2..12:20): m[Int](k = 0) += 5 => *(i)
-         |  i => xa/O.i.
-         |""".stripMargin
-    val expected212 =
+  checkSection(
+    "named arguments of an apply with type arguments, an implicit list and +=: synthetics",
+    applyWithTypeArgumentsImplicitsAndOperatorAssignment,
+    """|[9:22..9:26): += 5 => *(i)
+       |  i => xa/O.i.
+       |[10:23..10:27): += 5 => *(i)
+       |  i => xa/O.i.
+       |[11:23..11:27): += 5 => *(i)
+       |  i => xa/O.i.
+       |[12:2..12:3): m => *.apply[Nothing]
+       |  apply => xa/M#apply().
+       |  Nothing => scala/Nothing#
+       |[12:2..12:20): m[Int](k = 0) += 5 => *(i)
+       |  i => xa/O.i.
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
       """|[9:2..9:3): m => *.apply[Nothing]
          |  apply => xa/M#apply().
          |  Nothing => scala/Nothing#
@@ -5017,19 +5066,23 @@ class TargetedSuite extends SemanticdbSuite {
          |  Nothing => scala/Nothing#
          |[12:2..12:20): m[Int](k = 0) += 5 => *(i)
          |  i => xa/O.i.
-         |""".stripMargin
-    checkSection(
-      "named arguments of an apply with type arguments, an implicit list and +=: synthetics",
-      applyWithTypeArgumentsImplicitsAndOperatorAssignment,
-      ScalaVersion.getExpected(
-        List(ScalaVersion.Scala212 -> expected212, ScalaVersion.AtMost213(15) -> expected21315),
-        expected,
-      ),
-      "Synthetics",
-    )
-  }
+         |""".stripMargin,
+    ScalaVersion.AtMost213(15) ->
+      """|[9:25..9:26): 5 => *(i)
+         |  i => xa/O.i.
+         |[10:26..10:27): 5 => *(i)
+         |  i => xa/O.i.
+         |[11:26..11:27): 5 => *(i)
+         |  i => xa/O.i.
+         |[12:2..12:3): m => *.apply[Nothing]
+         |  apply => xa/M#apply().
+         |  Nothing => scala/Nothing#
+         |[12:2..12:20): m[Int](k = 0) += 5 => *(i)
+         |  i => xa/O.i.
+         |""".stripMargin,
+  )
 
-  val viewToApplyWithOperatorAssignment =
+  private val viewToApplyWithOperatorAssignment =
     """|package xb
        |import scala.language.implicitConversions
        |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
@@ -5117,7 +5170,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val writtenApplyWithDottedOperatorAssignment =
+  private val writtenApplyWithDottedOperatorAssignment =
     """|package xc
        |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
        |object O {
@@ -5167,7 +5220,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val writtenApplyWithMemberOperator =
+  private val writtenApplyWithMemberOperator =
     """|package xd
        |class B { def +=(y: Int) = this }
        |class M2 { def apply(k: Int) = new B }
@@ -5217,7 +5270,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val applyWithDefaultImplicitAsQualifier =
+  private val applyWithDefaultImplicitAsQualifier =
     """|package xe
        |class MD { def apply(k: Int)(implicit j: Int = k): Int = k }
        |object O {
@@ -5276,7 +5329,7 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
-  val writtenApplyOnReorderedCallWithOperatorAssignment =
+  private val writtenApplyOnReorderedCallWithOperatorAssignment =
     """|package xf
        |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
        |object O {
