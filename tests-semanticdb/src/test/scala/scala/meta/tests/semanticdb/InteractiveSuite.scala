@@ -321,7 +321,7 @@ class InteractiveSuite extends FunSuite {
        |Text => non-empty
        |Language => Scala
        |Symbols => 3 entries
-       |Occurrences => 4 entries
+       |Occurrences => 6 entries
        |
        |Symbols:
        |_empty_/n87. => final object n87 extends AnyRef { +2 decls }
@@ -335,6 +335,8 @@ class InteractiveSuite extends FunSuite {
        |[0:7..0:10): n87 <= _empty_/n87.
        |[1:12..1:13): S <= _empty_/n87.S.
        |[2:3..2:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[2:20..2:25): Array => scala/Array.
+       |[2:26..2:27): S => _empty_/n87.S.
        |[2:34..2:35): k <= _empty_/n87.k().
        |""".stripMargin,
   )

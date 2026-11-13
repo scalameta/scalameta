@@ -25,7 +25,7 @@ object InteractiveSemanticdb extends VersionCompilerOps {
     if (classpath.isEmpty) settings.usejavacp.value = true
     settings.processArgumentString(("-Ypresentation-any-thread" :: scalacOptions).mkString(" "))
     val compiler = new Global(settings, new StoreReporter)
-    new SemanticdbPlugin(compiler) // hijack reporter/analyzer
+    new SemanticdbPlugin(compiler).initTextDocumentOps(interactiveOK = true)
     compiler
   }
 
