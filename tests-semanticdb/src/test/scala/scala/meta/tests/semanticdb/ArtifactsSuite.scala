@@ -7,8 +7,7 @@ import scala.collection.JavaConverters._
 
 import munit.FunSuite
 
-// https://github.com/scalameta/scalameta/issues/4080
-class Issue4080Suite extends FunSuite {
+class ArtifactsSuite extends FunSuite {
 
   private def classes(jar: String): Set[String] = {
     val zip = new ZipFile(jar)
@@ -26,13 +25,14 @@ class Issue4080Suite extends FunSuite {
   private val compilerClasses = sys.props("sbt.paths.scala-compiler.jars").split(File.pathSeparator)
     .flatMap(classes).toSet
 
-  test("plugin classes outside scalameta") {
+  // https://github.com/scalameta/scalameta/issues/4080
+  test("#4080: plugin classes outside scalameta") {
     val bundled = pluginClasses.diff(compilerClasses)
       .filterNot(x => x.startsWith("scala/meta/") || x.startsWith("org/scalameta/"))
     assertEquals(packages(bundled), Nil)
   }
 
-  test("plugin classes in the compiler classpath")(
+  test("#4080: plugin classes in the compiler classpath")(
     assertEquals(packages(pluginClasses.intersect(compilerClasses)), Nil),
   )
 
