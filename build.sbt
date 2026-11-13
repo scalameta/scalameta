@@ -514,14 +514,18 @@ lazy val tests = projectMatrix.in(file("tests")).settings(testsSettings)
   .crossNative(TestedScalaVersions, testsNativeSettings).enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta, testkit)
 
+/** The classes that the symbol table suites read, built by the rows of this version. */
+def symtabInputs(version: String) = Def.setting(Seq[BuildInfoKey](
+  "classDirectories" ->
+    Seq(common2.publishedClassDir(version).value, common.publishedClassDir(version).value),
+  "databaseClasspath" -> semanticdbIntegration.classDir(version).value,
+))
+
 def testsSemanticdbSettings(version: String) = Def.settings(
   Test / exportJars := false,
   testSettings,
-  // only the suites in tests-semanticdb read these
+  buildInfoKeys ++= symtabInputs(version).value,
   buildInfoKeys ++= Seq[BuildInfoKey](
-    "classDirectories" ->
-      Seq(common2.publishedClassDir(version).value, common.publishedClassDir(version).value),
-    "databaseClasspath" -> semanticdbIntegration.classDir(version).value,
     "targetDirectory" -> (Test / target).value.getAbsolutePath,
     "integrationSourceDirectories" -> (semanticdbIntegration.jvmCompile(version) / sourceDirectories)
       .value,
