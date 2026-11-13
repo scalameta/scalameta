@@ -2035,7 +2035,28 @@ trait TextDocumentOps {
             if (isForName(gt.name)) res(cachedForOrOrig(qual), qual.toRange)
             else if (isOtherName(gt.name)) resPos(qual.toRange)
             else null
+          else if (gt.pos.isTransparent && !qual.pos.isRange && isOpAssignCall(gt))
+            resPos(gt.toRange) // a(i) += v: `a`'s range is moved to `a.update` instead
           else null
+        }
+
+        /** whether scalac adds the call `gt`: `update`, or an unwritten `apply` */
+        private def isOpAssignCall(gt: g.Select): Boolean = {
+          val isUpdate = gt.name == g.nme.update
+          if (!isUpdate && gt.name != g.nme.apply) return false
+          // a written select, like the method value `m.update _`, has its point at its name
+          if (!gt.pos.samePointAs(gt.qualifier.pos)) return false
+          if (isUpdate) return true
+          val end = gt.pos.end
+          @tailrec
+          def loop(t: m.Tree): Boolean = t.parentOrNull match {
+            case p: m.Term.Select if p.qual eq t => p.name.value != Apply
+            case p: m.Term.ApplyInfix if p.lhs eq t => p.op.value != Apply
+            case p: m.Tree => p.pos.end != end || loop(p)
+            case _ => true
+          }
+          val t = mend(end)
+          (null eq t) || loop(t)
         }
 
         private def cachedIfSelect(gt: g.Tree, usePos: Boolean = true) = gt match {
