@@ -159,7 +159,7 @@ trait TextDocumentOps {
       val sammethodoccurrences = emptyOccurrenceMap()
       val symbols = mutable.Map[String, s.SymbolInformation]()
       val synthetics = mutable.ArrayBuffer[s.Synthetic]()
-      val syntheticTreeCache = new mutable.HashMap[g.Tree, Option[s.Synthetic]]
+      val syntheticTreeCache = new mutable.HashMap[g.Tree, s.Synthetic] // value can be null
       val msource = unit.toSource(explicitDialect)
       val mtrees = TreeIndex(msource)
       // the offset of a macro annotation that scalac expanded -> the annotated member
@@ -1995,18 +1995,18 @@ trait TextDocumentOps {
       MyDocumentTraverser.successNamedArgs()
 
       object Synth {
-        def cached(gt: g.Tree)(res: => Option[s.Synthetic]): Option[s.Synthetic] =
-          syntheticTreeCache.getOrElseUpdate(
+        def cached(gt: g.Tree)(res: => s.Synthetic): s.Synthetic = syntheticTreeCache
+          .getOrElseUpdate(
             gt,
-            // if v is None, no synthetic; if v has no range, cache for parents but don't output
+            // output only a synthetic with a range, but cache any, for the parents to read
             {
               val v = res
-              v.foreach(s => if (s.range.isDefined) synthetics += s)
+              if ((null ne v) && v.range.isDefined) synthetics += v
               v
             },
           )
 
-        def getCached(gt: g.Tree, gpos: gu.Position): Option[s.Synthetic] = cached(gt) {
+        def getCached(gt: g.Tree, gpos: gu.Position): s.Synthetic = cached(gt) {
           gt match {
             case t: g.ApplyImplicitView =>
               val pos = gpos.toMeta.toRange
@@ -2014,56 +2014,56 @@ trait TextDocumentOps {
             case t: g.ApplyToImplicitArgs =>
               val pos = gpos.toMeta.toRange
               t.fun match {
-                case f: g.ApplyImplicitView => cached(f)(syn(getApplyImplicitView(f, pos)))
-                    .flatMap(x => syn(pos, getApplyToImplicitArgs(t, x.tree)))
+                case f: g.ApplyImplicitView =>
+                  val x = cached(f)(syn(getApplyImplicitView(f, pos)))
+                  if (null eq x) null else syn(pos, getApplyToImplicitArgs(t, x.tree))
                 case _ => syn(pos, getApplyToImplicitArgs(t))
               }
             case t: g.TypeApply => getTypeApply(t, isWithinFor = false)
             case t: g.Apply =>
               val res = cachedIfSelect(t.fun)
-              if (res.isEmpty) forApply(t) else None
+              if (null eq res) forApply(t) else null
             case t: g.Select => getSelect(t)
-            case _ => None
+            case _ => null
           }
         }
 
-        def syn(pos: Option[s.Range], st: s.Tree): Some[s.Synthetic] = Some(s.Synthetic(pos, st))
-        def syn(st: s.Tree): Some[s.Synthetic] = syn(None, st)
-        def syn(pos: s.Range, st: s.Tree): Some[s.Synthetic] = syn(Some(pos), st)
-        def syn(pos: => s.Range, st: s.Tree, usePos: Boolean): Option[s.Synthetic] =
+        def syn(pos: Option[s.Range], st: s.Tree): s.Synthetic = s.Synthetic(pos, st)
+        def syn(st: s.Tree): s.Synthetic = syn(None, st)
+        def syn(pos: s.Range, st: s.Tree): s.Synthetic = syn(Some(pos), st)
+        def syn(pos: => s.Range, st: s.Tree, usePos: Boolean): s.Synthetic =
           if (usePos) syn(pos, st) else syn(st)
 
-        private def getSelect(gt: g.Select, usePos: Boolean = true): Option[s.Synthetic] = {
+        private def getSelect(gt: g.Select, usePos: Boolean = true): s.Synthetic = {
           val qual = gt.qualifier
-          if (gt.pos != qual.pos) None
+          if (gt.pos != qual.pos) null
           else {
             val pos = qual.toRange
             def res(qual: s.Tree) = syn(pos, s.SelectTree(qual, Some(gt.toSemanticId)), usePos)
-            syntheticName(gt.name)(res(cachedForOrOrig(qual)))(res(pos.toSemanticOriginal))(None)
+            syntheticName(gt.name)(res(cachedForOrOrig(qual)))(res(pos.toSemanticOriginal))(null)
           }
         }
 
         private def cachedIfSelect(gt: g.Tree, usePos: Boolean = true) = gt match {
           case t: g.Select => cached(t)(getSelect(t, usePos = usePos))
-          case _ => None
+          case _ => null
         }
 
-        private def getTypeApply(gt: g.TypeApply, isWithinFor: Boolean): Option[s.Synthetic] = {
+        private def getTypeApply(gt: g.TypeApply, isWithinFor: Boolean): s.Synthetic = {
           def res(fun: s.Tree) = s.TypeApplyTree(fun, gt.args.map(_.tpe.toSemanticTpe))
-          (if (isWithinFor) cachedForApplyFun(gt.fun) else None) match {
-            case Some(fun) => syn(res(fun.tree))
-            case _ if gt.args.headOption.exists(!_.pos.isRange) =>
-              val pos = gt.fun.toRange
-              def noApply = gt.fun match {
-                case f: g.Apply =>
-                  cached(f)(None)
-                  f.fun
-                case f => f
-              }
-              def fun = cachedIfSelect(noApply, false).fold[s.Tree](pos.toSemanticOriginal)(_.tree)
-              syn(pos, res(fun))
-            case _ => None
-          }
+          val fun = if (isWithinFor) cachedForApplyFun(gt.fun) else null
+          if (null ne fun) syn(res(fun.tree))
+          else if (gt.args.headOption.exists(!_.pos.isRange)) {
+            val pos = gt.fun.toRange
+            val noApply = gt.fun match {
+              case f: g.Apply =>
+                cached(f)(null)
+                f.fun
+              case f => f
+            }
+            val x = cachedIfSelect(noApply, usePos = false)
+            syn(pos, res(if (null ne x) x.tree else pos.toSemanticOriginal))
+          } else null
         }
 
         private def getApplyImplicitView(gt: g.ApplyImplicitView, range: s.Range): s.ApplyTree =
@@ -2146,44 +2146,49 @@ trait TextDocumentOps {
         // use it when we don't want to output the original in `synthetics`
         private def uncachedOrig(gt: g.Tree): s.Tree = sourcePos(gt).toMeta.toRange
           .toSemanticOriginal
-        private def cachedOrOrig(gt: g.Tree)(res: => Option[s.Synthetic]) = cached(gt)(res)
-          .fold(uncachedOrig(gt))(_.tree)
+        private def cachedOrOrig(gt: g.Tree)(res: => s.Synthetic) = {
+          val x = cached(gt)(res)
+          if (null ne x) x.tree else uncachedOrig(gt)
+        }
 
         private def forSingleFuncArgApply(
             gt: g.Apply,
             farg: g.Function,
             usePos: Boolean,
-        ): Option[s.Synthetic] = cachedForApplyFun(gt.fun).filter(_.range.isEmpty).flatMap { x =>
-          // a pattern binds through a match on the parameter; its range spans the generator
-          val body = farg.body match {
-            case g.Match(sel: g.Typed, cd :: Nil)
-                if farg.vparams.exists(_.symbol == sel.expr.symbol) => cd.body
-            case body => body
+        ): s.Synthetic = {
+          val x = cachedForApplyFun(gt.fun)
+          if ((null eq x) || x.range.nonEmpty) null
+          else {
+            // skip the match that scalac adds for a generator's pattern: its range spans the generator
+            val body = farg.body match {
+              case g.Match(sel: g.Typed, cd :: Nil)
+                  if farg.vparams.exists(_.symbol == sel.expr.symbol) => cd.body
+              case body => body
+            }
+            val arg = s.FunctionTree(farg.vparams.map(toParamId), cachedForOrOrig(body))
+            syn(gt.toRange, s.ApplyTree(x.tree, List(arg)), usePos)
           }
-          val arg = s.FunctionTree(farg.vparams.map(toParamId), cachedForOrOrig(body))
-          syn(gt.toRange, s.ApplyTree(x.tree, List(arg)), usePos)
         }
 
         @tailrec
-        private def forRefutabilityCheckFun(gt: g.Tree): Option[s.Synthetic] = gt match {
+        private def forRefutabilityCheckFun(gt: g.Tree): s.Synthetic = gt match {
           // step through the type arguments that scalac infers for a generic `withFilter`
           case gt: g.TypeApply =>
-            cached(gt)(None)
+            cached(gt)(null)
             forRefutabilityCheckFun(gt.fun)
           // show the generator: the source does not write the check
           case gt: g.Select =>
-            cached(gt)(None)
+            cached(gt)(null)
             syn(cachedForOrOrig(gt.qualifier))
-          case _ => None
+          case _ => null
         }
 
-        private def forApply(gt: g.Apply, usePos: Boolean = true): Option[s.Synthetic] =
-          gt.args match {
-            case (f: g.Function) :: Nil if isForFun(gt.fun) =>
-              if (isRefutabilityCheck(f)) forRefutabilityCheckFun(gt.fun)
-              else forSingleFuncArgApply(gt, f, usePos)
-            case _ => None
-          }
+        private def forApply(gt: g.Apply, usePos: Boolean = true): s.Synthetic = gt.args match {
+          case (f: g.Function) :: Nil if isForFun(gt.fun) =>
+            if (isRefutabilityCheck(f)) forRefutabilityCheckFun(gt.fun)
+            else forSingleFuncArgApply(gt, f, usePos)
+          case _ => null
+        }
 
         private def toParamId(gparam: g.ValDef): s.IdTree = {
           val gsym = gparam.symbol
@@ -2193,10 +2198,10 @@ trait TextDocumentOps {
           s.IdTree(ssym)
         }
 
-        private def cachedForApplyFun(gt: g.Tree): Option[s.Synthetic] = cached(gt)(gt match {
+        private def cachedForApplyFun(gt: g.Tree): s.Synthetic = cached(gt)(gt match {
           case t: g.Select => getSelect(t, usePos = false)
           case t: g.TypeApply => getTypeApply(t, isWithinFor = true)
-          case _ => None
+          case _ => null
         })
       }
 
