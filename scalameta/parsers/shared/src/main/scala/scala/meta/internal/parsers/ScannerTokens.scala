@@ -197,14 +197,14 @@ private[meta] final class ScannerTokens(
 
   /**
    * When token on `tokenPosition` is not a whitespace and is a first non-whitespace character in a
-   * current line then a result is a number of whitespace characters counted. Otherwise
-   * {{{(-1, -1)}}} is returned.
+   * current line (or `skipNonTrivia` is set) then a result is a number of whitespace characters
+   * counted. Otherwise {{{(-1, -1)}}} is returned.
    *
    * Returns the indentation level and the `LF` token index packed into a single `Long` (high 32
    * bits = indentation, low 32 bits = index), to avoid a per-token `Tuple2` allocation on this hot
    * path. Use [[Tokens.countOf]] / [[Tokens.indexOf]] to unpack.
    */
-  def countIndentAndNewlineIndex(tokenPosition: Int): Long = {
+  def countIndentAndNewlineIndex(tokenPosition: Int, skipNonTrivia: Boolean = false): Long = {
     @tailrec
     def countIndentInternal(pos: Int, acc: Int = 0): Long =
       if (pos < 0) Tokens.pack(acc, pos)
@@ -216,6 +216,7 @@ private[meta] final class ScannerTokens(
             if (AsMultilineComment.isMultiline(c)) Tokens.pack(multilineCommentIndent(c), pos)
             else countIndentInternal(pos - 1)
           case t: HSpace => countIndentInternal(pos - 1, acc + t.len)
+          case _ if skipNonTrivia => countIndentInternal(pos - 1)
           case _ => Tokens.pack(-1, -1)
         }
       }
@@ -224,7 +225,8 @@ private[meta] final class ScannerTokens(
     else countIndentInternal(tokenPosition - 1)
   }
 
-  def countIndent(tokenPosition: Int): Int = Tokens.countOf(countIndentAndNewlineIndex(tokenPosition))
+  def countIndent(tokenPosition: Int, skipNonTrivia: Boolean = false): Int = Tokens
+    .countOf(countIndentAndNewlineIndex(tokenPosition, skipNonTrivia = skipNonTrivia))
 
   // the newlines at which an indentation region opened, and those at which one closed
   private val indentAt = new scala.collection.mutable.BitSet
@@ -493,6 +495,19 @@ private[meta] final class ScannerTokens(
       }) && !precedesTypedName(prevNonTrivia(prevPos)) &&
       isColonLambdaSameLine(nextNonHTriviaAt(currPos)) && !isInTypeDecl(prevPos)
 
+    /**
+     * Returns [[RegionControlCond.inCondIndent]] for the condition after a keyword
+     * @param regions
+     *   the regions that enclose the condition, the innermost first
+     */
+    def inCondIndent(regions: List[SepRegion]): Int =
+      // without colon arguments or leading infix lines, the scanner never needs `inCondIndent`
+      if (!dialect.allowFewerBraces || !dialect.allowInfixOperatorAfterNL) Int.MaxValue
+      // if the condition starts with `{` or on the next line, it is a block with its own indent
+      else if (next.is[LeftBrace] || nextIndent >= 0) Int.MaxValue
+      else regions
+        .foldLeft(countIndent(currPos, skipNonTrivia = true))((x, r) => math.max(x, r.indent))
+
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
       case _: EOF => getAtEof(sepRegions)
       case _: Comma =>
@@ -620,7 +635,7 @@ private[meta] final class ScannerTokens(
         )
       case _: KwFor if !isPrevEndMarker() => currRef(RegionFor(next) :: sepRegions)
       case _: KwWhile if dialect.allowQuietSyntax && !isPrevEndMarker() =>
-        currRef(RegionWhile(next, inCondIndent(currPos, nextPos, sepRegions)) :: sepRegions)
+        currRef(RegionWhile(next, inCondIndent(sepRegions)) :: sepRegions)
       case _: KwIf if dialect.allowQuietSyntax && !isPrevEndMarker() =>
         currRef(dropRegionLine(sepRegions) match {
           case (r: RegionCaseExprPat) :: rs => new RegionCaseExprGuard(r.indent) :: rs
@@ -628,7 +643,7 @@ private[meta] final class ScannerTokens(
           case rs @ (_: RegionDelim) :: (_: RegionFor) :: _ => rs
           // a guard after a generator that left a region, such as that of `new` or `try`
           case rs if canEndStat(prev) && isForGuard(rs) => rs
-          case _ => RegionIf(next, inCondIndent(currPos, nextPos, sepRegions)) :: sepRegions
+          case _ => RegionIf(next, inCondIndent(sepRegions)) :: sepRegions
         })
       case _: KwThen => afterControlRef(sepRegions, RegionThen :: _)
       case _: KwElse if dialect.allowQuietSyntax =>
@@ -1077,25 +1092,6 @@ private[meta] final class ScannerTokens(
     case Nil | (_: CanProduceLF) :: _ => true
     case _ => false
   }
-
-  /**
-   * Returns [[RegionControlCond.inCondIndent]] for the condition after a keyword
-   * @param kwPos
-   *   the index of the `if` or `while`
-   * @param nextPos
-   *   the index of the token after the keyword
-   * @param regions
-   *   the regions that enclose the condition, the innermost first
-   */
-  private def inCondIndent(kwPos: Int, nextPos: Int, regions: List[SepRegion]): Int =
-    // without colon arguments or leading infix lines, the scanner never needs `inCondIndent`
-    if (!dialect.allowFewerBraces || !dialect.allowInfixOperatorAfterNL) Int.MaxValue
-    // if the condition starts with `{` or on the next line, it is a block with its own indent
-    else if (tokens(nextPos).is[LeftBrace] || countIndent(nextPos) >= 0) Int.MaxValue
-    else {
-      val first = nextNonHTriviaAt(math.max(0, prevAt(kwPos, !_.is[AtEOL])))
-      regions.foldLeft(countIndent(first))((x, r) => math.max(x, r.indent))
-    }
 
   /** Returns true if `cond` continues past `)` to the token at `pos`, as dotty's `toBeContinued` */
   private def isCondContinued(cond: RegionControlMaybeCond, pos: Int): Boolean = {
