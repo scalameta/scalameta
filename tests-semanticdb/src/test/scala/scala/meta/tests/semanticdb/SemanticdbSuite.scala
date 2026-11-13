@@ -138,11 +138,15 @@ abstract class SemanticdbSuite extends FunSuite {
   def checkSection(code: String, expected: String, section: String)(implicit
       loc: munit.Location,
   ): Unit = checkSection(code, code, expected, section)
-  def checkSection(name: TestOptions, code: String, expected: String, section: String)(implicit
-      loc: munit.Location,
-  ): Unit = test(name) {
+  def checkSection(
+      name: TestOptions,
+      code: String,
+      expected: String,
+      section: String,
+      compat: (ScalaVersion.Version, String)*,
+  )(implicit loc: munit.Location): Unit = test(name) {
     val obtained = computeDatabaseSectionFromSnippet(code, section)
-    assertNoDiff(obtained, expected)
+    assertNoDiff(obtained, ScalaVersion.getExpected(compat, expected))
   }
 
   def occurrences(code: String, expected: String)(implicit loc: munit.Location): Unit =
