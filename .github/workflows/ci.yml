@@ -65,6 +65,12 @@ jobs:
       - &testjvm3next
         if: ${{ !cancelled() }}
         run: sbt tests3_next/testFull
+      - &testsymtab3lts
+        if: ${{ !cancelled() }}
+        run: sbt testsSemanticdbSymtab3_lts/testFull
+      - &testsymtab3next
+        if: ${{ !cancelled() }}
+        run: sbt testsSemanticdbSymtab3_next/testFull
 
   # ===== PR gate: 4 balanced JDK-17 workers, run on PR *and* push (~12 min) =====
   pr-jvm212-sem212-js3N: # 2.12 parser, mima, semanticdb; 3next JS
@@ -117,7 +123,7 @@ jobs:
         run: sbt $'-J-Dline.separator=\r\n' tests2_13/testFull
         shell: bash
   
-  pr-jvm3L-sem213-other: # 3lts parser, mima, semanticdb-dotc; 2.13 semanticdb; scalafmt
+  pr-jvm3L-sem213-other: # 3lts parser, mima, semanticdb-dotc; 2.13 semanticdb; scalafmt; 3 symtab
     runs-on: ubuntu-latest
     timeout-minutes: *timeout
     steps:
@@ -135,6 +141,8 @@ jobs:
         run: sbt testsSemanticdb2_13
       - if: ${{ !cancelled() }}
         run: ./bin/scalafmt --test
+      - *testsymtab3lts
+      - *testsymtab3next
       - *sbt_crlf
       - if: ${{ !cancelled() }}
         run: sbt $'-J-Dline.separator=\r\n' testsSemanticdb2_13
@@ -204,6 +212,8 @@ jobs:
         run: sbt testsSemanticdb${{ matrix.binary }}_other
       - if: ${{ !cancelled() && matrix.binary == '3' }} # semanticdb-dotc is Scala 3 only
         run: sbt semanticdbDotc3_other
+      - if: ${{ !cancelled() && matrix.binary == '3' }}
+        run: sbt testsSemanticdbSymtab3_other
 
   post-windows: # Windows parser/JS/semanticdb (line-ending sensitivity)
     if: ${{ github.event_name == 'push' }}

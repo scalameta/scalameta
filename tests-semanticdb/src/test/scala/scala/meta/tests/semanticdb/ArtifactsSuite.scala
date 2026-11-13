@@ -5,6 +5,8 @@ import scala.meta.tests.BuildInfo
 import java.io.File
 import java.nio.file.Paths
 import java.util.zip.ZipFile
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.xpath.XPathFactory
 
 import scala.collection.JavaConverters._
 
@@ -61,6 +63,16 @@ class ArtifactsSuite extends FunSuite {
     assertEquals(entries.length, 1, entries.mkString(File.pathSeparator))
     val entry = Paths.get(entries(0))
     assert(entry.startsWith(BuildInfo.databaseSourcepath), entry)
+  }
+
+  test("core's pom") {
+    val pom = DocumentBuilderFactory.newInstance.newDocumentBuilder
+      .parse(new File(sys.props("sbt.paths.semanticdb-scalac-core.pom")))
+    val xpath = XPathFactory.newInstance.newXPath
+    val symtab = s"semanticdb-symtab_${BuildInfo.scalaBinaryVersion}"
+    val obtained = xpath
+      .evaluate(s"/project/dependencies/dependency[artifactId='$symtab']/version", pom)
+    assertEquals(obtained, xpath.evaluate("/project/version", pom))
   }
 
 }
