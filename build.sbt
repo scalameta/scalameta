@@ -109,7 +109,7 @@ def rootSettings = Def.settings(
     all(Seq(trees2, scala3TreeLiftsCodeGen, tests).flatMap(_.allProjects()).map(_._1.id + "/clean")),
   ),
   testAliasesFor(Scala213Versions, Scala212Versions),
-  scala3Aliases("tests", "testsJS", "testsNative", "semanticdbDotc"),
+  scala3Aliases("tests", "testsJS", "testsNative", "semanticdbDotc", "testsSemanticdbSymtab"),
   commands += mimaPublished,
   addCommandAlias("mima2_13", "mimaPublished " + PublishedScala213),
   addCommandAlias("mima2_12", "mimaPublished " + PublishedScala212),
@@ -200,7 +200,8 @@ lazy val semanticdbScalacCore = projectMatrix.in(file("semanticdb/scalac/library
   // SIP-51 on the earliest cross-built Scala versions.
   libraryDependencies +=
     ("com.lihaoyi" %% "unroll-annotation" % "0.3.0").exclude("org.scala-lang" % "scala-library"),
-).crossFullJvm(AllScala2Versions, deps = Seq(semanticdbShared, io)).enablePlugins(BuildInfoPlugin)
+).crossFullJvm(AllScala2Versions, deps = Seq(semanticdbSymtab, semanticdbShared, io))
+  .enablePlugins(BuildInfoPlugin)
 
 def semanticdbSharedSettings = Def.settings(
   moduleName := "semanticdb-shared",
@@ -216,6 +217,21 @@ def semanticdbSharedSettings = Def.settings(
 lazy val semanticdbShared = projectMatrix.in(file("semanticdb/semanticdb"))
   .settings(semanticdbSharedSettings).dependsOn(scalameta)
   .crossAllPublished(TestedScalaVersions, PublishedScalaVersions)
+
+lazy val semanticdbSymtab = projectMatrix.in(file("semanticdb/symtab")).settings(
+  moduleName := "semanticdb-symtab",
+  sharedSettings,
+  description := "Library to read SemanticDB symbols from a classpath",
+  libraryDependencies += {
+    // Scala 3 needs only its asm, and only the newest asm reads the class files of the newest JDK
+    val ver = if (isScala3.value) LatestScala213 else scalaVersion.value
+    "org.scala-lang" % "scala-compiler" % ver
+  },
+).crossJvm(
+  TestedScalaVersions,
+  publishJvmFor(PublishedScalaVersions),
+  mimaPreviousArtifacts := Set.empty,
+).dependsOn(semanticdbShared)
 
 lazy val semanticdbDotc = projectMatrix.in(file("semanticdb/dotc")).configs(SemanticdbDotc.DotcGen)
   .settings(sharedBaseSettings, SemanticdbDotc.settings).crossJvm(
@@ -541,6 +557,8 @@ def testsSemanticdbSettings(version: String) = Def.settings(
   Test / fullClasspath := Def.uncached {
     sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") =
       semanticdbScalacPluginPackage(version).value
+    sys.props("sbt.paths.semanticdb-scalac-core.pom") = fileOf
+      .value((semanticdbScalacCore.jvm(version) / makePom).value).getAbsolutePath
     sys.props("sbt.paths.scala-compiler.jars") = scalaInstance.value.allJars
       .mkString(java.io.File.pathSeparator)
     (Test / fullClasspath).value
@@ -560,6 +578,23 @@ lazy val testsSemanticdb = projectMatrix.in(file("tests-semanticdb")).dependsOn(
   semanticdbIntegration,
 ).crossFullJvm(AllScala2Versions, v => Seq(testsSemanticdbSettings(v)), Seq(scalameta, testkit))
   .enablePlugins(BuildInfoPlugin)
+
+/**
+ * The Scala 3 symbol table reads the classes of the latest 2.13 rows. Its output must match the
+ * expect files of those rows.
+ */
+lazy val testsSemanticdbSymtab = projectMatrix.in(file("tests-semanticdb-symtab")).settings(
+  testSettings,
+  buildInfoKeys ++= symtabInputs(LatestScala213).value,
+  Test / resourceDirectory := (testsSemanticdb.jvm(LatestScala213) / Test / resourceDirectory).value,
+  Test / fullClasspath := Def.uncached {
+    val _ = (semanticdbIntegration.jvmCompile(LatestScala213) / compile).value
+    sys.props("sbt.paths.scala-library.jars") =
+      (semanticdbIntegration.jvmCompile(LatestScala213) / scalaInstance).value.libraryJars
+        .mkString(java.io.File.pathSeparator)
+    (Test / fullClasspath).value
+  },
+).crossJvm(Scala3Rows.map(_._1)).dependsOn(semanticdbSymtab).enablePlugins(BuildInfoPlugin)
 
 lazy val sharedTestSettings = Def.settings(
   sharedSettings,
@@ -655,7 +690,9 @@ def unusedOptions = Def.setting {
     // 2.12 has no fatal warnings; it also reports the temporaries of named arguments
     s"-Wconf:cat=unused&$generated:s,cat=unused-locals&msg=local val x[$$][0-9]+ :s,cat=unused:e",
   )
-  else List("-Wunused:imports,privates,locals,params,patvars", s"-Wconf:id=E198&$generated:s")
+  else "-Wunused:imports,privates,locals,params,patvars" ::
+    List(generated, "origin=org[.]scalameta[.]collections[.]Conversions[.].*")
+      .map(x => s"-Wconf:id=E198&$x:s")
 }
 
 lazy val sharedBaseSettings = Def.settings(
