@@ -495,11 +495,7 @@ private[meta] final class ScannerTokens(
       }) && !precedesTypedName(prevNonTrivia(prevPos)) &&
       isColonLambdaSameLine(nextNonHTriviaAt(currPos)) && !isInTypeDecl(prevPos)
 
-    /**
-     * Returns [[RegionControlCond.inCondIndent]] for the condition after a keyword
-     * @param regions
-     *   the regions that enclose the condition, the innermost first
-     */
+    /** computes [[RegionControlCond.inCondIndent]] for the condition after a keyword */
     def inCondIndent(regions: List[SepRegion]): Int =
       // without colon arguments or leading infix lines, the scanner never needs `inCondIndent`
       if (!dialect.allowFewerBraces || !dialect.allowInfixOperatorAfterNL) Int.MaxValue
