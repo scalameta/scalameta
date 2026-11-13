@@ -1,7 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.scalacp._
-import scala.meta.internal.semanticdb.{KnownSymbols => ks}
 import scala.meta.internal.{semanticdb => s}
 
 import scala.annotation.tailrec
@@ -10,6 +9,9 @@ import scala.reflect.internal.{Flags => gf}
 
 trait TypeOps {
   self: SemanticdbOps =>
+
+  import s.Implicits._
+  import s.{KnownSymbols => ks}
 
   // the existentials of the `ExistentialType`s that a conversion is inside
   private lazy val boundExistentials = new mutable.HashSet[g.Symbol]

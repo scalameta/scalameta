@@ -1,7 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
 import org.scalameta.internal.ScalaCompat.EOL
-import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.{semanticdb => s}
 
 import java.io._
@@ -13,6 +12,8 @@ import scala.util.control.NonFatal
 
 trait SemanticdbPipeline extends SemanticdbOps {
   self: SemanticdbPlugin =>
+
+  import s.Implicits._
 
   implicit class XtensionURI(uri: URI) {
     def toFile: File = new File(uri)

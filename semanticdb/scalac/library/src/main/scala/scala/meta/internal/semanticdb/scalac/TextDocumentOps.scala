@@ -3,9 +3,6 @@ package scala.meta.internal.semanticdb.scalac
 import scala.meta.internal.NullableOps._
 import scala.meta.internal.inputs._
 import scala.meta.internal.scalacp._
-import scala.meta.internal.semanticdb.Implicits._
-import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.semanticdb.{KnownSymbols => ks}
 import scala.meta.internal.{semanticdb => s}
 
 import scala.annotation.tailrec
@@ -15,6 +12,10 @@ import scala.reflect.internal.{Flags => gf, util => gu}
 import scala.tools.nsc.settings.ScalaVersion
 import scala.util.control.NonFatal
 import scala.{meta => m}
+
+import s.Implicits._
+import s.Scala._
+import s.{KnownSymbols => ks}
 
 trait TextDocumentOps {
   self: SemanticdbOps =>

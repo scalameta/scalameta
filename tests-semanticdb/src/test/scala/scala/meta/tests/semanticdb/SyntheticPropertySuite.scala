@@ -2,7 +2,6 @@ package scala.meta.tests
 package semanticdb
 
 import scala.meta.internal.metap.PrinterSymtab
-import scala.meta.internal.semanticdb._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.metap.Format
 
@@ -10,6 +9,9 @@ import scala.meta.metap.Format
 // `case` classes and `AnyVal` classes) must carry the SYNTHETIC property, while
 // symbols written by the user must not.
 class SyntheticPropertySuite extends SemanticdbSuite with MetacpSnippets {
+
+  import s.Implicits._
+  import s._
 
   private def info(doc: s.TextDocument, suffix: String): s.SymbolInformation =
     doc.symbols.filter(_.symbol.endsWith(suffix)) match {

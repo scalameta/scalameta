@@ -1,6 +1,5 @@
 package scala.meta.internal.semanticdb.scalac
 
-import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.{semanticdb => s}
 
 import scala.reflect.internal.util.{Position => gPosition}
@@ -8,6 +7,9 @@ import scala.{meta => m}
 
 trait DiagnosticOps {
   self: SemanticdbOps =>
+
+  import s.Implicits._
+
   implicit class XtensionHijackedDiagnostics(gdiagnostics: Iterator[(gPosition, Int, String)]) {
     def toDiagnostics(mtreeAt: Int => m.Tree): Iterator[s.Diagnostic] = gdiagnostics
       .map { case (gpos, gseverity, text) =>

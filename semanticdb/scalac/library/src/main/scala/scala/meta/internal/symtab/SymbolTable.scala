@@ -1,15 +1,17 @@
 package scala.meta.internal.symtab
 
 import org.scalameta.collections.Conversions._
-import scala.meta.internal.semanticdb.Scala.{Descriptor => d, _}
-import scala.meta.internal.semanticdb._
-import scala.meta.internal.semanticdb.{KnownSymbols => ks}
+import scala.meta.internal.{semanticdb => s}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
 trait SymbolTable {
+
+  import s.Implicits._
+  import s.Scala.{Descriptor => d, _}
+  import s.{KnownSymbols => ks, _}
 
   /** Returns the SymbolInformation for the given symbol, or None if the symbol is missing. */
   def info(symbol: String): Option[SymbolInformation]

@@ -1,15 +1,17 @@
 package scala.meta.internal.scalacp
 
-import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb.{KnownSymbols => ks}
 import scala.meta.internal.{semanticdb => s}
 
 import scala.tools.scalap.scalax.rules.scalasig._
 
 trait TypeOps {
   self: Scalacp =>
+
   import TypeOps._
+  import s.Implicits._
+  import s.Scala.{Descriptor => d, _}
+  import s.{KnownSymbols => ks}
+
   implicit class XtensionTypeSType(tpe: Type) {
     def toSemanticTpe: s.Type = {
       // A repeated type (`T*`) is only valid in parameter position; scalac widens it to
@@ -131,14 +133,14 @@ trait TypeOps {
 
   private object ByNameType {
     def unapply(tpe: Type): Option[Type] = tpe match {
-      case TypeRefType(_, sym, List(tpe)) if sym.name == "<byname>" => Some(tpe)
+      case TypeRefType(_, sym, List(tpe: Type)) if sym.name == "<byname>" => Some(tpe)
       case _ => None
     }
   }
 
   private object RepeatedType {
     def unapply(tpe: Type): Option[Type] = tpe match {
-      case TypeRefType(_, sym, List(tpe)) if sym.name == "<repeated>" => Some(tpe)
+      case TypeRefType(_, sym, List(tpe: Type)) if sym.name == "<repeated>" => Some(tpe)
       case _ => None
     }
   }

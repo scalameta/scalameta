@@ -2,15 +2,18 @@ package scala.meta.tests.semanticdb
 
 import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.javacp.Javacp
-import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.semanticdb.SymbolInformation.Property._
-import scala.meta.internal.semanticdb._
+import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.Classpath
 
 import scala.tools.asm.Opcodes
 import scala.tools.asm.tree.{ClassNode, MethodNode}
 
 class JavacpSuite extends JavacpSuiteBase {
+
+  import s.Implicits._
+  import s.Scala._
+  import s.SymbolInformation.Property._
+  import s._
 
   checkOrder(
     "methods",
