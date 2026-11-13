@@ -1,6 +1,8 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.io._
+import scala.meta.internal.semanticdb.Implicits._
+import scala.meta.internal.semanticdb.Range
 import scala.meta.io.{AbsolutePath, RelativePath}
 
 import java.net.{URI, URLEncoder}
@@ -83,6 +85,7 @@ trait InputOps {
       else if (pos.isRange) m.Position.Range(input, pos.start, pos.end)
       else m.Position.Range(input, pos.point, pos.point)
     }
+    def toSRange: Range = toMeta.toRange
   }
 }
 
