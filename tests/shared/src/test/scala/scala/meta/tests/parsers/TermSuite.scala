@@ -1221,6 +1221,11 @@ class TermSuite extends ParseSuite {
     runTestAssert[Stat](codeOnSameLine, Some(syntaxOnSameLine))(treeOnSameLine)
   }
 
+  test("a block on the next line, lines ended by CR CR LF")(
+    // a lone CR ends a line, so CR CR LF is a blank line
+    assertTerm("{\r\r\n  f\r\r\n  { a }\r\r\n}")(blk(tname("f"), blk(tname("a")))),
+  )
+
   test("case: inside partial function") {
     runTestAssert[Term](
       """|{

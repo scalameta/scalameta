@@ -4054,4 +4054,20 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Source](code, layout)(tree)
   }
 
+  test("a carriage return in the indent of a `def` body on the next line") {
+    val code =
+      s"""|object O:
+          |  def f =
+          |    \r1
+          |  def g = 2
+          |""".stripMargin
+    // on 2.12, `stripLineEnd` keeps a lone CR
+    val cr = "\r".stripLineEnd
+    val error =
+      s"""|<input>:3: error: illegal start of simple expression
+          |    $cr
+          |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
 }
