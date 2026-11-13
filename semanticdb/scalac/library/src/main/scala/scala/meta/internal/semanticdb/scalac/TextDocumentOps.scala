@@ -2012,7 +2012,7 @@ trait TextDocumentOps {
         def syn(pos: Option[s.Range], st: s.Tree): s.Synthetic = s.Synthetic(pos, st)
         def syn(st: s.Tree): s.Synthetic = syn(None, st)
         def syn(pos: s.Range, st: s.Tree): s.Synthetic = syn(Some(pos), st)
-        def syn(pos: => s.Range, st: s.Tree, usePos: Boolean): s.Synthetic =
+        def syn(pos: s.Range, st: s.Tree, usePos: Boolean): s.Synthetic =
           if (usePos) syn(pos, st) else syn(st)
 
         private def synApplyImplicitView(gt: g.ApplyImplicitView, pos: s.Range): s.Synthetic =
@@ -2031,10 +2031,11 @@ trait TextDocumentOps {
             syn(pos, s.SelectTree(qual, Some(gt.toSemanticId)), usePos)
           def resPos(pos: s.Range) = res(pos.toSemanticOriginal, pos)
           val qual = gt.qualifier
-          if (gt.pos == qual.pos) {
-            val pos = qual.toRange
-            syntheticName(gt.name)(res(cachedForOrOrig(qual), pos))(resPos(pos))(null)
-          } else null
+          if (gt.pos == qual.pos)
+            if (isForName(gt.name)) res(cachedForOrOrig(qual), qual.toRange)
+            else if (isOtherName(gt.name)) resPos(qual.toRange)
+            else null
+          else null
         }
 
         private def cachedIfSelect(gt: g.Tree, usePos: Boolean = true) = gt match {
@@ -2158,7 +2159,8 @@ trait TextDocumentOps {
               case body => body
             }
             val arg = s.FunctionTree(farg.vparams.map(toParamId), cachedForOrOrig(body))
-            syn(gt.toRange, s.ApplyTree(x.tree, List(arg)), usePos)
+            val st = s.ApplyTree(x.tree, List(arg))
+            if (usePos) syn(gt.toRange, st) else syn(st)
           }
         }
 
@@ -2252,14 +2254,18 @@ trait TextDocumentOps {
     }
   }
 
-  private def syntheticName[A](gt: g.Name)(fFor: => A)(fOther: => A)(fElse: => A): A = gt match {
-    case g.nme.foreach | g.nme.withFilter | g.nme.flatMap | g.nme.map => fFor
-    case g.nme.apply | g.nme.update | g.nme.unapplySeq | g.nme.unapply => fOther
-    case _ => fElse
+  private def isForName(gt: g.Name): Boolean = gt match {
+    case g.nme.foreach | g.nme.withFilter | g.nme.flatMap | g.nme.map => true
+    case _ => false
+  }
+
+  private def isOtherName(gt: g.Name): Boolean = gt match {
+    case g.nme.apply | g.nme.update | g.nme.unapplySeq | g.nme.unapply => true
+    case _ => false
   }
 
   private def isSyntheticName(gt: g.Select, ifOther: Boolean = true): Boolean =
-    gt.pos == gt.qualifier.pos && syntheticName(gt.name)(true)(ifOther)(false)
+    gt.pos == gt.qualifier.pos && (isForName(gt.name) || ifOther && isOtherName(gt.name))
 
   /** the source range of `gt` with the lifted operand that it refers to, or `NoPosition` */
   @tailrec
