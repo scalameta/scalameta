@@ -6361,6 +6361,8 @@ class NameRewriteSuite extends SemanticdbSuite {
              |  c => _empty_/n76.c.
              |[22:10..22:32): collection.mutable.Map => *.apply
              |  apply => scala/collection/generic/GenMapFactory#apply().
+             |[24:2..24:3): m => *.update
+             |  update => scala/collection/mutable/MapLike#update().
              |[24:2..24:3): m => *.apply
              |  apply => scala/collection/MapLike#apply().
              |""".stripMargin
@@ -6406,6 +6408,8 @@ class NameRewriteSuite extends SemanticdbSuite {
          |  c => _empty_/n76.c.
          |[22:10..22:32): collection.mutable.Map => *.apply
          |  apply => scala/collection/MapFactory.Delegate#apply().
+         |[24:2..24:3): m => *.update
+         |  update => scala/collection/mutable/MapOps#update().
          |[24:2..24:3): m => *.apply
          |  apply => scala/collection/MapOps#apply().
          |""".stripMargin,

@@ -2455,16 +2455,24 @@ class TargetedSuite extends SemanticdbSuite {
        |  update => scala/Array#update().
        |[7:2..7:5): arr => *.update
        |  update => scala/Array#update().
+       |[8:2..8:5): arr => *.update
+       |  update => scala/Array#update().
        |[8:2..8:5): arr => *.apply
        |  apply => scala/Array#apply().
+       |[9:2..9:5): arr => *.update
+       |  update => scala/Array#update().
        |[9:2..9:5): arr => *.apply
        |  apply => scala/Array#apply().
        |[10:2..10:3): m => *.update
        |  update => vn/M#update().
        |[11:2..11:3): m => *.update
        |  update => vn/M#update().
+       |[12:2..12:3): m => *.update
+       |  update => vn/M#update().
        |[12:2..12:3): m => *.apply
        |  apply => vn/M#apply().
+       |[13:2..13:3): m => *.update
+       |  update => vn/M#update().
        |[13:2..13:3): m => *.apply
        |  apply => vn/M#apply().
        |[14:2..14:5): arr => *.update
@@ -2542,12 +2550,20 @@ class TargetedSuite extends SemanticdbSuite {
     updateWithOperatorAndVariableIndex,
     """|[4:12..4:17): Array => *.apply
        |  apply => scala/Array.apply(+5).
+       |[6:2..6:5): arr => *.update
+       |  update => scala/Array#update().
        |[6:2..6:5): arr => *.apply
        |  apply => scala/Array#apply().
+       |[7:2..7:5): arr => *.update
+       |  update => scala/Array#update().
        |[7:2..7:5): arr => *.apply
        |  apply => scala/Array#apply().
+       |[8:2..8:3): m => *.update
+       |  update => vo/M#update().
        |[8:2..8:3): m => *.apply
        |  apply => vo/M#apply().
+       |[9:2..9:3): m => *.update
+       |  update => vo/M#update().
        |[9:2..9:3): m => *.apply
        |  apply => vo/M#apply().
        |""".stripMargin,
@@ -2606,12 +2622,20 @@ class TargetedSuite extends SemanticdbSuite {
     updateWithOperatorAndNamedCallInIndex,
     """|[3:12..3:17): Array => *.apply
        |  apply => scala/Array.apply(+5).
+       |[4:2..4:5): arr => *.update
+       |  update => scala/Array#update().
        |[4:2..4:5): arr => *.apply
        |  apply => scala/Array#apply().
+       |[5:2..5:5): arr => *.update
+       |  update => scala/Array#update().
        |[5:2..5:5): arr => *.apply
        |  apply => scala/Array#apply().
+       |[6:2..6:5): arr => *.update
+       |  update => scala/Array#update().
        |[6:2..6:5): arr => *.apply
        |  apply => scala/Array#apply().
+       |[7:2..7:5): arr => *.update
+       |  update => scala/Array#update().
        |[7:2..7:5): arr => *.apply
        |  apply => scala/Array#apply().
        |""".stripMargin,
@@ -2725,8 +2749,12 @@ class TargetedSuite extends SemanticdbSuite {
   checkSection(
     "named arguments of an update with an operator and another index name: synthetics",
     updateWithOperatorAndOtherIndexName,
-    """|[4:2..4:3): m => *.apply
+    """|[4:2..4:3): m => *.update
+       |  update => vr/M#update().
+       |[4:2..4:3): m => *.apply
        |  apply => vr/M#apply().
+       |[5:2..5:3): m => *.update
+       |  update => vr/M#update().
        |[5:2..5:3): m => *.apply
        |  apply => vr/M#apply().
        |""".stripMargin,
@@ -3352,6 +3380,22 @@ class TargetedSuite extends SemanticdbSuite {
        |  update => wc/M#update().
        |[8:2..8:11): a (i = 0) => *.update
        |  update => wc/M#update().
+       |[9:2..9:10): a(i = 0) => *.update
+       |  update => wc/M#update().
+       |[9:2..9:10): a(i = 0) => *.apply
+       |  apply => wc/M#apply().
+       |[10:2..10:11): a (i = 0) => *.update
+       |  update => wc/M#update().
+       |[10:2..10:11): a (i = 0) => *.apply
+       |  apply => wc/M#apply().
+       |[11:2..11:10): a(i = 0) => *.update
+       |  update => wc/M#update().
+       |[11:2..11:10): a(i = 0) => *.apply
+       |  apply => wc/M#apply().
+       |[12:2..12:11): a (i = 0) => *.update
+       |  update => wc/M#update().
+       |[12:2..12:11): a (i = 0) => *.apply
+       |  apply => wc/M#apply().
        |""".stripMargin,
     "Synthetics",
   )
@@ -3596,12 +3640,20 @@ class TargetedSuite extends SemanticdbSuite {
     dottedOperatorOnUpdate,
     """|[3:12..3:17): Array => *.apply
        |  apply => scala/Array.apply(+5).
+       |[5:2..5:5): arr => *.update
+       |  update => scala/Array#update().
        |[5:2..5:5): arr => *.apply
        |  apply => scala/Array#apply().
+       |[6:2..6:5): arr => *.update
+       |  update => scala/Array#update().
        |[6:2..6:5): arr => *.apply
        |  apply => scala/Array#apply().
+       |[7:2..7:3): m => *.update
+       |  update => wh/M#update().
        |[7:2..7:3): m => *.apply
        |  apply => wh/M#apply().
+       |[8:2..8:3): m => *.update
+       |  update => wh/M#update().
        |[8:2..8:3): m => *.apply
        |  apply => wh/M#apply().
        |""".stripMargin,
@@ -4013,7 +4065,23 @@ class TargetedSuite extends SemanticdbSuite {
   checkSection(
     "named arguments of a dotted operator on an update of a method result: synthetics",
     dottedOperatorOnUpdateOfMethodResult,
-    "",
+    """|[5:2..5:10): a(i = 0) => *.update
+       |  update => wn/M#update().
+       |[5:2..5:10): a(i = 0) => *.apply
+       |  apply => wn/M#apply().
+       |[6:2..6:11): a (i = 0) => *.update
+       |  update => wn/M#update().
+       |[6:2..6:11): a (i = 0) => *.apply
+       |  apply => wn/M#apply().
+       |[7:2..7:10): a(i = 0) => *.update
+       |  update => wn/M#update().
+       |[7:2..7:10): a(i = 0) => *.apply
+       |  apply => wn/M#apply().
+       |[8:2..8:11): a (i = 0) => *.update
+       |  update => wn/M#update().
+       |[8:2..8:11): a (i = 0) => *.apply
+       |  apply => wn/M#apply().
+       |""".stripMargin,
     "Synthetics",
   )
 
@@ -4248,8 +4316,34 @@ class TargetedSuite extends SemanticdbSuite {
   checkSection(
     "named arguments of an operator on a later clause of a constructor: synthetics",
     operatorOnLaterClauseOfNew,
-    "",
+    """|[6:2..6:13): new K(x = 1 => *.update
+       |  update => wr/K#update().
+       |[6:2..6:13): new K(x = 1 => *.apply
+       |  apply => wr/K#apply().
+       |[7:2..7:14): new K (x = 1 => *.update
+       |  update => wr/K#update().
+       |[7:2..7:14): new K (x = 1 => *.apply
+       |  apply => wr/K#apply().
+       |[8:2..8:13): new K(x = 1 => *.update
+       |  update => wr/K#update().
+       |[8:2..8:13): new K(x = 1 => *.apply
+       |  apply => wr/K#apply().
+       |""".stripMargin,
     "Synthetics",
+    ScalaVersion.atMost("2.13.15") ->
+      """|[6:6..6:13): K(x = 1 => *.update
+         |  update => wr/K#update().
+         |[6:6..6:13): K(x = 1 => *.apply
+         |  apply => wr/K#apply().
+         |[7:6..7:14): K (x = 1 => *.update
+         |  update => wr/K#update().
+         |[7:6..7:14): K (x = 1 => *.apply
+         |  apply => wr/K#apply().
+         |[8:6..8:13): K(x = 1 => *.update
+         |  update => wr/K#update().
+         |[8:6..8:13): K(x = 1 => *.apply
+         |  apply => wr/K#apply().
+         |""".stripMargin,
   )
 
   private val writtenApplyWithOperatorAssignment =
@@ -4521,8 +4615,42 @@ class TargetedSuite extends SemanticdbSuite {
   checkSection(
     "named arguments of an operator on a constructor with two lists: synthetics",
     operatorOnConstructorWithTwoLists,
-    "",
+    """|[3:2..3:21): new K2(x = 1)(y = 2 => *.update
+       |  update => wu/K2#update().
+       |[3:2..3:21): new K2(x = 1)(y = 2 => *.apply
+       |  apply => wu/K2#apply().
+       |[4:2..4:23): new K2 (x = 1) (y = 2 => *.update
+       |  update => wu/K2#update().
+       |[4:2..4:23): new K2 (x = 1) (y = 2 => *.apply
+       |  apply => wu/K2#apply().
+       |[5:2..5:21): new K2(x = 1)(y = 2 => *.update
+       |  update => wu/K2#update().
+       |[5:2..5:21): new K2(x = 1)(y = 2 => *.apply
+       |  apply => wu/K2#apply().
+       |[6:2..6:23): new K2 (x = 1) (y = 2 => *.update
+       |  update => wu/K2#update().
+       |[6:2..6:23): new K2 (x = 1) (y = 2 => *.apply
+       |  apply => wu/K2#apply().
+       |""".stripMargin,
     "Synthetics",
+    ScalaVersion.atMost("2.13.15") ->
+      """|[3:6..3:21): K2(x = 1)(y = 2 => *.update
+         |  update => wu/K2#update().
+         |[3:6..3:21): K2(x = 1)(y = 2 => *.apply
+         |  apply => wu/K2#apply().
+         |[4:6..4:23): K2 (x = 1) (y = 2 => *.update
+         |  update => wu/K2#update().
+         |[4:6..4:23): K2 (x = 1) (y = 2 => *.apply
+         |  apply => wu/K2#apply().
+         |[5:6..5:21): K2(x = 1)(y = 2 => *.update
+         |  update => wu/K2#update().
+         |[5:6..5:21): K2(x = 1)(y = 2 => *.apply
+         |  apply => wu/K2#apply().
+         |[6:6..6:23): K2 (x = 1) (y = 2 => *.update
+         |  update => wu/K2#update().
+         |[6:6..6:23): K2 (x = 1) (y = 2 => *.apply
+         |  apply => wu/K2#apply().
+         |""".stripMargin,
   )
 
   private val memberOperatorOnNew =
@@ -4917,6 +5045,8 @@ class TargetedSuite extends SemanticdbSuite {
        |  update => wz/M#update().
        |[6:2..6:2):  => *.update
        |  update => wz/M#update().
+       |[7:2..7:3): m => *.update
+       |  update => wz/M#update().
        |[7:2..7:3): m => *.apply[Nothing]
        |  apply => wz/M#apply().
        |  Nothing => scala/Nothing#
@@ -5166,6 +5296,10 @@ class TargetedSuite extends SemanticdbSuite {
        |  conv => xb/O.conv().
        |[11:2..11:3): x => conv(*)
        |  conv => xb/O.conv().
+       |[11:2..11:3): x => *.update
+       |  update => xb/M#update().
+       |[11:2..11:3): x => *.apply
+       |  apply => xb/M#apply().
        |""".stripMargin,
     "Synthetics",
   )
@@ -5382,7 +5516,11 @@ class TargetedSuite extends SemanticdbSuite {
   checkSection(
     "named arguments of a written apply on a reordered call with +=: synthetics",
     writtenApplyOnReorderedCallWithOperatorAssignment,
-    "",
+    """|[4:2..4:18): mk(y = 1, x = 2) => *.update
+       |  update => xf/M#update().
+       |[5:2..5:18): mk(y = 1, x = 2) => *.update
+       |  update => xf/M#update().
+       |""".stripMargin,
     "Synthetics",
   )
 
@@ -5566,11 +5704,19 @@ class TargetedSuite extends SemanticdbSuite {
        |  apply => scala/Array.apply(+5).
        |[4:2..4:4): aa => *.apply
        |  apply => scala/Array#apply().
+       |[4:2..4:7): aa(0) => *.update
+       |  update => scala/Array#update().
+       |[4:2..4:7): aa(0) => *.apply
+       |  apply => scala/Array#apply().
        |[5:2..5:4): aa => *.apply
        |  apply => scala/Array#apply().
        |[5:2..5:7): aa(0) => *.update
        |  update => scala/Array#update().
        |[6:2..6:4): aa => *.apply
+       |  apply => scala/Array#apply().
+       |[6:2..6:7): aa(n) => *.update
+       |  update => scala/Array#update().
+       |[6:2..6:7): aa(n) => *.apply
        |  apply => scala/Array#apply().
        |""".stripMargin,
     "Synthetics",
@@ -5630,8 +5776,16 @@ class TargetedSuite extends SemanticdbSuite {
     updateOfMethodResultWithOperator,
     """|[3:12..3:17): Array => *.apply
        |  apply => scala/Array.apply(+5).
+       |[6:2..6:5): f() => *.update
+       |  update => scala/Array#update().
+       |[6:2..6:5): f() => *.apply
+       |  apply => scala/Array#apply().
        |[7:2..7:5): f() => *.update
        |  update => scala/Array#update().
+       |[8:2..8:6): mk() => *.update
+       |  update => xj/M#update().
+       |[8:2..8:6): mk() => *.apply
+       |  apply => xj/M#apply().
        |[9:2..9:6): mk() => *.update
        |  update => xj/M#update().
        |""".stripMargin,
@@ -5698,10 +5852,14 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:17..3:21): List => *.apply[Int]
        |  apply => scala/collection/IterableFactory#apply().
        |  Int => scala/Int#
+       |[4:2..4:4): ys => *.update
+       |  update => scala/Array#update().
        |[4:2..4:4): ys => *.apply
        |  apply => scala/Array#apply().
        |[4:2..4:11): ys(0) ::= => *[Int]
        |  Int => scala/Int#
+       |[5:2..5:4): ys => *.update
+       |  update => scala/Array#update().
        |[5:2..5:4): ys => *.apply
        |  apply => scala/Array#apply().
        |[5:2..5:11): ys(n) ::= => *[Int]
@@ -5722,10 +5880,14 @@ class TargetedSuite extends SemanticdbSuite {
          |[3:17..3:21): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
+         |[4:2..4:4): ys => *.update
+         |  update => scala/Array#update().
          |[4:2..4:4): ys => *.apply
          |  apply => scala/Array#apply().
          |[4:2..4:11): ys(0) ::= => *[Int]
          |  Int => scala/Int#
+         |[5:2..5:4): ys => *.update
+         |  update => scala/Array#update().
          |[5:2..5:4): ys => *.apply
          |  apply => scala/Array#apply().
          |[5:2..5:11): ys(n) ::= => *[Int]
@@ -5807,10 +5969,26 @@ class TargetedSuite extends SemanticdbSuite {
        |  apply => scala/Array.apply(+5).
        |[4:12..4:17): Array => *.apply
        |  apply => scala/Array.apply(+5).
+       |[7:2..7:5): arr => *.update
+       |  update => scala/Array#update().
+       |[7:2..7:5): arr => *.apply
+       |  apply => scala/Array#apply().
        |[8:2..8:5): arr => *.update
        |  update => scala/Array#update().
+       |[9:2..9:3): m => *.update
+       |  update => xl/M#update().
+       |[9:2..9:3): m => *.apply
+       |  apply => xl/M#apply().
        |[10:2..10:3): m => *.update
        |  update => xl/M#update().
+       |[11:2..11:10): this.arr => *.update
+       |  update => scala/Array#update().
+       |[11:2..11:10): this.arr => *.apply
+       |  apply => scala/Array#apply().
+       |[12:2..12:7): x.buf => *.update
+       |  update => scala/Array#update().
+       |[12:2..12:7): x.buf => *.apply
+       |  apply => scala/Array#apply().
        |[13:2..13:7): x.buf => *.update
        |  update => scala/Array#update().
        |""".stripMargin,
@@ -5852,6 +6030,8 @@ class TargetedSuite extends SemanticdbSuite {
        |  apply => scala/Array.apply(+5).
        |[3:15..3:20): Array => *.apply
        |  apply => scala/Array.apply(+5).
+       |[4:2..4:8): counts => *.update
+       |  update => scala/Array#update().
        |[4:2..4:8): counts => *.apply
        |  apply => scala/Array#apply().
        |[4:9..4:12): arr => *.apply
@@ -5933,16 +6113,24 @@ class TargetedSuite extends SemanticdbSuite {
        |  apply => scala/Array.apply(+5).
        |[4:12..4:17): Array => *.apply
        |  apply => scala/Array.apply(+5).
+       |[6:2..6:7): O.arr => *.update
+       |  update => scala/Array#update().
        |[6:2..6:7): O.arr => *.apply
        |  apply => scala/Array#apply().
        |[7:2..7:7): O.arr => *.update
        |  update => scala/Array#update().
+       |[8:2..8:10): this.arr => *.update
+       |  update => scala/Array#update().
        |[8:2..8:10): this.arr => *.apply
        |  apply => scala/Array#apply().
+       |[9:2..9:7): x.arr => *.update
+       |  update => scala/Array#update().
        |[9:2..9:7): x.arr => *.apply
        |  apply => scala/Array#apply().
        |[10:2..10:7): x.arr => *.update
        |  update => scala/Array#update().
+       |[11:2..11:3): R => *.update
+       |  update => xn/R.update().
        |[11:2..11:3): R => *.apply
        |  apply => xn/R.apply().
        |[12:2..12:3): R => *.update
@@ -5993,6 +6181,8 @@ class TargetedSuite extends SemanticdbSuite {
        |  String => java/lang/String#
        |[3:23..3:29): "a" -> => *[Int]
        |  Int => scala/Int#
+       |[4:2..4:4): mm => *.update
+       |  update => scala/collection/mutable/MapOps#update().
        |[4:2..4:4): mm => *.apply
        |  apply => scala/collection/MapOps#apply().
        |[5:2..5:4): mm => *.update
@@ -6010,6 +6200,8 @@ class TargetedSuite extends SemanticdbSuite {
          |  String => java/lang/String#
          |[3:23..3:29): "a" -> => *[Int]
          |  Int => scala/Int#
+         |[4:2..4:4): mm => *.update
+         |  update => scala/collection/mutable/MapLike#update().
          |[4:2..4:4): mm => *.apply
          |  apply => scala/collection/MapLike#apply().
          |[5:2..5:4): mm => *.update
@@ -6062,7 +6254,9 @@ class TargetedSuite extends SemanticdbSuite {
   checkSection(
     "an update with two indices: synthetics",
     updateWithTwoIndices,
-    """|[4:2..4:3): m => *.apply
+    """|[4:2..4:3): m => *.update
+       |  update => xp/M2#update().
+       |[4:2..4:3): m => *.apply
        |  apply => xp/M2#apply().
        |[5:2..5:3): m => *.update
        |  update => xp/M2#update().
@@ -6108,6 +6302,8 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:13..2:23): Array("a") => *((`macro-expandee` : ClassTag[String]))
        |  ClassTag => scala/reflect/ClassTag#
        |  String => java/lang/String#
+       |[3:2..3:6): strs => *.update
+       |  update => scala/Array#update().
        |[3:2..3:6): strs => *.apply
        |  apply => scala/Array#apply().
        |[3:2..3:14): strs(0) *= 2 => augmentString(*)
@@ -6177,12 +6373,16 @@ class TargetedSuite extends SemanticdbSuite {
        |  i => local0
        |[3:12..3:13): 0 => intWrapper(*)
        |  intWrapper => scala/LowPriorityImplicits#intWrapper().
+       |[3:23..3:26): arr => *.update
+       |  update => scala/Array#update().
        |[3:23..3:26): arr => *.apply
        |  apply => scala/Array#apply().
        |[4:2..4:5): arr => intArrayOps(*)
        |  intArrayOps => scala/Predef.intArrayOps().
        |[4:2..4:21): arr.indices.foreach => *[Unit]
        |  Unit => scala/Unit#
+       |[4:27..4:30): arr => *.update
+       |  update => scala/Array#update().
        |[4:27..4:30): arr => *.apply
        |  apply => scala/Array#apply().
        |""".stripMargin,
@@ -6307,6 +6507,8 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:17..3:21): List => *.apply[Int]
        |  apply => scala/collection/IterableFactory#apply().
        |  Int => scala/Int#
+       |[5:2..5:4): ls => *.update
+       |  update => scala/Array#update().
        |[5:2..5:4): ls => *.apply
        |  apply => scala/Array#apply().
        |[5:2..5:11): ls(0) ++= => *[Int]
@@ -6314,6 +6516,8 @@ class TargetedSuite extends SemanticdbSuite {
        |[5:12..5:16): List => *.apply[Int]
        |  apply => scala/collection/IterableFactory#apply().
        |  Int => scala/Int#
+       |[6:2..6:4): ls => *.update
+       |  update => scala/Array#update().
        |[6:2..6:4): ls => *.apply
        |  apply => scala/Array#apply().
        |[6:2..6:11): ls(0) :+= => *[Int]
@@ -6358,6 +6562,8 @@ class TargetedSuite extends SemanticdbSuite {
          |[3:17..3:21): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
+         |[5:2..5:4): ls => *.update
+         |  update => scala/Array#update().
          |[5:2..5:4): ls => *.apply
          |  apply => scala/Array#apply().
          |[5:2..5:11): ls(0) ++= => *[Int, List[Int]]
@@ -6370,6 +6576,8 @@ class TargetedSuite extends SemanticdbSuite {
          |[5:12..5:16): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
+         |[6:2..6:4): ls => *.update
+         |  update => scala/Array#update().
          |[6:2..6:4): ls => *.apply
          |  apply => scala/Array#apply().
          |[6:2..6:11): ls(0) :+= => *[Int, List[Int]]
@@ -6480,6 +6688,10 @@ class TargetedSuite extends SemanticdbSuite {
     viewToUpdateWithPositionalIndex,
     """|[7:2..7:3): x => conv(*)
        |  conv => xt/O.conv().
+       |[7:2..7:3): x => *.update
+       |  update => xt/M#update().
+       |[7:2..7:3): x => *.apply
+       |  apply => xt/M#apply().
        |[8:2..8:3): x => *.update
        |  update => xt/M#update().
        |[8:2..8:3): x => conv(*)
@@ -6719,9 +6931,16 @@ class TargetedSuite extends SemanticdbSuite {
   checkSection(
     "an update of a receiver with type arguments: synthetics",
     updateOfReceiverWithTypeArguments,
-    """|[7:2..7:19): x.asInstanceOf[M] => *.update
+    """|[6:2..6:19): x.asInstanceOf[M] => *.update
        |  update => xw/M#update().
-       |[8:2..8:8): g[Int] => *[Nothing]
+       |[6:2..6:19): x.asInstanceOf[M] => *.apply
+       |  apply => xw/M#apply().
+       |[7:2..7:19): x.asInstanceOf[M] => *.update
+       |  update => xw/M#update().
+       |[8:2..8:8): g[Int] => *.update
+       |  update => xw/G#update().
+       |[8:2..8:8): g[Int] => *.apply[Nothing]
+       |  apply => xw/G#apply().
        |  Nothing => scala/Nothing#
        |[9:2..9:8): g[Int] => *.update
        |  update => xw/G#update().
@@ -6745,7 +6964,9 @@ class TargetedSuite extends SemanticdbSuite {
   checkSection(
     "an update with an operator through a view with an implicit list: synthetics",
     updateWithOperatorThroughViewWithImplicitList,
-    """|[5:4..5:7): arr => *.apply
+    """|[5:4..5:7): arr => *.update
+       |  update => scala/Array#update().
+       |[5:4..5:7): arr => *.apply
        |  apply => scala/Array#apply().
        |[5:4..5:20): arr(0) += arr(1) => Implicits.infixNumericOps[T](*)(evidence$1)
        |  Implicits => scala/math/Numeric.Implicits.
@@ -6754,6 +6975,8 @@ class TargetedSuite extends SemanticdbSuite {
        |  evidence$1 => xx/O.f().(evidence$1)
        |[5:14..5:17): arr => *.apply
        |  apply => scala/Array#apply().
+       |[6:4..6:5): m => *.update
+       |  update => scala/collection/mutable/MapOps#update().
        |[6:4..6:5): m => *.apply
        |  apply => scala/collection/MapOps#apply().
        |[6:4..6:20): m("a") += m("b") => Implicits.infixNumericOps[T](*)(evidence$1)
@@ -6777,7 +7000,9 @@ class TargetedSuite extends SemanticdbSuite {
        |""".stripMargin,
     "Synthetics",
     ScalaVersion.Scala212 ->
-      """|[5:4..5:7): arr => *.apply
+      """|[5:4..5:7): arr => *.update
+         |  update => scala/Array#update().
+         |[5:4..5:7): arr => *.apply
          |  apply => scala/Array#apply().
          |[5:4..5:20): arr(0) += arr(1) => Implicits.infixNumericOps[T](*)(evidence$1)
          |  Implicits => scala/math/Numeric.Implicits.
@@ -6786,6 +7011,8 @@ class TargetedSuite extends SemanticdbSuite {
          |  evidence$1 => xx/O.f().(evidence$1)
          |[5:14..5:17): arr => *.apply
          |  apply => scala/Array#apply().
+         |[6:4..6:5): m => *.update
+         |  update => scala/collection/mutable/MapLike#update().
          |[6:4..6:5): m => *.apply
          |  apply => scala/collection/MapLike#apply().
          |[6:4..6:20): m("a") += m("b") => Implicits.infixNumericOps[T](*)(evidence$1)
@@ -6824,6 +7051,8 @@ class TargetedSuite extends SemanticdbSuite {
     updateWithViewOnOperatorResult,
     """|[3:10..3:21): mutable.Map => *.apply
        |  apply => scala/collection/MapFactory.Delegate#apply().
+       |[4:2..4:3): m => *.update
+       |  update => scala/collection/mutable/MapOps#update().
        |[4:2..4:3): m => *.apply
        |  apply => scala/collection/MapOps#apply().
        |[4:2..4:13): m("a") += 1 => int2Integer(*)
@@ -6843,6 +7072,8 @@ class TargetedSuite extends SemanticdbSuite {
     ScalaVersion.Scala212 ->
       """|[3:10..3:21): mutable.Map => *.apply
          |  apply => scala/collection/generic/GenMapFactory#apply().
+         |[4:2..4:3): m => *.update
+         |  update => scala/collection/mutable/MapLike#update().
          |[4:2..4:3): m => *.apply
          |  apply => scala/collection/MapLike#apply().
          |[4:2..4:13): m("a") += 1 => int2Integer(*)
@@ -6878,12 +7109,18 @@ class TargetedSuite extends SemanticdbSuite {
     updateOnceWithViewOnOperatorResult,
     """|[3:10..3:21): mutable.Map => *.apply
        |  apply => scala/collection/MapFactory.Delegate#apply().
+       |[6:2..6:3): m => *.update
+       |  update => scala/collection/mutable/MapOps#update().
        |[6:2..6:3): m => *.apply
        |  apply => scala/collection/MapOps#apply().
        |[6:2..6:11): m(k) += 1 => int2Integer(*)
        |  int2Integer => scala/Predef.int2Integer().
        |[6:2..6:11): m(k) += 1 => Integer2int(*)
        |  Integer2int => scala/Predef.Integer2int().
+       |[7:2..7:6): mk() => *.update
+       |  update => scala/collection/mutable/MapOps#update().
+       |[7:2..7:6): mk() => *.apply
+       |  apply => scala/collection/MapOps#apply().
        |[7:2..7:16): mk()("a") += 1 => int2Integer(*)
        |  int2Integer => scala/Predef.int2Integer().
        |[7:2..7:16): mk()("a") += 1 => Integer2int(*)
@@ -6901,12 +7138,18 @@ class TargetedSuite extends SemanticdbSuite {
     ScalaVersion.Scala212 ->
       """|[3:10..3:21): mutable.Map => *.apply
          |  apply => scala/collection/generic/GenMapFactory#apply().
+         |[6:2..6:3): m => *.update
+         |  update => scala/collection/mutable/MapLike#update().
          |[6:2..6:3): m => *.apply
          |  apply => scala/collection/MapLike#apply().
          |[6:2..6:11): m(k) += 1 => int2Integer(*)
          |  int2Integer => scala/Predef.int2Integer().
          |[6:2..6:11): m(k) += 1 => Integer2int(*)
          |  Integer2int => scala/Predef.Integer2int().
+         |[7:2..7:6): mk() => *.update
+         |  update => scala/collection/mutable/MapLike#update().
+         |[7:2..7:6): mk() => *.apply
+         |  apply => scala/collection/MapLike#apply().
          |[7:2..7:16): mk()("a") += 1 => int2Integer(*)
          |  int2Integer => scala/Predef.int2Integer().
          |[7:2..7:16): mk()("a") += 1 => Integer2int(*)
@@ -6945,8 +7188,14 @@ class TargetedSuite extends SemanticdbSuite {
     updateWithViewsOfReceiverAndElement,
     """|[11:2..11:3): x => conv(*)
        |  conv => ya/O.conv().
+       |[11:2..11:3): x => *.update
+       |  update => ya/M#update().
+       |[11:2..11:3): x => *.apply
+       |  apply => ya/M#apply().
        |[11:2..11:11): x(0) *= 2 => augmentString(*)
        |  augmentString => scala/Predef.augmentString().
+       |[12:2..12:3): n => *.update
+       |  update => ya/N#update().
        |[12:2..12:3): n => *.apply
        |  apply => ya/N#apply().
        |[12:2..12:11): n(0) += 1 => RichB(*)
@@ -7060,8 +7309,20 @@ class TargetedSuite extends SemanticdbSuite {
   checkSection(
     "an update of a parenthesized receiver: synthetics",
     updateOfParenthesizedReceiver,
-    """|[9:3..9:12): m apply 0 => *.update
+    """|[8:3..8:12): m apply 0 => *.update
        |  update => yb/N#update().
+       |[8:3..8:12): m apply 0 => *.apply
+       |  apply => yb/N#apply().
+       |[9:3..9:12): m apply 0 => *.update
+       |  update => yb/N#update().
+       |[10:3..10:11): new K(1) => *.update
+       |  update => yb/K#update().
+       |[10:3..10:11): new K(1) => *.apply
+       |  apply => yb/K#apply().
+       |[11:3..11:9): p ++ p => *.update
+       |  update => yb/N#update().
+       |[11:3..11:9): p ++ p => *.apply
+       |  apply => yb/N#apply().
        |[12:3..12:9): p ++ p => *.update
        |  update => yb/N#update().
        |""".stripMargin,
@@ -7117,8 +7378,16 @@ class TargetedSuite extends SemanticdbSuite {
   checkSection(
     "an update of a parameterless apply: synthetics",
     updateOfParameterlessApply,
-    """|[5:2..5:9): R.apply => *.update
+    """|[4:2..4:9): R.apply => *.update
        |  update => yc/N#update().
+       |[4:2..4:9): R.apply => *.apply
+       |  apply => yc/N#apply().
+       |[5:2..5:9): R.apply => *.update
+       |  update => yc/N#update().
+       |[6:2..6:9): R apply => *.update
+       |  update => yc/N#update().
+       |[6:2..6:9): R apply => *.apply
+       |  apply => yc/N#apply().
        |""".stripMargin,
     "Synthetics",
   )
@@ -7212,7 +7481,11 @@ class TargetedSuite extends SemanticdbSuite {
   checkSection(
     "an update of a parameterless infix call: synthetics",
     updateOfParameterlessInfixCall,
-    "",
+    """|[5:2..5:6): p ++ => *.update
+       |  update => ye/N#update().
+       |[5:2..5:6): p ++ => *.apply
+       |  apply => ye/N#apply().
+       |""".stripMargin,
     "Synthetics",
   )
 
@@ -7389,10 +7662,26 @@ class TargetedSuite extends SemanticdbSuite {
   checkSection(
     "an inferred apply with defaults or named arguments, and an op= in a lambda: synthetics",
     inferredApplyWithDefaultsOnVar,
-    """|[7:2..7:3): m => *.apply
+    """|[6:2..6:3): m => *.apply
+       |  apply => zb/M#apply().
+       |[7:2..7:3): m => *.apply
+       |  apply => zb/M#apply().
+       |[8:2..8:6): mk() => *.apply
+       |  apply => zb/M#apply().
+       |[9:4..9:5): m => *.update
+       |  update => zb/M#update().
+       |[9:4..9:5): m => *.apply
        |  apply => zb/M#apply().
        |""".stripMargin,
     "Synthetics",
+    ScalaVersion.atMost("2.13.15") ->
+      """|[7:2..7:3): m => *.apply
+         |  apply => zb/M#apply().
+         |[9:4..9:5): m => *.update
+         |  update => zb/M#update().
+         |[9:4..9:5): m => *.apply
+         |  apply => zb/M#apply().
+         |""".stripMargin,
   )
 
   // meta-annotations (#2085)
