@@ -2006,33 +2006,33 @@ trait TextDocumentOps {
             },
           )
 
-        def getCached(gt: g.Tree, gpos: gu.Position): s.Synthetic = cached(gt) {
-          gt match {
-            case t: g.ApplyImplicitView =>
-              val pos = gpos.toMeta.toRange
-              syn(pos, getApplyImplicitView(t, pos))
-            case t: g.ApplyToImplicitArgs =>
-              val pos = gpos.toMeta.toRange
-              t.fun match {
-                case f: g.ApplyImplicitView =>
-                  val x = cached(f)(syn(getApplyImplicitView(f, pos)))
-                  if (null eq x) null else syn(pos, getApplyToImplicitArgs(t, x.tree))
-                case _ => syn(pos, getApplyToImplicitArgs(t))
-              }
-            case t: g.TypeApply => getTypeApply(t, isWithinFor = false)
-            case t: g.Apply =>
-              val res = cachedIfSelect(t.fun)
-              if (null eq res) forApply(t) else null
-            case t: g.Select => getSelect(t)
-            case _ => null
-          }
-        }
+        def getCached(gt: g.Tree, gpos: gu.Position): s.Synthetic = cached(gt)(gt match {
+          case t: g.ApplyImplicitView => synApplyImplicitView(t, gpos.toSRange)
+          case t: g.ApplyToImplicitArgs => synApplyToImplicitArgs(t, gpos.toSRange)
+          case t: g.TypeApply => getTypeApply(t, isWithinFor = false)
+          case t: g.Apply =>
+            val res = cachedIfSelect(t.fun)
+            if (null eq res) forApply(t) else null
+          case t: g.Select => getSelect(t)
+          case _ => null
+        })
 
         def syn(pos: Option[s.Range], st: s.Tree): s.Synthetic = s.Synthetic(pos, st)
         def syn(st: s.Tree): s.Synthetic = syn(None, st)
         def syn(pos: s.Range, st: s.Tree): s.Synthetic = syn(Some(pos), st)
         def syn(pos: => s.Range, st: s.Tree, usePos: Boolean): s.Synthetic =
           if (usePos) syn(pos, st) else syn(st)
+
+        private def synApplyImplicitView(gt: g.ApplyImplicitView, pos: s.Range): s.Synthetic =
+          syn(pos, getApplyImplicitView(gt, pos))
+
+        private def synApplyToImplicitArgs(gt: g.ApplyToImplicitArgs, pos: s.Range): s.Synthetic =
+          gt.fun match {
+            case f: g.ApplyImplicitView =>
+              val x = cached(f)(syn(getApplyImplicitView(f, pos)))
+              if (null eq x) null else syn(pos, getApplyToImplicitArgs(gt, x.tree))
+            case _ => syn(pos, getApplyToImplicitArgs(gt))
+          }
 
         private def getSelect(gt: g.Select, usePos: Boolean = true): s.Synthetic = {
           val qual = gt.qualifier
@@ -2144,8 +2144,7 @@ trait TextDocumentOps {
           })
 
         // use it when we don't want to output the original in `synthetics`
-        private def uncachedOrig(gt: g.Tree): s.Tree = sourcePos(gt).toMeta.toRange
-          .toSemanticOriginal
+        private def uncachedOrig(gt: g.Tree): s.Tree = sourcePos(gt).toSRange.toSemanticOriginal
         private def cachedOrOrig(gt: g.Tree)(res: => s.Synthetic) = {
           val x = cached(gt)(res)
           if (null ne x) x.tree else uncachedOrig(gt)
