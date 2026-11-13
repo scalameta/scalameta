@@ -84,6 +84,30 @@ def docFor = Command.args("docFor", "<platform> <version>") { (state, args) =>
   rows.map(row => s"$row/doc").toList ::: state
 }
 
+/** A backport release names one patch. */
+def releaseSemanticdbFor(s: State, version: String): State = requireBackport(s)(
+  if (AllScala2Versions.contains(version)) semanticdbRows(s)(version).toList ::: s
+  else {
+    s.log.error(s"$version is not a version this build validates")
+    s.fail
+  },
+)
+
+/**
+ * Returns `run` in backport mode, and otherwise logs a refusal and returns a failed `state`. sbt
+ * reads the mode when the build loads, so only a JVM started with the property has it.
+ */
+def requireBackport(state: State)(run: => State): State =
+  if (sys.props.contains("backport.release")) run
+  else {
+    val command = state.currentCommand.fold("the command")(_.commandLine)
+    state.log.error(
+      s"$command needs backport mode: run sbt shutdown, start sbt --server -Dbackport.release=1, " +
+        s"and run $command in it",
+    )
+    state.fail
+  }
+
 def helloContributor(): Unit = println(
   """|Welcome to the Scalameta build! You probably don't want to run `sbt test` since
      |that will take a long time to complete.  More likely, you want to run `tests/test`.
@@ -119,15 +143,7 @@ def rootSettings = Def.settings(
   addCommandAlias("docJS2_13", "docFor sjs " + PublishedScala213ForJS),
   addCommandAlias("doc3_lts", "docFor jvm " + Scala3Published),
   addCommandAlias("docNative3_lts", "docFor native " + Scala3Published),
-  /* A backport release names one patch, and every semanticdb artifact carries the full version. */
-  commands += Command.single("releaseSemanticdbFor")((s, version) =>
-    if (AllScala2Versions.contains(version)) semanticdbRows(s)(version).map(_ + "/publishSigned")
-      .toList ::: s
-    else {
-      s.log.error(s"$version is not a version this build validates")
-      s.fail
-    },
-  ),
+  commands += Command.single("releaseSemanticdbFor")((s, version) => releaseSemanticdbFor(s, version)),
   commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: s),
   commands += Command.command("download-scala-library") { s =>
     val out = file("target/scala-library")
@@ -949,13 +965,13 @@ lazy val docs = project.in(file("scalameta-docs")).settings(
 
 def fileOf = Def.task(fileConverter.value.toPath(_: xsbti.HashedVirtualFileRef).toFile)
 
-/** The rows that publish one artifact per full Scala version. */
+/** The publish tasks of the rows that publish one artifact per full Scala version. */
 def semanticdbRows(state: State)(version: String) = {
   val extracted = Project.extract(state)
   extracted.structure.allProjectRefs.filter(ref =>
     extracted.getOpt(ref / crossVersion).contains(CrossVersion.full) &&
       extracted.getOpt(ref / scalaVersion).contains(version),
-  ).map(_.project)
+  ).map(_.project + "/publishSigned")
 }
 
 def semanticdbScalacPluginPackage(version: String) = Def.task(
