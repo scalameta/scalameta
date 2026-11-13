@@ -24,6 +24,11 @@ trait TextDocumentOps {
 
   private lazy val gscalaPackageObject = g.definitions.ScalaPackageClass.packageObject
 
+  private[meta] def initTextDocumentOps(interactiveOK: Boolean): Unit =
+    if (isSupportedCompiler(interactiveOK = interactiveOK)) initTextDocumentOpsImpl()
+
+  private[scalac] def initTextDocumentOpsImpl(): Unit = g.analyzer.addAnalyzerPlugin(TyperRecorder)
+
   def validateCompilerState(): Unit = {
     if (!g.settings.Yrangepos.value) sys.error("the compiler instance must have -Yrangepos enabled")
     if (g.useOffsetPositions) sys.error("the compiler instance must use range positions")
