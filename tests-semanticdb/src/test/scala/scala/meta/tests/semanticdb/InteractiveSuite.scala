@@ -306,4 +306,37 @@ class InteractiveSuite extends FunSuite {
        |""".stripMargin,
   )
 
+  check(
+    """|object n87 {
+       |  final val S = "a"
+       |  @SuppressWarnings(Array(S)) def k = 1
+       |}
+       |""".stripMargin,
+    """|interactive.scala
+       |-----------------
+       |
+       |Summary:
+       |Schema => SemanticDB v4
+       |Uri => interactive.scala
+       |Text => non-empty
+       |Language => Scala
+       |Symbols => 3 entries
+       |Occurrences => 4 entries
+       |
+       |Symbols:
+       |_empty_/n87. => final object n87 extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/n87.S. => final val method S: "a"
+       |_empty_/n87.k(). => @SuppressWarnings method k: Int
+       |  SuppressWarnings => java/lang/SuppressWarnings#
+       |  Int => scala/Int#
+       |
+       |Occurrences:
+       |[0:7..0:10): n87 <= _empty_/n87.
+       |[1:12..1:13): S <= _empty_/n87.S.
+       |[2:3..2:19): SuppressWarnings => java/lang/SuppressWarnings#
+       |[2:34..2:35): k <= _empty_/n87.k().
+       |""".stripMargin,
+  )
+
 }
