@@ -1694,7 +1694,7 @@ trait TextDocumentOps {
           case Some(mclause) =>
             val mlhs = mclause.parentOrNull match {
               case t: m.Term.Apply => t
-              case t: m.Term.ApplyInfix => if (t.op.value == "apply") t else null
+              case t: m.Term.ApplyInfix => if (t.op.value == Apply) t else null
               case t: m.Init => t.parent match {
                   case Some(p: m.Term.New) if t.argClauses.lastOrNull eq mclause => p
                   case _ => null
@@ -2027,13 +2027,14 @@ trait TextDocumentOps {
           }
 
         private def getSelect(gt: g.Select, usePos: Boolean = true): s.Synthetic = {
+          def res(qual: s.Tree, pos: s.Range) =
+            syn(pos, s.SelectTree(qual, Some(gt.toSemanticId)), usePos)
+          def resPos(pos: s.Range) = res(pos.toSemanticOriginal, pos)
           val qual = gt.qualifier
-          if (gt.pos != qual.pos) null
-          else {
+          if (gt.pos == qual.pos) {
             val pos = qual.toRange
-            def res(qual: s.Tree) = syn(pos, s.SelectTree(qual, Some(gt.toSemanticId)), usePos)
-            syntheticName(gt.name)(res(cachedForOrOrig(qual)))(res(pos.toSemanticOriginal))(null)
-          }
+            syntheticName(gt.name)(res(cachedForOrOrig(qual), pos))(resPos(pos))(null)
+          } else null
         }
 
         private def cachedIfSelect(gt: g.Tree, usePos: Boolean = true) = gt match {
@@ -2343,6 +2344,8 @@ object TextDocumentOps {
   import s.SymbolOccurrence.Role
   type Occurrence = (String, Role)
   def emptyOccurrenceMap() = mutable.Map.empty[m.Position, Occurrence]
+
+  private final val Apply = "apply"
 
   val IsOldBehaviourOnPats = ScalaVersion(BuildInfo.scalaVersion) < ScalaVersion("2.13.17")
   // scalac before 2.13.17 types a partial function lambda's parameter with the expected type
