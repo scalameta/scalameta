@@ -1785,14 +1785,6 @@ trait TextDocumentOps {
           if (p.gparam ne g.NoSymbol) success(mname, p.gparam)
         }
 
-        // the `map`, `flatMap`, `foreach` or `withFilter` that scalac calls for a `for`, or null
-        @tailrec
-        private def forMethod(gfun: g.Tree): g.Select = gfun match {
-          case t: g.Select => if (hasFor(t)) t else null
-          case t: g.TypeApply => forMethod(t.fun)
-          case _ => null
-        }
-
         private def traverseNoOriginal(gtree: g.Tree): Unit = gtree match {
           // skip an annotation that scalac added, like `@unchecked` on a desugared match
           case t: g.Annotated if !t.annot.pos.isOpaqueRange => isVisited += t.annot
@@ -2169,16 +2161,24 @@ trait TextDocumentOps {
           }
         }
 
-        @tailrec
-        private def forRefutabilityCheckFun(gt: g.Tree): s.Synthetic = gt match {
+        private def forRefutabilityCheckFun(gt: g.Tree): s.Synthetic = {
           // step through the type arguments that scalac infers for a generic `withFilter`
-          case gt: g.TypeApply =>
-            cached(gt)(null)
-            forRefutabilityCheckFun(gt.fun)
-          // show the generator: the source does not write the check
-          case gt: g.Select =>
-            cached(gt)(null)
-            syn(cachedForOrOrig(gt.qualifier))
+          val t = cachedFunSelect(gt)
+          if (null eq t) null
+          else {
+            // show the generator: the source does not write the check
+            cached(t)(null)
+            syn(cachedForOrOrig(t.qualifier))
+          }
+        }
+
+        /** `funSelect` of `gfun`, caching each type application on the way as empty */
+        @tailrec
+        private def cachedFunSelect(gfun: g.Tree): g.Select = gfun match {
+          case t: g.Select => t
+          case t: g.TypeApply =>
+            cached(t)(null)
+            cachedFunSelect(t.fun)
           case _ => null
         }
 
@@ -2257,8 +2257,8 @@ trait TextDocumentOps {
     case _ => fElse
   }
 
-  private def isSyntheticName(gt: g.Select): Boolean = gt.pos == gt.qualifier.pos &&
-    syntheticName(gt.name)(true)(true)(false)
+  private def isSyntheticName(gt: g.Select, ifOther: Boolean = true): Boolean =
+    gt.pos == gt.qualifier.pos && syntheticName(gt.name)(true)(ifOther)(false)
 
   /** the source range of `gt` with the lifted operand that it refers to, or `NoPosition` */
   @tailrec
@@ -2290,11 +2290,23 @@ trait TextDocumentOps {
     if (pos.isRange) pos else gt.pos
   }
 
+  /** the select of `gfun`, through its type arguments, or null */
   @tailrec
-  private def isForFun(gt: g.Tree): Boolean = gt match {
-    case t: g.TypeApply => isForFun(t.fun)
-    case t: g.Select => t.pos == t.qualifier.pos && syntheticName(t.name)(true)(false)(false)
-    case _ => false
+  private def funSelect(gfun: g.Tree): g.Select = gfun match {
+    case t: g.Select => t
+    case t: g.TypeApply => funSelect(t.fun)
+    case _ => null
+  }
+
+  private def isForFun(gt: g.Tree): Boolean = {
+    val t = funSelect(gt)
+    (null ne t) && isSyntheticName(t, ifOther = false)
+  }
+
+  /** the `map`, `flatMap`, `foreach` or `withFilter` that scalac calls for a `for`, or null */
+  private def forMethod(gfun: g.Tree): g.Select = {
+    val t = funSelect(gfun)
+    if ((null ne t) && hasFor(t)) t else null
   }
 
   // the check that scalac adds for a generator whose pattern can fail
