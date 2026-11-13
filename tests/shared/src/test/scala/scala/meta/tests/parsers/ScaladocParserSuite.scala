@@ -93,6 +93,13 @@ class ScaladocParserSuite extends FunSuite {
     )
   }
 
+  test("paragraph parsing, lines ended by a lone CR") {
+    val code = "/**\r *\r *Description Body\r *\r *Description Body\r *\r */"
+    val words: Seq[TextPartInfo] = "* *Description Body * *Description Body *".split(' ').toSeq
+      .map(Word.apply)
+    assertEquals(parseString(code), Option(Scaladoc(Seq(Paragraph(Seq(Text(words)))))))
+  }
+
   test("paragraph parsing with leading space") {
     val descriptionBody = "Description Body"
     val words: Seq[TextPartInfo] = descriptionBody.split("\\s+").toSeq.map(Word.apply)

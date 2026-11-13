@@ -7,7 +7,7 @@ import munit._
 
 class OffsetLineColumnSuite extends FunSuite {
   private def test(s: String)(expected: String)(implicit loc: munit.Location): Unit = {
-    val testName = if (s != "") s.replace("\n", "\\n") else "empty string"
+    val testName = if (s != "") s.replace("\n", "\\n").replace("\r", "\\r") else "empty string"
     super.test(testName) {
       val content = Input.String(s)
       val len = content.chars.length
@@ -66,6 +66,38 @@ class OffsetLineColumnSuite extends FunSuite {
   }
 
   test("foo\nbar") {
+    """|[0, 0) -> [0:0, -1:0] end=(0:0)
+       |[0, 1) -> [0:0, 0:0] end=(0:1)
+       |[1, 1) -> [0:1, 0:0] end=(0:1)
+       |[1, 2) -> [0:1, 0:1] end=(0:2)
+       |[2, 2) -> [0:2, 0:1] end=(0:2)
+       |[2, 3) -> [0:2, 0:2] end=(0:3)
+       |[3, 3) -> [0:3, 0:2] end=(0:3)
+       |[3, 4) -> [0:3, 0:3] end=(1:0)
+       |[4, 4) -> [1:0, 0:3] end=(1:0)
+       |[4, 5) -> [1:0, 1:0] end=(1:1)
+       |[5, 5) -> [1:1, 1:0] end=(1:1)
+       |[5, 6) -> [1:1, 1:1] end=(1:2)
+       |[6, 6) -> [1:2, 1:1] end=(1:2)
+       |[6, 7) -> [1:2, 1:2] end=(1:3)
+       |[7, 7) -> [1:3, 1:2] end=(1:3)
+       |""".stripMargin
+  }
+
+  test("foo\r") {
+    """|[0, 0) -> [0:0, -1:0] end=(0:0)
+       |[0, 1) -> [0:0, 0:0] end=(0:1)
+       |[1, 1) -> [0:1, 0:0] end=(0:1)
+       |[1, 2) -> [0:1, 0:1] end=(0:2)
+       |[2, 2) -> [0:2, 0:1] end=(0:2)
+       |[2, 3) -> [0:2, 0:2] end=(0:3)
+       |[3, 3) -> [0:3, 0:2] end=(0:3)
+       |[3, 4) -> [0:3, 0:3] end=(0:4)
+       |[4, 4) -> [0:4, 0:3] end=(0:4)
+       |""".stripMargin
+  }
+
+  test("foo\rbar") {
     """|[0, 0) -> [0:0, -1:0] end=(0:0)
        |[0, 1) -> [0:0, 0:0] end=(0:1)
        |[1, 1) -> [0:1, 0:0] end=(0:1)

@@ -6,7 +6,7 @@ import scala.meta.internal.inputs._
 
 class FormatMessageSuite extends TreeSuiteBase {
   private def test(s: String)(expected: String)(implicit loc: munit.Location): Unit = {
-    val testName = if (s != "") s.replace("\n", "\\n") else "empty string"
+    val testName = if (s != "") s.replace("\n", "\\n").replace("\r", "\\r") else "empty string"
     super.test(testName) {
       val content = Input.String(s)
       val points = 0.to(content.chars.length).map(i => Position.Range(content, i, i))
@@ -98,5 +98,41 @@ class FormatMessageSuite extends TreeSuiteBase {
        |bar
        |   ^
        |""".stripMargin.lf2nl
+  }
+
+  test("foo\rbar") {
+    """|
+       |<input>:1: error: foo
+       |foo
+       |^
+       |<input>:1: error: foo
+       |foo
+       | ^
+       |<input>:1: error: foo
+       |foo
+       |  ^
+       |<input>:1: error: foo
+       |foo
+       |   ^
+       |<input>:2: error: foo
+       |bar
+       |^
+       |<input>:2: error: foo
+       |bar
+       | ^
+       |<input>:2: error: foo
+       |bar
+       |  ^
+       |<input>:2: error: foo
+       |bar
+       |   ^
+       |""".stripMargin.lf2nl
+  }
+
+  super.test("desc: a range over a line end") {
+    def desc(s: String) = Position.Range(Input.String(s), 0, s.length).desc
+    assertEquals(desc("a\nb"), "[0:a...:3)")
+    assertEquals(desc("a\r\nb"), "[0:a\r...:4)")
+    assertEquals(desc("a\rb"), "[0:a\rb:3)")
   }
 }
