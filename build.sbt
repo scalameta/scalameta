@@ -524,6 +524,9 @@ def symtabInputs(version: String) = Def.setting(Seq[BuildInfoKey](
 def testsSemanticdbSettings(version: String) = Def.settings(
   Test / exportJars := false,
   testSettings,
+  // these suites live in tests-semanticdb-symtab, so that a Scala 3 project can compile them too
+  Test / unmanagedSourceDirectories +=
+    (ThisBuild / baseDirectory).value / "tests-semanticdb-symtab" / "src" / "test" / "scala",
   buildInfoKeys ++= symtabInputs(version).value,
   buildInfoKeys ++= Seq[BuildInfoKey](
     "targetDirectory" -> (Test / target).value.getAbsolutePath,
