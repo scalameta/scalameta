@@ -1,5 +1,6 @@
 package scala.meta.tests.semanticdb
 
+import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.semanticdb._
 
 import munit.FunSuite

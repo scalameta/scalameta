@@ -1,11 +1,14 @@
 package scala.meta.internal.metap
 
-import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.semanticdb.SymbolInformation.Kind._
-import scala.meta.internal.semanticdb.SymbolInformation._
-import scala.meta.internal.semanticdb._
+import scala.meta.internal.{semanticdb => s}
 
 import scala.collection.mutable
+
+import s.Implicits._
+import s.Scala._
+import s.SymbolInformation.Kind._
+import s.SymbolInformation._
+import s._
 
 object SymbolInformationPrinter {
 

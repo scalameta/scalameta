@@ -2,8 +2,6 @@ package scala.meta.tests
 package semanticdb
 
 import org.scalameta.internal.ScalaCompat.EOL
-import scala.meta.internal.semanticdb.Implicits._
-import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io._
 
@@ -19,6 +17,9 @@ import munit._
 
 abstract class SemanticdbSuite extends FunSuite {
   self =>
+
+  import s.Implicits._
+  import s.scalac._
 
   private def test(code: String)(fn: => Unit): Unit = if (!Properties.isWin) {
     var name = code.trim.replace(EOL, " ")

@@ -1,22 +1,24 @@
 package scala.meta.internal.metap
 
 import scala.meta.cli._
-import scala.meta.internal.semanticdb.Implicits._
-import scala.meta.internal.semanticdb.Language._
-import scala.meta.internal.semanticdb._
+import scala.meta.internal.{semanticdb => s}
 import scala.meta.metap._
 
 class DocumentPrinter(
     settings: Settings,
     reporter: Reporter,
-    doc: TextDocument,
+    doc: s.TextDocument,
     symtab: PrinterSymtab,
 ) extends BasePrinter(settings, reporter, doc, symtab)
     with SymbolInformationPrinter
     with OccurrencePrinter
     with DiagnosticPrinter
     with SyntheticPrinter {
-  def this(settings: Settings, reporter: Reporter, doc: TextDocument) =
+
+  import s.Implicits._
+  import s.Language._
+
+  def this(settings: Settings, reporter: Reporter, doc: s.TextDocument) =
     this(settings, reporter, doc, PrinterSymtab.fromTextDocument(doc))
 
   def print(): Unit = {

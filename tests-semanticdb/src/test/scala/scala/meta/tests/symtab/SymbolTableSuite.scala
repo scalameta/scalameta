@@ -10,6 +10,8 @@ import munit.FunSuite
 
 class SymbolTableSuite extends FunSuite {
 
+  import s.Implicits._
+
   private val classpath = Library.scalaLibrary.classpath() ++
     Classpath(BuildInfo.databaseClasspath +: BuildInfo.classDirectories: _*)
 

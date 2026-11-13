@@ -2,9 +2,7 @@ package scala.meta.tests.semanticdb
 
 import scala.meta.inputs.{Input, Position}
 import scala.meta.internal.io.{FileIO, PathIO}
-import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
-import scala.meta.internal.semanticdb.{SymbolOccurrence, TextDocument, TextDocuments}
+import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 import scala.meta.tests.{BuildInfo, Utils}
 
@@ -12,6 +10,10 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 
 import munit.FunSuite
+import s.Implicits._
+import s.Scala._
+import s.scalac.SemanticdbPaths
+import s.{SymbolOccurrence, TextDocument, TextDocuments}
 
 class OccurrenceSuite extends FunSuite {
 

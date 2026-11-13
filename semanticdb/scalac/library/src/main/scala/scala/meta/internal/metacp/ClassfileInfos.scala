@@ -19,6 +19,8 @@ final case class ClassfileInfos(
     language: s.Language,
     infos: List[s.SymbolInformation],
 ) {
+  import s.Implicits._
+
   def toTextDocuments: s.TextDocuments = {
     val semanticdbDocument = s.TextDocument(
       schema = s.Schema.SEMANTICDB4,

@@ -14,6 +14,7 @@ trait AnnotationOps {
   self: Scalacp =>
 
   import AnnotationOps._
+  import s.Implicits._
 
   private def parseEntry(ref: Int): Any = node.scalaSig.parseEntry(ref)
 
