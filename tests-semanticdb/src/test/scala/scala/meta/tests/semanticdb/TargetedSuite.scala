@@ -5386,6 +5386,2015 @@ class TargetedSuite extends SemanticdbSuite {
     "Synthetics",
   )
 
+  private val operatorOnVarAndSetter =
+    """|package xg
+       |class X { var v = 0; def w: Int = 0; def w_=(x: Int): Unit = () }
+       |object O {
+       |  val x = new X
+       |  var c = 0
+       |  private[this] var p = 0
+       |  val pt = new java.awt.Point
+       |  def g = {
+       |    var l = 0
+       |    x.v += 1
+       |    x.v = 1
+       |    x.w += 1
+       |    x.w = 1
+       |    x.v.+=(1)
+       |    c += 1
+       |    c = 1
+       |    p += 1
+       |    l += 1
+       |    pt.x += 1
+       |  }
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator on a var and on a setter",
+    operatorOnVarAndSetter,
+    """|[0:8..0:10): xg <= xg/
+       |[1:6..1:7): X <= xg/X#
+       |[1:8..1:8):  <= xg/X#`<init>`().
+       |[1:14..1:15): v <= xg/X#v().
+       |[1:25..1:26): w <= xg/X#w().
+       |[1:28..1:31): Int => scala/Int#
+       |[1:41..1:44): w_= <= xg/X#`w_=`().
+       |[1:45..1:46): x <= xg/X#`w_=`().(x)
+       |[1:48..1:51): Int => scala/Int#
+       |[1:54..1:58): Unit => scala/Unit#
+       |[2:7..2:8): O <= xg/O.
+       |[3:6..3:7): x <= xg/O.x.
+       |[3:14..3:15): X => xg/X#
+       |[3:15..3:15):  => xg/X#`<init>`().
+       |[4:6..4:7): c <= xg/O.c().
+       |[5:20..5:21): p <= xg/O.p().
+       |[6:6..6:8): pt <= xg/O.pt.
+       |[6:15..6:19): java => java/
+       |[6:20..6:23): awt => java/awt/
+       |[6:24..6:29): Point => java/awt/Point#
+       |[6:29..6:29):  => java/awt/Point#`<init>`().
+       |[7:6..7:7): g <= xg/O.g().
+       |[8:8..8:9): l <= local0
+       |[9:4..9:5): x => xg/O.x.
+       |[9:6..9:7): v => xg/X#`v_=`().
+       |[9:8..9:10): += => scala/Int#`+`(+4).
+       |[10:4..10:5): x => xg/O.x.
+       |[10:6..10:7): v => xg/X#`v_=`().
+       |[11:4..11:5): x => xg/O.x.
+       |[11:6..11:7): w => xg/X#`w_=`().
+       |[11:8..11:10): += => scala/Int#`+`(+4).
+       |[12:4..12:5): x => xg/O.x.
+       |[12:6..12:7): w => xg/X#`w_=`().
+       |[13:4..13:5): x => xg/O.x.
+       |[13:6..13:7): v => xg/X#`v_=`().
+       |[13:8..13:10): += => scala/Int#`+`(+4).
+       |[14:4..14:5): c => xg/O.`c_=`().
+       |[14:6..14:8): += => scala/Int#`+`(+4).
+       |[15:4..15:5): c => xg/O.`c_=`().
+       |[16:4..16:5): p => xg/O.p().
+       |[16:6..16:8): += => scala/Int#`+`(+4).
+       |[17:4..17:5): l => local0
+       |[17:6..17:8): += => scala/Int#`+`(+4).
+       |[18:4..18:6): pt => xg/O.pt.
+       |[18:7..18:8): x => java/awt/Point#x.
+       |[18:9..18:11): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an assignment operator on a var and on a setter: synthetics",
+    operatorOnVarAndSetter,
+    "",
+    "Synthetics",
+  )
+
+  private val operatorOnSetterOfMethodResult =
+    """|package xh
+       |class X { var v = 0; def w: Int = 0; def w_=(x: Int): Unit = () }
+       |object O {
+       |  def mk() = new X
+       |  mk().v += 1
+       |  mk().v = 1
+       |  mk().w += 1
+       |  mk().w = 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator on a setter of a method result",
+    operatorOnSetterOfMethodResult,
+    """|[0:8..0:10): xh <= xh/
+       |[1:6..1:7): X <= xh/X#
+       |[1:8..1:8):  <= xh/X#`<init>`().
+       |[1:14..1:15): v <= xh/X#v().
+       |[1:25..1:26): w <= xh/X#w().
+       |[1:28..1:31): Int => scala/Int#
+       |[1:41..1:44): w_= <= xh/X#`w_=`().
+       |[1:45..1:46): x <= xh/X#`w_=`().(x)
+       |[1:48..1:51): Int => scala/Int#
+       |[1:54..1:58): Unit => scala/Unit#
+       |[2:7..2:8): O <= xh/O.
+       |[3:6..3:8): mk <= xh/O.mk().
+       |[3:17..3:18): X => xh/X#
+       |[3:18..3:18):  => xh/X#`<init>`().
+       |[4:2..4:4): mk => xh/O.mk().
+       |[4:7..4:8): v => xh/X#`v_=`().
+       |[4:9..4:11): += => scala/Int#`+`(+4).
+       |[5:2..5:4): mk => xh/O.mk().
+       |[5:7..5:8): v => xh/X#`v_=`().
+       |[6:2..6:4): mk => xh/O.mk().
+       |[6:7..6:8): w => xh/X#`w_=`().
+       |[6:9..6:11): += => scala/Int#`+`(+4).
+       |[7:2..7:4): mk => xh/O.mk().
+       |[7:7..7:8): w => xh/X#`w_=`().
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an assignment operator on a setter of a method result: synthetics",
+    operatorOnSetterOfMethodResult,
+    "",
+    "Synthetics",
+  )
+
+  private val updateWithNestedIndex =
+    """|package xi
+       |object O {
+       |  var n = 0
+       |  val aa = Array(Array(1))
+       |  aa(0)(1) += 1
+       |  aa(0)(1) = 1
+       |  aa(n)(n) += 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update with a nested index",
+    updateWithNestedIndex,
+    """|[0:8..0:10): xi <= xi/
+       |[1:7..1:8): O <= xi/O.
+       |[2:6..2:7): n <= xi/O.n().
+       |[3:6..3:8): aa <= xi/O.aa.
+       |[3:11..3:16): Array => scala/Array.
+       |[3:17..3:22): Array => scala/Array.
+       |[4:2..4:4): aa => xi/O.aa.
+       |[4:11..4:13): += => scala/Int#`+`(+4).
+       |[5:2..5:4): aa => xi/O.aa.
+       |[6:2..6:4): aa => xi/O.aa.
+       |[6:5..6:6): n => xi/O.n().
+       |[6:8..6:9): n => xi/O.n().
+       |[6:11..6:13): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update with a nested index: synthetics",
+    updateWithNestedIndex,
+    """|[3:11..3:16): Array => *.apply[Array[Int]]
+       |  apply => scala/Array.apply().
+       |  Array => scala/Array#
+       |  Int => scala/Int#
+       |[3:11..3:26): Array(Array(1)) => *((`macro-expandee` : ClassTag[Array[Int]]))
+       |  ClassTag => scala/reflect/ClassTag#
+       |  Array => scala/Array#
+       |  Int => scala/Int#
+       |[3:17..3:22): Array => *.apply
+       |  apply => scala/Array.apply(+5).
+       |[4:2..4:4): aa => *.apply
+       |  apply => scala/Array#apply().
+       |[5:2..5:4): aa => *.apply
+       |  apply => scala/Array#apply().
+       |[5:2..5:7): aa(0) => *.update
+       |  update => scala/Array#update().
+       |[6:2..6:4): aa => *.apply
+       |  apply => scala/Array#apply().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateOfMethodResultWithOperator =
+    """|package xj
+       |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
+       |object O {
+       |  val arr = Array(1)
+       |  def f() = arr
+       |  def mk() = new M
+       |  f()(0) += 1
+       |  f()(0) = 1
+       |  mk()(0) += 1
+       |  mk()(0) = 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update of a method result with an operator",
+    updateOfMethodResultWithOperator,
+    """|[0:8..0:10): xj <= xj/
+       |[1:6..1:7): M <= xj/M#
+       |[1:8..1:8):  <= xj/M#`<init>`().
+       |[1:14..1:19): apply <= xj/M#apply().
+       |[1:20..1:21): k <= xj/M#apply().(k)
+       |[1:23..1:26): Int => scala/Int#
+       |[1:29..1:32): Int => scala/Int#
+       |[1:35..1:36): k => xj/M#apply().(k)
+       |[1:42..1:48): update <= xj/M#update().
+       |[1:49..1:50): k <= xj/M#update().(k)
+       |[1:52..1:55): Int => scala/Int#
+       |[1:57..1:58): v <= xj/M#update().(v)
+       |[1:60..1:63): Int => scala/Int#
+       |[1:66..1:70): Unit => scala/Unit#
+       |[2:7..2:8): O <= xj/O.
+       |[3:6..3:9): arr <= xj/O.arr.
+       |[3:12..3:17): Array => scala/Array.
+       |[4:6..4:7): f <= xj/O.f().
+       |[4:12..4:15): arr => xj/O.arr.
+       |[5:6..5:8): mk <= xj/O.mk().
+       |[5:17..5:18): M => xj/M#
+       |[5:18..5:18):  => xj/M#`<init>`().
+       |[6:2..6:3): f => xj/O.f().
+       |[6:9..6:11): += => scala/Int#`+`(+4).
+       |[7:2..7:3): f => xj/O.f().
+       |[8:2..8:4): mk => xj/O.mk().
+       |[8:10..8:12): += => scala/Int#`+`(+4).
+       |[9:2..9:4): mk => xj/O.mk().
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update of a method result with an operator: synthetics",
+    updateOfMethodResultWithOperator,
+    """|[3:12..3:17): Array => *.apply
+       |  apply => scala/Array.apply(+5).
+       |[7:2..7:5): f() => *.update
+       |  update => scala/Array#update().
+       |[9:2..9:6): mk() => *.update
+       |  update => xj/M#update().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateWithRightAssociativeOperator =
+    """|package xk
+       |object O {
+       |  var n = 0
+       |  val ys = Array(List(1))
+       |  ys(0) ::= 2
+       |  ys(n) ::= 2
+       |  ys(0) = Nil
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update with ::=",
+    updateWithRightAssociativeOperator,
+    """|[0:8..0:10): xk <= xk/
+       |[1:7..1:8): O <= xk/O.
+       |[2:6..2:7): n <= xk/O.n().
+       |[3:6..3:8): ys <= xk/O.ys.
+       |[3:11..3:16): Array => scala/Array.
+       |[3:17..3:21): List => scala/package.List.
+       |[4:2..4:4): ys => xk/O.ys.
+       |[4:8..4:11): ::= => scala/collection/immutable/List#`::`().
+       |[5:2..5:4): ys => xk/O.ys.
+       |[5:5..5:6): n => xk/O.n().
+       |[5:8..5:11): ::= => scala/collection/immutable/List#`::`().
+       |[6:2..6:4): ys => xk/O.ys.
+       |[6:10..6:13): Nil => scala/package.Nil.
+       |""".stripMargin,
+    "Occurrences",
+    ScalaVersion.Scala212 ->
+      """|[0:8..0:10): xk <= xk/
+         |[1:7..1:8): O <= xk/O.
+         |[2:6..2:7): n <= xk/O.n().
+         |[3:6..3:8): ys <= xk/O.ys.
+         |[3:11..3:16): Array => scala/Array.
+         |[3:17..3:21): List => scala/collection/immutable/List.
+         |[4:2..4:4): ys => xk/O.ys.
+         |[4:8..4:11): ::= => scala/collection/immutable/List#`::`().
+         |[5:2..5:4): ys => xk/O.ys.
+         |[5:5..5:6): n => xk/O.n().
+         |[5:8..5:11): ::= => scala/collection/immutable/List#`::`().
+         |[6:2..6:4): ys => xk/O.ys.
+         |[6:10..6:13): Nil => scala/collection/immutable/Nil.
+         |""".stripMargin,
+  )
+
+  checkSection(
+    "an update with ::=: synthetics",
+    updateWithRightAssociativeOperator,
+    """|[3:11..3:16): Array => *.apply[List[Int]]
+       |  apply => scala/Array.apply().
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |[3:11..3:25): Array(List(1)) => *((`macro-expandee` : ClassTag[List[Int]]))
+       |  ClassTag => scala/reflect/ClassTag#
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |[3:17..3:21): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[4:2..4:4): ys => *.apply
+       |  apply => scala/Array#apply().
+       |[4:2..4:11): ys(0) ::= => *[Int]
+       |  Int => scala/Int#
+       |[5:2..5:4): ys => *.apply
+       |  apply => scala/Array#apply().
+       |[5:2..5:11): ys(n) ::= => *[Int]
+       |  Int => scala/Int#
+       |[6:2..6:4): ys => *.update
+       |  update => scala/Array#update().
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
+      """|[3:11..3:16): Array => *.apply[List[Int]]
+         |  apply => scala/Array.apply().
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |[3:11..3:25): Array(List(1)) => *((`macro-expandee` : ClassTag[List[Int]]))
+         |  ClassTag => scala/reflect/ClassTag#
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |[3:17..3:21): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[4:2..4:4): ys => *.apply
+         |  apply => scala/Array#apply().
+         |[4:2..4:11): ys(0) ::= => *[Int]
+         |  Int => scala/Int#
+         |[5:2..5:4): ys => *.apply
+         |  apply => scala/Array#apply().
+         |[5:2..5:11): ys(n) ::= => *[Int]
+         |  Int => scala/Int#
+         |[6:2..6:4): ys => *.update
+         |  update => scala/Array#update().
+         |""".stripMargin,
+  )
+
+  private val updateOfVar =
+    """|package xl
+       |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
+       |class X { var buf = Array(1) }
+       |object O {
+       |  var arr = Array(1)
+       |  var m = new M
+       |  val x = new X
+       |  arr(0) += 1
+       |  arr(0) = 1
+       |  m(0) += 1
+       |  m(0) = 1
+       |  this.arr(0) += 1
+       |  x.buf(0) += 1
+       |  x.buf(0) = 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update of a var",
+    updateOfVar,
+    """|[0:8..0:10): xl <= xl/
+       |[1:6..1:7): M <= xl/M#
+       |[1:8..1:8):  <= xl/M#`<init>`().
+       |[1:14..1:19): apply <= xl/M#apply().
+       |[1:20..1:21): k <= xl/M#apply().(k)
+       |[1:23..1:26): Int => scala/Int#
+       |[1:29..1:32): Int => scala/Int#
+       |[1:35..1:36): k => xl/M#apply().(k)
+       |[1:42..1:48): update <= xl/M#update().
+       |[1:49..1:50): k <= xl/M#update().(k)
+       |[1:52..1:55): Int => scala/Int#
+       |[1:57..1:58): v <= xl/M#update().(v)
+       |[1:60..1:63): Int => scala/Int#
+       |[1:66..1:70): Unit => scala/Unit#
+       |[2:6..2:7): X <= xl/X#
+       |[2:8..2:8):  <= xl/X#`<init>`().
+       |[2:14..2:17): buf <= xl/X#buf().
+       |[2:20..2:25): Array => scala/Array.
+       |[3:7..3:8): O <= xl/O.
+       |[4:6..4:9): arr <= xl/O.arr().
+       |[4:12..4:17): Array => scala/Array.
+       |[5:6..5:7): m <= xl/O.m().
+       |[5:14..5:15): M => xl/M#
+       |[5:15..5:15):  => xl/M#`<init>`().
+       |[6:6..6:7): x <= xl/O.x.
+       |[6:14..6:15): X => xl/X#
+       |[6:15..6:15):  => xl/X#`<init>`().
+       |[7:2..7:5): arr => xl/O.arr().
+       |[7:9..7:11): += => scala/Int#`+`(+4).
+       |[8:2..8:5): arr => xl/O.arr().
+       |[9:2..9:3): m => xl/O.m().
+       |[9:7..9:9): += => scala/Int#`+`(+4).
+       |[10:2..10:3): m => xl/O.m().
+       |[11:7..11:10): arr => xl/O.arr().
+       |[11:14..11:16): += => scala/Int#`+`(+4).
+       |[12:2..12:3): x => xl/O.x.
+       |[12:4..12:7): buf => xl/X#buf().
+       |[12:11..12:13): += => scala/Int#`+`(+4).
+       |[13:2..13:3): x => xl/O.x.
+       |[13:4..13:7): buf => xl/X#buf().
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update of a var: synthetics",
+    updateOfVar,
+    """|[2:20..2:25): Array => *.apply
+       |  apply => scala/Array.apply(+5).
+       |[4:12..4:17): Array => *.apply
+       |  apply => scala/Array.apply(+5).
+       |[8:2..8:5): arr => *.update
+       |  update => scala/Array#update().
+       |[10:2..10:3): m => *.update
+       |  update => xl/M#update().
+       |[13:2..13:7): x.buf => *.update
+       |  update => scala/Array#update().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateWithIndexOfApply =
+    """|package xm
+       |object O {
+       |  val arr = Array(1)
+       |  val counts = Array(0)
+       |  counts(arr(0)) += 1
+       |  counts(arr(0)) = 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update with an index that is an apply",
+    updateWithIndexOfApply,
+    """|[0:8..0:10): xm <= xm/
+       |[1:7..1:8): O <= xm/O.
+       |[2:6..2:9): arr <= xm/O.arr.
+       |[2:12..2:17): Array => scala/Array.
+       |[3:6..3:12): counts <= xm/O.counts.
+       |[3:15..3:20): Array => scala/Array.
+       |[4:2..4:8): counts => xm/O.counts.
+       |[4:9..4:12): arr => xm/O.arr.
+       |[4:17..4:19): += => scala/Int#`+`(+4).
+       |[5:2..5:8): counts => xm/O.counts.
+       |[5:9..5:12): arr => xm/O.arr.
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update with an index that is an apply: synthetics",
+    updateWithIndexOfApply,
+    """|[2:12..2:17): Array => *.apply
+       |  apply => scala/Array.apply(+5).
+       |[3:15..3:20): Array => *.apply
+       |  apply => scala/Array.apply(+5).
+       |[4:2..4:8): counts => *.apply
+       |  apply => scala/Array#apply().
+       |[4:9..4:12): arr => *.apply
+       |  apply => scala/Array#apply().
+       |[5:2..5:8): counts => *.update
+       |  update => scala/Array#update().
+       |[5:9..5:12): arr => *.apply
+       |  apply => scala/Array#apply().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateOfQualifiedValue =
+    """|package xn
+       |class X { val arr = Array(1) }
+       |object R { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
+       |object O {
+       |  val arr = Array(1)
+       |  val x = new X
+       |  O.arr(0) += 1
+       |  O.arr(0) = 1
+       |  this.arr(0) += 1
+       |  x.arr(0) += 1
+       |  x.arr(0) = 1
+       |  R(0) += 1
+       |  R(0) = 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update of a qualified value",
+    updateOfQualifiedValue,
+    """|[0:8..0:10): xn <= xn/
+       |[1:6..1:7): X <= xn/X#
+       |[1:8..1:8):  <= xn/X#`<init>`().
+       |[1:14..1:17): arr <= xn/X#arr.
+       |[1:20..1:25): Array => scala/Array.
+       |[2:7..2:8): R <= xn/R.
+       |[2:15..2:20): apply <= xn/R.apply().
+       |[2:21..2:22): k <= xn/R.apply().(k)
+       |[2:24..2:27): Int => scala/Int#
+       |[2:30..2:33): Int => scala/Int#
+       |[2:36..2:37): k => xn/R.apply().(k)
+       |[2:43..2:49): update <= xn/R.update().
+       |[2:50..2:51): k <= xn/R.update().(k)
+       |[2:53..2:56): Int => scala/Int#
+       |[2:58..2:59): v <= xn/R.update().(v)
+       |[2:61..2:64): Int => scala/Int#
+       |[2:67..2:71): Unit => scala/Unit#
+       |[3:7..3:8): O <= xn/O.
+       |[4:6..4:9): arr <= xn/O.arr.
+       |[4:12..4:17): Array => scala/Array.
+       |[5:6..5:7): x <= xn/O.x.
+       |[5:14..5:15): X => xn/X#
+       |[5:15..5:15):  => xn/X#`<init>`().
+       |[6:2..6:3): O => xn/O.
+       |[6:4..6:7): arr => xn/O.arr.
+       |[6:11..6:13): += => scala/Int#`+`(+4).
+       |[7:2..7:3): O => xn/O.
+       |[7:4..7:7): arr => xn/O.arr.
+       |[8:7..8:10): arr => xn/O.arr.
+       |[8:14..8:16): += => scala/Int#`+`(+4).
+       |[9:2..9:3): x => xn/O.x.
+       |[9:4..9:7): arr => xn/X#arr.
+       |[9:11..9:13): += => scala/Int#`+`(+4).
+       |[10:2..10:3): x => xn/O.x.
+       |[10:4..10:7): arr => xn/X#arr.
+       |[11:2..11:3): R => xn/R.
+       |[11:7..11:9): += => scala/Int#`+`(+4).
+       |[12:2..12:3): R => xn/R.
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update of a qualified value: synthetics",
+    updateOfQualifiedValue,
+    """|[1:20..1:25): Array => *.apply
+       |  apply => scala/Array.apply(+5).
+       |[4:12..4:17): Array => *.apply
+       |  apply => scala/Array.apply(+5).
+       |[6:2..6:7): O.arr => *.apply
+       |  apply => scala/Array#apply().
+       |[7:2..7:7): O.arr => *.update
+       |  update => scala/Array#update().
+       |[8:2..8:10): this.arr => *.apply
+       |  apply => scala/Array#apply().
+       |[9:2..9:7): x.arr => *.apply
+       |  apply => scala/Array#apply().
+       |[10:2..10:7): x.arr => *.update
+       |  update => scala/Array#update().
+       |[11:2..11:3): R => *.apply
+       |  apply => xn/R.apply().
+       |[12:2..12:3): R => *.update
+       |  update => xn/R.update().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateOfMutableMap =
+    """|package xo
+       |import scala.collection.mutable
+       |object O {
+       |  val mm = mutable.Map("a" -> 1)
+       |  mm("a") += 1
+       |  mm("a") = 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update of a mutable map",
+    updateOfMutableMap,
+    """|[0:8..0:10): xo <= xo/
+       |[1:7..1:12): scala => scala/
+       |[1:13..1:23): collection => scala/collection/
+       |[1:24..1:31): mutable => scala/collection/mutable/
+       |[2:7..2:8): O <= xo/O.
+       |[3:6..3:8): mm <= xo/O.mm.
+       |[3:11..3:18): mutable => scala/collection/mutable/
+       |[3:19..3:22): Map => scala/collection/mutable/Map.
+       |[3:27..3:29): -> => scala/Predef.ArrowAssoc#`->`().
+       |[4:2..4:4): mm => xo/O.mm.
+       |[4:10..4:12): += => scala/Int#`+`(+4).
+       |[5:2..5:4): mm => xo/O.mm.
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update of a mutable map: synthetics",
+    updateOfMutableMap,
+    """|[3:11..3:22): mutable.Map => *.apply[String, Int]
+       |  apply => scala/collection/MapFactory.Delegate#apply().
+       |  String => java/lang/String#
+       |  Int => scala/Int#
+       |[3:23..3:26): "a" => Predef.ArrowAssoc[String](*)
+       |  Predef => scala/Predef.
+       |  ArrowAssoc => scala/Predef.ArrowAssoc().
+       |  String => java/lang/String#
+       |[3:23..3:29): "a" -> => *[Int]
+       |  Int => scala/Int#
+       |[4:2..4:4): mm => *.apply
+       |  apply => scala/collection/MapOps#apply().
+       |[5:2..5:4): mm => *.update
+       |  update => scala/collection/mutable/MapOps#update().
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
+      """|[3:11..3:22): mutable.Map => *.apply[String, Int]
+         |  apply => scala/collection/generic/GenMapFactory#apply().
+         |  String => java/lang/String#
+         |  Int => scala/Int#
+         |[3:23..3:26): "a" => Predef.ArrowAssoc[String](*)
+         |  Predef => scala/Predef.
+         |  ArrowAssoc => scala/Predef.ArrowAssoc().
+         |  String => java/lang/String#
+         |[3:23..3:29): "a" -> => *[Int]
+         |  Int => scala/Int#
+         |[4:2..4:4): mm => *.apply
+         |  apply => scala/collection/MapLike#apply().
+         |[5:2..5:4): mm => *.update
+         |  update => scala/collection/mutable/MapLike#update().
+         |""".stripMargin,
+  )
+
+  private val updateWithTwoIndices =
+    """|package xp
+       |class M2 { def apply(i: Int, j: Int): Int = i; def update(i: Int, j: Int, v: Int): Unit = () }
+       |object O {
+       |  val m = new M2
+       |  m(0, 1) += 1
+       |  m(0, 1) = 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update with two indices",
+    updateWithTwoIndices,
+    """|[0:8..0:10): xp <= xp/
+       |[1:6..1:8): M2 <= xp/M2#
+       |[1:9..1:9):  <= xp/M2#`<init>`().
+       |[1:15..1:20): apply <= xp/M2#apply().
+       |[1:21..1:22): i <= xp/M2#apply().(i)
+       |[1:24..1:27): Int => scala/Int#
+       |[1:29..1:30): j <= xp/M2#apply().(j)
+       |[1:32..1:35): Int => scala/Int#
+       |[1:38..1:41): Int => scala/Int#
+       |[1:44..1:45): i => xp/M2#apply().(i)
+       |[1:51..1:57): update <= xp/M2#update().
+       |[1:58..1:59): i <= xp/M2#update().(i)
+       |[1:61..1:64): Int => scala/Int#
+       |[1:66..1:67): j <= xp/M2#update().(j)
+       |[1:69..1:72): Int => scala/Int#
+       |[1:74..1:75): v <= xp/M2#update().(v)
+       |[1:77..1:80): Int => scala/Int#
+       |[1:83..1:87): Unit => scala/Unit#
+       |[2:7..2:8): O <= xp/O.
+       |[3:6..3:7): m <= xp/O.m.
+       |[3:14..3:16): M2 => xp/M2#
+       |[3:16..3:16):  => xp/M2#`<init>`().
+       |[4:2..4:3): m => xp/O.m.
+       |[4:10..4:12): += => scala/Int#`+`(+4).
+       |[5:2..5:3): m => xp/O.m.
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update with two indices: synthetics",
+    updateWithTwoIndices,
+    """|[4:2..4:3): m => *.apply
+       |  apply => xp/M2#apply().
+       |[5:2..5:3): m => *.update
+       |  update => xp/M2#update().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateWithViewOfElement =
+    """|package xq
+       |object O {
+       |  val strs = Array("a")
+       |  strs(0) *= 2
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update with an implicit view of the element",
+    updateWithViewOfElement,
+    """|[0:8..0:10): xq <= xq/
+       |[1:7..1:8): O <= xq/O.
+       |[2:6..2:10): strs <= xq/O.strs.
+       |[2:13..2:18): Array => scala/Array.
+       |[3:2..3:6): strs => xq/O.strs.
+       |[3:10..3:12): *= => scala/collection/StringOps#`*`().
+       |""".stripMargin,
+    "Occurrences",
+    ScalaVersion.Scala212 ->
+      """|[0:8..0:10): xq <= xq/
+         |[1:7..1:8): O <= xq/O.
+         |[2:6..2:10): strs <= xq/O.strs.
+         |[2:13..2:18): Array => scala/Array.
+         |[3:2..3:6): strs => xq/O.strs.
+         |[3:10..3:12): *= => scala/collection/immutable/StringLike#`*`().
+         |""".stripMargin,
+  )
+
+  checkSection(
+    "an update with an implicit view of the element: synthetics",
+    updateWithViewOfElement,
+    """|[2:13..2:18): Array => *.apply[String]
+       |  apply => scala/Array.apply().
+       |  String => java/lang/String#
+       |[2:13..2:23): Array("a") => *((`macro-expandee` : ClassTag[String]))
+       |  ClassTag => scala/reflect/ClassTag#
+       |  String => java/lang/String#
+       |[3:2..3:6): strs => *.apply
+       |  apply => scala/Array#apply().
+       |[3:2..3:14): strs(0) *= 2 => augmentString(*)
+       |  augmentString => scala/Predef.augmentString().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateInFunctionBody =
+    """|package xr
+       |object O {
+       |  val arr = Array(1)
+       |  for (i <- 0 until 1) arr(i) += 1
+       |  arr.indices.foreach(i => arr(i) += 1)
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update with an operator in a function body",
+    updateInFunctionBody,
+    """|[0:8..0:10): xr <= xr/
+       |[1:7..1:8): O <= xr/O.
+       |[2:6..2:9): arr <= xr/O.arr.
+       |[2:12..2:17): Array => scala/Array.
+       |[3:7..3:8): i <= local0
+       |[3:14..3:19): until => scala/runtime/RichInt#until().
+       |[3:23..3:26): arr => xr/O.arr.
+       |[3:27..3:28): i => local0
+       |[3:30..3:32): += => scala/Int#`+`(+4).
+       |[4:2..4:5): arr => xr/O.arr.
+       |[4:6..4:13): indices => scala/collection/ArrayOps#indices().
+       |[4:14..4:21): foreach => scala/collection/immutable/Range#foreach().
+       |[4:22..4:23): i <= local1
+       |[4:27..4:30): arr => xr/O.arr.
+       |[4:31..4:32): i => local1
+       |[4:34..4:36): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+    ScalaVersion.Scala212 ->
+      """|[0:8..0:10): xr <= xr/
+         |[1:7..1:8): O <= xr/O.
+         |[2:6..2:9): arr <= xr/O.arr.
+         |[2:12..2:17): Array => scala/Array.
+         |[3:7..3:8): i <= local0
+         |[3:14..3:19): until => scala/runtime/RichInt#until().
+         |[3:23..3:26): arr => xr/O.arr.
+         |[3:27..3:28): i => local0
+         |[3:30..3:32): += => scala/Int#`+`(+4).
+         |[4:2..4:5): arr => xr/O.arr.
+         |[4:6..4:13): indices => scala/collection/SeqLike#indices().
+         |[4:14..4:21): foreach => scala/collection/immutable/Range#foreach().
+         |[4:22..4:23): i <= local1
+         |[4:27..4:30): arr => xr/O.arr.
+         |[4:31..4:32): i => local1
+         |[4:34..4:36): += => scala/Int#`+`(+4).
+         |""".stripMargin,
+  )
+
+  checkSection(
+    "an update with an operator in a function body: synthetics",
+    updateInFunctionBody,
+    """|[2:12..2:17): Array => *.apply
+       |  apply => scala/Array.apply(+5).
+       |[3:2..3:34): for (i <- 0 until 1) arr(i) += 1 => orig(0 until 1).foreach[Unit]({(i) => orig(arr(i) += 1)})
+       |  foreach => scala/collection/immutable/Range#foreach().
+       |  Unit => scala/Unit#
+       |  i => local0
+       |[3:12..3:13): 0 => intWrapper(*)
+       |  intWrapper => scala/LowPriorityImplicits#intWrapper().
+       |[3:23..3:26): arr => *.apply
+       |  apply => scala/Array#apply().
+       |[4:2..4:5): arr => intArrayOps(*)
+       |  intArrayOps => scala/Predef.intArrayOps().
+       |[4:2..4:21): arr.indices.foreach => *[Unit]
+       |  Unit => scala/Unit#
+       |[4:27..4:30): arr => *.apply
+       |  apply => scala/Array#apply().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val operatorWithImplicitList =
+    """|package xs
+       |class X { var l = List(1) }
+       |object O {
+       |  val ls = Array(List(1))
+       |  val x = new X
+       |  ls(0) ++= List(2)
+       |  ls(0) :+= 2
+       |  ls(0) = ls(0) ++ List(2)
+       |  x.l ++= List(2)
+       |  x.l = x.l ++ List(2)
+       |  def g = {
+       |    var k = List(1)
+       |    k ++= List(2)
+       |  }
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator with a polymorphic operator",
+    operatorWithImplicitList,
+    """|[0:8..0:10): xs <= xs/
+       |[1:6..1:7): X <= xs/X#
+       |[1:8..1:8):  <= xs/X#`<init>`().
+       |[1:14..1:15): l <= xs/X#l().
+       |[1:18..1:22): List => scala/package.List.
+       |[2:7..2:8): O <= xs/O.
+       |[3:6..3:8): ls <= xs/O.ls.
+       |[3:11..3:16): Array => scala/Array.
+       |[3:17..3:21): List => scala/package.List.
+       |[4:6..4:7): x <= xs/O.x.
+       |[4:14..4:15): X => xs/X#
+       |[4:15..4:15):  => xs/X#`<init>`().
+       |[5:2..5:4): ls => xs/O.ls.
+       |[5:8..5:11): ++= => scala/collection/IterableOps#`++`().
+       |[5:12..5:16): List => scala/package.List.
+       |[6:2..6:4): ls => xs/O.ls.
+       |[6:8..6:11): :+= => scala/collection/SeqOps#`:+`().
+       |[7:2..7:4): ls => xs/O.ls.
+       |[7:10..7:12): ls => xs/O.ls.
+       |[7:16..7:18): ++ => scala/collection/IterableOps#`++`().
+       |[7:19..7:23): List => scala/package.List.
+       |[8:2..8:3): x => xs/O.x.
+       |[8:4..8:5): l => xs/X#`l_=`().
+       |[8:6..8:9): ++= => scala/collection/IterableOps#`++`().
+       |[8:10..8:14): List => scala/package.List.
+       |[9:2..9:3): x => xs/O.x.
+       |[9:4..9:5): l => xs/X#`l_=`().
+       |[9:8..9:9): x => xs/O.x.
+       |[9:10..9:11): l => xs/X#l().
+       |[9:12..9:14): ++ => scala/collection/IterableOps#`++`().
+       |[9:15..9:19): List => scala/package.List.
+       |[10:6..10:7): g <= xs/O.g().
+       |[11:8..11:9): k <= local0
+       |[11:12..11:16): List => scala/package.List.
+       |[12:4..12:5): k => local0
+       |[12:6..12:9): ++= => scala/collection/IterableOps#`++`().
+       |[12:10..12:14): List => scala/package.List.
+       |""".stripMargin,
+    "Occurrences",
+    ScalaVersion.Scala212 ->
+      """|[0:8..0:10): xs <= xs/
+         |[1:6..1:7): X <= xs/X#
+         |[1:8..1:8):  <= xs/X#`<init>`().
+         |[1:14..1:15): l <= xs/X#l().
+         |[1:18..1:22): List => scala/collection/immutable/List.
+         |[2:7..2:8): O <= xs/O.
+         |[3:6..3:8): ls <= xs/O.ls.
+         |[3:11..3:16): Array => scala/Array.
+         |[3:17..3:21): List => scala/collection/immutable/List.
+         |[4:6..4:7): x <= xs/O.x.
+         |[4:14..4:15): X => xs/X#
+         |[4:15..4:15):  => xs/X#`<init>`().
+         |[5:2..5:4): ls => xs/O.ls.
+         |[5:8..5:11): ++= => scala/collection/immutable/List#`++`().
+         |[5:12..5:16): List => scala/collection/immutable/List.
+         |[6:2..6:4): ls => xs/O.ls.
+         |[6:8..6:11): :+= => scala/collection/SeqLike#`:+`().
+         |[7:2..7:4): ls => xs/O.ls.
+         |[7:10..7:12): ls => xs/O.ls.
+         |[7:16..7:18): ++ => scala/collection/immutable/List#`++`().
+         |[7:19..7:23): List => scala/collection/immutable/List.
+         |[8:2..8:3): x => xs/O.x.
+         |[8:4..8:5): l => xs/X#`l_=`().
+         |[8:6..8:9): ++= => scala/collection/immutable/List#`++`().
+         |[8:10..8:14): List => scala/collection/immutable/List.
+         |[9:2..9:3): x => xs/O.x.
+         |[9:4..9:5): l => xs/X#`l_=`().
+         |[9:8..9:9): x => xs/O.x.
+         |[9:10..9:11): l => xs/X#l().
+         |[9:12..9:14): ++ => scala/collection/immutable/List#`++`().
+         |[9:15..9:19): List => scala/collection/immutable/List.
+         |[10:6..10:7): g <= xs/O.g().
+         |[11:8..11:9): k <= local0
+         |[11:12..11:16): List => scala/collection/immutable/List.
+         |[12:4..12:5): k => local0
+         |[12:6..12:9): ++= => scala/collection/immutable/List#`++`().
+         |[12:10..12:14): List => scala/collection/immutable/List.
+         |""".stripMargin,
+  )
+
+  checkSection(
+    "an assignment operator with a polymorphic operator: synthetics",
+    operatorWithImplicitList,
+    """|[1:18..1:22): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[3:11..3:16): Array => *.apply[List[Int]]
+       |  apply => scala/Array.apply().
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |[3:11..3:25): Array(List(1)) => *((`macro-expandee` : ClassTag[List[Int]]))
+       |  ClassTag => scala/reflect/ClassTag#
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |[3:17..3:21): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[5:2..5:4): ls => *.apply
+       |  apply => scala/Array#apply().
+       |[5:2..5:11): ls(0) ++= => *[Int]
+       |  Int => scala/Int#
+       |[5:12..5:16): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[6:2..6:4): ls => *.apply
+       |  apply => scala/Array#apply().
+       |[6:2..6:11): ls(0) :+= => *[Int]
+       |  Int => scala/Int#
+       |[7:2..7:4): ls => *.update
+       |  update => scala/Array#update().
+       |[7:10..7:12): ls => *.apply
+       |  apply => scala/Array#apply().
+       |[7:10..7:18): ls(0) ++ => *[Int]
+       |  Int => scala/Int#
+       |[7:19..7:23): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[8:10..8:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[9:8..9:14): x.l ++ => *[Int]
+       |  Int => scala/Int#
+       |[9:15..9:19): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[11:12..11:16): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[12:10..12:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
+      """|[1:18..1:22): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[3:11..3:16): Array => *.apply[List[Int]]
+         |  apply => scala/Array.apply().
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |[3:11..3:25): Array(List(1)) => *((`macro-expandee` : ClassTag[List[Int]]))
+         |  ClassTag => scala/reflect/ClassTag#
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |[3:17..3:21): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[5:2..5:4): ls => *.apply
+         |  apply => scala/Array#apply().
+         |[5:2..5:11): ls(0) ++= => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[5:2..5:19): ls(0) ++= List(2) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[5:12..5:16): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[6:2..6:4): ls => *.apply
+         |  apply => scala/Array#apply().
+         |[6:2..6:11): ls(0) :+= => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[6:2..6:13): ls(0) :+= 2 => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[7:2..7:4): ls => *.update
+         |  update => scala/Array#update().
+         |[7:10..7:12): ls => *.apply
+         |  apply => scala/Array#apply().
+         |[7:10..7:18): ls(0) ++ => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[7:10..7:26): ls(0) ++ List(2) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[7:19..7:23): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[8:2..8:17): x.l ++= List(2) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[8:10..8:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[9:8..9:14): x.l ++ => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[9:8..9:22): x.l ++ List(2) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[9:15..9:19): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[11:12..11:16): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[12:4..12:17): k ++= List(2) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[12:10..12:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  private val viewToUpdateWithPositionalIndex =
+    """|package xt
+       |import scala.language.implicitConversions
+       |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
+       |class X
+       |object O {
+       |  implicit def conv(x: X): M = new M
+       |  val x = new X
+       |  x(0) += 1
+       |  x(0) = 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update through an implicit view with a positional index",
+    viewToUpdateWithPositionalIndex,
+    """|[0:8..0:10): xt <= xt/
+       |[1:7..1:12): scala => scala/
+       |[1:13..1:21): language => scala/language.
+       |[1:22..1:41): implicitConversions => scala/language.implicitConversions.
+       |[2:6..2:7): M <= xt/M#
+       |[2:8..2:8):  <= xt/M#`<init>`().
+       |[2:14..2:19): apply <= xt/M#apply().
+       |[2:20..2:21): k <= xt/M#apply().(k)
+       |[2:23..2:26): Int => scala/Int#
+       |[2:29..2:32): Int => scala/Int#
+       |[2:35..2:36): k => xt/M#apply().(k)
+       |[2:42..2:48): update <= xt/M#update().
+       |[2:49..2:50): k <= xt/M#update().(k)
+       |[2:52..2:55): Int => scala/Int#
+       |[2:57..2:58): v <= xt/M#update().(v)
+       |[2:60..2:63): Int => scala/Int#
+       |[2:66..2:70): Unit => scala/Unit#
+       |[3:6..3:7): X <= xt/X#
+       |[3:7..3:7):  <= xt/X#`<init>`().
+       |[4:7..4:8): O <= xt/O.
+       |[5:15..5:19): conv <= xt/O.conv().
+       |[5:20..5:21): x <= xt/O.conv().(x)
+       |[5:23..5:24): X => xt/X#
+       |[5:27..5:28): M => xt/M#
+       |[5:35..5:36): M => xt/M#
+       |[5:36..5:36):  => xt/M#`<init>`().
+       |[6:6..6:7): x <= xt/O.x.
+       |[6:14..6:15): X => xt/X#
+       |[6:15..6:15):  => xt/X#`<init>`().
+       |[7:2..7:3): x => xt/O.x.
+       |[7:7..7:9): += => scala/Int#`+`(+4).
+       |[8:2..8:3): x => xt/O.x.
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update through an implicit view with a positional index: synthetics",
+    viewToUpdateWithPositionalIndex,
+    """|[7:2..7:3): x => conv(*)
+       |  conv => xt/O.conv().
+       |[8:2..8:3): x => *.update
+       |  update => xt/M#update().
+       |[8:2..8:3): x => conv(*)
+       |  conv => xt/O.conv().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val assignmentToUpdateWithImplicitList =
+    """|package xu
+       |class I
+       |class M {
+       |  def apply(k: Int)(implicit i: I): Int = k
+       |  def update(k: Int, v: Int)(implicit i: I): Unit = ()
+       |}
+       |object O {
+       |  implicit val i: I = new I
+       |  val m = new M
+       |  m(0) = 5
+       |  m(k = 0) = 5
+       |  m(0) += 5
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment to an update with an implicit list",
+    assignmentToUpdateWithImplicitList,
+    """|[0:8..0:10): xu <= xu/
+       |[1:6..1:7): I <= xu/I#
+       |[1:7..1:7):  <= xu/I#`<init>`().
+       |[2:6..2:7): M <= xu/M#
+       |[2:8..2:8):  <= xu/M#`<init>`().
+       |[3:6..3:11): apply <= xu/M#apply().
+       |[3:12..3:13): k <= xu/M#apply().(k)
+       |[3:15..3:18): Int => scala/Int#
+       |[3:29..3:30): i <= xu/M#apply().(i)
+       |[3:32..3:33): I => xu/I#
+       |[3:36..3:39): Int => scala/Int#
+       |[3:42..3:43): k => xu/M#apply().(k)
+       |[4:6..4:12): update <= xu/M#update().
+       |[4:13..4:14): k <= xu/M#update().(k)
+       |[4:16..4:19): Int => scala/Int#
+       |[4:21..4:22): v <= xu/M#update().(v)
+       |[4:24..4:27): Int => scala/Int#
+       |[4:38..4:39): i <= xu/M#update().(i)
+       |[4:41..4:42): I => xu/I#
+       |[4:45..4:49): Unit => scala/Unit#
+       |[6:7..6:8): O <= xu/O.
+       |[7:15..7:16): i <= xu/O.i.
+       |[7:18..7:19): I => xu/I#
+       |[7:26..7:27): I => xu/I#
+       |[7:27..7:27):  => xu/I#`<init>`().
+       |[8:6..8:7): m <= xu/O.m.
+       |[8:14..8:15): M => xu/M#
+       |[8:15..8:15):  => xu/M#`<init>`().
+       |[9:2..9:3): m => xu/O.m.
+       |[10:2..10:3): m => xu/O.m.
+       |[10:4..10:5): k => xu/M#update().(k)
+       |[11:2..11:3): m => xu/O.m.
+       |[11:7..11:9): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an assignment to an update with an implicit list: synthetics",
+    assignmentToUpdateWithImplicitList,
+    """|[9:2..9:3): m => *.update
+       |  update => xu/M#update().
+       |[9:2..9:10): m(0) = 5 => *(i)
+       |  i => xu/O.i.
+       |[10:2..10:3): m => *.update
+       |  update => xu/M#update().
+       |[10:2..10:14): m(k = 0) = 5 => *(i)
+       |  i => xu/O.i.
+       |[11:2..11:3): m => *.apply
+       |  apply => xu/M#apply().
+       |[11:2..11:11): m(0) += 5 => *(i)
+       |  i => xu/O.i.
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateWithElementOperatorAsValue =
+    """|package xv
+       |class B { def +=(x: Int): B = this }
+       |class M { def apply(k: Int): B = new B; def update(k: Int, v: B): Unit = () }
+       |object O {
+       |  val m = new M
+       |  val n = new M
+       |  m(0) = m(0) += 1
+       |  m(0) = n(0) += 1
+       |  m.update(0, n(0) += 1)
+       |  m(0) = n(0)
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update whose value is an operator of the element",
+    updateWithElementOperatorAsValue,
+    """|[0:8..0:10): xv <= xv/
+       |[1:6..1:7): B <= xv/B#
+       |[1:8..1:8):  <= xv/B#`<init>`().
+       |[1:14..1:16): += <= xv/B#`+=`().
+       |[1:17..1:18): x <= xv/B#`+=`().(x)
+       |[1:20..1:23): Int => scala/Int#
+       |[1:26..1:27): B => xv/B#
+       |[2:6..2:7): M <= xv/M#
+       |[2:8..2:8):  <= xv/M#`<init>`().
+       |[2:14..2:19): apply <= xv/M#apply().
+       |[2:20..2:21): k <= xv/M#apply().(k)
+       |[2:23..2:26): Int => scala/Int#
+       |[2:29..2:30): B => xv/B#
+       |[2:37..2:38): B => xv/B#
+       |[2:38..2:38):  => xv/B#`<init>`().
+       |[2:44..2:50): update <= xv/M#update().
+       |[2:51..2:52): k <= xv/M#update().(k)
+       |[2:54..2:57): Int => scala/Int#
+       |[2:59..2:60): v <= xv/M#update().(v)
+       |[2:62..2:63): B => xv/B#
+       |[2:66..2:70): Unit => scala/Unit#
+       |[3:7..3:8): O <= xv/O.
+       |[4:6..4:7): m <= xv/O.m.
+       |[4:14..4:15): M => xv/M#
+       |[4:15..4:15):  => xv/M#`<init>`().
+       |[5:6..5:7): n <= xv/O.n.
+       |[5:14..5:15): M => xv/M#
+       |[5:15..5:15):  => xv/M#`<init>`().
+       |[6:2..6:3): m => xv/O.m.
+       |[6:9..6:10): m => xv/O.m.
+       |[6:14..6:16): += => xv/B#`+=`().
+       |[7:2..7:3): m => xv/O.m.
+       |[7:9..7:10): n => xv/O.n.
+       |[7:14..7:16): += => xv/B#`+=`().
+       |[8:2..8:3): m => xv/O.m.
+       |[8:4..8:10): update => xv/M#update().
+       |[8:14..8:15): n => xv/O.n.
+       |[8:19..8:21): += => xv/B#`+=`().
+       |[9:2..9:3): m => xv/O.m.
+       |[9:9..9:10): n => xv/O.n.
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update whose value is an operator of the element: synthetics",
+    updateWithElementOperatorAsValue,
+    """|[6:2..6:3): m => *.update
+       |  update => xv/M#update().
+       |[6:9..6:10): m => *.apply
+       |  apply => xv/M#apply().
+       |[7:2..7:3): m => *.update
+       |  update => xv/M#update().
+       |[7:9..7:10): n => *.apply
+       |  apply => xv/M#apply().
+       |[8:14..8:15): n => *.apply
+       |  apply => xv/M#apply().
+       |[9:2..9:3): m => *.update
+       |  update => xv/M#update().
+       |[9:9..9:10): n => *.apply
+       |  apply => xv/M#apply().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateOfReceiverWithTypeArguments =
+    """|package xw
+       |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
+       |class G { def apply[T](k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
+       |object O {
+       |  val x: Any = new M
+       |  def g[A]: G = new G
+       |  x.asInstanceOf[M](0) += 1
+       |  x.asInstanceOf[M](0) = 1
+       |  g[Int](0) += 1
+       |  g[Int](0) = 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update of a receiver with type arguments",
+    updateOfReceiverWithTypeArguments,
+    """|[0:8..0:10): xw <= xw/
+       |[1:6..1:7): M <= xw/M#
+       |[1:8..1:8):  <= xw/M#`<init>`().
+       |[1:14..1:19): apply <= xw/M#apply().
+       |[1:20..1:21): k <= xw/M#apply().(k)
+       |[1:23..1:26): Int => scala/Int#
+       |[1:29..1:32): Int => scala/Int#
+       |[1:35..1:36): k => xw/M#apply().(k)
+       |[1:42..1:48): update <= xw/M#update().
+       |[1:49..1:50): k <= xw/M#update().(k)
+       |[1:52..1:55): Int => scala/Int#
+       |[1:57..1:58): v <= xw/M#update().(v)
+       |[1:60..1:63): Int => scala/Int#
+       |[1:66..1:70): Unit => scala/Unit#
+       |[2:6..2:7): G <= xw/G#
+       |[2:8..2:8):  <= xw/G#`<init>`().
+       |[2:14..2:19): apply <= xw/G#apply().
+       |[2:20..2:21): T <= xw/G#apply().[T]
+       |[2:23..2:24): k <= xw/G#apply().(k)
+       |[2:26..2:29): Int => scala/Int#
+       |[2:32..2:35): Int => scala/Int#
+       |[2:38..2:39): k => xw/G#apply().(k)
+       |[2:45..2:51): update <= xw/G#update().
+       |[2:52..2:53): k <= xw/G#update().(k)
+       |[2:55..2:58): Int => scala/Int#
+       |[2:60..2:61): v <= xw/G#update().(v)
+       |[2:63..2:66): Int => scala/Int#
+       |[2:69..2:73): Unit => scala/Unit#
+       |[3:7..3:8): O <= xw/O.
+       |[4:6..4:7): x <= xw/O.x.
+       |[4:9..4:12): Any => scala/Any#
+       |[4:19..4:20): M => xw/M#
+       |[4:20..4:20):  => xw/M#`<init>`().
+       |[5:6..5:7): g <= xw/O.g().
+       |[5:8..5:9): A <= xw/O.g().[A]
+       |[5:12..5:13): G => xw/G#
+       |[5:20..5:21): G => xw/G#
+       |[5:21..5:21):  => xw/G#`<init>`().
+       |[6:2..6:3): x => xw/O.x.
+       |[6:4..6:16): asInstanceOf => scala/Any#asInstanceOf().
+       |[6:17..6:18): M => xw/M#
+       |[6:23..6:25): += => scala/Int#`+`(+4).
+       |[7:2..7:3): x => xw/O.x.
+       |[7:4..7:16): asInstanceOf => scala/Any#asInstanceOf().
+       |[7:17..7:18): M => xw/M#
+       |[8:2..8:3): g => xw/O.g().
+       |[8:4..8:7): Int => scala/Int#
+       |[8:12..8:14): += => scala/Int#`+`(+4).
+       |[9:2..9:3): g => xw/O.g().
+       |[9:4..9:7): Int => scala/Int#
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update of a receiver with type arguments: synthetics",
+    updateOfReceiverWithTypeArguments,
+    """|[7:2..7:19): x.asInstanceOf[M] => *.update
+       |  update => xw/M#update().
+       |[8:2..8:8): g[Int] => *[Nothing]
+       |  Nothing => scala/Nothing#
+       |[9:2..9:8): g[Int] => *.update
+       |  update => xw/G#update().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateWithOperatorThroughViewWithImplicitList =
+    """|package xx
+       |import scala.collection.mutable
+       |import scala.math.Numeric.Implicits._
+       |object O {
+       |  def f[T: Numeric](arr: Array[T], m: mutable.Map[String, T]): Unit = {
+       |    arr(0) += arr(1)
+       |    m("a") += m("b")
+       |    m("a") = m("a") + m("b")
+       |  }
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update with an operator through a view with an implicit list: synthetics",
+    updateWithOperatorThroughViewWithImplicitList,
+    """|[5:4..5:7): arr => *.apply
+       |  apply => scala/Array#apply().
+       |[5:4..5:20): arr(0) += arr(1) => Implicits.infixNumericOps[T](*)(evidence$1)
+       |  Implicits => scala/math/Numeric.Implicits.
+       |  infixNumericOps => scala/math/Numeric.ExtraImplicits#infixNumericOps().
+       |  T => xx/O.f().[T]
+       |  evidence$1 => xx/O.f().(evidence$1)
+       |[5:14..5:17): arr => *.apply
+       |  apply => scala/Array#apply().
+       |[6:4..6:5): m => *.apply
+       |  apply => scala/collection/MapOps#apply().
+       |[6:4..6:20): m("a") += m("b") => Implicits.infixNumericOps[T](*)(evidence$1)
+       |  Implicits => scala/math/Numeric.Implicits.
+       |  infixNumericOps => scala/math/Numeric.ExtraImplicits#infixNumericOps().
+       |  T => xx/O.f().[T]
+       |  evidence$1 => xx/O.f().(evidence$1)
+       |[6:14..6:15): m => *.apply
+       |  apply => scala/collection/MapOps#apply().
+       |[7:4..7:5): m => *.update
+       |  update => scala/collection/mutable/MapOps#update().
+       |[7:13..7:14): m => *.apply
+       |  apply => scala/collection/MapOps#apply().
+       |[7:13..7:19): m("a") => Implicits.infixNumericOps[T](*)(evidence$1)
+       |  Implicits => scala/math/Numeric.Implicits.
+       |  infixNumericOps => scala/math/Numeric.ExtraImplicits#infixNumericOps().
+       |  T => xx/O.f().[T]
+       |  evidence$1 => xx/O.f().(evidence$1)
+       |[7:22..7:23): m => *.apply
+       |  apply => scala/collection/MapOps#apply().
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
+      """|[5:4..5:7): arr => *.apply
+         |  apply => scala/Array#apply().
+         |[5:4..5:20): arr(0) += arr(1) => Implicits.infixNumericOps[T](*)(evidence$1)
+         |  Implicits => scala/math/Numeric.Implicits.
+         |  infixNumericOps => scala/math/Numeric.ExtraImplicits#infixNumericOps().
+         |  T => xx/O.f().[T]
+         |  evidence$1 => xx/O.f().(evidence$1)
+         |[5:14..5:17): arr => *.apply
+         |  apply => scala/Array#apply().
+         |[6:4..6:5): m => *.apply
+         |  apply => scala/collection/MapLike#apply().
+         |[6:4..6:20): m("a") += m("b") => Implicits.infixNumericOps[T](*)(evidence$1)
+         |  Implicits => scala/math/Numeric.Implicits.
+         |  infixNumericOps => scala/math/Numeric.ExtraImplicits#infixNumericOps().
+         |  T => xx/O.f().[T]
+         |  evidence$1 => xx/O.f().(evidence$1)
+         |[6:14..6:15): m => *.apply
+         |  apply => scala/collection/MapLike#apply().
+         |[7:4..7:5): m => *.update
+         |  update => scala/collection/mutable/MapLike#update().
+         |[7:13..7:14): m => *.apply
+         |  apply => scala/collection/MapLike#apply().
+         |[7:13..7:19): m("a") => Implicits.infixNumericOps[T](*)(evidence$1)
+         |  Implicits => scala/math/Numeric.Implicits.
+         |  infixNumericOps => scala/math/Numeric.ExtraImplicits#infixNumericOps().
+         |  T => xx/O.f().[T]
+         |  evidence$1 => xx/O.f().(evidence$1)
+         |[7:22..7:23): m => *.apply
+         |  apply => scala/collection/MapLike#apply().
+         |""".stripMargin,
+  )
+
+  private val updateWithViewOnOperatorResult =
+    """|package xy
+       |import scala.collection.mutable
+       |object O {
+       |  val m = mutable.Map[String, java.lang.Integer]()
+       |  m("a") += 1
+       |  m("a") = m("a") + 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update with a view on the operator result: synthetics",
+    updateWithViewOnOperatorResult,
+    """|[3:10..3:21): mutable.Map => *.apply
+       |  apply => scala/collection/MapFactory.Delegate#apply().
+       |[4:2..4:3): m => *.apply
+       |  apply => scala/collection/MapOps#apply().
+       |[4:2..4:13): m("a") += 1 => int2Integer(*)
+       |  int2Integer => scala/Predef.int2Integer().
+       |[4:2..4:13): m("a") += 1 => Integer2int(*)
+       |  Integer2int => scala/Predef.Integer2int().
+       |[5:2..5:3): m => *.update
+       |  update => scala/collection/mutable/MapOps#update().
+       |[5:11..5:12): m => *.apply
+       |  apply => scala/collection/MapOps#apply().
+       |[5:11..5:17): m("a") => Integer2int(*)
+       |  Integer2int => scala/Predef.Integer2int().
+       |[5:11..5:21): m("a") + 1 => int2Integer(*)
+       |  int2Integer => scala/Predef.int2Integer().
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
+      """|[3:10..3:21): mutable.Map => *.apply
+         |  apply => scala/collection/generic/GenMapFactory#apply().
+         |[4:2..4:3): m => *.apply
+         |  apply => scala/collection/MapLike#apply().
+         |[4:2..4:13): m("a") += 1 => int2Integer(*)
+         |  int2Integer => scala/Predef.int2Integer().
+         |[4:2..4:13): m("a") += 1 => Integer2int(*)
+         |  Integer2int => scala/Predef.Integer2int().
+         |[5:2..5:3): m => *.update
+         |  update => scala/collection/mutable/MapLike#update().
+         |[5:11..5:12): m => *.apply
+         |  apply => scala/collection/MapLike#apply().
+         |[5:11..5:17): m("a") => Integer2int(*)
+         |  Integer2int => scala/Predef.Integer2int().
+         |[5:11..5:21): m("a") + 1 => int2Integer(*)
+         |  int2Integer => scala/Predef.int2Integer().
+         |""".stripMargin,
+  )
+
+  private val updateOnceWithViewOnOperatorResult =
+    """|package xz
+       |import scala.collection.mutable
+       |object O {
+       |  val m = mutable.Map[String, java.lang.Integer]()
+       |  var k = "a"
+       |  def mk() = m
+       |  m(k) += 1
+       |  mk()("a") += 1
+       |  m(k) = m(k) + 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update evaluated once with a view on the operator result: synthetics",
+    updateOnceWithViewOnOperatorResult,
+    """|[3:10..3:21): mutable.Map => *.apply
+       |  apply => scala/collection/MapFactory.Delegate#apply().
+       |[6:2..6:3): m => *.apply
+       |  apply => scala/collection/MapOps#apply().
+       |[6:2..6:11): m(k) += 1 => int2Integer(*)
+       |  int2Integer => scala/Predef.int2Integer().
+       |[6:2..6:11): m(k) += 1 => Integer2int(*)
+       |  Integer2int => scala/Predef.Integer2int().
+       |[7:2..7:16): mk()("a") += 1 => int2Integer(*)
+       |  int2Integer => scala/Predef.int2Integer().
+       |[7:2..7:16): mk()("a") += 1 => Integer2int(*)
+       |  Integer2int => scala/Predef.Integer2int().
+       |[8:2..8:3): m => *.update
+       |  update => scala/collection/mutable/MapOps#update().
+       |[8:9..8:10): m => *.apply
+       |  apply => scala/collection/MapOps#apply().
+       |[8:9..8:13): m(k) => Integer2int(*)
+       |  Integer2int => scala/Predef.Integer2int().
+       |[8:9..8:17): m(k) + 1 => int2Integer(*)
+       |  int2Integer => scala/Predef.int2Integer().
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
+      """|[3:10..3:21): mutable.Map => *.apply
+         |  apply => scala/collection/generic/GenMapFactory#apply().
+         |[6:2..6:3): m => *.apply
+         |  apply => scala/collection/MapLike#apply().
+         |[6:2..6:11): m(k) += 1 => int2Integer(*)
+         |  int2Integer => scala/Predef.int2Integer().
+         |[6:2..6:11): m(k) += 1 => Integer2int(*)
+         |  Integer2int => scala/Predef.Integer2int().
+         |[7:2..7:16): mk()("a") += 1 => int2Integer(*)
+         |  int2Integer => scala/Predef.int2Integer().
+         |[7:2..7:16): mk()("a") += 1 => Integer2int(*)
+         |  Integer2int => scala/Predef.Integer2int().
+         |[8:2..8:3): m => *.update
+         |  update => scala/collection/mutable/MapLike#update().
+         |[8:9..8:10): m => *.apply
+         |  apply => scala/collection/MapLike#apply().
+         |[8:9..8:13): m(k) => Integer2int(*)
+         |  Integer2int => scala/Predef.Integer2int().
+         |[8:9..8:17): m(k) + 1 => int2Integer(*)
+         |  int2Integer => scala/Predef.int2Integer().
+         |""".stripMargin,
+  )
+
+  private val updateWithViewsOfReceiverAndElement =
+    """|package ya
+       |import scala.language.implicitConversions
+       |class M { def apply(k: Int): String = ""; def update(k: Int, v: String): Unit = () }
+       |class X
+       |class B
+       |class N { def apply(k: Int): B = new B; def update(k: Int, v: B): Unit = () }
+       |object O {
+       |  implicit def conv(x: X): M = new M
+       |  implicit class RichB(b: B) { def +(i: Int): B = b }
+       |  val x = new X
+       |  val n = new N
+       |  x(0) *= 2
+       |  n(0) += 1
+       |  x(0) = x(0) * 2
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update with views of the receiver and of the element: synthetics",
+    updateWithViewsOfReceiverAndElement,
+    """|[11:2..11:3): x => conv(*)
+       |  conv => ya/O.conv().
+       |[11:2..11:11): x(0) *= 2 => augmentString(*)
+       |  augmentString => scala/Predef.augmentString().
+       |[12:2..12:3): n => *.apply
+       |  apply => ya/N#apply().
+       |[12:2..12:11): n(0) += 1 => RichB(*)
+       |  RichB => ya/O.RichB().
+       |[13:2..13:3): x => *.update
+       |  update => ya/M#update().
+       |[13:2..13:3): x => conv(*)
+       |  conv => ya/O.conv().
+       |[13:9..13:10): x => *.apply
+       |  apply => ya/M#apply().
+       |[13:9..13:10): x => conv(*)
+       |  conv => ya/O.conv().
+       |[13:9..13:13): x(0) => augmentString(*)
+       |  augmentString => scala/Predef.augmentString().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateOfParenthesizedReceiver =
+    """|package yb
+       |class N { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
+       |class M { def apply(k: Int): N = new N }
+       |class K(x: Int) { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
+       |class P { def ++(q: P): N = new N }
+       |object O {
+       |  val m = new M
+       |  val p = new P
+       |  (m apply 0)(1) += 5
+       |  (m apply 0)(1) = 5
+       |  (new K(1))(0) += 5
+       |  (p ++ p)(0) += 1
+       |  (p ++ p)(0) = 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update of a parenthesized receiver",
+    updateOfParenthesizedReceiver,
+    """|[0:8..0:10): yb <= yb/
+       |[1:6..1:7): N <= yb/N#
+       |[1:8..1:8):  <= yb/N#`<init>`().
+       |[1:14..1:19): apply <= yb/N#apply().
+       |[1:20..1:21): k <= yb/N#apply().(k)
+       |[1:23..1:26): Int => scala/Int#
+       |[1:29..1:32): Int => scala/Int#
+       |[1:35..1:36): k => yb/N#apply().(k)
+       |[1:42..1:48): update <= yb/N#update().
+       |[1:49..1:50): k <= yb/N#update().(k)
+       |[1:52..1:55): Int => scala/Int#
+       |[1:57..1:58): v <= yb/N#update().(v)
+       |[1:60..1:63): Int => scala/Int#
+       |[1:66..1:70): Unit => scala/Unit#
+       |[2:6..2:7): M <= yb/M#
+       |[2:8..2:8):  <= yb/M#`<init>`().
+       |[2:14..2:19): apply <= yb/M#apply().
+       |[2:20..2:21): k <= yb/M#apply().(k)
+       |[2:23..2:26): Int => scala/Int#
+       |[2:29..2:30): N => yb/N#
+       |[2:37..2:38): N => yb/N#
+       |[2:38..2:38):  => yb/N#`<init>`().
+       |[3:6..3:7): K <= yb/K#
+       |[3:7..3:7):  <= yb/K#`<init>`().
+       |[3:8..3:9): x <= yb/K#`<init>`().(x)
+       |[3:8..3:9): x <= yb/K#x.
+       |[3:11..3:14): Int => scala/Int#
+       |[3:22..3:27): apply <= yb/K#apply().
+       |[3:28..3:29): k <= yb/K#apply().(k)
+       |[3:31..3:34): Int => scala/Int#
+       |[3:37..3:40): Int => scala/Int#
+       |[3:43..3:44): k => yb/K#apply().(k)
+       |[3:50..3:56): update <= yb/K#update().
+       |[3:57..3:58): k <= yb/K#update().(k)
+       |[3:60..3:63): Int => scala/Int#
+       |[3:65..3:66): v <= yb/K#update().(v)
+       |[3:68..3:71): Int => scala/Int#
+       |[3:74..3:78): Unit => scala/Unit#
+       |[4:6..4:7): P <= yb/P#
+       |[4:8..4:8):  <= yb/P#`<init>`().
+       |[4:14..4:16): ++ <= yb/P#`++`().
+       |[4:17..4:18): q <= yb/P#`++`().(q)
+       |[4:20..4:21): P => yb/P#
+       |[4:24..4:25): N => yb/N#
+       |[4:32..4:33): N => yb/N#
+       |[4:33..4:33):  => yb/N#`<init>`().
+       |[5:7..5:8): O <= yb/O.
+       |[6:6..6:7): m <= yb/O.m.
+       |[6:14..6:15): M => yb/M#
+       |[6:15..6:15):  => yb/M#`<init>`().
+       |[7:6..7:7): p <= yb/O.p.
+       |[7:14..7:15): P => yb/P#
+       |[7:15..7:15):  => yb/P#`<init>`().
+       |[8:3..8:4): m => yb/O.m.
+       |[8:5..8:10): apply => yb/M#apply().
+       |[8:17..8:19): += => scala/Int#`+`(+4).
+       |[9:3..9:4): m => yb/O.m.
+       |[9:5..9:10): apply => yb/M#apply().
+       |[10:7..10:8): K => yb/K#
+       |[10:8..10:8):  => yb/K#`<init>`().
+       |[10:16..10:18): += => scala/Int#`+`(+4).
+       |[11:3..11:4): p => yb/O.p.
+       |[11:5..11:7): ++ => yb/P#`++`().
+       |[11:8..11:9): p => yb/O.p.
+       |[11:14..11:16): += => scala/Int#`+`(+4).
+       |[12:3..12:4): p => yb/O.p.
+       |[12:5..12:7): ++ => yb/P#`++`().
+       |[12:8..12:9): p => yb/O.p.
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update of a parenthesized receiver: synthetics",
+    updateOfParenthesizedReceiver,
+    """|[9:3..9:12): m apply 0 => *.update
+       |  update => yb/N#update().
+       |[12:3..12:9): p ++ p => *.update
+       |  update => yb/N#update().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateOfParameterlessApply =
+    """|package yc
+       |class N { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
+       |object R { def apply: N = new N }
+       |object O {
+       |  R.apply(0) += 5
+       |  R.apply(0) = 5
+       |  R apply 0 += 5
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update of a parameterless apply",
+    updateOfParameterlessApply,
+    """|[0:8..0:10): yc <= yc/
+       |[1:6..1:7): N <= yc/N#
+       |[1:8..1:8):  <= yc/N#`<init>`().
+       |[1:14..1:19): apply <= yc/N#apply().
+       |[1:20..1:21): k <= yc/N#apply().(k)
+       |[1:23..1:26): Int => scala/Int#
+       |[1:29..1:32): Int => scala/Int#
+       |[1:35..1:36): k => yc/N#apply().(k)
+       |[1:42..1:48): update <= yc/N#update().
+       |[1:49..1:50): k <= yc/N#update().(k)
+       |[1:52..1:55): Int => scala/Int#
+       |[1:57..1:58): v <= yc/N#update().(v)
+       |[1:60..1:63): Int => scala/Int#
+       |[1:66..1:70): Unit => scala/Unit#
+       |[2:7..2:8): R <= yc/R.
+       |[2:15..2:20): apply <= yc/R.apply().
+       |[2:22..2:23): N => yc/N#
+       |[2:30..2:31): N => yc/N#
+       |[2:31..2:31):  => yc/N#`<init>`().
+       |[3:7..3:8): O <= yc/O.
+       |[4:2..4:3): R => yc/R.
+       |[4:4..4:9): apply => yc/R.apply().
+       |[4:13..4:15): += => scala/Int#`+`(+4).
+       |[5:2..5:3): R => yc/R.
+       |[5:4..5:9): apply => yc/R.apply().
+       |[6:2..6:3): R => yc/R.
+       |[6:4..6:9): apply => yc/R.apply().
+       |[6:12..6:14): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update of a parameterless apply: synthetics",
+    updateOfParameterlessApply,
+    """|[5:2..5:9): R.apply => *.update
+       |  update => yc/N#update().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateOfImplicitThis =
+    """|package yd
+       |class N {
+       |  def apply(k: Int): Int = k
+       |  def update(k: Int, v: Int): Unit = ()
+       |  def f(): Unit = apply(0) += 5
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update of an implicit this",
+    updateOfImplicitThis,
+    """|[0:8..0:10): yd <= yd/
+       |[1:6..1:7): N <= yd/N#
+       |[1:8..1:8):  <= yd/N#`<init>`().
+       |[2:6..2:11): apply <= yd/N#apply().
+       |[2:12..2:13): k <= yd/N#apply().(k)
+       |[2:15..2:18): Int => scala/Int#
+       |[2:21..2:24): Int => scala/Int#
+       |[2:27..2:28): k => yd/N#apply().(k)
+       |[3:6..3:12): update <= yd/N#update().
+       |[3:13..3:14): k <= yd/N#update().(k)
+       |[3:16..3:19): Int => scala/Int#
+       |[3:21..3:22): v <= yd/N#update().(v)
+       |[3:24..3:27): Int => scala/Int#
+       |[3:30..3:34): Unit => scala/Unit#
+       |[4:6..4:7): f <= yd/N#f().
+       |[4:11..4:15): Unit => scala/Unit#
+       |[4:27..4:29): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update of an implicit this: synthetics",
+    updateOfImplicitThis,
+    """|[4:18..4:18):  => *.update
+       |  update => yd/N#update().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val updateOfParameterlessInfixCall =
+    """|package ye
+       |class N { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
+       |class P { def ++ : N = new N }
+       |object O {
+       |  val p = new P
+       |  p ++ 0 += 5
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an update of a parameterless infix call",
+    updateOfParameterlessInfixCall,
+    """|[0:8..0:10): ye <= ye/
+       |[1:6..1:7): N <= ye/N#
+       |[1:8..1:8):  <= ye/N#`<init>`().
+       |[1:14..1:19): apply <= ye/N#apply().
+       |[1:20..1:21): k <= ye/N#apply().(k)
+       |[1:23..1:26): Int => scala/Int#
+       |[1:29..1:32): Int => scala/Int#
+       |[1:35..1:36): k => ye/N#apply().(k)
+       |[1:42..1:48): update <= ye/N#update().
+       |[1:49..1:50): k <= ye/N#update().(k)
+       |[1:52..1:55): Int => scala/Int#
+       |[1:57..1:58): v <= ye/N#update().(v)
+       |[1:60..1:63): Int => scala/Int#
+       |[1:66..1:70): Unit => scala/Unit#
+       |[2:6..2:7): P <= ye/P#
+       |[2:8..2:8):  <= ye/P#`<init>`().
+       |[2:14..2:16): ++ <= ye/P#`++`().
+       |[2:19..2:20): N => ye/N#
+       |[2:27..2:28): N => ye/N#
+       |[2:28..2:28):  => ye/N#`<init>`().
+       |[3:7..3:8): O <= ye/O.
+       |[4:6..4:7): p <= ye/O.p.
+       |[4:14..4:15): P => ye/P#
+       |[4:15..4:15):  => ye/P#`<init>`().
+       |[5:2..5:3): p => ye/O.p.
+       |[5:4..5:6): ++ => ye/P#`++`().
+       |[5:9..5:11): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an update of a parameterless infix call: synthetics",
+    updateOfParameterlessInfixCall,
+    "",
+    "Synthetics",
+  )
+
+  private val methodValuesOfWrittenApplyAndUpdate =
+    """|package yz
+       |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
+       |object O {
+       |  val s = new M
+       |  var m = new M
+       |  def mk(): M = new M
+       |  val ks = List(1, 2)
+       |  ks.map(s.apply)
+       |  ks.map(m.apply)
+       |  ks.map(mk().apply)
+       |  ks.map(m.apply _)
+       |  val u: (Int, Int) => Unit = m.update
+       |  val w = mk().update _
+       |  mk().apply(k = 0)
+       |  mk()(k = 0)
+       |  mk().update(k = 0, v = 1)
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "method values of a written apply and update: synthetics",
+    methodValuesOfWrittenApplyAndUpdate,
+    """|[6:11..6:15): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[7:2..7:8): ks.map => *[Int]
+       |  Int => scala/Int#
+       |[8:2..8:8): ks.map => *[Int]
+       |  Int => scala/Int#
+       |[9:2..9:8): ks.map => *[Int]
+       |  Int => scala/Int#
+       |[10:2..10:8): ks.map => *[Int]
+       |  Int => scala/Int#
+       |[14:2..14:6): mk() => *.apply
+       |  apply => yz/M#apply().
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
+      """|[6:11..6:15): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[7:2..7:8): ks.map => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[7:2..7:17): ks.map(s.apply) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[8:2..8:8): ks.map => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[8:2..8:17): ks.map(m.apply) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[9:2..9:8): ks.map => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[9:2..9:20): ks.map(mk().apply) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[10:2..10:8): ks.map => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[10:2..10:19): ks.map(m.apply _) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[14:2..14:6): mk() => *.apply
+         |  apply => yz/M#apply().
+         |""".stripMargin,
+  )
+
+  private val methodValuesOnViewByNameAndFor =
+    """|package za
+       |class M { def apply(k: Int): Int = k; def update(k: Int, v: Int): Unit = () }
+       |object O {
+       |  implicit def toM(x: Int): M = new M
+       |  var m = new M
+       |  var n = 1
+       |  val ks = List(1, 2)
+       |  def f(x: => M) = ks.map(x.apply)
+       |  ks.map(n.apply)
+       |  val u: (Int, Int) => Unit = n.update
+       |  for (k <- ks; g = m.update _) g(k, 1)
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "method values of a written apply and update on a view, a by-name and in a for: synthetics",
+    methodValuesOnViewByNameAndFor,
+    """|[6:11..6:15): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |[7:19..7:25): ks.map => *[Int]
+       |  Int => scala/Int#
+       |[8:2..8:8): ks.map => *[Int]
+       |  Int => scala/Int#
+       |[8:9..8:10): n => toM(*)
+       |  toM => za/O.toM().
+       |[9:30..9:31): n => toM(*)
+       |  toM => za/O.toM().
+       |[10:2..10:39): for (k <- ks; g = m.update _) g(k, 1) => orig(ks).map[Tuple2[Int, Function2[Int, Int, Unit]]]({(k) => orig(g = m.update _)}).foreach[Unit]({(x$1) => orig(g(k, 1))})
+       |  map => scala/collection/immutable/List#map().
+       |  Tuple2 => scala/Tuple2#
+       |  Int => scala/Int#
+       |  Function2 => scala/Function2#
+       |  Unit => scala/Unit#
+       |  k => local0
+       |  foreach => scala/collection/immutable/List#foreach().
+       |  x$1 => local1
+       |[10:32..10:33): g => *.apply
+       |  apply => scala/Function2#apply().
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
+      """|[6:11..6:15): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[7:19..7:25): ks.map => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[7:19..7:34): ks.map(x.apply) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[8:2..8:8): ks.map => *[Int, List[Int]]
+         |  Int => scala/Int#
+         |  List => scala/collection/immutable/List#
+         |[8:2..8:17): ks.map(n.apply) => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |[8:9..8:10): n => toM(*)
+         |  toM => za/O.toM().
+         |[9:30..9:31): n => toM(*)
+         |  toM => za/O.toM().
+         |[10:2..10:39): for (k <- ks; g = m.update _) g(k, 1) => orig(ks).map[Tuple2[Int, Function2[Int, Int, Unit]], List[Tuple2[Int, Function2[Int, Int, Unit]]]]({(k) => orig(g = m.update _)})(List.canBuildFrom[Tuple2[Int, Function2[Int, Int, Unit]]]).foreach[Unit]({(x$1) => orig(g(k, 1))})
+         |  map => scala/collection/immutable/List#map().
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
+         |  Function2 => scala/Function2#
+         |  Unit => scala/Unit#
+         |  List => scala/collection/immutable/List#
+         |  k => local0
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  foreach => scala/collection/immutable/List#foreach().
+         |  x$1 => local1
+         |[10:32..10:33): g => *.apply
+         |  apply => scala/Function2#apply().
+         |""".stripMargin,
+  )
+
+  private val inferredApplyWithDefaultsOnVar =
+    """|package zb
+       |class M { def apply(k: Int = 0): Int = k; def update(k: Int, v: Int): Unit = () }
+       |object O {
+       |  var m = new M
+       |  def mk(): M = new M
+       |  def g(f: Int => Unit): Unit = ()
+       |  m()
+       |  m(k = 1)
+       |  mk()()
+       |  g(m(0) += _)
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an inferred apply with defaults or named arguments, and an op= in a lambda: synthetics",
+    inferredApplyWithDefaultsOnVar,
+    """|[7:2..7:3): m => *.apply
+       |  apply => zb/M#apply().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
   // meta-annotations (#2085)
   occurrences(
     """|package t
