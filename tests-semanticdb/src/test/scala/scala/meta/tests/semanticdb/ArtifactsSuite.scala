@@ -1,6 +1,9 @@
 package scala.meta.tests.semanticdb
 
+import scala.meta.tests.BuildInfo
+
 import java.io.File
+import java.nio.file.Paths
 import java.util.zip.ZipFile
 
 import scala.collection.JavaConverters._
@@ -21,6 +24,12 @@ class ArtifactsSuite extends FunSuite {
     dirs.filterNot(dir => dirs.exists(x => dir.startsWith(x + "/"))).toList.sorted
   }
 
+  private def hasEntry(jar: File, name: String): Boolean = {
+    val zip = new ZipFile(jar)
+    try zip.getEntry(name) ne null
+    finally zip.close()
+  }
+
   private val pluginClasses = classes(sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar"))
   private val compilerClasses = sys.props("sbt.paths.scala-compiler.jars").split(File.pathSeparator)
     .flatMap(classes).toSet
@@ -35,5 +44,23 @@ class ArtifactsSuite extends FunSuite {
   test("#4080: plugin classes in the compiler classpath")(
     assertEquals(packages(pluginClasses.intersect(compilerClasses)), Nil),
   )
+
+  test("symbol table packages in the plugin") {
+    val inPlugin = pluginClasses.map(_.split('/').init.mkString("/"))
+    val internal = List("classpath", "javacp", "javacp/asm", "metacp", "scalacp", "symtab")
+    val expected = internal.map("scala/meta/internal/" + _) :+ "scala/meta/metacp"
+    assertEquals(expected.filterNot(inPlugin), Nil)
+  }
+
+  test("symbol table classes on the test classpath") {
+    val name = "scala/meta/internal/symtab/GlobalSymbolTable.class"
+    val entries = sys.props("sbt.paths.tests.test.classes").split(File.pathSeparator).filter { x =>
+      val file = new File(x)
+      if (file.isDirectory) new File(file, name).isFile else file.isFile && hasEntry(file, name)
+    }
+    assertEquals(entries.length, 1, entries.mkString(File.pathSeparator))
+    val entry = Paths.get(entries(0))
+    assert(entry.startsWith(BuildInfo.databaseSourcepath), entry)
+  }
 
 }
