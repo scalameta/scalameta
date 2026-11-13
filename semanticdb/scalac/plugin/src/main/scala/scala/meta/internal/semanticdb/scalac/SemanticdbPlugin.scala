@@ -17,11 +17,13 @@ class SemanticdbPlugin(val global: Global) extends Plugin with SemanticdbPipelin
     val originalOptions = options.map(option => "-P:" + name + ":" + option)
     val baseConfig = SemanticdbConfig.default.copy(targetroot = outputDirectory)
     config = SemanticdbConfig.parse(originalOptions, errFn, g.reporter, baseConfig)
-    g.reporter match {
-      case _: SemanticdbReporter => // do nothing, already hijacked
-      case r => if (isSupportedCompiler) g.reporter = new SemanticdbReporter(r)
+    if (isSupportedCompiler) {
+      g.reporter match {
+        case _: SemanticdbReporter => // do nothing, already hijacked
+        case r => g.reporter = new SemanticdbReporter(r)
+      }
+      initTextDocumentOpsImpl()
     }
-    if (isSupportedCompiler) g.analyzer.addAnalyzerPlugin(TyperRecorder)
     true
   }
 
