@@ -164,9 +164,5 @@ website. New changes should trigger a reload in the browser.
 
 ## Back publishing
 
-To release a new version of the SemanticDB compiler plugin, you need to back publish it for a specific Scala version. To do this push a tag to the scalameta repository in a form of:
-
-  `v4.13.43@2.13.17@releaseSemanticdb`
-
-This will trigger a release workflow that will publish the plugin artifact to
-Sonatype. Replace `v4.13.4` and `2.13.17` with the version of the release you are making.
+To publish the SemanticDB compiler plugin of an existing release for a new Scala version, run the
+[Release semanticdb](.github/workflows/release-semanticdb.yml) workflow with that Scala version.

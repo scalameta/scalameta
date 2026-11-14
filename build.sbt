@@ -119,10 +119,6 @@ def rootSettings = Def.settings(
   addCommandAlias("docJS2_13", "docFor sjs " + PublishedScala213ForJS),
   addCommandAlias("doc3_lts", "docFor jvm " + Scala3Published),
   addCommandAlias("docNative3_lts", "docFor native " + Scala3Published),
-  commands += Command.command("releaseSemanticdb") { s =>
-    val rows = AllScala2Versions.flatMap(semanticdbRows(s))
-    ("semanticdbShared2_13" +: rows).map(_ + "/publishSigned").toList ::: s
-  },
   /* A backport release names one patch, and every semanticdb artifact carries the full version. */
   commands += Command.single("releaseSemanticdbFor")((s, version) =>
     if (AllScala2Versions.contains(version)) semanticdbRows(s)(version).map(_ + "/publishSigned")
