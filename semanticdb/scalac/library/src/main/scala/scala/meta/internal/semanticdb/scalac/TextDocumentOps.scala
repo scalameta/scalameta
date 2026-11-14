@@ -1179,14 +1179,19 @@ trait TextDocumentOps {
             gname: g.Name,
             gscope: List[g.Tree],
             start: Int,
-            @scala.annotation.nowarn skipCurrentRun: Boolean,
+            skipCurrentRun: Boolean,
         ): (g.Type, g.Symbol) = {
           val gbindings = gscope.iterator.map(scopeBinding(gname, _, start)) ++
             grootImports.iterator.map(importBinding(gname, _)) ++
             Iterator(member(g.rootMirror.RootClass.thisType, gname))
-          gbindings.find(isBinding).orNull
+          gbindings.find(if (skipCurrentRun) isBindingOutsideRun else isBinding).orNull
         }
         private val isBinding: ((g.Type, g.Symbol)) => Boolean = x => (x eq null) || x._2.exists
+        private val isBindingOutsideRun: ((g.Type, g.Symbol)) => Boolean = x =>
+          (x eq null) || x._2.exists && { // binding unsure or outside current run
+            val grun = g.currentRun
+            !grun.compiles(x._2) && !grun.compiles(x._1.typeSymbol)
+          }
         private def member(gpre: g.Type, gname: g.Name) = (gpre, gpre.member(gname))
         private val noBinding = (g.NoPrefix, g.NoSymbol)
         // the binding of a name in a scope: NoSymbol if none, null if unsure
@@ -1468,7 +1473,7 @@ trait TextDocumentOps {
         ): Unit = mtpe match {
           case mtpe: m.Type.Apply => tryFindMacroAnnotation(mtpe.tpe, gscope, start)
           case _: m.Type.Name | _: m.Type.Select =>
-            resolveTypePath(mtpe, gscope, start, skipCurrentRun = false) match {
+            resolveTypePath(mtpe, gscope, start, skipCurrentRun = true) match {
               case (_, (mname, gann) :: gquals) if gann.isClass && gann.hasFlag(gf.MACRO) =>
                 successes(gquals)
                 success(mname, gann)
