@@ -1075,7 +1075,7 @@ trait TextDocumentOps {
          * lead to the same class; the class itself binds only its type parameters there */
         private def tryFindParent(mtpe: m.Type, gtpe: g.Type): Boolean = {
           val gscope = genclosing.dropWhile(!_.isInstanceOf[g.ImplDef])
-          resolveTypePath(mtpe, gscope, mtpe.pos.start) match {
+          resolveTypePath(mtpe, gscope, mtpe.pos.start, skipCurrentRun = false) match {
             case (gpre, gnames @ (_, gsym) :: _) =>
               val gcls =
                 if (gsym.isClass) gsym else gpre.memberInfo(gsym).flatten.dealias.typeSymbol
@@ -1090,19 +1090,21 @@ trait TextDocumentOps {
             mtpe: m.Type,
             gscope: List[g.Tree],
             start: Int,
+            skipCurrentRun: Boolean,
         ): (g.Type, List[(m.Name, g.Symbol)]) = mtpe match {
           case mname: m.Type.Name =>
-            lookupMember(g.TypeName(mname.value).encode, gscope, start) match {
+            lookupMember(g.TypeName(mname.value).encode, gscope, start, skipCurrentRun) match {
               case null => null
               case (gpre, gsym) => (gpre, (mname -> gsym) :: Nil)
             }
-          case mtpe: m.Type.Select => resolvePath(mtpe.qual, gscope, start) match {
+          case mtpe: m.Type.Select => resolvePath(mtpe.qual, gscope, start, skipCurrentRun) match {
               case null => null
               case (gpre, gquals) =>
                 val gsym = gpre.member(g.TypeName(mtpe.name.value).encode)
                 if (gsym.exists) (gpre, (mtpe.name -> gsym) :: gquals) else null
             }
-          case mtpe: m.Type.Project => resolveTypePath(mtpe.qual, gscope, start) match {
+          case mtpe: m.Type.Project =>
+            resolveTypePath(mtpe.qual, gscope, start, skipCurrentRun) match {
               case null => null
               case (gpreQual, gquals @ (_, gqual) :: _) =>
                 val gpre = g.typeRef(gpreQual, gqual, Nil).dealias
@@ -1117,8 +1119,10 @@ trait TextDocumentOps {
             mqual: m.Term,
             gscope: List[g.Tree],
             start: Int,
+            skipCurrentRun: Boolean,
         ): (g.Type, List[(m.Name, g.Symbol)]) = mqual match {
-          case mqual: m.Term.Select => resolvePath(mqual.qual, gscope, start) match {
+          case mqual: m.Term.Select =>
+            resolvePath(mqual.qual, gscope, start, skipCurrentRun) match {
               case null => null
               case (gpre, gquals) => stablePath(gpre.member(encoded(mqual.name))) match {
                   case null => null
@@ -1127,7 +1131,8 @@ trait TextDocumentOps {
             }
           case mname: m.Term.Name if mname.value == DisplayNames.RootPackage =>
             (g.rootMirror.RootClass.tpe, (mname -> g.rootMirror.RootPackage) :: Nil)
-          case mname: m.Term.Name => stablePath(lookupName(encoded(mname), gscope, start)) match {
+          case mname: m.Term.Name =>
+            stablePath(lookupName(encoded(mname), gscope, start, skipCurrentRun)) match {
               case null => null
               case (gtpe, gsym) => (gtpe, (mname -> gsym) :: Nil)
             }
@@ -1159,23 +1164,29 @@ trait TextDocumentOps {
           if ((null eq gsym) || !gsym.exists || !gsym.isTerm || gsym.isOverloaded || !gsym.isStable)
             null
           else (gsym.info.finalResultType, gsym)
-        private def lookupName(gname: g.Name, gscope: List[g.Tree], start: Int): g.Symbol =
-          lookupMember(gname, gscope, start) match {
-            case null => null
-            case (_, gsym) => gsym
-          }
+        private def lookupName(
+            gname: g.Name,
+            gscope: List[g.Tree],
+            start: Int,
+            skipCurrentRun: Boolean,
+        ): g.Symbol = lookupMember(gname, gscope, start, skipCurrentRun) match {
+          case null => null
+          case (_, gsym) => gsym
+        }
         /* the prefix and the symbol of a name in scope, innermost binding first, or null if
          * unsure; for a compiled tree, a binding never conflicts with one further out */
         private def lookupMember(
             gname: g.Name,
             gscope: List[g.Tree],
             start: Int,
+            @scala.annotation.nowarn skipCurrentRun: Boolean,
         ): (g.Type, g.Symbol) = {
           val gbindings = gscope.iterator.map(scopeBinding(gname, _, start)) ++
             grootImports.iterator.map(importBinding(gname, _)) ++
             Iterator(member(g.rootMirror.RootClass.thisType, gname))
-          gbindings.find(x => (x eq null) || x._2.exists).orNull
+          gbindings.find(isBinding).orNull
         }
+        private val isBinding: ((g.Type, g.Symbol)) => Boolean = x => (x eq null) || x._2.exists
         private def member(gpre: g.Type, gname: g.Name) = (gpre, gpre.member(gname))
         private val noBinding = (g.NoPrefix, g.NoSymbol)
         // the binding of a name in a scope: NoSymbol if none, null if unsure
@@ -1456,7 +1467,8 @@ trait TextDocumentOps {
             start: Int,
         ): Unit = mtpe match {
           case mtpe: m.Type.Apply => tryFindMacroAnnotation(mtpe.tpe, gscope, start)
-          case _: m.Type.Name | _: m.Type.Select => resolveTypePath(mtpe, gscope, start) match {
+          case _: m.Type.Name | _: m.Type.Select =>
+            resolveTypePath(mtpe, gscope, start, skipCurrentRun = false) match {
               case (_, (mname, gann) :: gquals) if gann.isClass && gann.hasFlag(gf.MACRO) =>
                 successes(gquals)
                 success(mname, gann)
