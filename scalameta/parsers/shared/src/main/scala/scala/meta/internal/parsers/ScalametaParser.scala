@@ -600,10 +600,11 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
             val next = elems.head
             val bound = begOfComments(next)
             // an empty enclosure holds the comments inside it, so the next element takes those after it
-            val afterEmpty = (prev ne null) && (prev.endComment match {
-              case Some(c) => c.endTokenIdx < prev.endTokenIdx
-              case _ => false
-            })
+            val afterEmpty = (prev ne null) &&
+              (prev.endComment match {
+                case Some(c) => c.endTokenIdx < prev.endTokenIdx
+                case _ => false
+              })
             def from =
               if (prev ne null) appendTrailingComments(prev, bound = bound)
               // the element took the comments before our opening delimiter
@@ -747,8 +748,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
           (continued || !tokens.findNotOrNull(_.is[HSpace], idx + 1).isInstanceOf[AtEOL] || {
             val prev = prevNonTriviaAt(idx)
             // a token that can end a statement ends the tree only where the statement ends
-            !endsTree(prev, body) ||
-            canEndStat(tokens(prev)) && !isStatEolAfter(prev)
+            !endsTree(prev, body) || canEndStat(tokens(prev)) && !isStatEolAfter(prev)
           }) && {
             if (wasIndent) inRegion = true
             true
@@ -835,9 +835,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   private val noTreeBeg = new collection.mutable.BitSet
   private def markNoTreeBeg(idx: Int): Unit = if (options.captureComments) noTreeBeg += idx
 
-  private def continuesTree(t: Token, idx: Int): Boolean = t.is[KwThen] || noTreeBeg
-    .contains(idx) ||
-    !mightStartStat(t, closeDelimOK = true)
+  private def continuesTree(t: Token, idx: Int): Boolean = t.is[KwThen] ||
+    noTreeBeg.contains(idx) || !mightStartStat(t, closeDelimOK = true)
 
   // check if `idx` follows a detached comment that is not indented deeper
   private def isAfterDetachedComment(idx: Int): Boolean = options.captureComments && {
@@ -933,8 +932,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     // only where the leading scan of the next tree excludes them
     if (detached || !tokens.getOrNull(idx).isInstanceOf[AtEOL] || isIndentAt(idx)) return end
     val nextNonWS = nextNonWhitespaceAt(idx)
-    if (!tokens.getOrNull(nextNonWS).isInstanceOf[HTrivia] ||
-      !endsTree(beforeFrom, arrowEnds = true)) return end
+    if (!tokens.getOrNull(nextNonWS).isInstanceOf[HTrivia] || !endsTree(beforeFrom, arrowEnds = true))
+      return end
 
     // also take the comments indented deeper than the line of the code after them
     val next = nextNonTriviaAt(nextNonWS)
@@ -1337,11 +1336,12 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       single: Term,
       needParens: Boolean = false,
   ): Either[List[Term], Term] = {
-    val force = needParens || (single match {
-      // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
-      case _: Term.Assign => dialect.allowNamedTuples
-      case _ => false
-    })
+    val force = needParens ||
+      (single match {
+        // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
+        case _: Term.Assign => dialect.allowNamedTuples
+        case _ => false
+      })
     if (force) Left(single :: Nil) else Right(single)
   }
 
@@ -3247,9 +3247,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     hasDetachedCommentAfter(t)
 
   private def blockOnIndent(keepBlock: Boolean = false): Term = {
-    val keep = keepBlock ||
-      !prevToken.is[Colon] && !commentsTrail(prevToken) &&
-      continuesTree(prevToken, prevIndex) && isAfterDetachedComment(prevIndex)
+    val keep = keepBlock || !prevToken.is[Colon] && !commentsTrail(
+      prevToken,
+    ) && continuesTree(prevToken, prevIndex) && isAfterDetachedComment(prevIndex)
     autoEndPosOpt(AfterPrevPos)(indentedOnOpen(blockMaybeRaw(keepBlock = keep)))
   }
 
