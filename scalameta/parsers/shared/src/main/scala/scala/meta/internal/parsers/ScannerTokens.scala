@@ -12,6 +12,10 @@ import scala.meta.tokens._
 
 import scala.annotation.tailrec
 
+/**
+ * The token stream, with the indentation tokens and line ends that the scanner adds. Only this
+ * class produces it, and no client changes it.
+ */
 private[meta] final class ScannerTokens(
     val input: Input,
     val tokens: Tokens,
@@ -300,7 +304,7 @@ private[meta] final class ScannerTokens(
     case null =>
       val pos = ref.nextPos
       val next =
-        if (pos < tokens.length) nextToken(ref.token, ref.pos, pos, ref.regions)
+        if (pos < tokens.length) nextToken(ref.token, ref.pos, ref.pointPos, pos, ref.regions)
         else {
           val next = TokenRef(Nil, null, pos, pos, pos)
           next.next = next
@@ -315,6 +319,7 @@ private[meta] final class ScannerTokens(
   private def nextToken(
       prevToken: Token,
       prevPos: Int,
+      prevPointPos: Int,
       currPos: Int,
       sepRegionsOrig: List[SepRegion],
   ): TokenRef = {
@@ -340,15 +345,15 @@ private[meta] final class ScannerTokens(
     def mkIndent(pos: Int, pointPos: Int, rs: List[SepRegion], next: TokenRef = null): TokenRef =
       TokenRef(rs, mkIndentToken(pointPos), pos, nextPos, pointPos, next)
 
-    def mkOutdentTo(region: SepRegionIndented, regions: List[SepRegion]) = region match {
+    @scala.annotation.nowarn("cat=unused-params") // unused until keywords end bodies
+    def mkOutdentTo(region: SepRegionIndented, regions: List[SepRegion], beforeComment: Boolean) =
       // end the lambda before a comment on a later line
-      case _: RegionColonLambda => mkOutdentAt(Int.MaxValue, regions)
-      case _ => mkOutdentAt(region.indent, regions)
-    }
+      if (region.isInstanceOf[RegionColonLambda]) mkOutdentAt(Int.MaxValue, regions)
+      else mkOutdentAt(region.indent, regions)
 
-    def mkOutdentAt(outdent: Int, regions: List[SepRegion]) = {
+    def mkOutdentAt(outdent: Int, regions: List[SepRegion], fromPos: Int = prevPos) = {
       val maxPointPos = if (nextPos < 0 || currNonTrivial) currPos else nextPos
-      val pointPos = findOutdentPos(prevPos, maxPointPos, outdent, isIndented(regions, outdent))
+      val pointPos = findOutdentPos(fromPos, maxPointPos, outdent, isIndented(regions, outdent))
       val (nextPrevPos, nextCurrPos) =
         if (pointPos > currPos) (currPos, pointPos) else (prevPos, currPos)
       val tok = tokens(pointPos)
@@ -365,21 +370,22 @@ private[meta] final class ScannerTokens(
         head: TokenRef = null,
         last: TokenRef = null,
         multiEOL: Boolean,
+        beforeComment: Boolean,
     )(implicit f: List[SepRegion] => OutdentInfo): Either[List[SepRegion], (TokenRef, TokenRef)] =
       if (!wasDone) f(xs) match {
-        case null => mkOutdentsOpt(xs, true, head, last, multiEOL)
+        case null => mkOutdentsOpt(xs, true, head, last, multiEOL, beforeComment)
         case OutdentInfo(outdent, rs, done) =>
           val isDone = done || (rs eq xs)
-          if (outdent eq null) mkOutdentsOpt(rs, isDone, head, last, multiEOL)
+          if (outdent eq null) mkOutdentsOpt(rs, isDone, head, last, multiEOL, beforeComment)
           else {
-            val tr = mkOutdentTo(outdent, rs)
+            val tr = mkOutdentTo(outdent, rs, beforeComment)
             val newHead =
               if (head eq null) tr
               else {
                 last.next = tr
                 head
               }
-            mkOutdentsOpt(rs, isDone, newHead, tr, multiEOL)
+            mkOutdentsOpt(rs, isDone, newHead, tr, multiEOL, beforeComment)
           }
       }
       else if (head eq null) Left(xs)
@@ -390,14 +396,17 @@ private[meta] final class ScannerTokens(
         Right((head, last))
       }
 
-    def mkOutdentsT[A](xs: List[SepRegion], multiEOL: Boolean = false)(lt: List[SepRegion] => A)(
-        rt: (TokenRef, TokenRef) => A,
-    )(implicit f: List[SepRegion] => OutdentInfo): A = mkOutdentsOpt(xs, multiEOL = multiEOL)
-      .fold(lt, rt.tupled)
-
-    def mkOutdents(xs: List[SepRegion], multiEOL: Boolean = false)(implicit
+    def mkOutdentsT[A](
+        xs: List[SepRegion],
+        multiEOL: Boolean = false,
+        beforeComment: Boolean = false,
+    )(lt: List[SepRegion] => A)(rt: (TokenRef, TokenRef) => A)(implicit
         f: List[SepRegion] => OutdentInfo,
-    ): TokenRef = mkOutdentsT(xs, multiEOL)(currRef)((x, _) => x)
+    ): A = mkOutdentsOpt(xs, multiEOL = multiEOL, beforeComment = beforeComment).fold(lt, rt.tupled)
+
+    def mkOutdents(xs: List[SepRegion], multiEOL: Boolean = false, beforeComment: Boolean = false)(
+        implicit f: List[SepRegion] => OutdentInfo,
+    ): TokenRef = mkOutdentsT(xs, multiEOL, beforeComment)(currRef)((x, _) => x)
 
     def currRef(regions: List[SepRegion]): TokenRef = currAndNextRef(regions, null)
     def currAndNextRef(regions: List[SepRegion], next: TokenRef): TokenRef =
@@ -466,19 +475,50 @@ private[meta] final class ScannerTokens(
       case _ => null
     }
 
+    /**
+     * Returns the next step of the outdents for the regions nested in `end`. Once the step reaches
+     * `end`, the regions that remain are `atEnd`.
+     */
+    def outdentsUntil(
+        regions: List[SepRegion],
+        end: List[SepRegion],
+        atEnd: List[SepRegion],
+    ): OutdentInfo = regions match {
+      case (r: SepRegionIndented) :: xs => OutdentInfo(r, xs)
+      case xs @ _ :: tail =>
+        if (xs eq end) OutdentInfo(null, atEnd, done = true) else OutdentInfo(null, tail)
+      case _ => null
+    }
+
     def afterControlRef(
         regions: List[SepRegion],
         body: List[SepRegion] => List[SepRegion] = identity,
+        beforeComment: Boolean = false,
     ) = {
-      val dropped = dropControl(curr, regions)
-      if (dropped.isEmpty) currRef(body(regions))
-      // only line regions are nested in it: no outdent, and no closure to allocate
-      else if (dropped eq dropRegionLine(regions)) currRef(body(dropped.tail))
-      else mkOutdents(regions) {
-        case (r: SepRegionIndented) :: xs => OutdentInfo(r, xs)
-        case xs @ _ :: tail =>
-          if (xs eq dropped) OutdentInfo(null, body(tail), done = true) else OutdentInfo(null, tail)
-        case _ => null
+      val droppedLine = dropRegionLine(regions)
+      val droppedCtrl = dropControl(curr, droppedLine)
+      if (droppedCtrl.isEmpty) currRef(body(regions))
+      else {
+        val atEnd = body(droppedCtrl.tail)
+        if (droppedCtrl eq droppedLine) currRef(atEnd) // no outdents, only line regions
+        else mkOutdents(regions, beforeComment = beforeComment)(outdentsUntil(_, droppedCtrl, atEnd))
+      }
+    }
+
+    /**
+     * Returns the ref of `catch` or `finally`, after any outdents that end the body of its `try`.
+     */
+    def afterTryRef(regions: List[SepRegion]) = {
+      val droppedLine = dropRegionLine(regions)
+      if (curr.is[KwCatch]) getCaseIntro(dropWhile(droppedLine)(_ ne RegionTry))
+      else droppedLine match {
+        // covers case when finally follows catch case without a newline
+        // otherwise, these two regions would have been removed already
+        case (_: RegionCaseBody) :: (r: RegionIndent) :: rs =>
+          val ref = mkOutdentTo(r, rs, beforeComment = false)
+          ref.next = currRef(dropUntil(rs)(_ eq RegionTry))
+          ref
+        case rs => currRef(dropUntil(rs)(_ eq RegionTry))
       }
     }
 
@@ -549,7 +589,7 @@ private[meta] final class ScannerTokens(
       case _: KwNew if dialect.allowSignificantIndentation => currRef(RegionNewMark :: sepRegions)
       case _: KwTry if !isPrevEndMarker() => currRef(RegionTry :: dropRegionLine(sepRegions))
       case _: KwMatch if !isPrevEndMarker() => getCaseIntro(sepRegions)
-      case _: KwCatch => getCaseIntro(dropWhile(sepRegions)(_ ne RegionTry))
+      case _: KwCatch | _: KwFinally => afterTryRef(sepRegions)
       case _: KwCase if !next.isClassOrObject =>
         def expr() = new RegionCaseExprPat(countIndent(currPos))
         currRef {
@@ -573,15 +613,6 @@ private[meta] final class ScannerTokens(
             case Nil if prevPos == 0 => expr() :: sepRegions
             case _ => sepRegions
           }
-        }
-      case _: KwFinally => dropRegionLine(sepRegions) match {
-          // covers case when finally follows catch case without a newline
-          // otherwise, these two regions would have been removed already
-          case (_: RegionCaseBody) :: (r: RegionIndent) :: rs =>
-            val ref = mkOutdentTo(r, rs)
-            ref.next = currRef(dropUntil(rs)(_ eq RegionTry))
-            ref
-          case rs => currRef(dropUntil(rs)(_ eq RegionTry))
         }
       case _: LeftBrace =>
         val lbRegions = sepRegions match {
@@ -715,7 +746,9 @@ private[meta] final class ScannerTokens(
               case _ => rs
             }
           case r: RegionFor if r.isClosingConditionToken(prev) => rs
-          case _ => if (prevToken.is[AtEOL] || curr.is[CloseDelim]) rs else regions
+          case _ =>
+            val ends = curr.is[CloseDelim] || prevToken.is[AtEOL]
+            if (ends) rs else regions
         }
       case (r: RegionParen) :: RegionForMaybeParens :: rs if curr.is[LeftArrow] =>
         r :: RegionForParens :: rs
@@ -724,7 +757,7 @@ private[meta] final class ScannerTokens(
 
     if (nextPos < 0) getAtEof(getNonTrivialRegions(sepRegionsOrig))
     else if (currNonTrivial)
-      if (isTrailingComma) nextToken(curr, currPos, currPos + 1, sepRegionsOrig)
+      if (isTrailingComma) nextToken(curr, currPos, currPos, currPos + 1, sepRegionsOrig)
       else nonTrivial(getNonTrivialRegions(sepRegionsOrig))
     else {
       @tailrec
@@ -1068,8 +1101,9 @@ private[meta] final class ScannerTokens(
         }
       result match {
         case x: Right[_, TokenRef] => x.value
-        case x: Left[List[SepRegion], _] => nextToken(prevToken, prevPos, nextPos, x.value)
-        case null => nextToken(prevToken, prevPos, nextPos, sepRegionsOrig)
+        case x: Left[List[SepRegion], _] =>
+          nextToken(prevToken, prevPos, prevPointPos, nextPos, x.value)
+        case null => nextToken(prevToken, prevPos, prevPointPos, nextPos, sepRegionsOrig)
       }
     }
   }
@@ -1332,6 +1366,16 @@ private[meta] object ScannerTokens {
     case (r: RegionLine) :: rs if r.indent >= indent => dropRegionLine(indent, rs)
     case _ => regions
   }
+
+  /**
+   * Returns true if a line at `indent` is deeper than the indentation that encloses it. `regions`
+   * are the regions at the line's end, without the line's own region.
+   */
+  private[parsers] def isDeeperLine(regions: List[SepRegion], indent: Int): Boolean =
+    regions match {
+      case r :: _ => r.indent >= 0 && r.indent < indent
+      case Nil => true // at the top level
+    }
 
   private def findIndent(sepRegions: List[SepRegion]): Int = sepRegions.findOrNull(_.indent >= 0)
     .nnFold(0)(_.indent)
