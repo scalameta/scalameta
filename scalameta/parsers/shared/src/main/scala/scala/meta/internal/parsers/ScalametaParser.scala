@@ -334,7 +334,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   /* ------------- POSITION HANDLING ------------------------------------------- */
 
   case object AutoPos extends Pos {
-    def begIndex = currIndex
+    def begIndex = currEmptyIndex
     def endIndex = prevIndex
   }
   // a body without a delimiter starts right after the token before it
@@ -367,8 +367,14 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
   def atPosEmpty[T <: Tree](pos: Int)(body: => T): T = atPosWithBody(pos, body, pos - 1)
   def atPosEmpty[T <: Tree](pos: StartPos)(body: => T): T = atPosEmpty(pos.begIndex)(body)
-  def atCurPosEmpty[T <: Tree](body: => T): T = atPosEmpty(currIndex)(body)
+  def atCurPosEmpty[T <: Tree](body: => T): T = atPosEmpty(currEmptyIndex)(body)
   def atCurPosEmptyNext[T <: Tree](body: => T): T = nextAfter(atCurPosEmpty(body))
+
+  /** Returns the current index or, at an outdent, the index of the token where it starts. */
+  private def currEmptyIndex: Int = currToken match {
+    case _: Indentation.Outdent if !tokens(currIndex).is[Whitespace] => currIndex + 1
+    case _ => currIndex
+  }
 
   private val originSource = new Origin.ParsedSource(input)
 
@@ -3259,7 +3265,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     )
 
   private def blockOnOther(allowRepeated: Boolean = false): Term = {
-    val start = currIndex
+    val start = currEmptyIndex
     val afterPrev = AfterPrevPos.begIndex // the first statement takes the comments from there
     blockStatSeq(allowRepeated = allowRepeated) match {
       case (term: Term) :: Nil => term

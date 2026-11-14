@@ -265,12 +265,6 @@ private[meta] final class ScannerTokens(
     new Indentation.Indent(token.input, token.dialect, token.start, token.start)
   }
 
-  def mkOutdentToken(pointPos: Int): Token = {
-    val token = tokens(pointPos)
-    outdentAt += pointPos
-    new Indentation.Outdent(token.input, token.dialect, token.start, token.start)
-  }
-
   def findOutdentPos(prevPos: Int, currPos: Int, outdent: Int, okBlank: Boolean): Int = {
     @tailrec
     def iter(i: Int, pos: Int, indent: Int, numEOL: Int = 0): Int =
@@ -286,9 +280,11 @@ private[meta] final class ScannerTokens(
       }
 
     val iterPos = 1 + prevPos
-    if (iterPos < currPos) iter(iterPos, prevPos, if (tokens(prevPos).is[AtEOL]) 0 else -1)
-    else if (tokens(currPos).is[EOF]) currPos
-    else prevPos
+    if (iterPos >= currPos) prevPos
+    else if (tokens(prevPos).is[AtEOL]) iter(iterPos, prevPos, 0)
+    // put the outdent on the space after the previous token, where trees before it end
+    else if (tokens(iterPos).is[HSpace]) iter(iterPos + 1, iterPos, -1)
+    else iter(iterPos, prevPos, -1)
   }
 
   @tailrec
@@ -355,7 +351,11 @@ private[meta] final class ScannerTokens(
       val pointPos = findOutdentPos(prevPos, maxPointPos, outdent, isIndented(regions, outdent))
       val (nextPrevPos, nextCurrPos) =
         if (pointPos > currPos) (currPos, pointPos) else (prevPos, currPos)
-      TokenRef(regions, mkOutdentToken(pointPos), nextPrevPos, nextCurrPos, pointPos)
+      val tok = tokens(pointPos)
+      val start = if (tok.is[Whitespace]) tok.start else tok.end
+      outdentAt += pointPos
+      val outdentToken = new Indentation.Outdent(tok.input, tok.dialect, start, start)
+      TokenRef(regions, outdentToken, nextPrevPos, nextCurrPos, pointPos)
     }
 
     @tailrec
