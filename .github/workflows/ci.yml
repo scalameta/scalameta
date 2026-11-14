@@ -214,6 +214,25 @@ jobs:
         run: sbt semanticdbDotc3_other
       - if: ${{ !cancelled() && matrix.binary == '3' }}
         run: sbt testsSemanticdbSymtab3_other
+      # without the refusal, each command fails another way, or reaches the time limit
+      - if: ${{ !cancelled() && matrix.binary == '3' }}
+        name: refuse the backport commands without backport mode
+        timeout-minutes: 5
+        run: |
+          for cmd in 'releaseSemanticdbFor none' testsSemanticdbBackport; do
+            if out=$(sbt "$cmd" 2>&1); then echo "$out"; echo "$cmd passed"; exit 1; fi
+            echo "$out"
+            grep -q 'needs backport mode' <<< "$out"
+          done
+        shell: bash
+      # stop the server first, so that only one sbt JVM runs on the runner
+      # run this step last, because it rewrites the shared target
+      - if: ${{ !cancelled() && matrix.binary == '3' }}
+        name: check backport mode on a local release
+        run: |
+          sbt shutdown
+          sbt --server --batch -Dbackport.release=1 testsSemanticdbBackport
+        shell: bash
 
   post-windows: # Windows parser/JS/semanticdb (line-ending sensitivity)
     if: ${{ github.event_name == 'push' }}

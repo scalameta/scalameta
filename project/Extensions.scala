@@ -291,9 +291,16 @@ object Extensions {
       val pv = getPublishedForScalaVersion(v)
       /* customRow hands each row its own Project, so a row states the dependency for its own
        * version. A module published per binary version has one row a full-cross row can name. */
-      val conv = (p: Project) =>
-        p.settings(rowSettings(VirtualAxis.jvm, v, jvmPlatformSettings, ss(v)))
-          .dependsOn(deps.map(_.jvm(pv))*)
+      val conv = (p: Project) => {
+        val row = p.settings(rowSettings(VirtualAxis.jvm, v, jvmPlatformSettings, ss(v)))
+        // a backport of a release must link with its binary artifacts, so it compiles against them
+        if (sys.props.contains("backport.release")) row.settings(
+          libraryDependencies ++= deps.map(d =>
+            Def.setting(organization.value %% (d.jvm(pv) / moduleName).value % version.value),
+          ).join.value,
+        )
+        else row.dependsOn(deps.map(_.jvm(pv))*)
+      }
       matrix.customRow(
         autoScalaLibrary = true,
         scalaVersions = Seq(v),

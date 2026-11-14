@@ -165,4 +165,6 @@ website. New changes should trigger a reload in the browser.
 ## Back publishing
 
 To publish the SemanticDB compiler plugin of an existing release for a new Scala version, run the
-[Release semanticdb](.github/workflows/release-semanticdb.yml) workflow with that Scala version.
+[Release semanticdb](.github/workflows/release-semanticdb.yml) workflow with that Scala version. It
+takes the version of the last tag before the commit you give it, and runs sbt in backport mode,
+which `releaseSemanticdbFor` needs.

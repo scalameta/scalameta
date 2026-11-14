@@ -62,7 +62,9 @@ class ArtifactsSuite extends FunSuite {
     }
     assertEquals(entries.length, 1, entries.mkString(File.pathSeparator))
     val entry = Paths.get(entries(0))
-    assert(entry.startsWith(BuildInfo.databaseSourcepath), entry)
+    // the tests run in sbt's JVM: in backport mode the entry comes from the local repository
+    val backport = sys.props.contains("backport.release")
+    assertEquals(entry.startsWith(BuildInfo.databaseSourcepath), !backport, entry)
   }
 
   test("core's pom") {
