@@ -3951,4 +3951,849 @@ class Scala3PositionSuite extends BasePositionSuite {
     showPosition = true,
   )
 
+  checkPositions[Stat](
+    """|def f =
+       |  g(xs.map: x =>
+       |    x)
+       |""".stripMargin,
+    """|Term.Apply g(xs.map: x =>
+       |    x) [10:g(xs.map: x =>...:31)
+       |Term.ArgClause (xs.map: x =>
+       |    x) [11:(xs.map: x =>...:31)
+       |Term.Apply xs.map: x =>
+       |    x [12:xs.map: x =>...:30)
+       |Term.Select xs.map [12:xs.map:18)
+       |Term.Block : x =>
+       |    x [18<: x =>...>30)
+       |Term.Function x =>
+       |    x [20:x =>...:30)
+       |Term.ParamClause x [20:x:21)
+       |Term.Param x [20:x:21)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |Ident(g) [10..11)
+       |LeftParen [11..12)
+       |Ident(xs) [12..14)
+       |Dot [14..15)
+       |Ident(map) [15..18)
+       |Colon [18..19)
+       |Ident(x) [20..21)
+       |RightArrow [22..24)
+       |Indentation.Indent [24..24)
+       |Ident(x) [29..30)
+       |Indentation.Outdent [29..29)
+       |RightParen [30..31)
+       |Indentation.Outdent [31..31)
+       |EOF [32..32)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  g(xs.map: x =>
+       |    x )
+       |""".stripMargin,
+    """|Term.Apply g(xs.map: x =>
+       |    x ) [10:g(xs.map: x =>...:32)
+       |Term.ArgClause (xs.map: x =>
+       |    x ) [11:(xs.map: x =>...:32)
+       |Term.Apply xs.map: x =>
+       |    x [12:xs.map: x =>...:30)
+       |Term.Select xs.map [12:xs.map:18)
+       |Term.Block : x =>
+       |    x [18<: x =>...>30)
+       |Term.Function x =>
+       |    x [20:x =>...:30)
+       |Term.ParamClause x [20:x:21)
+       |Term.Param x [20:x:21)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |Ident(g) [10..11)
+       |LeftParen [11..12)
+       |Ident(xs) [12..14)
+       |Dot [14..15)
+       |Ident(map) [15..18)
+       |Colon [18..19)
+       |Ident(x) [20..21)
+       |RightArrow [22..24)
+       |Indentation.Indent [24..24)
+       |Ident(x) [29..30)
+       |Indentation.Outdent [29..29)
+       |RightParen [31..32)
+       |Indentation.Outdent [32..32)
+       |EOF [33..33)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  g(xs.map: x =>
+       |    if (a) b )
+       |""".stripMargin,
+    """|Term.Apply g(xs.map: x =>
+       |    if (a) b ) [10:g(xs.map: x =>...:39)
+       |Term.ArgClause (xs.map: x =>
+       |    if (a) b ) [11:(xs.map: x =>...:39)
+       |Term.Apply xs.map: x =>
+       |    if (a) b [12:xs.map: x =>...:37)
+       |Term.Select xs.map [12:xs.map:18)
+       |Term.Block : x =>
+       |    if (a) b [18<: x =>...>37)
+       |Term.Function x =>
+       |    if (a) b [20:x =>...:37)
+       |Term.ParamClause x [20:x:21)
+       |Term.Param x [20:x:21)
+       |Term.If if (a) b [29:if (a) b:37)
+       |Lit.Unit     if (a) @@b ) [36::36)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |Ident(g) [10..11)
+       |LeftParen [11..12)
+       |Ident(xs) [12..14)
+       |Dot [14..15)
+       |Ident(map) [15..18)
+       |Colon [18..19)
+       |Ident(x) [20..21)
+       |RightArrow [22..24)
+       |Indentation.Indent [24..24)
+       |KwIf [29..31)
+       |LeftParen [32..33)
+       |Ident(a) [33..34)
+       |RightParen [34..35)
+       |Ident(b) [36..37)
+       |Indentation.Outdent [36..36)
+       |RightParen [38..39)
+       |Indentation.Outdent [39..39)
+       |EOF [40..40)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  g(xs.map: x =>
+       |    if (a) b /* c */ )
+       |""".stripMargin,
+    """|Term.Apply g(xs.map: x =>
+       |    if (a) b /* c */ ) [10:g(xs.map: x =>...:47)
+       |Term.ArgClause (xs.map: x =>
+       |    if (a) b /* c */ ) [11:(xs.map: x =>...:47)
+       |Term.Apply xs.map: x =>
+       |    if (a) b [12:xs.map: x =>...:37)
+       |Term.Select xs.map [12:xs.map:18)
+       |Term.Block : x =>
+       |    if (a) b [18<: x =>...>37)
+       |Term.Function x =>
+       |    if (a) b [20:x =>...:37)
+       |Term.ParamClause x [20:x:21)
+       |Term.Param x [20:x:21)
+       |Term.If if (a) b [29:if (a) b:37)
+       |Lit.Unit     if (a) b /* c */@@ ) [45::45)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |Ident(g) [10..11)
+       |LeftParen [11..12)
+       |Ident(xs) [12..14)
+       |Dot [14..15)
+       |Ident(map) [15..18)
+       |Colon [18..19)
+       |Ident(x) [20..21)
+       |RightArrow [22..24)
+       |Indentation.Indent [24..24)
+       |KwIf [29..31)
+       |LeftParen [32..33)
+       |Ident(a) [33..34)
+       |RightParen [34..35)
+       |Ident(b) [36..37)
+       |Indentation.Outdent [45..45)
+       |RightParen [46..47)
+       |Indentation.Outdent [47..47)
+       |EOF [48..48)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  { xs.map: x =>
+       |    x }
+       |""".stripMargin,
+    """|Term.Block { xs.map: x =>
+       |    x } [10:{ xs.map: x =>...:32)
+       |Term.Apply xs.map: x =>
+       |    x [12:xs.map: x =>...:30)
+       |Term.Select xs.map [12:xs.map:18)
+       |Term.Block : x =>
+       |    x [18<: x =>...>30)
+       |Term.Function x =>
+       |    x [20:x =>...:30)
+       |Term.ParamClause x [20:x:21)
+       |Term.Param x [20:x:21)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |LeftBrace [10..11)
+       |Ident(xs) [12..14)
+       |Dot [14..15)
+       |Ident(map) [15..18)
+       |Colon [18..19)
+       |Ident(x) [20..21)
+       |RightArrow [22..24)
+       |Indentation.Indent [24..24)
+       |Ident(x) [29..30)
+       |Indentation.Outdent [29..29)
+       |RightBrace [31..32)
+       |Indentation.Outdent [32..32)
+       |EOF [33..33)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  { xs.map: x =>
+       |    if (a) b }
+       |""".stripMargin,
+    """|Term.Block { xs.map: x =>
+       |    if (a) b } [10:{ xs.map: x =>...:39)
+       |Term.Apply xs.map: x =>
+       |    if (a) b [12:xs.map: x =>...:37)
+       |Term.Select xs.map [12:xs.map:18)
+       |Term.Block : x =>
+       |    if (a) b [18<: x =>...>37)
+       |Term.Function x =>
+       |    if (a) b [20:x =>...:37)
+       |Term.ParamClause x [20:x:21)
+       |Term.Param x [20:x:21)
+       |Term.If if (a) b [29:if (a) b:37)
+       |Lit.Unit     if (a) @@b } [36::36)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |LeftBrace [10..11)
+       |Ident(xs) [12..14)
+       |Dot [14..15)
+       |Ident(map) [15..18)
+       |Colon [18..19)
+       |Ident(x) [20..21)
+       |RightArrow [22..24)
+       |Indentation.Indent [24..24)
+       |KwIf [29..31)
+       |LeftParen [32..33)
+       |Ident(a) [33..34)
+       |RightParen [34..35)
+       |Ident(b) [36..37)
+       |Indentation.Outdent [36..36)
+       |RightBrace [38..39)
+       |Indentation.Outdent [39..39)
+       |EOF [40..40)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  g(xs.map: x =>
+       |    x , 2)
+       |""".stripMargin,
+    """|Term.Apply g(xs.map: x =>
+       |    x , 2) [10:g(xs.map: x =>...:35)
+       |Term.ArgClause (xs.map: x =>
+       |    x , 2) [11:(xs.map: x =>...:35)
+       |Term.Apply xs.map: x =>
+       |    x [12:xs.map: x =>...:30)
+       |Term.Select xs.map [12:xs.map:18)
+       |Term.Block : x =>
+       |    x [18<: x =>...>30)
+       |Term.Function x =>
+       |    x [20:x =>...:30)
+       |Term.ParamClause x [20:x:21)
+       |Term.Param x [20:x:21)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |Ident(g) [10..11)
+       |LeftParen [11..12)
+       |Ident(xs) [12..14)
+       |Dot [14..15)
+       |Ident(map) [15..18)
+       |Colon [18..19)
+       |Ident(x) [20..21)
+       |RightArrow [22..24)
+       |Indentation.Indent [24..24)
+       |Ident(x) [29..30)
+       |Indentation.Outdent [29..29)
+       |Comma [31..32)
+       |Constant.Int(2) [33..34)
+       |RightParen [34..35)
+       |Indentation.Outdent [35..35)
+       |EOF [36..36)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  if xs.exists: x =>
+       |    x then 1 else 2
+       |""".stripMargin,
+    """|Term.If if xs.exists: x =>
+       |    x then 1 else 2 [10:if xs.exists: x =>...:48)
+       |Term.Apply xs.exists: x =>
+       |    x [13:xs.exists: x =>...:34)
+       |Term.Select xs.exists [13:xs.exists:22)
+       |Term.Block : x =>
+       |    x [22<: x =>...>34)
+       |Term.Function x =>
+       |    x [24:x =>...:34)
+       |Term.ParamClause x [24:x:25)
+       |Term.Param x [24:x:25)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |KwIf [10..12)
+       |Ident(xs) [13..15)
+       |Dot [15..16)
+       |Ident(exists) [16..22)
+       |Colon [22..23)
+       |Ident(x) [24..25)
+       |RightArrow [26..28)
+       |Indentation.Indent [28..28)
+       |Ident(x) [33..34)
+       |Indentation.Outdent [33..33)
+       |KwThen [35..39)
+       |Constant.Int(1) [40..41)
+       |KwElse [42..46)
+       |Constant.Int(2) [47..48)
+       |Indentation.Outdent [48..48)
+       |EOF [49..49)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  while xs.exists: x =>
+       |    if (a) b do ()
+       |""".stripMargin,
+    """|Term.While while xs.exists: x =>
+       |    if (a) b do () [10:while xs.exists: x =>...:50)
+       |Term.Apply xs.exists: x =>
+       |    if (a) b [16:xs.exists: x =>...:44)
+       |Term.Select xs.exists [16:xs.exists:25)
+       |Term.Block : x =>
+       |    if (a) b [25<: x =>...>44)
+       |Term.Function x =>
+       |    if (a) b [27:x =>...:44)
+       |Term.ParamClause x [27:x:28)
+       |Term.Param x [27:x:28)
+       |Term.If if (a) b [36:if (a) b:44)
+       |Lit.Unit     if (a) @@b do () [43::43)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |KwWhile [10..15)
+       |Ident(xs) [16..18)
+       |Dot [18..19)
+       |Ident(exists) [19..25)
+       |Colon [25..26)
+       |Ident(x) [27..28)
+       |RightArrow [29..31)
+       |Indentation.Indent [31..31)
+       |KwIf [36..38)
+       |LeftParen [39..40)
+       |Ident(a) [40..41)
+       |RightParen [41..42)
+       |Ident(b) [43..44)
+       |Indentation.Outdent [43..43)
+       |KwDo [45..47)
+       |LeftParen [48..49)
+       |RightParen [49..50)
+       |Indentation.Outdent [50..50)
+       |EOF [51..51)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  for y <- xs.map: x =>
+       |    if (a) b yield y
+       |""".stripMargin,
+    """|Term.ForYield for y <- xs.map: x =>
+       |    if (a) b yield y [10:for y <- xs.map: x =>...:52)
+       |Term.EnumeratorsBlock y <- xs.map: x =>
+       |    if (a) b [14:y <- xs.map: x =>...:44)
+       |Enumerator.Generator y <- xs.map: x =>
+       |    if (a) b [14:y <- xs.map: x =>...:44)
+       |Term.Apply xs.map: x =>
+       |    if (a) b [19:xs.map: x =>...:44)
+       |Term.Select xs.map [19:xs.map:25)
+       |Term.Block : x =>
+       |    if (a) b [25<: x =>...>44)
+       |Term.Function x =>
+       |    if (a) b [27:x =>...:44)
+       |Term.ParamClause x [27:x:28)
+       |Term.Param x [27:x:28)
+       |Term.If if (a) b [36:if (a) b:44)
+       |Lit.Unit     if (a) @@b yield y [43::43)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |KwFor [10..13)
+       |Ident(y) [14..15)
+       |LeftArrow [16..18)
+       |Ident(xs) [19..21)
+       |Dot [21..22)
+       |Ident(map) [22..25)
+       |Colon [25..26)
+       |Ident(x) [27..28)
+       |RightArrow [29..31)
+       |Indentation.Indent [31..31)
+       |KwIf [36..38)
+       |LeftParen [39..40)
+       |Ident(a) [40..41)
+       |RightParen [41..42)
+       |Ident(b) [43..44)
+       |Indentation.Outdent [43..43)
+       |KwYield [45..50)
+       |Ident(y) [51..52)
+       |Indentation.Outdent [52..52)
+       |EOF [53..53)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  try a catch case _ => x finally c
+       |""".stripMargin,
+    """|Term.Try try a catch case _ => x finally c [10:try a catch case _ => x finally c:43)
+       |Term.CasesBlock case _ => x [22:case _ => x:33)
+       |Case case _ => x [22:case _ => x:33)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |KwTry [10..13)
+       |Ident(a) [14..15)
+       |KwCatch [16..21)
+       |Indentation.Indent [22..22)
+       |KwCase [22..26)
+       |Underscore [27..28)
+       |RightArrow [29..31)
+       |Ident(x) [32..33)
+       |Indentation.Outdent [32..32)
+       |KwFinally [34..41)
+       |Ident(c) [42..43)
+       |Indentation.Outdent [43..43)
+       |EOF [44..44)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  try a catch case _ => h(x) finally c
+       |""".stripMargin,
+    """|Term.Try try a catch case _ => h(x) finally c [10:try a catch case _ => h(x) finally c:46)
+       |Term.CasesBlock case _ => h(x) [22:case _ => h(x):36)
+       |Case case _ => h(x) [22:case _ => h(x):36)
+       |Term.Apply h(x) [32:h(x):36)
+       |Term.ArgClause (x) [33:(x):36)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |KwTry [10..13)
+       |Ident(a) [14..15)
+       |KwCatch [16..21)
+       |Indentation.Indent [22..22)
+       |KwCase [22..26)
+       |Underscore [27..28)
+       |RightArrow [29..31)
+       |Ident(h) [32..33)
+       |LeftParen [33..34)
+       |Ident(x) [34..35)
+       |RightParen [35..36)
+       |Indentation.Outdent [35..35)
+       |KwFinally [37..44)
+       |Ident(c) [45..46)
+       |Indentation.Outdent [46..46)
+       |EOF [47..47)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  g(x match
+       |    case 1 =>)
+       |""".stripMargin,
+    """|Term.Apply g(x match
+       |    case 1 =>) [10:g(x match...:34)
+       |Term.ArgClause (x match
+       |    case 1 =>) [11:(x match...:34)
+       |Term.Match x match
+       |    case 1 => [12:x match...:33)
+       |Term.CasesBlock case 1 => [24:case 1 =>:33)
+       |Case case 1 => [24:case 1 =>:33)
+       |Term.Block => [31:=>:33)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |Ident(g) [10..11)
+       |LeftParen [11..12)
+       |Ident(x) [12..13)
+       |KwMatch [14..19)
+       |Indentation.Indent [19..19)
+       |KwCase [24..28)
+       |Constant.Int(1) [29..30)
+       |RightArrow [31..33)
+       |Indentation.Outdent [31..31)
+       |RightParen [33..34)
+       |Indentation.Outdent [34..34)
+       |EOF [35..35)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  g(x match
+       |    case 1 => )
+       |""".stripMargin,
+    """|Term.Apply g(x match
+       |    case 1 => ) [10:g(x match...:35)
+       |Term.ArgClause (x match
+       |    case 1 => ) [11:(x match...:35)
+       |Term.Match x match
+       |    case 1 => [12:x match...:33)
+       |Term.CasesBlock case 1 => [24:case 1 =>:33)
+       |Case case 1 => [24:case 1 =>:33)
+       |Term.Block => [31:=>:33)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |Ident(g) [10..11)
+       |LeftParen [11..12)
+       |Ident(x) [12..13)
+       |KwMatch [14..19)
+       |Indentation.Indent [19..19)
+       |KwCase [24..28)
+       |Constant.Int(1) [29..30)
+       |RightArrow [31..33)
+       |Indentation.Outdent [31..31)
+       |RightParen [34..35)
+       |Indentation.Outdent [35..35)
+       |EOF [36..36)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  g(xs.map: x =>
+       |    return)
+       |""".stripMargin,
+    """|Term.Apply g(xs.map: x =>
+       |    return) [10:g(xs.map: x =>...:36)
+       |Term.ArgClause (xs.map: x =>
+       |    return) [11:(xs.map: x =>...:36)
+       |Term.Apply xs.map: x =>
+       |    return [12:xs.map: x =>...:35)
+       |Term.Select xs.map [12:xs.map:18)
+       |Term.Block : x =>
+       |    return [18<: x =>...>35)
+       |Term.Function x =>
+       |    return [20:x =>...:35)
+       |Term.ParamClause x [20:x:21)
+       |Term.Param x [20:x:21)
+       |Term.Return return [29:return:35)
+       |Lit.Unit     @@return) [29::29)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |Ident(g) [10..11)
+       |LeftParen [11..12)
+       |Ident(xs) [12..14)
+       |Dot [14..15)
+       |Ident(map) [15..18)
+       |Colon [18..19)
+       |Ident(x) [20..21)
+       |RightArrow [22..24)
+       |Indentation.Indent [24..24)
+       |KwReturn [29..35)
+       |Indentation.Outdent [29..29)
+       |RightParen [35..36)
+       |Indentation.Outdent [36..36)
+       |EOF [37..37)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  g(xs.map: x =>
+       |    if (a) b /* c */)
+       |""".stripMargin,
+    """|Term.Apply g(xs.map: x =>
+       |    if (a) b /* c */) [10:g(xs.map: x =>...:46)
+       |Term.ArgClause (xs.map: x =>
+       |    if (a) b /* c */) [11:(xs.map: x =>...:46)
+       |Term.Apply xs.map: x =>
+       |    if (a) b [12:xs.map: x =>...:37)
+       |Term.Select xs.map [12:xs.map:18)
+       |Term.Block : x =>
+       |    if (a) b [18<: x =>...>37)
+       |Term.Function x =>
+       |    if (a) b [20:x =>...:37)
+       |Term.ParamClause x [20:x:21)
+       |Term.Param x [20:x:21)
+       |Term.If if (a) b [29:if (a) b:37)
+       |Lit.Unit     if (a) b @@/* c */) [38::38)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |Ident(g) [10..11)
+       |LeftParen [11..12)
+       |Ident(xs) [12..14)
+       |Dot [14..15)
+       |Ident(map) [15..18)
+       |Colon [18..19)
+       |Ident(x) [20..21)
+       |RightArrow [22..24)
+       |Indentation.Indent [24..24)
+       |KwIf [29..31)
+       |LeftParen [32..33)
+       |Ident(a) [33..34)
+       |RightParen [34..35)
+       |Ident(b) [36..37)
+       |Indentation.Outdent [38..38)
+       |RightParen [45..46)
+       |Indentation.Outdent [46..46)
+       |EOF [47..47)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  { xs.map: x =>
+       |    x /* c */}
+       |""".stripMargin,
+    """|Term.Block { xs.map: x =>
+       |    x /* c */} [10:{ xs.map: x =>...:39)
+       |Term.Apply xs.map: x =>
+       |    x [12:xs.map: x =>...:30)
+       |Term.Select xs.map [12:xs.map:18)
+       |Term.Block : x =>
+       |    x [18<: x =>...>30)
+       |Term.Function x =>
+       |    x [20:x =>...:30)
+       |Term.ParamClause x [20:x:21)
+       |Term.Param x [20:x:21)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |LeftBrace [10..11)
+       |Ident(xs) [12..14)
+       |Dot [14..15)
+       |Ident(map) [15..18)
+       |Colon [18..19)
+       |Ident(x) [20..21)
+       |RightArrow [22..24)
+       |Indentation.Indent [24..24)
+       |Ident(x) [29..30)
+       |Indentation.Outdent [31..31)
+       |RightBrace [38..39)
+       |Indentation.Outdent [39..39)
+       |EOF [40..40)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  g(xs.map: x =>
+       |    x /* c */, 2)
+       |""".stripMargin,
+    """|Term.Apply g(xs.map: x =>
+       |    x /* c */, 2) [10:g(xs.map: x =>...:42)
+       |Term.ArgClause (xs.map: x =>
+       |    x /* c */, 2) [11:(xs.map: x =>...:42)
+       |Term.Apply xs.map: x =>
+       |    x [12:xs.map: x =>...:30)
+       |Term.Select xs.map [12:xs.map:18)
+       |Term.Block : x =>
+       |    x [18<: x =>...>30)
+       |Term.Function x =>
+       |    x [20:x =>...:30)
+       |Term.ParamClause x [20:x:21)
+       |Term.Param x [20:x:21)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |Ident(g) [10..11)
+       |LeftParen [11..12)
+       |Ident(xs) [12..14)
+       |Dot [14..15)
+       |Ident(map) [15..18)
+       |Colon [18..19)
+       |Ident(x) [20..21)
+       |RightArrow [22..24)
+       |Indentation.Indent [24..24)
+       |Ident(x) [29..30)
+       |Indentation.Outdent [31..31)
+       |Comma [38..39)
+       |Constant.Int(2) [40..41)
+       |RightParen [41..42)
+       |Indentation.Outdent [42..42)
+       |EOF [43..43)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  xs.map: x =>
+       |    x // c""".stripMargin,
+    """|Term.Apply xs.map: x =>
+       |    x [10:xs.map: x =>...:28)
+       |Term.Select xs.map [10:xs.map:16)
+       |Term.Block : x =>
+       |    x [16<: x =>...>28)
+       |Term.Function x =>
+       |    x [18:x =>...:28)
+       |Term.ParamClause x [18:x:19)
+       |Term.Param x [18:x:19)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |Ident(xs) [10..12)
+       |Dot [12..13)
+       |Ident(map) [13..16)
+       |Colon [16..17)
+       |Ident(x) [18..19)
+       |RightArrow [20..22)
+       |Indentation.Indent [22..22)
+       |Ident(x) [27..28)
+       |Indentation.Outdent [29..29)
+       |Indentation.Outdent [29..29)
+       |EOF [33..33)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|object O:
+       |  class A // c""".stripMargin,
+    """|Template :
+       |  class A [8<:...>19)
+       |Template.Body :
+       |  class A [8<:...>19)
+       |Defn.Class class A [12:class A:19)
+       |Type.ParamClause   class A @@// c [20::20)
+       |Ctor.Primary   class A@@ // c [19::19)
+       |Template   class A @@// c [20::20)
+       |Template.Body   class A @@// c [20::20)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Ident(O) [7..8)
+       |Colon [8..9)
+       |Indentation.Indent [9..9)
+       |KwClass [12..17)
+       |Ident(A) [18..19)
+       |Indentation.Outdent [20..20)
+       |EOF [24..24)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|object O:
+       |  type T // c""".stripMargin,
+    """|Template :
+       |  type T [8<:...>18)
+       |Template.Body :
+       |  type T [8<:...>18)
+       |Decl.Type type T [12:type T:18)
+       |Type.ParamClause   type T @@// c [19::19)
+       |Type.Bounds   type T @@// c [19::19)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Ident(O) [7..8)
+       |Colon [8..9)
+       |Indentation.Indent [9..9)
+       |KwType [12..16)
+       |Ident(T) [17..18)
+       |Indentation.Outdent [19..19)
+       |EOF [23..23)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
 }
