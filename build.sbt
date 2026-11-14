@@ -108,6 +108,38 @@ def requireBackport(state: State)(run: => State): State =
     state.fail
   }
 
+/**
+ * Publishes the binary modules of this commit as a local release of a version that no release has,
+ * then checks the artifacts that the full-cross rows build against them in backport mode.
+ */
+def testsSemanticdbBackport = Command.command("testsSemanticdbBackport") { state =>
+  requireBackport(state) {
+    val extracted = Project.extract(state)
+    val refs = extracted.structure.allProjectRefs
+    // the rows of a release that a 2.13 full-cross row depends on
+    val rows = refs.filter { ref =>
+      def is[A](key: SettingKey[A], value: A) = extracted.getOpt(ref / key).contains(value)
+      is(scalaVersion, PublishedScala213) && is(platform, "jvm") && is(publishArtifact, true) &&
+      !is(crossVersion, CrossVersion.full)
+    }
+    state.log.info(s"backport check publishes ${rows.map(_.project).sorted.mkString(", ")}")
+    val settings = refs.map(_ / version := "0.0.0-backport") ++
+      rows.map(_ / Compile / packageDoc / publishArtifact := false)
+    val published = rows.foldLeft(extracted.appendWithSession(settings, state))((s, ref) =>
+      Project.extract(s).runTask(ref / publishLocal, s)._1,
+    )
+    val tests = testsSemanticdb.jvm(LatestScala213)
+    val suite = "scala.meta.tests.semanticdb.ArtifactsSuite"
+    val (s, names) = Project.extract(published).runTask(tests / Test / definedTestNames, published)
+    // testOnly passes when no suite matches
+    if (names.contains(suite)) s"${tests.id}/testOnly $suite" :: s
+    else {
+      s.log.error(s"${tests.id} has no $suite")
+      s.fail
+    }
+  }
+}
+
 def helloContributor(): Unit = println(
   """|Welcome to the Scalameta build! You probably don't want to run `sbt test` since
      |that will take a long time to complete.  More likely, you want to run `tests/test`.
@@ -144,6 +176,7 @@ def rootSettings = Def.settings(
   addCommandAlias("doc3_lts", "docFor jvm " + Scala3Published),
   addCommandAlias("docNative3_lts", "docFor native " + Scala3Published),
   commands += Command.single("releaseSemanticdbFor")((s, version) => releaseSemanticdbFor(s, version)),
+  commands += testsSemanticdbBackport,
   commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: s),
   commands += Command.command("download-scala-library") { s =>
     val out = file("target/scala-library")
@@ -840,9 +873,13 @@ lazy val mergeSettings = Def.settings(
     val toFile = fileOf.value
     val compilerPackages = scalaInstance.value.allJars.toSet.flatMap(jarClasses).map(packageOf)
     val excludedJars = options.excludedJars.map(_.data).toSet
+    val own = organization.value
     val rules = (assembly / externalDependencyClasspath).value.flatMap { cp =>
       val data = cp.data
-      if (excludedJars.contains(data)) Nil else jarClasses(toFile(data))
+      // a backport bundles the released artifacts of this build, which keep their names
+      def isOwn = cp.get(moduleIDStr)
+        .exists(Classpaths.moduleIdJsonKeyFormat.read(_).organization == own)
+      if (excludedJars.contains(data) || isOwn) Nil else jarClasses(toFile(data))
     }.groupBy(packageOf).toList.flatMap { case (pkg, classes) =>
       if (pkg.isEmpty || compilerPackages.contains(pkg)) classes.distinct
         .map(x => x -> s"$shaded.$x")

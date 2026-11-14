@@ -65,16 +65,22 @@
 Releasing for a specific existing version might be needed for example in case of new Scala version.
 
 To peform it on CI, create and push a tag with a special name: `semanticdb_v${existing-scalameta-version}_${scala_version}`.
-You can also do it manually. The local flow is:
+You can also do it manually, at the root of the checkout. Every step from the start of sbt to the release runs in one sbt JVM, which keeps the version you set. The local flow is:
 
 - set the needed secrets (https://github.com/sbt/sbt-ci-release#secrets)
 
-- run sbt console, check if the credentials are available using `show credentials`, you might need to run sbt from bash when having issues with other shells
+- if an sbt server of this build runs, stop it with `sbt shutdown`, so that one sbt JVM holds the build
+
+- remove `target/sona-staging`: `sonaRelease` uploads everything in it
+
+- start `sbt --server -Dbackport.release=1`. `--server` runs sbt in the foreground instead of as a client of a background server, so the JVM, and every `set` in its session, lasts until `exit`. `releaseSemanticdbFor` refuses to run without backport mode
+
+- run `show credentials` to check if the credentials are available, you might need to run sbt from bash when having issues with other shells
 
 - run `set every version := "4.5.9"` - replace `4.5.9` with the specific version you are releasing for
 
-- run `semanticdbShared2_13/publishSigned` and `releaseSemanticdbFor 2.12.21`, replacing `2.12.21` with the Scala version you need. It must be one project/Versions.scala lists
+- run `releaseSemanticdbFor 2.12.21`, replacing `2.12.21` with the Scala version you need. It must be one project/Versions.scala lists
 
-- make sure that everything is properly generated to `target/sonatype-staging` directory
+- make sure that everything is properly generated to `target/sona-staging` directory
 
-- run `sonatypeBundleRelease`
+- run `sonaRelease`, then `exit`

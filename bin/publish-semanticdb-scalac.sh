@@ -4,9 +4,8 @@ set -eux
 version=$1
 scala=$2
 
+# sonaRelease uploads everything in it
+rm -rf target/sona-staging
 # semanticdb has a row per Scala patch, and releaseSemanticdbFor names the rows of one patch
-sbt \
-  "set every version := \"$version\"" \
-  semanticdbShared2_13/publishSigned \
-  "releaseSemanticdbFor $scala" \
-  sonatypeReleaseAll
+sbt --server --batch -Dbackport.release=1 \
+  "set every version := \"$version\"; releaseSemanticdbFor $scala; sonaRelease"
