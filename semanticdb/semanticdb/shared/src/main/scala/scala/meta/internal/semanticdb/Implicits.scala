@@ -164,7 +164,7 @@ object Implicits {
   implicit class XtensionSemanticdbScope(private val scope: Scope) extends AnyVal {
     def symbols: List[String] =
       if (scope.symlinks.nonEmpty) scope.symlinks.toList else scope.hardlinks.map(_.symbol).toList
-    def infos: List[SymbolInformation] =
+    def infosOrStubs: List[SymbolInformation] =
       if (scope.symlinks.nonEmpty) scope.symlinks
         .map(symbol => SymbolInformation(symbol = symbol, annotations = Nil, overriddenSymbols = Nil))
         .toList
@@ -173,12 +173,12 @@ object Implicits {
 
   implicit class XtensionSemanticdbScopeOpt(private val scopeOpt: Option[Scope]) extends AnyVal {
     def symbols: List[String] = scopeOpt.map(_.symbols).getOrElse(Nil)
-    def infos: List[SymbolInformation] = scopeOpt.map(_.infos).getOrElse(Nil)
+    def infosOrStubs: List[SymbolInformation] = scopeOpt.map(_.infosOrStubs).getOrElse(Nil)
   }
 
   implicit class XtensionSemanticdbScopes(private val scopes: Seq[Scope]) extends AnyVal {
     def symbols: List[List[String]] = scopes.map(_.symbols).toList
-    def infos: List[List[SymbolInformation]] = scopes.map(_.infos).toList
+    def infosOrStubs: List[List[SymbolInformation]] = scopes.map(_.infosOrStubs).toList
   }
 
   implicit class XtensionSemanticdbType(private val tpe: Type) extends AnyVal {

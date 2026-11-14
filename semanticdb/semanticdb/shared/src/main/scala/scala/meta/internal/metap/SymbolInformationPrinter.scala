@@ -120,16 +120,17 @@ trait SymbolInformationPrinter extends BasePrinter {
 
     def pprint(sig: Signature): Unit = sig match {
       case sig: ClassSignature =>
-        rep("[", sig.typeParameters.infos, ", ", "]")(pprintDefn)
+        rep("[", sig.typeParameters.infosOrStubs, ", ", "]")(pprintDefn)
         rep(" extends ", sig.parents, " with ")(pprint)
-        val inBraces = sig.self.nonEmpty || sig.declarations.infos.nonEmpty
+        val inBraces = sig.self.nonEmpty || sig.declarations.infosOrStubs.nonEmpty
         if (inBraces) str(" { ")
         if (sig.self.nonEmpty) {
           str("self: ")
           pprint(sig.self)
           str(" => ")
         }
-        if (sig.declarations.infos.nonEmpty) str(s"+${sig.declarations.infos.length} decls")
+        if (sig.declarations.infosOrStubs.nonEmpty)
+          str(s"+${sig.declarations.infosOrStubs.length} decls")
         if (inBraces) str(" }")
       case sig: MethodSignature =>
         pprintClauses(sig.typeParameters, sig.parameterLists)
@@ -140,7 +141,7 @@ trait SymbolInformationPrinter extends BasePrinter {
         rep(" throws ", sig.throws, ", ", "")(pprint)
         opt(": ", sig.returnType)(pprint)
       case sig: TypeSignature =>
-        rep("[", sig.typeParameters.infos, ", ", "]")(pprintDefn)
+        rep("[", sig.typeParameters.infosOrStubs, ", ", "]")(pprintDefn)
         if (sig.lowerBound == sig.upperBound) opt(" = ", sig.lowerBound)(pprint)
         else {
           sig.lowerBound match {
@@ -192,21 +193,21 @@ trait SymbolInformationPrinter extends BasePrinter {
       case tpe: UnionType => rep(tpe.types, " | ")(pprint)
       case tpe: WithType => rep(tpe.types, " with ")(pprint)
       case tpe: StructuralType =>
-        notes.discover(tpe.declarations.infos)
+        notes.discover(tpe.declarations.infosOrStubs)
         opt(tpe.tpe)(pprint)
-        if (tpe.declarations.infos.isEmpty) str(" {}")
-        else rep(" { ", tpe.declarations.infos, "; ", " }")(pprintDefn)
+        if (tpe.declarations.infosOrStubs.isEmpty) str(" {}")
+        else rep(" { ", tpe.declarations.infosOrStubs, "; ", " }")(pprintDefn)
       case tpe: AnnotatedType =>
         opt(tpe.tpe)(pprint)
         str(" ")
         rep(tpe.annotations, " ")(pprint)
       case tpe: ExistentialType =>
-        notes.discover(tpe.declarations.infos)
+        notes.discover(tpe.declarations.infosOrStubs)
         opt(tpe.tpe)(pprint)
-        rep(" forSome { ", tpe.declarations.infos, "; ", " }")(pprintDefn)
+        rep(" forSome { ", tpe.declarations.infosOrStubs, "; ", " }")(pprintDefn)
       case tpe: UniversalType =>
-        notes.discover(tpe.typeParameters.infos)
-        rep("[", tpe.typeParameters.infos, ", ", "] => ")(pprintDefn)
+        notes.discover(tpe.typeParameters.infosOrStubs)
+        rep("[", tpe.typeParameters.infosOrStubs, ", ", "] => ")(pprintDefn)
         opt(tpe.tpe)(pprint)
       case tpe: ByNameType =>
         str("=> ")
@@ -222,8 +223,8 @@ trait SymbolInformationPrinter extends BasePrinter {
           opt(kase.body)(pprint)
         }
       case tpe: LambdaType =>
-        notes.discover(tpe.parameters.infos)
-        rep("[", tpe.parameters.infos, ", ", "] =>> ")(pprintDefn)
+        notes.discover(tpe.parameters.infosOrStubs)
+        rep("[", tpe.parameters.infosOrStubs, ", ", "] =>> ")(pprintDefn)
         opt(tpe.returnType)(pprint)
       case tpe: AppliedType =>
         // keep the parentheses unless arguments after the constructor can only apply to all of it
@@ -247,8 +248,8 @@ trait SymbolInformationPrinter extends BasePrinter {
     }
 
     private def pprintClauses(typeParameters: Option[Scope], parameterLists: Seq[Scope]): Unit = {
-      rep("[", typeParameters.infos, ", ", "]")(pprintDefn)
-      rep("(", parameterLists, ")(", ")")(params => rep(params.infos, ", ")(pprintDefn))
+      rep("[", typeParameters.infosOrStubs, ", ", "]")(pprintDefn)
+      rep("(", parameterLists, ")(", ")")(params => rep(params.infosOrStubs, ", ")(pprintDefn))
     }
 
     protected sealed trait SymbolStyle
