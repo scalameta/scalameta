@@ -14773,9 +14773,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwThen [45..49)
          |Indentation.Indent [49..49)
          |Ident(c) [58..59)
+         |Indentation.Outdent [59..59)
          |KwElse [60..64)
          |Ident(d) [65..66)
-         |Indentation.Outdent [66..66)
          |Indentation.Outdent [66..66)
          |KwThen [67..71)
          |Ident(e) [72..73)
@@ -15222,10 +15222,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Underscore [81..82)
          |RightArrow [83..85)
          |Ident(c) [86..87)
+         |Indentation.Outdent [87..87)
+         |Indentation.Outdent [87..87)
          |KwElse [88..92)
          |Ident(d) [93..94)
-         |Indentation.Outdent [94..94)
-         |Indentation.Outdent [94..94)
          |LF [94..95)
          |Ident(k) [99..100)
          |Indentation.Outdent [100..100)
@@ -15233,11 +15233,36 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [101..101)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:6: error: `outdent` expected but `else` found
-         |        case _ => c else d
-         |                    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (a) x match {
+         |      case 1 => b
+         |      case _ => c
+         |    } else d
+         |    k
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tif(
+            tname("a"),
+            tmatch(tname("x"), Case(lit(1), None, tname("b")), Case(Pat.Wildcard(), None, tname("c"))),
+            tname("d"),
+          ),
+          tname("k"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("nested condition: two statements in an indented `then` body, `else` on the line of the second one, next statement") {
@@ -15266,9 +15291,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |Ident(b) [40..41)
          |LF [41..42)
          |Ident(c) [48..49)
+         |Indentation.Outdent [49..49)
          |KwElse [50..54)
          |Ident(d) [55..56)
-         |Indentation.Outdent [56..56)
          |LF [56..57)
          |Ident(k) [61..62)
          |Indentation.Outdent [62..62)
@@ -19763,9 +19788,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |LeftParen [41..42)
          |Ident(x) [42..43)
          |RightParen [43..44)
+         |Indentation.Outdent [44..44)
          |KwElse [45..49)
          |Ident(y) [50..51)
-         |Indentation.Outdent [51..51)
          |RightParen [51..52)
          |LF [52..53)
          |Ident(h) [57..58)
@@ -19824,9 +19849,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |LeftParen [43..44)
          |Ident(x) [44..45)
          |RightParen [45..46)
+         |Indentation.Outdent [46..46)
          |KwElse [47..51)
          |Ident(y) [52..53)
-         |Indentation.Outdent [53..53)
          |KwThen [58..62)
          |Ident(c) [63..64)
          |KwElse [65..69)
@@ -19886,9 +19911,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [31..32)
          |Indentation.Indent [32..32)
          |Ident(x) [41..42)
+         |Indentation.Outdent [42..42)
          |KwElse [43..47)
          |Ident(y) [48..49)
-         |Indentation.Outdent [49..49)
          |RightParen [49..50)
          |LF [50..51)
          |Ident(h) [55..56)
@@ -19945,9 +19970,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [32..33)
          |Indentation.Indent [33..33)
          |Ident(x) [43..44)
+         |Indentation.Outdent [44..44)
          |KwElse [45..49)
          |Ident(y) [50..51)
-         |Indentation.Outdent [51..51)
          |KwThen [56..60)
          |Ident(c) [61..62)
          |KwElse [63..67)
@@ -20007,9 +20032,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |RightParen [31..32)
          |Indentation.Indent [32..32)
          |Ident(x) [39..40)
+         |Indentation.Outdent [40..40)
          |KwElse [41..45)
          |Ident(y) [46..47)
-         |Indentation.Outdent [47..47)
          |RightParen [47..48)
          |LF [48..49)
          |Ident(h) [53..54)
@@ -30280,6 +30305,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |KwTry [10..13)
          |Indentation.Indent [13..13)
          |Ident(x) [18..19)
+         |Indentation.Outdent [19..19)
          |KwCatch [20..25)
          |Indentation.Indent [26..26)
          |KwCase [26..30)
@@ -30291,11 +30317,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |EOF [38..38)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Stat])
-    val error =
-      """|<input>:3: error: `outdent` expected but `catch` found
-         |    x catch case _ => 1
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = try x catch {
+         |  case _ => 1
+         |}
+         |""".stripMargin
+    val tree = Defn
+      .Def(Nil, "f", Nil, None, Term.Try(tname("x"), List(Case(Pat.Wildcard(), None, lit(1))), None))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("indented try body, finally on the body line") {
@@ -30304,11 +30333,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  try
          |    x finally g
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `finally` found
-         |    x finally g
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def f = try x finally g"
+    val tree = Defn.Def(Nil, "f", Nil, None, Term.Try(tname("x"), Nil, Some(tname("g"))))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("indented try body, catch on the next line") {
@@ -30345,11 +30372,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  try a catch case _ =>
          |    b finally g
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `finally` found
-         |    b finally g
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = try a catch {
+         |  case _ => b
+         |} finally g
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.Try(tname("a"), List(Case(Pat.Wildcard(), None, tname("b"))), Some(tname("g"))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scala 3.0: indented try body, catch on the body line") {
@@ -30359,11 +30394,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  try
          |    x catch case _ => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `catch` found
-         |    x catch case _ => 1
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = try x catch {
+         |  case _ => 1
+         |}
+         |""".stripMargin
+    val tree = Defn
+      .Def(Nil, "f", Nil, None, Term.Try(tname("x"), List(Case(Pat.Wildcard(), None, lit(1))), None))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("indented then body, else at the body indent") {
@@ -30500,11 +30538,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  try
          |    x /* note */ catch case _ => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `catch` found
-         |    x /* note */ catch case _ => 1
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = try x /* note */ catch {
+         |  case _ => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.Try(tnameComments("x")()("/* note */"), List(Case(Pat.Wildcard(), None, lit(1))), None),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("nested inline ifs, an argument on a deeper line") {
@@ -30613,11 +30659,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  try
          |    if (bar) baz catch case _ => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `catch` found
-         |    if (bar) baz catch case _ => 1
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = try if (bar) baz catch {
+         |  case _ => 1
+         |}
+         |""".stripMargin
+    val cond = Term.If(tname("bar"), tname("baz"), lit(), Nil)
+    runTestAssert[Stat](code, layout)(
+      Defn.Def(Nil, "f", Nil, None, Term.Try(cond, List(Case(Pat.Wildcard(), None, lit(1))), None)),
+    )
+    val ifTree = parseStat(code).collect { case t: Term.If => t }.head
+    assertEquals(ifTree.elsep.pos.start, ifTree.thenp.pos.end)
   }
 
   test("indented try body, an if without else and finally on the body line") {
@@ -30626,11 +30678,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  try
          |    if (bar) baz finally g
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `finally` found
-         |    if (bar) baz finally g
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def f = try if (bar) baz finally g"
+    val cond = Term.If(tname("bar"), tname("baz"), lit(), Nil)
+    runTestAssert[Stat](code, layout)(
+      Defn.Def(Nil, "f", Nil, None, Term.Try(cond, Nil, Some(tname("g")))),
+    )
+    val ifTree = parseStat(code).collect { case t: Term.If => t }.head
+    assertEquals(ifTree.elsep.pos.start, ifTree.thenp.pos.end)
   }
 
 }

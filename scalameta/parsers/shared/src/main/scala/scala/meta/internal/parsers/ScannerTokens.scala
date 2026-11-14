@@ -345,10 +345,11 @@ private[meta] final class ScannerTokens(
     def mkIndent(pos: Int, pointPos: Int, rs: List[SepRegion], next: TokenRef = null): TokenRef =
       TokenRef(rs, mkIndentToken(pointPos), pos, nextPos, pointPos, next)
 
-    @scala.annotation.nowarn("cat=unused-params") // unused until keywords end bodies
     def mkOutdentTo(region: SepRegionIndented, regions: List[SepRegion], beforeComment: Boolean) =
+      // end the region before a comment line above the keyword
+      if (beforeComment) mkOutdentAt(Int.MaxValue, regions, prevPointPos)
       // end the lambda before a comment on a later line
-      if (region.isInstanceOf[RegionColonLambda]) mkOutdentAt(Int.MaxValue, regions)
+      else if (region.isInstanceOf[RegionColonLambda]) mkOutdentAt(Int.MaxValue, regions)
       else mkOutdentAt(region.indent, regions)
 
     def mkOutdentAt(outdent: Int, regions: List[SepRegion], fromPos: Int = prevPos) = {
@@ -509,17 +510,17 @@ private[meta] final class ScannerTokens(
      * Returns the ref of `catch` or `finally`, after any outdents that end the body of its `try`.
      */
     def afterTryRef(regions: List[SepRegion]) = {
+      // keep the region of `try` after `catch`, for `finally`
+      def ref(rs: List[SepRegion]) = if (curr.is[KwCatch]) getCaseIntro(rs) else currRef(rs.drop(1))
       val droppedLine = dropRegionLine(regions)
-      if (curr.is[KwCatch]) getCaseIntro(dropWhile(droppedLine)(_ ne RegionTry))
-      else droppedLine match {
-        // covers case when finally follows catch case without a newline
-        // otherwise, these two regions would have been removed already
-        case (_: RegionCaseBody) :: (r: RegionIndent) :: rs =>
-          val ref = mkOutdentTo(r, rs, beforeComment = false)
-          ref.next = currRef(dropUntil(rs)(_ eq RegionTry))
-          ref
-        case rs => currRef(dropUntil(rs)(_ eq RegionTry))
-      }
+      val droppedCtrl = dropControl(curr, droppedLine)
+      // a delimiter or a `for` encloses the keyword before any `try`: end no region with an outdent
+      if (droppedCtrl.isEmpty) ref(dropWhile(droppedLine)(_ ne RegionTry))
+      else if (droppedCtrl eq droppedLine) ref(droppedCtrl)
+      else mkOutdentsT(regions, beforeComment = true)(ref) { (head, last) =>
+        last.next = ref(droppedCtrl)
+        head
+      }(outdentsUntil(_, droppedCtrl, droppedCtrl))
     }
 
     /** spec: whether the colon starts a lambda argument that ends on its line */
@@ -673,11 +674,7 @@ private[meta] final class ScannerTokens(
           case _ => RegionIf(next, inCondIndent(sepRegions)) :: sepRegions
         })
       case _: KwThen => afterControlRef(sepRegions, RegionThen :: _)
-      case _: KwElse if dialect.allowQuietSyntax =>
-        dropRegionLine(sepRegions) match {
-          case (_: RegionIf | RegionThen) :: rs => currRef(rs)
-          case _ => currRef(sepRegions)
-        }
+      case _: KwElse if dialect.allowQuietSyntax => afterControlRef(sepRegions, beforeComment = true)
       case _: KwDo | _: KwYield => afterControlRef(sepRegions)
       case _: KwDef | _: KwVal | _: KwVar
           if dialect.allowSignificantIndentation && !isPrevEndMarker() =>
@@ -747,7 +744,9 @@ private[meta] final class ScannerTokens(
             }
           case r: RegionFor if r.isClosingConditionToken(prev) => rs
           case _ =>
-            val ends = curr.is[CloseDelim] || prevToken.is[AtEOL]
+            val ends = curr.is[CloseDelim] || // check if expression continues past EOL
+              prevToken.is[AtEOL] && !prevToken.is[InfixLF] &&
+              !continuesAfterEol(prevNonTriviaAt(prevPos), curr, countIndent(currPos), rs)
             if (ends) rs else regions
         }
       case (r: RegionParen) :: RegionForMaybeParens :: rs if curr.is[LeftArrow] =>
@@ -805,7 +804,7 @@ private[meta] final class ScannerTokens(
             if (blankBraceOr(!derives(next) && !derives(prev))) strip(xs) else null
           case RegionTry :: xs
               if !next.isAny[KwCatch, KwFinally] && canBeLeadingInfix != LeadingInfix.Yes &&
-                !isIndented(xs, nextIndent) => strip(xs)
+                !isIndented(xs, nextIndent) && !isInfixOp(prevPos) => strip(xs)
           case (_: RegionGivenDecl) :: xs => strip(xs)
           case _ => if (canProduceLF(rs)) rs else null
         }
@@ -1076,7 +1075,8 @@ private[meta] final class ScannerTokens(
               case Nil if prev.is[BOF] => Left(RegionLine(nextIndent) :: Nil)
               case (r: RegionLine) :: rs if r.indent >= nextIndent => iter(rs)
               case (r: RegionControl) :: rs
-                  if !r.isControlKeyword(prev) && r.isNotTerminatingTokenIfOptional(next) =>
+                  if !r.isControlKeyword(prev) && r.isNotTerminatingTokenIfOptional(next) &&
+                    !continuesAfterEol(prevPos, next, nextIndent, rs) =>
                 r match {
                   case r: RegionControlMaybeCond if prev.is[RightParen] =>
                     if (next.is[Dot]) null
@@ -1121,6 +1121,69 @@ private[meta] final class ScannerTokens(
     case (RegionTry | RegionThen) :: rs => canProduceLF(rs)
     case Nil | (_: CanProduceLF) :: _ => true
     case _ => false
+  }
+
+  /**
+   * Returns true if the parser continues the expression past the line end between `prevPos` and
+   * `next`
+   * @param nextIndent
+   *   the indent of the line of `next`
+   * @param regions
+   *   the regions that enclose the expression, the innermost first
+   */
+  private def continuesAfterEol(
+      prevPos: Int,
+      next: Token,
+      nextIndent: Int,
+      regions: List[SepRegion],
+  ): Boolean =
+    next.is[OpenDelim] && canEndStat(tokens(prevPos)) && isDeeperLine(regions, nextIndent) ||
+      isInfixOp(prevPos)
+
+  /**
+   * Returns true if the parser reads the identifier at `pos`, at a line end, as an infix operator.
+   * The expression then continues on the next line.
+   */
+  private def isInfixOp(pos: Int): Boolean = tokens(pos).is[Ident] && {
+    // as the parser's `prefixExpr`, with or without a space before the operand
+    def isPrefixOp(i: Int): Boolean = i < pos && tokens(i).text.isUnaryOp
+    // the first identifier of the run that ends at `pos` on its line
+    var start = pos
+    var beforePos = 0
+    while ({
+      beforePos = prevNonHTriviaAt(start)
+      beforePos >= 0 && tokens(beforePos).is[Ident]
+    }) start = beforePos
+    val firstOp = tokens.getOrNull(beforePos) match {
+      case null | _: AtEOL | _: BOF => // a leading infix operator, or a prefix one
+        tokens(start).isSymbolicInfixOperator && tokens(start + 1).is[Whitespace] ||
+        isPrefixOp(start)
+      case _: Dot | _: Hash => false
+      // the body starts after the header of a control statement
+      case _: RightParen => !isControlHeaderEnd(beforePos) || isPrefixOp(start)
+      case _: CloseDelim | _: Literal | _: Underscore | _: KwThis | _: Interpolation.End |
+          _: Xml.End => true
+      case _ => isPrefixOp(start)
+    }
+    @tailrec
+    def iter(i: Int, op: Boolean): Boolean = {
+      val j = nextNonHTriviaAt(i)
+      if (j >= pos) !op else iter(j, if (op && isPrefixOp(j)) op else !op)
+    }
+    if (start == pos) firstOp else iter(start, firstOp)
+  }
+
+  /** Returns true if the `)` at `pos` ends the header of an `if`, a `while` or a `for` */
+  private def isControlHeaderEnd(pos: Int): Boolean = {
+    @tailrec
+    def iter(i: Int, depth: Int): Boolean = i > 0 &&
+      (tokens(i) match {
+        case _: CloseDelim => iter(i - 1, depth + 1)
+        case _: OpenDelim =>
+          if (depth == 0) prevNonTrivia(i).isAny[KwIf, KwWhile, KwFor] else iter(i - 1, depth - 1)
+        case _ => iter(i - 1, depth)
+      })
+    iter(pos - 1, 0)
   }
 
   /** Returns true if `cond` continues past `)` to the token at `pos`, as dotty's `toBeContinued` */
@@ -1329,18 +1392,12 @@ private[meta] object ScannerTokens {
       case _ => Nil
     }
 
-  @tailrec
-  private def dropUntil(regions: List[SepRegion])(f: SepRegion => Boolean): List[SepRegion] =
-    regions match {
-      case head :: tail => if (f(head)) tail else dropUntil(tail)(f)
-      case _ => Nil
-    }
-
   // a control-region terminating token closes nested regions as well, like a closing delim
   private def dropControl(token: Token, regions: List[SepRegion]): List[SepRegion] = {
     @tailrec
     def iter(rs: List[SepRegion]): List[SepRegion] = rs match {
       case (r: RegionControl) :: _ if r.isTerminatingToken(token) => rs
+      case RegionTry :: _ if token.isAny[KwCatch, KwFinally] => rs
       case Nil | (_: RegionDelimNonIndented | _: RegionFor) :: _ => Nil
       case _ :: xs => iter(xs)
     }
@@ -1371,8 +1428,10 @@ private[meta] object ScannerTokens {
    * Returns true if a line at `indent` is deeper than the indentation that encloses it. `regions`
    * are the regions at the line's end, without the line's own region.
    */
+  @tailrec
   private[parsers] def isDeeperLine(regions: List[SepRegion], indent: Int): Boolean =
     regions match {
+      case RegionThen :: rs => isDeeperLine(rs, indent)
       case r :: _ => r.indent >= 0 && r.indent < indent
       case Nil => true // at the top level
     }

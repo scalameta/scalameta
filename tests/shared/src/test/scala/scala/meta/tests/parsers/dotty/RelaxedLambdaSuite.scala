@@ -2879,11 +2879,29 @@ class RelaxedLambdaSuite extends BaseDottySuite {
       """|object A:
          |  def f = if c then try a catch case e => b else d
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `outdent` expected but `else` found
-         |  def f = if c then try a catch case e => b else d
-         |                                            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (c) try a catch {
+         |    case e => b
+         |  } else d
+         |}
+         |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          tname("c"),
+          Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None),
+          tname("d"),
+        ),
+      )),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: in then, if body, else on the next line at the statement indent") {
@@ -2925,11 +2943,29 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |    if c then try a catch case e => b
          |      else d
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `outdent` expected but `else` found
-         |      else d
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (c) try a catch {
+         |    case e => b
+         |  } else d
+         |}
+         |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tif(
+          tname("c"),
+          Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None),
+          tname("d"),
+        ),
+      )),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("SIP-75 single-line lambda: call body, deeper braces, next statement") {
