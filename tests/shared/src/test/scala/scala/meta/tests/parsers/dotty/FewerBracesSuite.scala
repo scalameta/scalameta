@@ -5047,4 +5047,938 @@ class FewerBracesSuite extends BaseDottySuite {
     parseAndCheckTree[Source](code, layout)(tree)
   }
 
+  test("colon lambda in then, else on the body line") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    x else 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwDef [0..3)
+         |Ident(f) [4..5)
+         |Equals [6..7)
+         |Indentation.Indent [7..7)
+         |KwIf [10..12)
+         |Ident(c) [13..14)
+         |KwThen [15..19)
+         |Ident(xs) [20..22)
+         |Dot [22..23)
+         |Ident(map) [23..26)
+         |Colon [26..27)
+         |Ident(x) [28..29)
+         |RightArrow [30..32)
+         |Indentation.Indent [32..32)
+         |Ident(x) [37..38)
+         |KwElse [39..43)
+         |Constant.Int(1) [44..45)
+         |Indentation.Outdent [45..45)
+         |Indentation.Outdent [45..45)
+         |EOF [46..46)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Stat])
+    val error =
+      """|<input>:3: error: `outdent` expected but `else` found
+         |    x else 1
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, else on the next line") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    x
+         |  else 1
+         |""".stripMargin
+    val layout =
+      """|def f = if (c) xs.map {
+         |  x => x
+         |} else 1
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.If(
+        tname("c"),
+        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))),
+        lit(1),
+        Nil,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon argument in then, else on the body line") {
+    val code =
+      """|def f =
+         |  if c then xs.foo:
+         |    x else 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `else` found
+         |    x else 1
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("nested colon lambdas in then, else on the inner body line") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    ys.map: y =>
+         |      y else 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `:` found
+         |    ys.map: y =>
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in an indented then body, else on the body line") {
+    val code =
+      """|def f =
+         |  if c then
+         |    xs.map: x =>
+         |      x else 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    xs.map: x =>
+         |              ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, else if on the body line") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    x else if d then 2 else 3
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `else` found
+         |    x else if d then 2 else 3
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda after a parenthesized condition, else on the body line") {
+    val code =
+      """|def f =
+         |  if (c) xs.map: x =>
+         |    x else 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `else` found
+         |    x else 1
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in try, catch on the body line") {
+    val code =
+      """|def f =
+         |  try xs.map: x =>
+         |    x catch case _ => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `catch` found
+         |    x catch case _ => 1
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in try, finally on the body line") {
+    val code =
+      """|def f =
+         |  try xs.map: x =>
+         |    x finally g
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `finally` found
+         |    x finally g
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in a condition, then on the body line") {
+    val code =
+      """|def f =
+         |  if xs.exists: x =>
+         |    x then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|def f = if (xs.exists {
+         |  x => x
+         |}) 1 else 2
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.If(
+        tapply(tselect("xs", "exists"), blk(tfunc(tparam("x"))(tname("x")))),
+        lit(1),
+        lit(2),
+        Nil,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon lambda in a while condition, do on the body line") {
+    val code =
+      """|def f =
+         |  while xs.exists: x =>
+         |    x do ()
+         |""".stripMargin
+    val layout =
+      """|def f = while (xs.exists {
+         |  x => x
+         |}) ()
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.While(tapply(tselect("xs", "exists"), blk(tfunc(tparam("x"))(tname("x")))), lit()),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon lambda in a generator, yield on the body line") {
+    val code =
+      """|def f =
+         |  for y <- xs.map: x =>
+         |    x yield y
+         |""".stripMargin
+    val layout =
+      """|def f = for (y <- xs.map {
+         |  x => x
+         |}) yield y
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.ForYield(
+        List(
+          Enumerator
+            .Generator(patvar("y"), tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x"))))),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon lambda in parens, closing parenthesis on the body line") {
+    val code =
+      """|def f =
+         |  g(xs.map: x =>
+         |    x)
+         |""".stripMargin
+    val layout =
+      """|def f = g(xs.map {
+         |  x => x
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      tapply("g", tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x"))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon lambda in braces, closing brace on the body line") {
+    val code =
+      """|def f =
+         |  { xs.map: x =>
+         |    x }
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  xs.map {
+         |    x => x
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn
+      .Def(Nil, "f", Nil, None, blk(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x"))))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon lambda in then, if with else on the body line") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    if d then e else f
+         |""".stripMargin
+    val layout =
+      """|def f = if (c) xs.map {
+         |  x => if (d) e else f
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.If(
+        tname("c"),
+        tapply(
+          tselect("xs", "map"),
+          blk(tfunc(tparam("x"))(Term.If(tname("d"), tname("e"), tname("f"), Nil))),
+        ),
+        lit(),
+        Nil,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon lambda in try, try with catch on the body line") {
+    val code =
+      """|def f =
+         |  try xs.map: x =>
+         |    try a catch case _ => b
+         |""".stripMargin
+    val layout =
+      """|def f = try xs.map {
+         |  x => try a catch {
+         |    case _ => b
+         |  }
+         |}
+         |""".stripMargin
+    val inner = Term.Try(tname("a"), List(Case(Pat.Wildcard(), None, tname("b"))), None)
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.Try(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(inner))), Nil, None),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon argument in an indented then body, else on the body line") {
+    val code =
+      """|def f =
+         |  if c then
+         |    xs.foo:
+         |      x else 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `else` found
+         |      x else 1
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in an indented try body, catch on the body line") {
+    val code =
+      """|def f =
+         |  try
+         |    xs.map: x =>
+         |      x catch case _ => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    xs.map: x =>
+         |              ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon argument in an indented try body, catch on the body line") {
+    val code =
+      """|def f =
+         |  try
+         |    xs.foo:
+         |      x catch case _ => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `catch` found
+         |      x catch case _ => 1
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("nested colon lambdas in try, catch on the inner body line") {
+    val code =
+      """|def f =
+         |  try xs.map: x =>
+         |    ys.map: y =>
+         |      y catch case _ => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `:` found
+         |    ys.map: y =>
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in a generator, do on the body line") {
+    val code =
+      """|def f =
+         |  for y <- xs.map: x =>
+         |    x do g(y)
+         |""".stripMargin
+    val layout =
+      """|def f = for (y <- xs.map {
+         |  x => x
+         |}) g(y)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.For(
+        List(
+          Enumerator
+            .Generator(patvar("y"), tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x"))))),
+        ),
+        tapply("g", tname("y")),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon argument with cases in then, else on the case line") {
+    val code =
+      """|def f =
+         |  if c then xs.collect:
+         |    case x => x else 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `else` found
+         |    case x => x else 1
+         |                ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in a nested if, else on the body line, outer else on the next line") {
+    val code =
+      """|def f =
+         |  if a then if c then xs.map: x =>
+         |    x else 1
+         |  else 2
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `else` found
+         |    x else 1
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then inside a colon lambda, else on the body line, then a statement") {
+    val code =
+      """|def f = ys.foreach: y =>
+         |  if c then xs.map: x =>
+         |    x else 1
+         |  g(y)
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `identifier` expected but `if` found
+         |  if c then xs.map: x =>
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in an else if branch, else on the body line") {
+    val code =
+      """|def f =
+         |  if c then 1 else if d then xs.map: x =>
+         |    x else 2
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `else` found
+         |    x else 2
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in parens, comma on the body line") {
+    val code =
+      """|def f =
+         |  g(xs.map: x =>
+         |    x, 2)
+         |""".stripMargin
+    val layout =
+      """|def f = g(xs.map {
+         |  x => x
+         |}, 2)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      tapply("g", tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), lit(2)),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon lambda in a nested if, else on the body line") {
+    val code =
+      """|def f =
+         |  if a then if c then xs.map: x =>
+         |    x else 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `else` found
+         |    x else 1
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in an indented try body in then, catch and else on the body line") {
+    val code =
+      """|def f =
+         |  if c then
+         |    try
+         |      xs.map: x =>
+         |        x catch case _ => 1 else 2
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `=>` found
+         |      xs.map: x =>
+         |                ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, a block comment and else on the body line") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    x /* c */ else 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `else` found
+         |    x /* c */ else 1
+         |              ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, a select and else on the next line") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |      x
+         |    .sum else 1
+         |""".stripMargin
+    val layout =
+      """|def f = if (c) xs.map {
+         |  x => x
+         |}.sum else 1
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.If(
+        tname("c"),
+        tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "sum"),
+        lit(1),
+        Nil,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon lambda in try, catch with braces on the body line") {
+    val code =
+      """|def f =
+         |  try xs.map: x =>
+         |    x catch { case _ => 1 }
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `catch` found
+         |    x catch { case _ => 1 }
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then of a val, else on the body line") {
+    val code =
+      """|val y = if c then xs.map: x =>
+         |  x else 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `else` found
+         |  x else 1
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then in parens, else on the body line") {
+    val code =
+      """|def f =
+         |  g(if c then xs.map: x =>
+         |    x else 1)
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `else` found
+         |    x else 1)
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, if and else on their own lines, outer else on the inner else line") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    if d then e
+         |    else g else h
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `identifier` expected but `if` found
+         |    if d then e
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, try and catch on their own lines, finally and else on the catch line") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    try a
+         |    catch case _ => b finally g else h
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `identifier` expected but `try` found
+         |    try a
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda after a parenthesized condition, a call and else on the body line") {
+    val code =
+      """|def f =
+         |  if (c) xs.foreach: x =>
+         |    println(x) else println(0)
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `(` found
+         |    println(x) else println(0)
+         |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, if with an infix continuation and else on the next line") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    if (bar) baz &&
+         |      qux else quux
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwDef [0..3)
+         |Ident(f) [4..5)
+         |Equals [6..7)
+         |Indentation.Indent [7..7)
+         |KwIf [10..12)
+         |Ident(c) [13..14)
+         |KwThen [15..19)
+         |Ident(xs) [20..22)
+         |Dot [22..23)
+         |Ident(map) [23..26)
+         |Colon [26..27)
+         |Ident(x) [28..29)
+         |RightArrow [30..32)
+         |Indentation.Indent [32..32)
+         |KwIf [37..39)
+         |LeftParen [40..41)
+         |Ident(bar) [41..44)
+         |RightParen [44..45)
+         |Ident(baz) [46..49)
+         |Ident(&&) [50..52)
+         |LF [52..53)
+         |Ident(qux) [59..62)
+         |KwElse [63..67)
+         |Ident(quux) [68..72)
+         |Indentation.Outdent [72..72)
+         |Indentation.Outdent [72..72)
+         |EOF [73..73)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Stat])
+    val layout =
+      """|def f = if (c) xs.map {
+         |  x => if (bar) baz && qux else quux
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.If(
+        tname("c"),
+        tapply(
+          tselect("xs", "map"),
+          blk(tfunc(tparam("x"))(
+            Term.If(tname("bar"), tinfix(tname("baz"), "&&", tname("qux")), tname("quux"), Nil),
+          )),
+        ),
+        lit(),
+        Nil,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon lambda in an infix continuation in nested ifs, else on the body line, outer else next") {
+    val code =
+      """|def f =
+         |  if (foo)
+         |    if (bar) baz &&
+         |      xs.map: x =>
+         |        x else quux
+         |  else xyzzy
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `outdent` expected but `else` found
+         |        x else quux
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("no quiet syntax: colon lambda after a parenthesized condition, else on the body line") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowQuietSyntax(false)
+    val code =
+      """|def f =
+         |  if (c) xs.map: x =>
+         |    x else 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `else` found
+         |    x else 1
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("no quiet syntax: colon lambda in try, catch with braces on the body line") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowQuietSyntax(false)
+    val code =
+      """|def f =
+         |  try xs.map: x =>
+         |    x catch { case _ => 1 }
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `catch` found
+         |    x catch { case _ => 1 }
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, else at the body indent") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    x
+         |    else 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwDef [0..3)
+         |Ident(f) [4..5)
+         |Equals [6..7)
+         |Indentation.Indent [7..7)
+         |KwIf [10..12)
+         |Ident(c) [13..14)
+         |KwThen [15..19)
+         |Ident(xs) [20..22)
+         |Dot [22..23)
+         |Ident(map) [23..26)
+         |Colon [26..27)
+         |Ident(x) [28..29)
+         |RightArrow [30..32)
+         |Indentation.Indent [32..32)
+         |Ident(x) [37..38)
+         |KwElse [43..47)
+         |Constant.Int(1) [48..49)
+         |Indentation.Outdent [49..49)
+         |Indentation.Outdent [49..49)
+         |EOF [50..50)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Stat])
+    val error =
+      """|<input>:4: error: `outdent` expected but `else` found
+         |    else 1
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, a comment line, else at the body indent") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    x
+         |    // note
+         |    else 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwDef [0..3)
+         |Ident(f) [4..5)
+         |Equals [6..7)
+         |Indentation.Indent [7..7)
+         |KwIf [10..12)
+         |Ident(c) [13..14)
+         |KwThen [15..19)
+         |Ident(xs) [20..22)
+         |Dot [22..23)
+         |Ident(map) [23..26)
+         |Colon [26..27)
+         |Ident(x) [28..29)
+         |RightArrow [30..32)
+         |Indentation.Indent [32..32)
+         |Ident(x) [37..38)
+         |KwElse [55..59)
+         |Constant.Int(1) [60..61)
+         |Indentation.Outdent [61..61)
+         |Indentation.Outdent [61..61)
+         |EOF [62..62)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Stat])
+    val error =
+      """|<input>:5: error: `outdent` expected but `else` found
+         |    else 1
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, a block comment and else at the body indent") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    x
+         |    /* note */ else 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `else` found
+         |    /* note */ else 1
+         |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, a trailing comment, else on the next line") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    x // note
+         |  else 1
+         |""".stripMargin
+    val layout =
+      """|def f = if (c) xs.map {
+         |  x => x // note
+         |} else 1
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.If(
+        tname("c"),
+        tapply(
+          tselect("xs", "map"),
+          blk(
+            Term.Function.newBuilder(List(tparam("x")), tname("x")).endComment(Seq("// note"))
+              .result(),
+          ),
+        ),
+        lit(1),
+        Nil,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("colon lambda in an indented try body, catch at the body indent") {
+    val code =
+      """|def f =
+         |  try
+         |    xs.map: x =>
+         |      x
+         |      catch case _ => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    xs.map: x =>
+         |              ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("nested colon lambdas in then, a comment line in the inner body, else at the outer body") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    ys.map: y =>
+         |      y
+         |      // c
+         |    else 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `:` found
+         |    ys.map: y =>
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, a comment line in a case, else at the lambda body") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    x match
+         |      case 1 => y
+         |      // c
+         |    else 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `outdent` expected but `else` found
+         |    else 1
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("colon lambda in then, if with a prefix operator and a space, an infix continuation and else on the next line") {
+    val code =
+      """|def f =
+         |  if c then xs.map: x =>
+         |    if (bar) ! baz &&
+         |      qux else quux
+         |""".stripMargin
+    val layout =
+      """|def f = if (c) xs.map {
+         |  x => if (bar) !baz && qux else quux
+         |}
+         |""".stripMargin
+    val body = Term.If(
+      tname("bar"),
+      tinfix(Term.ApplyUnary(tname("!"), tname("baz")), "&&", tname("qux")),
+      tname("quux"),
+      Nil,
+    )
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.If(tname("c"), tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(body))), lit(), Nil),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }

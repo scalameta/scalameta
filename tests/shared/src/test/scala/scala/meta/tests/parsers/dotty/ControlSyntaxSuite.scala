@@ -30265,4 +30265,372 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("indented try body, catch on the body line") {
+    val code =
+      """|def f =
+         |  try
+         |    x catch case _ => 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwDef [0..3)
+         |Ident(f) [4..5)
+         |Equals [6..7)
+         |Indentation.Indent [7..7)
+         |KwTry [10..13)
+         |Indentation.Indent [13..13)
+         |Ident(x) [18..19)
+         |KwCatch [20..25)
+         |Indentation.Indent [26..26)
+         |KwCase [26..30)
+         |Underscore [31..32)
+         |RightArrow [33..35)
+         |Constant.Int(1) [36..37)
+         |Indentation.Outdent [37..37)
+         |Indentation.Outdent [37..37)
+         |EOF [38..38)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Stat])
+    val error =
+      """|<input>:3: error: `outdent` expected but `catch` found
+         |    x catch case _ => 1
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("indented try body, finally on the body line") {
+    val code =
+      """|def f =
+         |  try
+         |    x finally g
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `finally` found
+         |    x finally g
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("indented try body, catch on the next line") {
+    val code =
+      """|def f =
+         |  try
+         |    x
+         |  catch case _ => 1
+         |""".stripMargin
+    val layout =
+      """|def f = try x catch {
+         |  case _ => 1
+         |}
+         |""".stripMargin
+    val tree = Defn
+      .Def(Nil, "f", Nil, None, Term.Try(tname("x"), List(Case(Pat.Wildcard(), None, lit(1))), None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented then body, else on the body line") {
+    val code =
+      """|def f =
+         |  if c then
+         |    x else 1
+         |""".stripMargin
+    val layout = "def f = if (c) x else 1"
+    val tree = Defn.Def(Nil, "f", Nil, None, Term.If(tname("c"), tname("x"), lit(1), Nil))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("catch case on the try line, finally on the case body line") {
+    val code =
+      """|def f =
+         |  try a catch case _ =>
+         |    b finally g
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `finally` found
+         |    b finally g
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scala 3.0: indented try body, catch on the body line") {
+    implicit val dialect: Dialect = dialects.Scala30
+    val code =
+      """|def f =
+         |  try
+         |    x catch case _ => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `catch` found
+         |    x catch case _ => 1
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("indented then body, else at the body indent") {
+    val code =
+      """|def f =
+         |  if c then
+         |    x
+         |    else y
+         |""".stripMargin
+    val layout = "def f = if (c) x else y"
+    val tree = Defn.Def(Nil, "f", Nil, None, Term.If(tname("c"), tname("x"), tname("y"), Nil))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("nested ifs, an infix continuation with else, outer else on the next line") {
+    val code =
+      """|def f =
+         |  if (foo)
+         |    if (bar) baz &&
+         |      qux else quux
+         |  else xyzzy
+         |""".stripMargin
+    val layout = "def f = if (foo) if (bar) baz && qux else quux else xyzzy"
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.If(
+        tname("foo"),
+        Term.If(tname("bar"), tinfix(tname("baz"), "&&", tname("qux")), tname("quux"), Nil),
+        tname("xyzzy"),
+        Nil,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented then body, a comment line, else at the body indent") {
+    val code =
+      """|def f =
+         |  if c then
+         |    x
+         |    // note
+         |    else y
+         |""".stripMargin
+    val layout =
+      """|def f = if (c) x
+         |// note
+         |else y
+         |""".stripMargin
+    val tree = Defn
+      .Def(Nil, "f", Nil, None, Term.If(tname("c"), tname("x"), tnameComments("y")("// note")(), Nil))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented then body, a comment before else at the body indent") {
+    val code =
+      """|def f =
+         |  if c then
+         |    x
+         |    /* note */ else y
+         |""".stripMargin
+    val layout =
+      """|def f = if (c) x
+         |/* note */ else y
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.If(tname("c"), tname("x"), tnameComments("y")("/* note */")(), Nil),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented try body, a comment before finally at the body indent") {
+    val code =
+      """|def f =
+         |  try
+         |    a
+         |    /* note */ finally b
+         |""".stripMargin
+    val layout =
+      """|def f = try {
+         |  a
+         |  /* note */
+         |}
+         |/* note */ finally b
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.Try(blk(tnameComments("a")()("/* note */")), Nil, Some(tnameComments("b")("/* note */")())),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented try body, a comment before catch at the body indent") {
+    val code =
+      """|def f =
+         |  try
+         |    x
+         |    /* note */ catch case _ => 1
+         |""".stripMargin
+    val layout =
+      """|def f = try {
+         |  x
+         |  /* note */
+         |} catch {
+         |  /* note */ case _ => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.Try(
+        blk(tnameComments("x")()("/* note */")),
+        List(Case.newBuilder(Pat.Wildcard(), None, lit(1)).begComment(Seq("/* note */")).result()),
+        None,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented try body, a block comment and catch on the body line") {
+    val code =
+      """|def f =
+         |  try
+         |    x /* note */ catch case _ => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `catch` found
+         |    x /* note */ catch case _ => 1
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("nested inline ifs, an argument on a deeper line") {
+    val code =
+      """|def f =
+         |  if (a) if (b) foo
+         |    (x)
+         |  next
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  if (a) if (b) foo(x)
+         |  next
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      blk(
+        Term.If(tname("a"), Term.If(tname("b"), tapply("foo", tname("x")), lit(), Nil), lit(), Nil),
+        tname("next"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("nested inline ifs, an argument on a deeper line, else on that line") {
+    val code =
+      """|def f =
+         |  if (a) if (b) foo
+         |    (x) else y
+         |  next
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  if (a) if (b) foo(x) else y
+         |  next
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      blk(
+        Term.If(
+          tname("a"),
+          Term.If(tname("b"), tapply("foo", tname("x")), tname("y"), Nil),
+          lit(),
+          Nil,
+        ),
+        tname("next"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("nested inline ifs with then, a brace argument on a deeper line") {
+    val code =
+      """|def f =
+         |  if a then if b then foo
+         |      { x => x }
+         |  next
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  if (a) if (b) foo {
+         |    x => x
+         |  }
+         |  next
+         |}
+         |""".stripMargin
+    val arg = blk(tfunc(tparam("x"))(tname("x")))
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      blk(
+        Term.If(tname("a"), Term.If(tname("b"), tapply("foo", arg), lit(), Nil), lit(), Nil),
+        tname("next"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("inline try body, an argument on a deeper line, catch on the next line") {
+    val code =
+      """|def f =
+         |  try foo
+         |    (x)
+         |  catch case _ => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `catch` found
+         |  catch case _ => 1
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("indented try body, an if without else and catch on the body line") {
+    val code =
+      """|def f =
+         |  try
+         |    if (bar) baz catch case _ => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `catch` found
+         |    if (bar) baz catch case _ => 1
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("indented try body, an if without else and finally on the body line") {
+    val code =
+      """|def f =
+         |  try
+         |    if (bar) baz finally g
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `finally` found
+         |    if (bar) baz finally g
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
