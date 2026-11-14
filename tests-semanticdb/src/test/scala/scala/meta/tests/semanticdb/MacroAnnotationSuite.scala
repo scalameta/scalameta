@@ -275,6 +275,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:9): h <= h/
        |[1:7..1:14): example <= h/example.
+       |[2:1..2:8): example => example/
+       |[2:9..2:24): MacroAnnotation => example/MacroAnnotation#
        |[2:31..2:32): H <= h/H#
        |[2:32..2:32):  <= h/H#`<init>`().
        |[3:7..3:8): H <= h/H.
@@ -293,6 +295,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
     """|[0:8..0:9): i <= i/
        |[1:7..1:8): I <= i/I.
        |[2:9..2:16): example <= i/I.example.
+       |[3:3..3:10): example => example/
+       |[3:11..3:26): MacroAnnotation => example/MacroAnnotation#
        |[3:33..3:34): J <= i/I.J#
        |[3:34..3:34):  <= i/I.J#`<init>`().
        |[4:9..4:10): J <= i/I.J.
@@ -313,6 +317,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:7..1:9): Ex <= j/Ex.
        |[2:9..2:16): example <= j/Ex.example.
        |[4:7..4:9): Ex => j/Ex.
+       |[5:1..5:8): example => example/
+       |[5:9..5:24): MacroAnnotation => example/MacroAnnotation#
        |[5:31..5:32): J <= j/J#
        |[5:32..5:32):  <= j/J#`<init>`().
        |[6:7..6:8): J <= j/J.
@@ -334,6 +340,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[2:9..2:16): example <= k/Ex.example.
        |[4:7..4:9): Ex => k/Ex.
        |[4:10..4:17): example => k/Ex.example.
+       |[5:1..5:8): example => example/
+       |[5:9..5:24): MacroAnnotation => example/MacroAnnotation#
        |[5:31..5:32): K <= k/K#
        |[5:32..5:32):  <= k/K#`<init>`().
        |[6:7..6:8): K <= k/K.
@@ -356,6 +364,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:53..1:63): annotation => scala/annotation/
        |[1:64..1:80): StaticAnnotation => scala/annotation/StaticAnnotation#
        |[1:80..1:80):  => scala/annotation/Annotation#`<init>`().
+       |[2:1..2:8): example => example/
+       |[2:9..2:24): MacroAnnotation => example/MacroAnnotation#
        |[2:31..2:32): T <= t/T#
        |[2:32..2:32):  <= t/T#`<init>`().
        |[3:7..3:8): T <= t/T.
