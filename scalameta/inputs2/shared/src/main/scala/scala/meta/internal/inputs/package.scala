@@ -2,6 +2,7 @@ package scala.meta.internal
 
 import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta.inputs._
+import scala.meta.tokens.Tokens
 
 package object inputs {
 
@@ -28,8 +29,9 @@ package object inputs {
   implicit class XtensionPosition(private val pos: Position) extends AnyVal {
     def lineContent: String = {
       val input = pos.input
-      val (start, len) = input.lineToOffsetAndLength(pos.startLine)
-      if (len <= 0) "" else new String(input.chars, start, len).stripLineEnd
+      val packed = input.lineToOffsetAndLength(pos.startLine)
+      val len = Tokens.countOf(packed)
+      if (len <= 0) "" else new String(input.chars, Tokens.indexOf(packed), len).stripLineEnd
     }
     def formatMessage(severity: String, message: String): String = {
       // WONTFIX: https://github.com/scalameta/scalameta/issues/383

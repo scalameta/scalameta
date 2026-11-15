@@ -31,7 +31,8 @@ trait InternalInput {
     buf.toArray
   }
 
-  private[meta] def lineToOffsetAndLength(line: Int): (Int, Int) = {
+  /** Returns the offset as `Tokens.indexOf` and the length as `Tokens.countOf`. */
+  private[meta] def lineToOffsetAndLength(line: Int): Long = {
     val a = cachedLineIndices
     // NOTE: The length-1 part is not a typo, it's to accommodate the sentinel value.
     if (0 > line || line >= a.length) {
@@ -40,10 +41,11 @@ trait InternalInput {
     }
     val offset = a(line)
     val nextLine = line + 1
-    (offset, (if (nextLine == a.length) chars.length else a(nextLine)) - offset)
+    Tokens.pack((if (nextLine == a.length) chars.length else a(nextLine)) - offset, offset)
   }
 
-  private[meta] def offsetToLineAndColumn(offset: Int): (Int, Int) = {
+  /** Returns the line as `Tokens.indexOf` and the column as `Tokens.countOf`. */
+  private[meta] def offsetToLineAndColumn(offset: Int): Long = {
     val chars = this.chars
     val a = cachedLineIndices
     // NOTE: We allow chars.length, because it's a valid value for an offset.
@@ -52,7 +54,7 @@ trait InternalInput {
       throw new IllegalArgumentException(message)
     }
     // NOTE: chars.length requires a really ugly special case.
-    if (offset == chars.length) return (a.length - 1, offset - a(a.length - 1))
+    if (offset == chars.length) return Tokens.pack(offset - a(a.length - 1), a.length - 1)
     var lo = 0
     var mid = 0
     var hi = a.length
@@ -61,9 +63,9 @@ trait InternalInput {
       mid > lo
     }) {
       val midoff = a(mid)
-      if (offset == midoff) return (mid, 0)
+      if (offset == midoff) return Tokens.pack(0, mid)
       if (offset < midoff) hi = mid else lo = mid
     }
-    (lo, offset - a(lo))
+    Tokens.pack(offset - a(lo), lo)
   }
 }
