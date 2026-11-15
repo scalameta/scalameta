@@ -132,7 +132,7 @@ class FormatMessageSuite extends TreeSuiteBase {
   super.test("desc: a range over a line end") {
     def desc(s: String) = Position.Range(Input.String(s), 0, s.length).desc
     assertEquals(desc("a\nb"), "[0:a...:3)")
-    assertEquals(desc("a\r\nb"), "[0:a\r...:4)")
-    assertEquals(desc("a\rb"), "[0:a\rb:3)")
+    assertEquals(desc("a\r\nb"), "[0:a...:4)")
+    assertEquals(desc("a\rb"), "[0:a...:3)")
   }
 }

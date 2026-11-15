@@ -14,7 +14,7 @@ package object inputs {
         val excerpt =
           if (text.isEmpty) text
           else {
-            val nl = text.indexOf('\n')
+            val nl = text.indexWhere(c => c == '\n' || c == '\r')
             val prefix = if (x.text.head <= ' ') "..." else ""
             val suffix = if (x.text.last <= ' ' || nl >= 0) "..." else ""
             val slice = if (nl < 0) text else text.substring(0, nl)
@@ -30,8 +30,15 @@ package object inputs {
     def lineContent: String = {
       val input = pos.input
       val packed = input.lineToOffsetAndLength(pos.startLine)
-      val len = Tokens.countOf(packed)
-      if (len <= 0) "" else new String(input.chars, Tokens.indexOf(packed), len).stripLineEnd
+      val start = Tokens.indexOf(packed)
+      var end = start + Tokens.countOf(packed) - 1
+      val chars = input.chars
+      while ({
+        if (end < start) return ""
+        val ch = chars(end)
+        ch == '\n' || ch == '\r'
+      }) end -= 1
+      new String(chars, start, end - start + 1)
     }
     def formatMessage(severity: String, message: String): String = {
       // WONTFIX: https://github.com/scalameta/scalameta/issues/383

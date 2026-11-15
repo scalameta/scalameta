@@ -19,8 +19,8 @@ object ScaladocParser {
 
   private val numberOfSupportedHeadingLevels = 6
 
-  private def hspace[$: P] = CharIn("\t\r ")
-  private def hspacesMin[$: P](min: Int) = P(CharsWhileIn("\t\r ", min))
+  private def hspace[$: P] = CharIn("\t ")
+  private def hspacesMin[$: P](min: Int) = P(CharsWhileIn("\t ", min))
   private def hspaces0[$: P] = hspacesMin(0)
   private def hspaces1[$: P] = hspacesMin(1)
   private def hspacesMinWithLen[$: P](min: Int): P[Int] = (Index ~ hspacesMin(min) ~ Index).map {
@@ -324,7 +324,7 @@ object ScaladocParser {
     paraSep.? ~ docParser ~ spacesMin(0) ~ End
   }
 
-  private val scaladocDelim = Pattern.compile("[ \r\t]*(?:\n(?:[ \r\t]*\\*+)?|$)")
+  private val scaladocDelim = Pattern.compile("[ \t]*(?:(?:\r\n?|\n)(?:[ \t]*\\*+)?|$)")
 
   /** removes all trailing space, ensures newline at EOF */
   private[meta] def stripTrailingSpaces(content: CharSequence): String = scaladocDelim
