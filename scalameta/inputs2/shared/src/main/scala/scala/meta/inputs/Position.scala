@@ -1,5 +1,7 @@
 package scala.meta.inputs
 
+import scala.meta.tokens.Tokens
+
 // NOTE: `start` and `end` are String.substring-style,
 // i.e. `start` is inclusive and `end` is not.
 // Therefore Position.end can point to the last character plus one.
@@ -52,30 +54,33 @@ object Position {
   }
 
   final case class Range(input: Input, start: Int, end: Int) extends Position {
-    lazy val (startLine, startColumn) = input.offsetToLineAndColumn(start)
-    lazy val (endLine, endColumn) = input.offsetToLineAndColumn(end)
+    private lazy val startPacked = input.offsetToLineAndColumn(start)
+    private lazy val endPacked = input.offsetToLineAndColumn(end)
+    def startLine: Int = Tokens.indexOf(startPacked)
+    def startColumn: Int = Tokens.countOf(startPacked)
+    def endLine: Int = Tokens.indexOf(endPacked)
+    def endColumn: Int = Tokens.countOf(endPacked)
     lazy val text = if (isEmpty) "" else new String(input.chars, start, end - start)
     def lastLine: Int = if (endColumn > 0) endLine else endLine - 1
     def lastColumn: Int =
       if (endColumn > 0) endColumn - 1
-      else if (endLine > 0) input.lineToOffsetAndLength(endLine - 1)._2 - 1
+      else if (endLine > 0) Tokens.countOf(input.lineToOffsetAndLength(endLine - 1)) - 1
       else 0
   }
 
   object Range {
     @inline
-    private def getPositionOffset(lineOffset: Int, lineColumn: Int, lineLength: Int): Int =
-      lineOffset + math.min(lineColumn, lineLength)
+    private def getPositionOffset(packedLine: Long, lineColumn: Int): Int = Tokens
+      .indexOf(packedLine) + math.min(lineColumn, Tokens.countOf(packedLine))
 
     def exclusive(input: Input, start: Int, end: Int): Range = new Range(input, start, end)
     def inclusive(input: Input, start: Int, end: Int): Range = new Range(input, start, end + 1)
 
     def apply(input: Input, startLine: Int, startColumn: Int, endLine: Int, endColumn: Int): Range = {
-      val (begLineOff, begLineLen) = input.lineToOffsetAndLength(startLine)
-      val (endLineOff, endLineLen) =
-        if (endLine == startLine) (begLineOff, begLineLen) else input.lineToOffsetAndLength(endLine)
-      val beg = getPositionOffset(begLineOff, startColumn, begLineLen)
-      val end = getPositionOffset(endLineOff, endColumn, endLineLen)
+      val begPacked = input.lineToOffsetAndLength(startLine)
+      val endPacked = if (endLine == startLine) begPacked else input.lineToOffsetAndLength(endLine)
+      val beg = getPositionOffset(begPacked, startColumn)
+      val end = getPositionOffset(endPacked, endColumn)
       exclusive(input, beg, end)
     }
   }
