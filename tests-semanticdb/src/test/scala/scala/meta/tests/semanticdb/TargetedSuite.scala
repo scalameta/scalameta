@@ -1106,10 +1106,12 @@ class TargetedSuite extends SemanticdbSuite {
        |[18:14..18:15): y => um/M.g().(y)
        |[19:6..19:7): w <= um/M.w().
        |[20:2..20:3): w => um/M.`w_=`().
+       |[20:2..20:3): w => um/M.w().
        |[20:4..20:6): += => scala/Int#`+`(+4).
        |[20:7..20:8): h => um/M.h().
        |[20:9..20:10): x => um/M.h().(x)
        |[21:2..21:3): w => um/M.`w_=`().
+       |[21:2..21:3): w => um/M.w().
        |[21:4..21:6): += => scala/Int#`+`(+4).
        |[21:7..21:8): h => um/M.h().
        |[21:10..21:11): x => um/M.h().(x)
@@ -5576,18 +5578,22 @@ class TargetedSuite extends SemanticdbSuite {
        |[8:8..8:9): l <= local0
        |[9:4..9:5): x => xg/O.x.
        |[9:6..9:7): v => xg/X#`v_=`().
+       |[9:6..9:7): v => xg/X#v().
        |[9:8..9:10): += => scala/Int#`+`(+4).
        |[10:4..10:5): x => xg/O.x.
        |[10:6..10:7): v => xg/X#`v_=`().
        |[11:4..11:5): x => xg/O.x.
        |[11:6..11:7): w => xg/X#`w_=`().
+       |[11:6..11:7): w => xg/X#w().
        |[11:8..11:10): += => scala/Int#`+`(+4).
        |[12:4..12:5): x => xg/O.x.
        |[12:6..12:7): w => xg/X#`w_=`().
        |[13:4..13:5): x => xg/O.x.
        |[13:6..13:7): v => xg/X#`v_=`().
+       |[13:6..13:7): v => xg/X#v().
        |[13:8..13:10): += => scala/Int#`+`(+4).
        |[14:4..14:5): c => xg/O.`c_=`().
+       |[14:4..14:5): c => xg/O.c().
        |[14:6..14:8): += => scala/Int#`+`(+4).
        |[15:4..15:5): c => xg/O.`c_=`().
        |[16:4..16:5): p => xg/O.p().
@@ -5639,11 +5645,13 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:18..3:18):  => xh/X#`<init>`().
        |[4:2..4:4): mk => xh/O.mk().
        |[4:7..4:8): v => xh/X#`v_=`().
+       |[4:7..4:8): v => xh/X#v().
        |[4:9..4:11): += => scala/Int#`+`(+4).
        |[5:2..5:4): mk => xh/O.mk().
        |[5:7..5:8): v => xh/X#`v_=`().
        |[6:2..6:4): mk => xh/O.mk().
        |[6:7..6:8): w => xh/X#`w_=`().
+       |[6:7..6:8): w => xh/X#w().
        |[6:9..6:11): += => scala/Int#`+`(+4).
        |[7:2..7:4): mk => xh/O.mk().
        |[7:7..7:8): w => xh/X#`w_=`().
@@ -6433,6 +6441,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[7:19..7:23): List => scala/package.List.
        |[8:2..8:3): x => xs/O.x.
        |[8:4..8:5): l => xs/X#`l_=`().
+       |[8:4..8:5): l => xs/X#l().
        |[8:6..8:9): ++= => scala/collection/IterableOps#`++`().
        |[8:10..8:14): List => scala/package.List.
        |[9:2..9:3): x => xs/O.x.
@@ -6473,6 +6482,7 @@ class TargetedSuite extends SemanticdbSuite {
          |[7:19..7:23): List => scala/collection/immutable/List.
          |[8:2..8:3): x => xs/O.x.
          |[8:4..8:5): l => xs/X#`l_=`().
+         |[8:4..8:5): l => xs/X#l().
          |[8:6..8:9): ++= => scala/collection/immutable/List#`++`().
          |[8:10..8:14): List => scala/collection/immutable/List.
          |[9:2..9:3): x => xs/O.x.
@@ -7805,8 +7815,10 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:14..2:15): p <= zd/X#p().
        |[3:6..3:7): f <= zd/X#f().
        |[3:14..3:15): p => zd/X#`p_=`().
+       |[3:14..3:15): p => zd/X#p().
        |[3:16..3:18): += => scala/Int#`+`(+4).
        |[3:22..3:23): c => zd/X#`c_=`().
+       |[3:22..3:23): c => zd/X#c().
        |[3:24..3:26): += => scala/Int#`+`(+4).
        |[5:7..5:8): O <= zd/O.
        |[6:6..6:7): x <= zd/O.x.
@@ -7814,6 +7826,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:15..6:15):  => zd/X#`<init>`().
        |[7:2..7:3): x => zd/O.x.
        |[7:4..7:5): c => zd/X#`c_=`().
+       |[7:4..7:5): c => zd/X#c().
        |[7:6..7:8): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -7851,6 +7864,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:16..4:17): V => local0
        |[4:17..4:17):  => local1
        |[5:4..5:5): y => local5
+       |[5:6..5:7): v => local2
        |[5:6..5:7): v => local3
        |[5:8..5:10): += => scala/Int#`+`(+4).
        |[6:4..6:5): y => local5
@@ -7895,6 +7909,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[5:2..5:4): yy => zf/O.yy.
        |[5:5..5:6): x => zf/Y#x().
        |[5:7..5:8): v => zf/X#`v_=`().
+       |[5:7..5:8): v => zf/X#v().
        |[5:9..5:11): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -7930,6 +7945,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:15..3:15):  => zg/X#`<init>`().
        |[4:2..4:3): x => zg/O.x.
        |[4:4..4:7): arr => zg/X#`arr_=`().
+       |[4:4..4:7): arr => zg/X#arr().
        |[4:8..4:11): :+= => scala/collection/ArrayOps#`:+`().
        |""".stripMargin,
     "Occurrences",
@@ -7945,6 +7961,7 @@ class TargetedSuite extends SemanticdbSuite {
          |[3:15..3:15):  => zg/X#`<init>`().
          |[4:2..4:3): x => zg/O.x.
          |[4:4..4:7): arr => zg/X#`arr_=`().
+         |[4:4..4:7): arr => zg/X#arr().
          |[4:8..4:11): :+= => scala/collection/mutable/ArrayOps#`:+`().
          |""".stripMargin,
   )
@@ -7981,6 +7998,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:41..2:41):  => scala/util/DynamicVariable#`<init>`().
        |[3:2..3:4): dv => zh/O.dv.
        |[3:5..3:10): value => scala/util/DynamicVariable#`value_=`().
+       |[3:5..3:10): value => scala/util/DynamicVariable#value().
        |[3:11..3:13): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -8041,8 +8059,10 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:15..6:15):  => zi/C#`<init>`().
        |[7:2..7:3): b => zi/O.b.
        |[7:4..7:5): w => zi/A#`w_=`().
+       |[7:4..7:5): w => zi/B#w().
        |[7:6..7:8): += => scala/Int#`+`(+4).
        |[8:2..8:3): c => zi/O.c.
+       |[8:4..8:5): w => zi/A#w().
        |[8:4..8:5): w => zi/C#`w_=`().
        |[8:6..8:8): += => scala/Int#`+`(+4).
        |""".stripMargin,
@@ -8089,6 +8109,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[4:15..4:15):  => zj/N#`<init>`().
        |[5:2..5:3): n => zj/O.n.
        |[5:4..5:5): w => zj/O.P#`w_=`().
+       |[5:4..5:5): w => zj/O.P#w().
        |[5:6..5:8): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -8125,6 +8146,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:20..3:21): p <= zk/T#p().
        |[4:6..4:7): g <= zk/T#g().
        |[4:12..4:13): p => zk/T#`p_=`().
+       |[4:12..4:13): p => zk/T#p().
        |[4:14..4:16): += => scala/Int#`+`(+4).
        |[6:6..6:7): X <= zk/X#
        |[6:8..6:8):  <= zk/X#`<init>`().
@@ -8132,6 +8154,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[6:17..6:17):  => java/lang/Object#`<init>`().
        |[7:6..7:7): f <= zk/X#f().
        |[7:12..7:13): t => zk/T#`t_=`().
+       |[7:12..7:13): t => zk/T#t().
        |[7:14..7:16): += => scala/Int#`+`(+4).
        |""".stripMargin,
     "Occurrences",
@@ -8163,10 +8186,12 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:7..2:8): O <= zl/O.
        |[3:9..3:10): M => zl/M.
        |[4:2..4:3): c => zl/M.`c_=`().
+       |[4:2..4:3): c => zl/M.c().
        |[4:4..4:6): += => scala/Int#`+`(+4).
        |[5:7..5:8): i <= local0
        |[5:12..5:16): List => scala/package.List.
        |[5:21..5:22): c => zl/M.`c_=`().
+       |[5:21..5:22): c => zl/M.c().
        |[5:23..5:25): += => scala/Int#`+`(+4).
        |[5:26..5:27): i => local0
        |""".stripMargin,
@@ -8178,10 +8203,12 @@ class TargetedSuite extends SemanticdbSuite {
          |[2:7..2:8): O <= zl/O.
          |[3:9..3:10): M => zl/M.
          |[4:2..4:3): c => zl/M.`c_=`().
+         |[4:2..4:3): c => zl/M.c().
          |[4:4..4:6): += => scala/Int#`+`(+4).
          |[5:7..5:8): i <= local0
          |[5:12..5:16): List => scala/collection/immutable/List.
          |[5:21..5:22): c => zl/M.`c_=`().
+         |[5:21..5:22): c => zl/M.c().
          |[5:23..5:25): += => scala/Int#`+`(+4).
          |[5:26..5:27): i => local0
          |""".stripMargin,
@@ -8227,8 +8254,10 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:6..2:7): l <= zm/O.l().
        |[2:10..2:14): List => scala/package.List.
        |[3:2..3:3): l => zm/O.`l_=`().
+       |[3:2..3:3): l => zm/O.l().
        |[3:4..3:7): ::= => scala/collection/immutable/List#`::`().
        |[4:2..4:3): l => zm/O.`l_=`().
+       |[4:2..4:3): l => zm/O.l().
        |[4:4..4:7): +:= => scala/collection/SeqOps#`+:`().
        |""".stripMargin,
     "Occurrences",
@@ -8238,8 +8267,10 @@ class TargetedSuite extends SemanticdbSuite {
          |[2:6..2:7): l <= zm/O.l().
          |[2:10..2:14): List => scala/collection/immutable/List.
          |[3:2..3:3): l => zm/O.`l_=`().
+         |[3:2..3:3): l => zm/O.l().
          |[3:4..3:7): ::= => scala/collection/immutable/List#`::`().
          |[4:2..4:3): l => zm/O.`l_=`().
+         |[4:2..4:3): l => zm/O.l().
          |[4:4..4:7): +:= => scala/collection/immutable/List#`+:`().
          |""".stripMargin,
   )
