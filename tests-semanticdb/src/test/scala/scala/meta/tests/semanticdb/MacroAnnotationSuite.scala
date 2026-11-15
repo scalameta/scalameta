@@ -61,6 +61,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:20..1:24): data => org/scalameta/data/data#
        |[2:6..2:7): C <= c/C#
        |[2:7..2:7):  <= c/C#`<init>`().
+       |[2:8..2:9): a <= c/C#`<init>`().(a)
+       |[2:8..2:9): a <= c/C#a.
        |[2:11..2:14): Int => scala/Int#
        |""".stripMargin,
   )
@@ -244,6 +246,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[2:6..2:10): data => org/scalameta/data/data#
        |[2:17..2:18): F <= org/scalameta/f/F#
        |[2:18..2:18):  <= org/scalameta/f/F#`<init>`().
+       |[2:19..2:20): a <= org/scalameta/f/F#`<init>`().(a)
+       |[2:19..2:20): a <= org/scalameta/f/F#a.
        |[2:22..2:25): Int => scala/Int#
        |""".stripMargin,
   )
@@ -262,6 +266,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[2:6..2:10): data => org/scalameta/data/data#
        |[2:17..2:18): G <= g/G#
        |[2:18..2:18):  <= g/G#`<init>`().
+       |[2:19..2:20): a <= g/G#`<init>`().(a)
+       |[2:19..2:20): a <= g/G#a.
        |[2:22..2:25): Int => scala/Int#
        |""".stripMargin,
   )
@@ -387,6 +393,9 @@ class MacroAnnotationSuite extends SemanticdbSuite {
     """|[0:8..0:9): u <= u/
        |[1:7..1:8): U <= u/U.
        |[2:9..2:16): example <= u/U.example.
+       |[3:3..3:10): example => example/
+       |[3:11..3:21): RebuildDef => example/RebuildDef#
+       |[3:26..3:27): f <= u/U.f().
        |[3:28..3:29): i <= u/U.f().(i)
        |[3:31..3:34): Int => scala/Int#
        |[3:38..3:39): i => u/U.f().(i)
@@ -558,6 +567,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:20..1:24): data => org/scalameta/data/data#
        |[2:6..2:7): A <= ma1/A#
        |[2:7..2:7):  <= ma1/A#`<init>`().
+       |[2:8..2:9): a <= ma1/A#`<init>`().(a)
+       |[2:8..2:9): a <= ma1/A#a.
        |[2:11..2:14): Int => scala/Int#
        |[3:7..3:8): o <= ma1/o.
        |[3:15..3:16): x <= ma1/o.x.
@@ -587,8 +598,14 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[2:6..2:7): A <= ma2/A#
        |[2:8..2:9): T <= ma2/A#[T]
        |[2:10..2:10):  <= ma2/A#`<init>`().
+       |[2:11..2:12): a <= ma2/A#`<init>`().(a)
+       |[2:11..2:12): a <= ma2/A#a.
        |[2:14..2:17): Int => scala/Int#
+       |[2:23..2:24): b <= ma2/A#`<init>`().(b)
+       |[2:23..2:24): b <= ma2/A#b.
        |[2:26..2:27): T => ma2/A#[T]
+       |[2:29..2:30): c <= ma2/A#`<init>`().(c)
+       |[2:29..2:30): c <= ma2/A#c.
        |[2:32..2:38): String => scala/Predef.String#
        |[3:6..3:7): v <= ma2/A#v.
        |[3:10..3:11): a => ma2/A#a.
@@ -672,7 +689,11 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:20..1:24): data => org/scalameta/data/data#
        |[1:31..1:32): A <= ma5/A#
        |[1:32..1:32):  <= ma5/A#`<init>`().
+       |[1:45..1:46): a <= ma5/A#`<init>`().(a)
+       |[1:45..1:46): a <= ma5/A#a.
        |[1:48..1:51): Int => scala/Int#
+       |[1:57..1:58): b <= ma5/A#`<init>`().(b)
+       |[1:57..1:58): b <= ma5/A#b.
        |[1:60..1:66): String => scala/Predef.String#
        |[2:6..2:7): U <= ma5/U#
        |[2:8..2:8):  <= ma5/U#`<init>`().
@@ -698,6 +719,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[2:22..2:26): data => org/scalameta/data/data#
        |[2:33..2:34): A <= ma6/N.A#
        |[2:34..2:34):  <= ma6/N.A#`<init>`().
+       |[2:35..2:36): a <= ma6/N.A#`<init>`().(a)
+       |[2:35..2:36): a <= ma6/N.A#a.
        |[2:38..2:41): Int => scala/Int#
        |[3:6..3:7): f <= ma6/N.f().
        |[3:13..3:16): org => org/
@@ -706,6 +729,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[3:32..3:36): data => org/scalameta/data/data#
        |[3:43..3:44): B <= local1
        |[3:44..3:44):  <= local3
+       |[3:45..3:46): b <= local2
        |[3:48..3:51): Int => scala/Int#
        |[3:54..3:55): B => local19
        |[3:59..3:60): b => local2
@@ -725,7 +749,10 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:20..1:24): data => org/scalameta/data/data#
        |[2:6..2:7): A <= ma7/A#
        |[2:7..2:7):  <= ma7/A#`<init>`().
+       |[2:8..2:9): a <= ma7/A#a().
        |[2:11..2:14): Int => scala/Int#
+       |[2:24..2:25): b <= ma7/A#`<init>`().(b)
+       |[2:24..2:25): b <= ma7/A#b.
        |[2:27..2:30): Int => scala/Int#
        |""".stripMargin,
   )
@@ -758,6 +785,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[3:19..3:23): leaf => org/scalameta/adt/leaf#
        |[3:30..3:31): L <= ma8/L#
        |[3:31..3:31):  <= ma8/L#`<init>`().
+       |[3:32..3:33): a <= ma8/L#`<init>`().(a)
+       |[3:32..3:33): a <= ma8/L#a.
        |[3:35..3:38): Int => scala/Int#
        |[3:48..3:49): R => ma8/R#
        |[3:50..3:53): Int => scala/Int#
@@ -888,6 +917,9 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:12): ma11 <= ma11/
        |[1:7..1:8): O <= ma11/O.
+       |[2:3..2:10): example => example/
+       |[2:11..2:21): RebuildDef => example/RebuildDef#
+       |[3:6..3:7): f <= ma11/O.f(+1).
        |[3:8..3:9): T <= ma11/O.f(+1).[T]
        |[3:11..3:12): x <= ma11/O.f(+1).(x)
        |[3:14..3:17): Int => scala/Int#
@@ -945,6 +977,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:1..1:8): example => example/
        |[1:9..1:20): RebuildDefs => example/RebuildDefs#
        |[1:28..1:29): O <= ma13/O.
+       |[1:36..1:37): f <= ma13/O.f().
        |[1:38..1:39): x <= ma13/O.f().(x)
        |[1:41..1:44): Int => scala/Int#
        |[1:48..1:49): x => ma13/O.f().(x)
@@ -952,6 +985,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[2:9..2:20): RebuildDefs => example/RebuildDefs#
        |[2:27..2:28): C <= ma13/C#
        |[2:29..2:29):  <= ma13/C#`<init>`().
+       |[2:35..2:36): f <= ma13/C#f().
        |[2:37..2:38): x <= ma13/C#f().(x)
        |[2:40..2:43): Int => scala/Int#
        |[2:47..2:48): x => ma13/C#f().(x)
@@ -994,6 +1028,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:20..1:24): data => org/scalameta/data/data#
        |[2:6..2:7): O <= ma15/O#
        |[2:7..2:7):  <= ma15/O#`<init>`().
+       |[2:8..2:9): o <= ma15/O#`<init>`().(o)
+       |[2:8..2:9): o <= ma15/O#o.
        |[2:11..2:14): Int => scala/Int#
        |[2:19..2:22): org => org/
        |[2:23..2:32): scalameta => org/scalameta/
@@ -1001,6 +1037,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[2:38..2:42): data => org/scalameta/data/data#
        |[2:49..2:50): I <= ma15/O#I#
        |[2:50..2:50):  <= ma15/O#I#`<init>`().
+       |[2:51..2:52): i <= ma15/O#I#`<init>`().(i)
+       |[2:51..2:52): i <= ma15/O#I#i.
        |[2:54..2:57): Int => scala/Int#
        |""".stripMargin,
   )
@@ -1023,6 +1061,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[2:31..2:35): data => org/scalameta/data/data#
        |[2:42..2:43): I <= ma16/T.I#
        |[2:43..2:43):  <= ma16/T.I#`<init>`().
+       |[2:44..2:45): i <= ma16/T.I#`<init>`().(i)
+       |[2:44..2:45): i <= ma16/T.I#i.
        |[2:47..2:50): Int => scala/Int#
        |""".stripMargin,
   )
@@ -1037,7 +1077,6 @@ class MacroAnnotationSuite extends SemanticdbSuite {
     """|[0:8..0:13): scala => scala/
        |[0:14..0:18): meta => scala/meta/
        |[1:8..1:12): ma17 <= scala/meta/ma17/
-       |[2:1..2:1):  <= local65
        |[2:1..2:6): scala => scala/
        |[2:7..2:11): meta => scala/meta/
        |[2:12..2:20): internal => scala/meta/internal/
@@ -1046,7 +1085,6 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[2:40..2:41): B <= scala/meta/ma17/B#
        |[2:50..2:54): Tree => scala/meta/Tree#
        |[3:7..3:8): B <= scala/meta/ma17/B.
-       |[3:12..3:12):  <= local24
        |[3:12..3:17): scala => scala/
        |[3:18..3:22): meta => scala/meta/
        |[3:23..3:31): internal => scala/meta/internal/
@@ -1054,6 +1092,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[3:38..3:41): ast => scala/meta/internal/trees/ast#
        |[3:48..3:49): N <= scala/meta/ma17/B.N#
        |[3:49..3:49):  <= scala/meta/ma17/B.N#`<init>`().
+       |[3:50..3:55): value <= scala/meta/ma17/B.N#value().
        |[3:57..3:63): String => scala/Predef.String#
        |[3:73..3:74): B => scala/meta/ma17/B#
        |[4:7..4:8): U <= scala/meta/ma17/U.
@@ -1075,6 +1114,9 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:12): ma18 <= ma18/
        |[1:7..1:8): O <= ma18/O.
+       |[2:3..2:10): example => example/
+       |[2:11..2:21): RebuildVal => example/RebuildVal#
+       |[2:26..2:27): v <= ma18/O.v.
        |[2:29..2:32): Int => scala/Int#
        |[3:6..3:7): g <= ma18/O.g().
        |[3:10..3:11): v => ma18/O.v.
@@ -1090,9 +1132,11 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:9..1:20): RebuildDefs => example/RebuildDefs#
        |[1:27..1:28): C <= ma19/C#
        |[1:29..1:29):  <= ma19/C#`<init>`().
+       |[1:35..1:36): f <= ma19/C#f().
        |[1:37..1:38): x <= ma19/C#f().(x)
        |[1:40..1:43): Int => scala/Int#
        |[1:47..1:48): x => ma19/C#f().(x)
+       |[1:54..1:55): f <= ma19/C#f(+1).
        |[1:56..1:57): s <= ma19/C#f(+1).(s)
        |[1:59..1:65): String => scala/Predef.String#
        |""".stripMargin,
@@ -1108,6 +1152,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:9..1:20): RebuildDefs => example/RebuildDefs#
        |[1:27..1:28): C <= ma20/C#
        |[1:29..1:29):  <= ma20/C#`<init>`().
+       |[1:35..1:36): f <= ma20/C#f().
        |[1:37..1:38): x <= ma20/C#f().(x)
        |[1:40..1:43): Int => scala/Int#
        |[1:47..1:48): x => ma20/C#f().(x)
@@ -1139,6 +1184,9 @@ class MacroAnnotationSuite extends SemanticdbSuite {
     """|[0:8..0:12): ma22 <= ma22/
        |[1:7..1:8): O <= ma22/O.
        |[1:15..1:16): f <= ma22/O.f().
+       |[1:22..1:29): example => example/
+       |[1:30..1:40): RebuildDef => example/RebuildDef#
+       |[1:45..1:46): g <= local0
        |[1:47..1:48): x <= local1
        |[1:50..1:53): Int => scala/Int#
        |[1:57..1:58): x => local1
@@ -1157,6 +1205,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[2:1..2:8): example => example/
        |[2:9..2:20): RebuildDefs => example/RebuildDefs#
        |[2:28..2:29): O <= ma23/O.
+       |[2:36..2:37): f <= ma23/O.f().
        |[2:38..2:39): x <= ma23/O.f().(x)
        |[2:41..2:44): Int => scala/Int#
        |[2:48..2:49): x => ma23/O.f().(x)
@@ -1176,6 +1225,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:41..1:45): data => org/scalameta/data/data#
        |[1:52..1:53): B <= local0
        |[1:53..1:53):  <= local2
+       |[1:54..1:55): b <= local1
        |[1:57..1:60): Int => scala/Int#
        |[1:63..1:64): B => local18
        |[1:68..1:69): b => local1
@@ -1210,6 +1260,9 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:12): ma26 <= ma26/
        |[1:7..1:8): O <= ma26/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:41): PrependMethodOverload => example/PrependMethodOverload#
+       |[1:46..1:47): f <= ma26/O.f(+1).
        |[1:48..1:49): s <= ma26/O.f(+1).(s)
        |[1:51..1:57): String => scala/Predef.String#
        |[2:7..2:8): U <= ma26/U.
@@ -1228,6 +1281,9 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:12): ma27 <= ma27/
        |[1:7..1:8): O <= ma27/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:40): AppendMethodOverload => example/AppendMethodOverload#
+       |[1:45..1:46): f <= ma27/O.f().
        |[1:47..1:48): s <= ma27/O.f().(s)
        |[1:50..1:56): String => scala/Predef.String#
        |[2:7..2:8): U <= ma27/U.
@@ -1245,6 +1301,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:12): ma28 <= ma28/
        |[1:7..1:8): O <= ma28/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:41): PrependMethodOverload => example/PrependMethodOverload#
        |""".stripMargin,
   )
 
@@ -1257,6 +1315,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:9..1:20): RebuildDefs => example/RebuildDefs#
        |[1:27..1:28): C <= ma29/C#
        |[1:29..1:29):  <= ma29/C#`<init>`().
+       |[1:46..1:47): f <= ma29/C#f(+1).
        |[1:48..1:49): x <= ma29/C#f(+1).(x)
        |[1:51..1:54): Int => scala/Int#
        |[1:58..1:59): x => ma29/C#f(+1).(x)
@@ -1269,6 +1328,9 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:12): ma30 <= ma30/
        |[1:7..1:8): O <= ma30/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:41): PrependMethodOverload => example/PrependMethodOverload#
+       |[1:46..1:47): f <= ma30/O.f(+1).
        |[1:48..1:49): T <= ma30/O.f(+1).[T]
        |[1:51..1:52): t <= ma30/O.f(+1).(t)
        |[1:54..1:55): T => ma30/O.f(+1).[T]
@@ -1357,11 +1419,14 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |class A(@example.KeepParamOwner a: Int)
        |""".stripMargin,
     """|[0:8..0:12): ma35 <= ma35/
-       |""".stripMargin + (if (ScalaVersion.is212) "" else "[1:7..1:7):  <= ma35/A#`<init>`().\n") +
-      """|[1:9..1:16): example => example/
-         |[1:17..1:31): KeepParamOwner => example/KeepParamOwner#
-         |[1:35..1:38): Int => scala/Int#
-         |""".stripMargin,
+       |[1:6..1:7): A <= ma35/A#
+       |[1:7..1:7):  <= ma35/A#`<init>`().
+       |[1:9..1:16): example => example/
+       |[1:17..1:31): KeepParamOwner => example/KeepParamOwner#
+       |[1:32..1:33): a <= ma35/A#`<init>`().(a)
+       |[1:32..1:33): a <= ma35/A#a.
+       |[1:35..1:38): Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -1369,8 +1434,10 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |class B[@example.KeepParamOwner T]
        |""".stripMargin,
     """|[0:8..0:12): ma36 <= ma36/
+       |[1:6..1:7): B <= ma36/B#
        |[1:9..1:16): example => example/
        |[1:17..1:31): KeepParamOwner => example/KeepParamOwner#
+       |[1:32..1:33): T <= ma36/B#[T]
        |[1:34..1:34):  <= ma36/B#`<init>`().
        |""".stripMargin,
   )
@@ -1381,6 +1448,10 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:12): ma37 <= ma37/
        |[1:7..1:8): O <= ma37/O.
+       |[1:15..1:16): f <= ma37/O.f().
+       |[1:18..1:25): example => example/
+       |[1:26..1:40): KeepParamOwner => example/KeepParamOwner#
+       |[1:41..1:42): s <= ma37/O.f().(s)
        |[1:44..1:50): String => scala/Predef.String#
        |[1:54..1:55): s => ma37/O.f().(s)
        |""".stripMargin,
@@ -1391,8 +1462,10 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |trait T[@example.KeepParamOwner X]
        |""".stripMargin,
     """|[0:8..0:12): ma38 <= ma38/
+       |[1:6..1:7): T <= ma38/T#
        |[1:9..1:16): example => example/
        |[1:17..1:31): KeepParamOwner => example/KeepParamOwner#
+       |[1:32..1:33): X <= ma38/T#[X]
        |""".stripMargin,
   )
 
@@ -1402,6 +1475,10 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:12): ma39 <= ma39/
        |[1:7..1:8): O <= ma39/O.
+       |[1:15..1:16): f <= ma39/O.f().
+       |[1:18..1:25): example => example/
+       |[1:26..1:40): KeepParamOwner => example/KeepParamOwner#
+       |[1:41..1:42): X <= ma39/O.f().[X]
        |[1:44..1:45): x <= ma39/O.f().(x)
        |[1:47..1:48): X => ma39/O.f().[X]
        |[1:52..1:53): x => ma39/O.f().(x)
@@ -1448,6 +1525,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:20..1:24): data => org/scalameta/data/data#
        |[2:6..2:7): A <= ma41/A#
        |[2:7..2:7):  <= ma41/A#`<init>`().
+       |[2:8..2:9): a <= ma41/A#`<init>`().(a)
+       |[2:8..2:9): a <= ma41/A#a.
        |[2:11..2:14): Int => scala/Int#
        |[3:7..3:8): A <= ma41/A.
        |[3:15..3:16): w <= ma41/A.w.
@@ -1468,6 +1547,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:1..1:8): example => example/
        |[1:9..1:20): RebuildDefs => example/RebuildDefs#
        |[1:28..1:29): O <= ma42/O.
+       |[1:36..1:37): f <= ma42/O.f().
        |[1:38..1:39): x <= ma42/O.f().(x)
        |[1:41..1:44): Int => scala/Int#
        |[1:48..1:49): x => ma42/O.f().(x)
@@ -1488,6 +1568,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:20..1:24): data => org/scalameta/data/data#
        |[2:6..2:7): A <= ma43/A#
        |[2:7..2:7):  <= ma43/A#`<init>`().
+       |[2:8..2:9): a <= ma43/A#`<init>`().(a)
+       |[2:8..2:9): a <= ma43/A#a.
        |[2:11..2:14): Int => scala/Int#
        |[3:7..3:8): A <= ma43/A.
        |[3:15..3:16): w <= ma43/A.w.
@@ -1535,6 +1617,9 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:12): ma46 <= ma46/
        |[1:7..1:8): O <= ma46/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:30): RebuildDef => example/RebuildDef#
+       |[1:35..1:36): f <= ma46/O.f().
        |[1:37..1:38): T <= ma46/O.f().[T]
        |[1:40..1:48): Ordering => scala/package.Ordering#
        |[1:50..1:51): x <= ma46/O.f().(x)

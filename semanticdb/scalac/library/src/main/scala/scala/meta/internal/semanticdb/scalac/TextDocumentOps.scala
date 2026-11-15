@@ -163,8 +163,10 @@ trait TextDocumentOps {
       val syntheticTreeCache = new mutable.HashMap[g.Tree, s.Synthetic] // value can be null
       val msource = unit.toSource(explicitDialect)
       val mtrees = TreeIndex(msource)
-      // the offset of a macro annotation that scalac expanded -> the annotated member
-      val mexpansions = mutable.LongMap.empty[m.Member]
+      // the offset of an annotation -> its annottee if scalac expanded it, or null
+      val mexpansions = mutable.LongMap.empty[m.Stat.WithMods]
+      // a definition that a macro annotation built -> the written one that it stands for, or null
+      val mwrittenDefs = mutable.HashMap.empty[g.Symbol, m.Tree]
       val mcolons = mutable.LongMap.empty[m.Pat] // the colon after a whole pattern -> the pattern
       val mfors = mutable.ArrayBuffer.empty[m.Term.ForClause] // outer first
       val mrenames = mutable.HashSet.empty[String] // the names that an import renames to
@@ -440,6 +442,8 @@ trait TextDocumentOps {
           t.body.iterator.collect { case d: g.DefDef if d.symbol.isGetter => d.symbol }.toSet,
         )
 
+        private def isExpansion(gpos: g.Position): Boolean = !gpos.isRange &&
+          (mexpansions.getOrNull(gpos.point) ne null)
         private def trySymbolDefinition(gsym: g.Symbol): Unit = {
           if (shouldNotSaveSymbol(gsym)) return
           val symbol = gsym.toSemantic
@@ -447,7 +451,7 @@ trait TextDocumentOps {
           val symInfo = saveSymbolFromSemantic(gsym, symbol)
 
           if (gsym.isClass && !gsym.isTrait) {
-            if (gsym.isAnonymousClass && gsym.pos.isDefined) {
+            if (gsym.isAnonymousClass && gsym.pos.isDefined && !isExpansion(gsym.pos)) {
               val mpos = partialFunctionLambdaPos(gsym)
               val mdef = if (mpos ne null) mpos else gsym.pos.focus.toMeta
               addOccurrenceFromSemantic(mdef, symbol, Role.DEFINITION)
@@ -678,17 +682,6 @@ trait TextDocumentOps {
           case t: m.Term.Super => t
           case _ => null
         }
-        // the member that the annotation at `offset` annotates
-        private def mannotteeAt(offset: Int): m.Member = mstartOf[m.Member](offset) {
-          case t: m.Init => t.parent match {
-              case Some(p: m.Mod.Annot) => p.parent match {
-                  case Some(pp: m.Member) => pp
-                  case _ => null
-                }
-              case _ => null
-            }
-          case _ => null
-        }
         private val mvalPatVarAtStart: m.Tree => m.Pat.Var = {
           case t: m.Pat.Extract => if (IsOldBehaviourOnPats) null else extractVar(t)
           case _: m.Pat.ExtractInfix if IsOldBehaviourOnPats => null
@@ -760,33 +753,21 @@ trait TextDocumentOps {
             case _ =>
           }
 
-          // in a macro expansion, find only the annottee and its companion
-          if (!gpos.isRange) mexpansions.get(gpoint) match {
-            case Some(mannottee) =>
-              if (gtree.isInstanceOf[g.ImplDef]) {
-                mannottee.parent.foreach { p =>
-                  val gname = gsym.decodedName
-                  p.foreachChild {
-                    case t: m.Member
-                        if t.name.value == gname &&
-                          t.name.isInstanceOf[m.Term.Name] == gsym.isTerm =>
-                      success(t.name, gsym)
-                      t match { // 2.12 puts the primary constructor past the class
-                        case t: m.Defn.Class => success(t.ctor.name, gsym.primaryConstructor)
-                        case _ =>
-                      }
+          // in a macro expansion, bind a definition only to the written one that it stands for
+          if (!gpos.isRange) mexpansions.getOrNull(gpoint) match {
+            case null =>
+            case mannottee =>
+              if (gtree.isInstanceOf[g.MemberDef]) {
+                val mdef = mwrittenDefCached(gsym, mannottee, gpoint)
+                if (null ne mdef) {
+                  success(mdefName(mdef), gsym)
+                  mdef match { // 2.12 puts the primary constructor past the class
+                    case t: m.Defn.Class => success(t.ctor.name, gsym.primaryConstructor)
                     case _ =>
                   }
                 }
-                val gscope = genclosing.drop(1)
-                mannottee.foreachChild {
-                  case t: m.Mod.Annot if t.init.pos.start == gpoint =>
-                    tryFindMacroAnnotation(t.init.tpe, gscope, t.pos.start)
-                  case _ =>
-                }
               }
               return
-            case _ =>
           }
 
           gtree match {
@@ -1470,24 +1451,222 @@ trait TextDocumentOps {
             mtpe: m.Type,
             gscope: List[g.Tree],
             start: Int,
-        ): Unit = mtpe match {
+        ): Boolean = mtpe match { // false only if scalac does not expand it
           case mtpe: m.Type.Apply => tryFindMacroAnnotation(mtpe.tpe, gscope, start)
           case _: m.Type.Name | _: m.Type.Select =>
             resolveTypePath(mtpe, gscope, start, skipCurrentRun = true) match {
               case (_, (mname, gann) :: gquals) if gann.isClass && gann.hasFlag(gf.MACRO) =>
                 successes(gquals)
                 success(mname, gann)
-              case _ =>
+                true
+              case null => !isRefused(resolveTypePath(mtpe, gscope, start, skipCurrentRun = false))
+              case gres => !isRefused(gres)
             }
-          case _ =>
+          case _ => true
+        }
+
+        /**
+         * whether the annotation resolves to a class without `MACRO`, and the current run compiles
+         * the unit. In another run, a lookup with `skipCurrentRun` finds the unit's definitions.
+         * scalac's lookup of a macro annotation skipped them.
+         */
+        private def isRefused(gres: (g.Type, List[(m.Name, g.Symbol)])): Boolean = gres match {
+          case (_, (_, gann) :: _) => gann.isClass && !gann.hasFlag(gf.MACRO) &&
+            g.currentRun.compiledFiles.contains(unit.source.file.path)
+          case _ => false
+        }
+
+        @tailrec
+        private def mstatWithMods(tree: m.Tree): m.Stat.WithMods = tree.parentOrNull match {
+          case p: m.Stat.WithMods => p
+          case p @ (_: m.Member.ParamClauseGroup | _: m.Member.ParamClause | _: m.Member.Param |
+              _: m.Ctor.Primary) => mstatWithMods(p)
+          case _ => null
+        }
+
+        /**
+         * the written definition that `gsym` stands for, if the macro of `stat` built it at
+         * `gpoint`, or null
+         */
+        private def mwrittenDefCached(gsym: g.Symbol, stat: m.Stat.WithMods, gpoint: Int): m.Tree =
+          mwrittenDefs.getOrElseUpdate(gsym, mwrittenDef(gsym, stat, gpoint))
+        private def mwrittenDef(gsym: g.Symbol, stat: m.Stat.WithMods, gpoint: Int): m.Tree = {
+          val gowner = {
+            val gowner = gsym.owner
+            if (gowner.isPrimaryConstructor) gowner.owner
+            else if (gowner.isModuleClass) gowner.sourceModule
+            else gowner
+          }
+          val gname = gsym.symbolName
+          if (!isWithin(stat, gowner)) { // the annottee or its companion
+            val mname = mdefName(stat)
+            if ((null eq mname) || mname.value != gname) null
+            else if (matchTerm(mname, gsym)) {
+              val greused = reusedParamAt(gsym, gpoint)
+              val skip = !isWithin(stat, greused) || isClaimed(mname, gsym, gpoint, greused >= 0)
+              if (skip) null else stat
+            } else if (!gsym.isModuleOrModuleClass && !gsym.isClass) null
+            else stat.parent match {
+              case Some(p: m.Tree.Block) => mcompanion(p.stats)(mname, gsym, gname)
+              case _ => null
+            }
+          } else if (gowner.pos.point != gpoint) null // the macro kept the owner
+          else {
+            val mowner = mwrittenDefCached(gowner, stat, gpoint)
+            if (null eq mowner) null
+            else {
+              val greused = reusedParamAt(gsym, gpoint)
+              val mdef = mwrittenMember(mowner, gsym, gname, greused)
+              val skip = (null eq mdef) || isClaimed(mdefName(mdef), gsym, gpoint, greused >= 0)
+              if (skip) null else mdef
+            }
+          }
+        }
+
+        /** whether `gsym` has its point within `mtree`. A package can have it in another file. */
+        private def isWithin(mtree: m.Tree, gsym: g.Symbol): Boolean = {
+          val gpos = gsym.pos
+          gpos.isDefined && isWithin(mtree, gpos.point) && gpos.source == unit.source
+        }
+
+        /** a negative offset is within any tree */
+        private def isWithin(mtree: m.Tree, offset: Int): Boolean = offset < 0 || {
+          val mpos = mtree.pos
+          mpos.start <= offset && offset < mpos.end
+        }
+        private def isNameOf(mname: m.Name, gsym: g.Symbol, gname: String): Boolean =
+          mname.value == gname && matchTerm(mname, gsym)
+        private def matchTerm(mname: m.Name, gsym: g.Symbol): Boolean = mname
+          .isInstanceOf[m.Term.Name] == gsym.isTerm
+
+        /** the name of a definition that defines one name, or null */
+        private def mdefName(mdef: m.Tree): m.Name = mdef match {
+          case t: m.Member => t.name
+          case t: m.Tree.WithPats => t.pats match {
+              case (p: m.Pat.Var) :: Nil => p.name
+              case _ => null
+            }
+          case _ => null
+        }
+
+        /** the definition in `mstats`, other than `mname`'s, that `gsym` can stand for, or null */
+        @tailrec
+        private def mcompanion(
+            mstats: List[m.Tree],
+        )(mname: m.Name, gsym: g.Symbol, gname: String): m.Tree = mstats match {
+          case (t: m.Member) :: _ if (t.name ne mname) && isNameOf(t.name, gsym, gname) => t
+          case _ :: rest => mcompanion(rest)(mname, gsym, gname)
+          case _ => null
+        }
+
+        /** the point of the first value parameter of `gsym` that is not at `gpoint`, or -1 */
+        private def reusedParamAt(gsym: g.Symbol, gpoint: Int): Int =
+          if (gsym.isMethod) reusedParamAt(gsym.paramss, gpoint) else -1
+        @tailrec
+        private def reusedParamAt(gparamss: List[List[g.Symbol]], gpoint: Int): Int = gparamss match {
+          case gparams :: rest =>
+            val res = reusedParamIn(gparams, gpoint)
+            if (res >= 0) res else reusedParamAt(rest, gpoint)
+          case _ => -1
+        }
+        @tailrec
+        private def reusedParamIn(gparams: List[g.Symbol], gpoint: Int): Int = gparams match {
+          case gparam :: rest =>
+            val gpos = gparam.pos
+            if (gpos.isDefined && gpos.point != gpoint) gpos.point else reusedParamIn(rest, gpoint)
+          case _ => -1
+        }
+
+        /**
+         * the written definition directly inside `mowner` that `gsym` can stand for, or null if
+         * none or several qualify. If `greused` is not negative, the definition holds that offset.
+         */
+        private def mwrittenMember(
+            mowner: m.Tree,
+            gsym: g.Symbol,
+            gname: String,
+            greused: Int,
+        ): m.Tree = {
+          val severalDefs = mowner // use this to indicate that multiple definitions qualify
+          @tailrec // the definition that qualifies, or null or `severalDefs`
+          def in(seq: List[m.Tree], res: m.Tree): m.Tree = seq match {
+            case head :: rest if res ne severalDefs =>
+              val mname = mdefName(head)
+              if ((null ne mname) && isNameOf(mname, gsym, gname) && isWithin(head, greused))
+                if (null eq res) in(rest, head) else severalDefs
+              else in(rest, res)
+            case _ => res
+          }
+          @tailrec
+          def inClauses(seq: Seq[m.Term.ParamClause], res: m.Tree): m.Tree =
+            if (seq.isEmpty) res else inClauses(seq.tail, in(seq.head.values, res))
+          @tailrec
+          def inGroups(seq: List[m.Member.ParamClauseGroup], res: m.Tree): m.Tree = seq match {
+            case head :: rest =>
+              inGroups(rest, inClauses(head.paramClauses, in(head.tparamClause.values, res)))
+            case _ => res
+          }
+          val mparams = mowner match {
+            case t: m.Tree.WithParamClauseGroups => inGroups(t.paramClauseGroups, null)
+            case t: m.Tree.WithTParamClause => in(t.tparamClause.values, null)
+            case _ => null
+          }
+          val mctor = mowner match {
+            case t: m.Stat.WithCtor => inClauses(t.ctor.paramClauses, mparams)
+            case _ => mparams
+          }
+          val res = mowner match {
+            case t: m.Stat.WithTemplate => in(t.templ.body.stats, mctor)
+            case _ => mctor
+          }
+          if (res eq severalDefs) null else res
+        }
+
+        /**
+         * whether another definition of the name of `gsym` stands for the written `mname`: one that
+         * the macro kept at its name, or, if `gsym` reuses no parameter, one that it built too
+         */
+        private def isClaimed(
+            mname: m.Name,
+            gsym: g.Symbol,
+            gpoint: Int,
+            reused: Boolean,
+        ): Boolean = {
+          val gowner = gsym.owner
+          gowner.isClass && {
+            val gdecl = gowner.info.decl(gsym.name)
+            gdecl.isOverloaded &&
+            isClaimedBy(gdecl.alternatives, gsym, mname.pos.start, if (reused) -1 else gpoint)
+          }
+        }
+
+        /** whether an alternative other than `gsym` sits at `start` or at `gpoint` */
+        @tailrec
+        private def isClaimedBy(
+            galts: List[g.Symbol],
+            gsym: g.Symbol,
+            start: Int,
+            gpoint: Int,
+        ): Boolean = galts match {
+          case galt :: rest =>
+            val gpos = galt.pos
+            if ((galt ne gsym) && gpos.isDefined && (gpos.point == start || gpos.point == gpoint))
+              true
+            else isClaimedBy(rest, gsym, start, gpoint)
+          case Nil => false
         }
 
         private def processMemberDef(gtree: g.MemberDef) = {
           // a macro annotation puts its expansion at the offset of the annotation
-          if (gtree.isInstanceOf[g.ImplDef]) {
-            val gpos = gtree.pos
-            if (gpos.isDefined && !gpos.isRange) mannotteeAt(gpos.point) match {
-              case t: m.Member => mexpansions(gpos.point) = t
+          val gpos = gtree.pos
+          if (gpos.isDefined && !gpos.isRange) {
+            val gp = gpos.point
+            mtrees.mbefore(gp - 1) match { // resolve each annotation once
+              case ma: m.Mod.Annot if !mexpansions.contains(gp) && ma.init.pos.start == gp =>
+                val mannottee = mstatWithMods(ma)
+                val keep = (null ne mannottee) &&
+                  tryFindMacroAnnotation(ma.init.tpe, genclosing.drop(1), ma.pos.start)
+                mexpansions(gp) = if (keep) mannottee else null
               case _ =>
             }
           }
