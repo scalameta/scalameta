@@ -13,11 +13,9 @@ class InteractiveSuite extends FunSuite {
 
   val option = "-Ywarn-unused:imports"
   val compiler: Global = newCompiler(scalacOptions = option :: Nil)
-  def check(
-      original: String,
-      expected: String,
-      compat: List[(ScalaVersion.Version, String)] = List.empty,
-  )(implicit loc: munit.Location): Unit = test(logger.revealWhitespace(original)) {
+  def check(original: String, expected: String, compat: (ScalaVersion.Version, String)*)(implicit
+      loc: munit.Location,
+  ): Unit = test(logger.revealWhitespace(original)) {
     val options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
     val document = toTextDocument(compiler, original, options)
     val format = scala.meta.metap.Format.Detailed
@@ -96,7 +94,7 @@ class InteractiveSuite extends FunSuite {
        |}
        |""".stripMargin,
     expectedPrevious,
-    compat = List(ScalaVersion.Scala213 -> expectedLatest),
+    ScalaVersion.Scala213 -> expectedLatest,
   )
 
   // This tests a case where SymbolOps.toSemantic crashes
@@ -174,41 +172,39 @@ class InteractiveSuite extends FunSuite {
        |[2:12..2:18): :: Nil => *[Int]
        |  Int => scala/Int#
        |""".stripMargin,
-    compat = List {
-      ScalaVersion.Scala213 ->
-        """|interactive.scala
-           |-----------------
-           |
-           |Summary:
-           |Schema => SemanticDB v4
-           |Uri => interactive.scala
-           |Text => non-empty
-           |Language => Scala
-           |Symbols => 3 entries
-           |Occurrences => 6 entries
-           |Synthetics => 1 entries
-           |
-           |Symbols:
-           |_empty_/n61. => final object n61 extends AnyRef { +2 decls }
-           |  AnyRef => scala/AnyRef#
-           |_empty_/n61.K. => final val method K: 1
-           |_empty_/n61.a. => val method a: List[Int]
-           |  List => scala/collection/immutable/List#
-           |  Int => scala/Int#
-           |
-           |Occurrences:
-           |[0:7..0:10): n61 <= _empty_/n61.
-           |[1:12..1:13): K <= _empty_/n61.K.
-           |[2:6..2:7): a <= _empty_/n61.a.
-           |[2:10..2:11): K => _empty_/n61.K.
-           |[2:12..2:14): :: => scala/collection/immutable/List#`::`().
-           |[2:15..2:18): Nil => scala/package.Nil.
-           |
-           |Synthetics:
-           |[2:12..2:18): :: Nil => *[Int]
-           |  Int => scala/Int#
-           |""".stripMargin
-    },
+    ScalaVersion.Scala213 ->
+      """|interactive.scala
+         |-----------------
+         |
+         |Summary:
+         |Schema => SemanticDB v4
+         |Uri => interactive.scala
+         |Text => non-empty
+         |Language => Scala
+         |Symbols => 3 entries
+         |Occurrences => 6 entries
+         |Synthetics => 1 entries
+         |
+         |Symbols:
+         |_empty_/n61. => final object n61 extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/n61.K. => final val method K: 1
+         |_empty_/n61.a. => val method a: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |
+         |Occurrences:
+         |[0:7..0:10): n61 <= _empty_/n61.
+         |[1:12..1:13): K <= _empty_/n61.K.
+         |[2:6..2:7): a <= _empty_/n61.a.
+         |[2:10..2:11): K => _empty_/n61.K.
+         |[2:12..2:14): :: => scala/collection/immutable/List#`::`().
+         |[2:15..2:18): Nil => scala/package.Nil.
+         |
+         |Synthetics:
+         |[2:12..2:18): :: Nil => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin,
   )
 
   check(
@@ -478,7 +474,7 @@ class InteractiveSuite extends FunSuite {
        |[2:18..2:19): N <= ia1/N#
        |[2:19..2:19):  <= ia1/N#`<init>`().
        |""".stripMargin,
-    compat = List(ScalaVersion.Scala212 -> expectedIa1, ScalaVersion.AtMost213(15) -> expectedIa1),
+    ScalaVersion.atMost("2.13.16") -> expectedIa1,
   )
 
 }
