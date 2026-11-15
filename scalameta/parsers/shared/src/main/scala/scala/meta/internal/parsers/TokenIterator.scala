@@ -3,7 +3,7 @@ package scala.meta.internal.parsers
 import scala.meta.tokens.Token
 
 // NOTE: public methods of TokenIterator return scannerTokens-based positions
-/** A cursor over the stream of [[ScannerTokens]]. It only reads the stream. */
+/** A cursor over the stream of `ScannerTokens`. It only reads the stream. */
 trait TokenIterator {
 
   def hasCurr: Boolean
