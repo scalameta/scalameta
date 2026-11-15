@@ -7684,6 +7684,585 @@ class TargetedSuite extends SemanticdbSuite {
          |""".stripMargin,
   )
 
+  private val operatorCallingMemberMethod =
+    """|package zc
+       |import scala.collection.mutable.ListBuffer
+       |class B { def +=(n: Int): Unit = () }
+       |class X { var b = new B }
+       |object O {
+       |  val x = new X
+       |  def g = {
+       |    var lb = ListBuffer(1)
+       |    x.b += 5
+       |    lb += 2
+       |  }
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator that calls a member method",
+    operatorCallingMemberMethod,
+    """|[0:8..0:10): zc <= zc/
+       |[1:7..1:12): scala => scala/
+       |[1:13..1:23): collection => scala/collection/
+       |[1:24..1:31): mutable => scala/collection/mutable/
+       |[1:32..1:42): ListBuffer => scala/collection/mutable/ListBuffer#
+       |[1:32..1:42): ListBuffer => scala/collection/mutable/ListBuffer.
+       |[2:6..2:7): B <= zc/B#
+       |[2:8..2:8):  <= zc/B#`<init>`().
+       |[2:14..2:16): += <= zc/B#`+=`().
+       |[2:17..2:18): n <= zc/B#`+=`().(n)
+       |[2:20..2:23): Int => scala/Int#
+       |[2:26..2:30): Unit => scala/Unit#
+       |[3:6..3:7): X <= zc/X#
+       |[3:8..3:8):  <= zc/X#`<init>`().
+       |[3:14..3:15): b <= zc/X#b().
+       |[3:22..3:23): B => zc/B#
+       |[3:23..3:23):  => zc/B#`<init>`().
+       |[4:7..4:8): O <= zc/O.
+       |[5:6..5:7): x <= zc/O.x.
+       |[5:14..5:15): X => zc/X#
+       |[5:15..5:15):  => zc/X#`<init>`().
+       |[6:6..6:7): g <= zc/O.g().
+       |[7:8..7:10): lb <= local0
+       |[7:13..7:23): ListBuffer => scala/collection/mutable/ListBuffer.
+       |[8:4..8:5): x => zc/O.x.
+       |[8:6..8:7): b => zc/X#b().
+       |[8:8..8:10): += => zc/B#`+=`().
+       |[9:4..9:6): lb => local0
+       |[9:7..9:9): += => scala/collection/mutable/Growable#`+=`().
+       |""".stripMargin,
+    "Occurrences",
+    ScalaVersion.Scala212 ->
+      """|[0:8..0:10): zc <= zc/
+         |[1:7..1:12): scala => scala/
+         |[1:13..1:23): collection => scala/collection/
+         |[1:24..1:31): mutable => scala/collection/mutable/
+         |[1:32..1:42): ListBuffer => scala/collection/mutable/ListBuffer#
+         |[1:32..1:42): ListBuffer => scala/collection/mutable/ListBuffer.
+         |[2:6..2:7): B <= zc/B#
+         |[2:8..2:8):  <= zc/B#`<init>`().
+         |[2:14..2:16): += <= zc/B#`+=`().
+         |[2:17..2:18): n <= zc/B#`+=`().(n)
+         |[2:20..2:23): Int => scala/Int#
+         |[2:26..2:30): Unit => scala/Unit#
+         |[3:6..3:7): X <= zc/X#
+         |[3:8..3:8):  <= zc/X#`<init>`().
+         |[3:14..3:15): b <= zc/X#b().
+         |[3:22..3:23): B => zc/B#
+         |[3:23..3:23):  => zc/B#`<init>`().
+         |[4:7..4:8): O <= zc/O.
+         |[5:6..5:7): x <= zc/O.x.
+         |[5:14..5:15): X => zc/X#
+         |[5:15..5:15):  => zc/X#`<init>`().
+         |[6:6..6:7): g <= zc/O.g().
+         |[7:8..7:10): lb <= local0
+         |[7:13..7:23): ListBuffer => scala/collection/mutable/ListBuffer.
+         |[8:4..8:5): x => zc/O.x.
+         |[8:6..8:7): b => zc/X#b().
+         |[8:8..8:10): += => zc/B#`+=`().
+         |[9:4..9:6): lb => local0
+         |[9:7..9:9): += => scala/collection/mutable/ListBuffer#`+=`().
+         |""".stripMargin,
+  )
+
+  checkSection(
+    "an assignment operator that calls a member method: synthetics",
+    operatorCallingMemberMethod,
+    """|[7:13..7:23): ListBuffer => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
+      """|[7:13..7:23): ListBuffer => *.apply[Int]
+         |  apply => scala/collection/generic/GenericCompanion#apply().
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  private val operatorOnPrivateAndConstructorVar =
+    """|package zd
+       |class X(var c: Int) {
+       |  private var p = 0
+       |  def f() = { p += 1; c += 1 }
+       |}
+       |object O {
+       |  val x = new X(0)
+       |  x.c += 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator on a private var and a constructor var",
+    operatorOnPrivateAndConstructorVar,
+    """|[0:8..0:10): zd <= zd/
+       |[1:6..1:7): X <= zd/X#
+       |[1:7..1:7):  <= zd/X#`<init>`().
+       |[1:12..1:13): c <= zd/X#`<init>`().(c)
+       |[1:12..1:13): c <= zd/X#c().
+       |[1:15..1:18): Int => scala/Int#
+       |[2:14..2:15): p <= zd/X#p().
+       |[3:6..3:7): f <= zd/X#f().
+       |[3:14..3:15): p => zd/X#`p_=`().
+       |[3:16..3:18): += => scala/Int#`+`(+4).
+       |[3:22..3:23): c => zd/X#`c_=`().
+       |[3:24..3:26): += => scala/Int#`+`(+4).
+       |[5:7..5:8): O <= zd/O.
+       |[6:6..6:7): x <= zd/O.x.
+       |[6:14..6:15): X => zd/X#
+       |[6:15..6:15):  => zd/X#`<init>`().
+       |[7:2..7:3): x => zd/O.x.
+       |[7:4..7:5): c => zd/X#`c_=`().
+       |[7:6..7:8): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an assignment operator on a private var and a constructor var: synthetics",
+    operatorOnPrivateAndConstructorVar,
+    "",
+    "Synthetics",
+  )
+
+  private val operatorOnMemberOfLocalClass =
+    """|package ze
+       |object O {
+       |  def f = {
+       |    class V { var v = 0 }
+       |    val y = new V
+       |    y.v += 1
+       |    y.v
+       |  }
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator on a member of a local class",
+    operatorOnMemberOfLocalClass,
+    """|[0:8..0:10): ze <= ze/
+       |[1:7..1:8): O <= ze/O.
+       |[2:6..2:7): f <= ze/O.f().
+       |[3:10..3:11): V <= local0
+       |[3:12..3:12):  <= local1
+       |[3:18..3:19): v <= local2
+       |[4:8..4:9): y <= local5
+       |[4:16..4:17): V => local0
+       |[4:17..4:17):  => local1
+       |[5:4..5:5): y => local5
+       |[5:6..5:7): v => local3
+       |[5:8..5:10): += => scala/Int#`+`(+4).
+       |[6:4..6:5): y => local5
+       |[6:6..6:7): v => local2
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an assignment operator on a member of a local class: synthetics",
+    operatorOnMemberOfLocalClass,
+    "",
+    "Synthetics",
+  )
+
+  private val operatorOnVarOfVarQualifier =
+    """|package zf
+       |class X { var v = 0 }
+       |class Y { var x = new X }
+       |object O {
+       |  val yy = new Y
+       |  yy.x.v += 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator on a var of a var qualifier",
+    operatorOnVarOfVarQualifier,
+    """|[0:8..0:10): zf <= zf/
+       |[1:6..1:7): X <= zf/X#
+       |[1:8..1:8):  <= zf/X#`<init>`().
+       |[1:14..1:15): v <= zf/X#v().
+       |[2:6..2:7): Y <= zf/Y#
+       |[2:8..2:8):  <= zf/Y#`<init>`().
+       |[2:14..2:15): x <= zf/Y#x().
+       |[2:22..2:23): X => zf/X#
+       |[2:23..2:23):  => zf/X#`<init>`().
+       |[3:7..3:8): O <= zf/O.
+       |[4:6..4:8): yy <= zf/O.yy.
+       |[4:15..4:16): Y => zf/Y#
+       |[4:16..4:16):  => zf/Y#`<init>`().
+       |[5:2..5:4): yy => zf/O.yy.
+       |[5:5..5:6): x => zf/Y#x().
+       |[5:7..5:8): v => zf/X#`v_=`().
+       |[5:9..5:11): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an assignment operator on a var of a var qualifier: synthetics",
+    operatorOnVarOfVarQualifier,
+    "",
+    "Synthetics",
+  )
+
+  private val operatorWithViewOnVarValue =
+    """|package zg
+       |class X { var arr = Array(1) }
+       |object O {
+       |  val x = new X
+       |  x.arr :+= 2
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator with a view on the var's value",
+    operatorWithViewOnVarValue,
+    """|[0:8..0:10): zg <= zg/
+       |[1:6..1:7): X <= zg/X#
+       |[1:8..1:8):  <= zg/X#`<init>`().
+       |[1:14..1:17): arr <= zg/X#arr().
+       |[1:20..1:25): Array => scala/Array.
+       |[2:7..2:8): O <= zg/O.
+       |[3:6..3:7): x <= zg/O.x.
+       |[3:14..3:15): X => zg/X#
+       |[3:15..3:15):  => zg/X#`<init>`().
+       |[4:2..4:3): x => zg/O.x.
+       |[4:4..4:7): arr => zg/X#`arr_=`().
+       |[4:8..4:11): :+= => scala/collection/ArrayOps#`:+`().
+       |""".stripMargin,
+    "Occurrences",
+    ScalaVersion.Scala212 ->
+      """|[0:8..0:10): zg <= zg/
+         |[1:6..1:7): X <= zg/X#
+         |[1:8..1:8):  <= zg/X#`<init>`().
+         |[1:14..1:17): arr <= zg/X#arr().
+         |[1:20..1:25): Array => scala/Array.
+         |[2:7..2:8): O <= zg/O.
+         |[3:6..3:7): x <= zg/O.x.
+         |[3:14..3:15): X => zg/X#
+         |[3:15..3:15):  => zg/X#`<init>`().
+         |[4:2..4:3): x => zg/O.x.
+         |[4:4..4:7): arr => zg/X#`arr_=`().
+         |[4:8..4:11): :+= => scala/collection/mutable/ArrayOps#`:+`().
+         |""".stripMargin,
+  )
+
+  checkSection(
+    "an assignment operator with a view on the var's value: synthetics",
+    operatorWithViewOnVarValue,
+    """|[1:20..1:25): Array => *.apply
+       |  apply => scala/Array.apply(+5).
+       |[4:2..4:13): x.arr :+= 2 => *((`macro-expandee` : ClassTag[Int]))
+       |  ClassTag => scala/reflect/ClassTag#
+       |  Int => scala/Int#
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val operatorOnClasspathVar =
+    """|package zh
+       |object O {
+       |  val dv = new scala.util.DynamicVariable(1)
+       |  dv.value += 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator on a classpath getter and setter",
+    operatorOnClasspathVar,
+    """|[0:8..0:10): zh <= zh/
+       |[1:7..1:8): O <= zh/O.
+       |[2:6..2:8): dv <= zh/O.dv.
+       |[2:15..2:20): scala => scala/
+       |[2:21..2:25): util => scala/util/
+       |[2:26..2:41): DynamicVariable => scala/util/DynamicVariable#
+       |[2:41..2:41):  => scala/util/DynamicVariable#`<init>`().
+       |[3:2..3:4): dv => zh/O.dv.
+       |[3:5..3:10): value => scala/util/DynamicVariable#`value_=`().
+       |[3:11..3:13): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an assignment operator on a classpath getter and setter: synthetics",
+    operatorOnClasspathVar,
+    "",
+    "Synthetics",
+  )
+
+  private val operatorOnAccessorsOfSubclasses =
+    """|package zi
+       |class A { def w: Int = 0; def w_=(n: Int): Unit = () }
+       |class B extends A { override def w: Int = 1 }
+       |class C extends A { override def w_=(n: Int): Unit = () }
+       |object O {
+       |  val b = new B
+       |  val c = new C
+       |  b.w += 1
+       |  c.w += 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator on a getter and a setter of different classes",
+    operatorOnAccessorsOfSubclasses,
+    """|[0:8..0:10): zi <= zi/
+       |[1:6..1:7): A <= zi/A#
+       |[1:8..1:8):  <= zi/A#`<init>`().
+       |[1:14..1:15): w <= zi/A#w().
+       |[1:17..1:20): Int => scala/Int#
+       |[1:30..1:33): w_= <= zi/A#`w_=`().
+       |[1:34..1:35): n <= zi/A#`w_=`().(n)
+       |[1:37..1:40): Int => scala/Int#
+       |[1:43..1:47): Unit => scala/Unit#
+       |[2:6..2:7): B <= zi/B#
+       |[2:8..2:8):  <= zi/B#`<init>`().
+       |[2:16..2:17): A => zi/A#
+       |[2:17..2:17):  => zi/A#`<init>`().
+       |[2:33..2:34): w <= zi/B#w().
+       |[2:36..2:39): Int => scala/Int#
+       |[3:6..3:7): C <= zi/C#
+       |[3:8..3:8):  <= zi/C#`<init>`().
+       |[3:16..3:17): A => zi/A#
+       |[3:17..3:17):  => zi/A#`<init>`().
+       |[3:33..3:36): w_= <= zi/C#`w_=`().
+       |[3:37..3:38): n <= zi/C#`w_=`().(n)
+       |[3:40..3:43): Int => scala/Int#
+       |[3:46..3:50): Unit => scala/Unit#
+       |[4:7..4:8): O <= zi/O.
+       |[5:6..5:7): b <= zi/O.b.
+       |[5:14..5:15): B => zi/B#
+       |[5:15..5:15):  => zi/B#`<init>`().
+       |[6:6..6:7): c <= zi/O.c.
+       |[6:14..6:15): C => zi/C#
+       |[6:15..6:15):  => zi/C#`<init>`().
+       |[7:2..7:3): b => zi/O.b.
+       |[7:4..7:5): w => zi/A#`w_=`().
+       |[7:6..7:8): += => scala/Int#`+`(+4).
+       |[8:2..8:3): c => zi/O.c.
+       |[8:4..8:5): w => zi/C#`w_=`().
+       |[8:6..8:8): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an assignment operator on a getter and a setter of different classes: synthetics",
+    operatorOnAccessorsOfSubclasses,
+    "",
+    "Synthetics",
+  )
+
+  private val operatorOnSetterOfImplicitClass =
+    """|package zj
+       |class N
+       |object O {
+       |  implicit class P(n: N) { def w: Int = 0; def w_=(x: Int): Unit = () }
+       |  val n = new N
+       |  n.w += 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator on a setter of an implicit class",
+    operatorOnSetterOfImplicitClass,
+    """|[0:8..0:10): zj <= zj/
+       |[1:6..1:7): N <= zj/N#
+       |[1:7..1:7):  <= zj/N#`<init>`().
+       |[2:7..2:8): O <= zj/O.
+       |[3:17..3:18): P <= zj/O.P#
+       |[3:18..3:18):  <= zj/O.P#`<init>`().
+       |[3:19..3:20): n <= zj/O.P#`<init>`().(n)
+       |[3:19..3:20): n <= zj/O.P#n.
+       |[3:22..3:23): N => zj/N#
+       |[3:31..3:32): w <= zj/O.P#w().
+       |[3:34..3:37): Int => scala/Int#
+       |[3:47..3:50): w_= <= zj/O.P#`w_=`().
+       |[3:51..3:52): x <= zj/O.P#`w_=`().(x)
+       |[3:54..3:57): Int => scala/Int#
+       |[3:60..3:64): Unit => scala/Unit#
+       |[4:6..4:7): n <= zj/O.n.
+       |[4:14..4:15): N => zj/N#
+       |[4:15..4:15):  => zj/N#`<init>`().
+       |[5:2..5:3): n => zj/O.n.
+       |[5:4..5:5): w => zj/O.P#`w_=`().
+       |[5:6..5:8): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an assignment operator on a setter of an implicit class: synthetics",
+    operatorOnSetterOfImplicitClass,
+    """|[5:2..5:3): n => P(*)
+       |  P => zj/O.P().
+       |""".stripMargin,
+    "Synthetics",
+  )
+
+  private val operatorOnVarsOfTrait =
+    """|package zk
+       |trait T {
+       |  var t = 0
+       |  private[this] var p = 0
+       |  def g() = p += 1
+       |}
+       |class X extends T {
+       |  def f() = t += 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator on vars of a trait",
+    operatorOnVarsOfTrait,
+    """|[0:8..0:10): zk <= zk/
+       |[1:6..1:7): T <= zk/T#
+       |[1:8..1:8):  <= zk/T#`<init>`().
+       |[2:6..2:7): t <= zk/T#t().
+       |[3:20..3:21): p <= zk/T#p().
+       |[4:6..4:7): g <= zk/T#g().
+       |[4:12..4:13): p => zk/T#`p_=`().
+       |[4:14..4:16): += => scala/Int#`+`(+4).
+       |[6:6..6:7): X <= zk/X#
+       |[6:8..6:8):  <= zk/X#`<init>`().
+       |[6:16..6:17): T => zk/T#
+       |[6:17..6:17):  => java/lang/Object#`<init>`().
+       |[7:6..7:7): f <= zk/X#f().
+       |[7:12..7:13): t => zk/T#`t_=`().
+       |[7:14..7:16): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+    "Occurrences",
+  )
+
+  checkSection(
+    "an assignment operator on vars of a trait: synthetics",
+    operatorOnVarsOfTrait,
+    "",
+    "Synthetics",
+  )
+
+  private val operatorOnImportedVar =
+    """|package zl
+       |object M { var c = 0 }
+       |object O {
+       |  import M._
+       |  c += 1
+       |  for (i <- List(1)) c += i
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "an assignment operator on an imported var and in a for",
+    operatorOnImportedVar,
+    """|[0:8..0:10): zl <= zl/
+       |[1:7..1:8): M <= zl/M.
+       |[1:15..1:16): c <= zl/M.c().
+       |[2:7..2:8): O <= zl/O.
+       |[3:9..3:10): M => zl/M.
+       |[4:2..4:3): c => zl/M.`c_=`().
+       |[4:4..4:6): += => scala/Int#`+`(+4).
+       |[5:7..5:8): i <= local0
+       |[5:12..5:16): List => scala/package.List.
+       |[5:21..5:22): c => zl/M.`c_=`().
+       |[5:23..5:25): += => scala/Int#`+`(+4).
+       |[5:26..5:27): i => local0
+       |""".stripMargin,
+    "Occurrences",
+    ScalaVersion.Scala212 ->
+      """|[0:8..0:10): zl <= zl/
+         |[1:7..1:8): M <= zl/M.
+         |[1:15..1:16): c <= zl/M.c().
+         |[2:7..2:8): O <= zl/O.
+         |[3:9..3:10): M => zl/M.
+         |[4:2..4:3): c => zl/M.`c_=`().
+         |[4:4..4:6): += => scala/Int#`+`(+4).
+         |[5:7..5:8): i <= local0
+         |[5:12..5:16): List => scala/collection/immutable/List.
+         |[5:21..5:22): c => zl/M.`c_=`().
+         |[5:23..5:25): += => scala/Int#`+`(+4).
+         |[5:26..5:27): i => local0
+         |""".stripMargin,
+  )
+
+  checkSection(
+    "an assignment operator on an imported var and in a for: synthetics",
+    operatorOnImportedVar,
+    """|[5:2..5:27): for (i <- List(1)) c += i => orig(List(1)).foreach[Unit]({(i) => orig(c += i)})
+       |  foreach => scala/collection/immutable/List#foreach().
+       |  Unit => scala/Unit#
+       |  i => local0
+       |[5:12..5:16): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
+      """|[5:2..5:27): for (i <- List(1)) c += i => orig(List(1)).foreach[Unit]({(i) => orig(c += i)})
+         |  foreach => scala/collection/immutable/List#foreach().
+         |  Unit => scala/Unit#
+         |  i => local0
+         |[5:12..5:16): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
+  private val rightAssociativeOperatorOnVar =
+    """|package zm
+       |object O {
+       |  var l = List(1)
+       |  l ::= 1
+       |  l +:= 1
+       |}
+       |""".stripMargin
+
+  checkSection(
+    "a right-associative assignment operator on a var",
+    rightAssociativeOperatorOnVar,
+    """|[0:8..0:10): zm <= zm/
+       |[1:7..1:8): O <= zm/O.
+       |[2:6..2:7): l <= zm/O.l().
+       |[2:10..2:14): List => scala/package.List.
+       |[3:2..3:3): l => zm/O.`l_=`().
+       |[3:4..3:7): ::= => scala/collection/immutable/List#`::`().
+       |[4:2..4:3): l => zm/O.`l_=`().
+       |[4:4..4:7): +:= => scala/collection/SeqOps#`+:`().
+       |""".stripMargin,
+    "Occurrences",
+    ScalaVersion.Scala212 ->
+      """|[0:8..0:10): zm <= zm/
+         |[1:7..1:8): O <= zm/O.
+         |[2:6..2:7): l <= zm/O.l().
+         |[2:10..2:14): List => scala/collection/immutable/List.
+         |[3:2..3:3): l => zm/O.`l_=`().
+         |[3:4..3:7): ::= => scala/collection/immutable/List#`::`().
+         |[4:2..4:3): l => zm/O.`l_=`().
+         |[4:4..4:7): +:= => scala/collection/immutable/List#`+:`().
+         |""".stripMargin,
+  )
+
+  checkSection(
+    "a right-associative assignment operator on a var: synthetics",
+    rightAssociativeOperatorOnVar,
+    """|[2:10..2:14): List => *.apply[Int]
+       |  apply => scala/collection/IterableFactory#apply().
+       |  Int => scala/Int#
+       |""".stripMargin,
+    "Synthetics",
+    ScalaVersion.Scala212 ->
+      """|[2:10..2:14): List => *.apply[Int]
+         |  apply => scala/collection/immutable/List.apply().
+         |  Int => scala/Int#
+         |[4:2..4:9): l +:= 1 => *(List.canBuildFrom[Int])
+         |  List => scala/collection/immutable/List.
+         |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+         |  Int => scala/Int#
+         |""".stripMargin,
+  )
+
   // meta-annotations (#2085)
   occurrences(
     """|package t

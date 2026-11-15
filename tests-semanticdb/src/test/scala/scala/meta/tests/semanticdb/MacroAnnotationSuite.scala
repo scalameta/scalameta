@@ -1645,4 +1645,20 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  occurrences(
+    """|package ma48
+       |@example.RebuildDefs class K { var n = 0; def inc() = n += 1 }
+       |""".stripMargin,
+    """|[0:8..0:12): ma48 <= ma48/
+       |[1:1..1:8): example => example/
+       |[1:9..1:20): RebuildDefs => example/RebuildDefs#
+       |[1:27..1:28): K <= ma48/K#
+       |[1:29..1:29):  <= ma48/K#`<init>`().
+       |[1:35..1:36): n <= ma48/K#n().
+       |[1:46..1:49): inc <= ma48/K#inc().
+       |[1:54..1:55): n => ma48/K#`n_=`().
+       |[1:56..1:58): += => scala/Int#`+`(+4).
+       |""".stripMargin,
+  )
+
 }
