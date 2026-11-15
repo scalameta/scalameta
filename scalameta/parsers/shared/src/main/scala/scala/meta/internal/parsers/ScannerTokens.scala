@@ -355,8 +355,9 @@ private[meta] final class ScannerTokens(
     def mkOutdentAt(outdent: Int, regions: List[SepRegion], fromPos: Int = prevPos) = {
       val maxPointPos = if (nextPos < 0 || currNonTrivial) currPos else nextPos
       val pointPos = findOutdentPos(fromPos, maxPointPos, outdent, isIndented(regions, outdent))
-      val (nextPrevPos, nextCurrPos) =
-        if (pointPos > currPos) (currPos, pointPos) else (prevPos, currPos)
+      val isPointAhead = pointPos > currPos
+      val nextPrevPos = if (isPointAhead) currPos else prevPos
+      val nextCurrPos = if (isPointAhead) pointPos else currPos
       val tok = tokens(pointPos)
       val start = if (tok.is[Whitespace]) tok.start else tok.end
       outdentAt += pointPos
