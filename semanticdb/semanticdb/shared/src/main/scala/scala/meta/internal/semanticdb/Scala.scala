@@ -7,6 +7,7 @@ import scala.annotation.tailrec
 
 object Scala {
   object Symbols {
+
     val None: String = ""
     val RootPackage: String = "_root_/"
     val EmptyPackage: String = "_empty_/"
@@ -16,16 +17,21 @@ object Scala {
     def Global(owner: String, desc: Descriptor): String =
       if (owner != RootPackage) owner + desc.toString else desc.toString
     def Local(id: Int): String = LocalPrefix + id.toString
-    def Multi(symbols: List[String]): String = symbols.distinct match {
-      case List(symbol) => symbol
-      case symbols =>
+    private def multi(symbols: Seq[String]): String = {
+      val unique = symbols.distinct
+      if (unique.lengthCompare(1) == 0) unique.head
+      else {
         val sb = new StringBuilder
-        symbols.foreach { symbol =>
+        unique.foreach { symbol =>
           if (!symbol.isMulti) sb.append(';')
           sb.append(symbol)
         }
         sb.toString()
+      }
     }
+    def Multi(symbols: List[String]): String = multi(symbols)
+    def Multi(symbols: String*): String = multi(symbols)
+
   }
 
   implicit class ScalaSymbolOps(private val symbol: String) extends AnyVal {
@@ -42,25 +48,26 @@ object Scala {
       })
     def isLocal: Boolean = symbol.startsWith(Symbols.LocalPrefix)
     def isMulti: Boolean = symbol.startsWith(";")
-    def asMulti: List[String] =
-      if (!isMulti) symbol :: Nil
+    def asMulti: List[String] = asMulti(Nil)
+    def asMulti(suffix: List[String]): List[String] =
+      if (!isMulti) symbol :: suffix
       else {
-        val buf = List.newBuilder[String]
-        @tailrec
-        def loop(begin: Int, i: Int): Unit =
-          if (i >= symbol.length) buf += symbol.substring(begin, symbol.length)
-          else symbol.charAt(i) match {
+        var res = suffix
+        var end = symbol.length
+        var idx = end - 1
+        while (idx >= 0) {
+          symbol.charAt(idx) match {
             case ';' =>
-              buf += symbol.substring(begin, i)
-              loop(i + 1, i + 1)
+              res = symbol.substring(idx + 1, end) :: res
+              end = idx
             case '`' =>
-              var j = i + 1
-              while (symbol.charAt(j) != '`') j += 1
-              loop(begin, j + 1)
-            case _ => loop(begin, i + 1)
+              idx -= 1
+              while (symbol.charAt(idx) != '`') idx -= 1
+            case _ =>
           }
-        loop(1, 1)
-        buf.result()
+          idx -= 1
+        }
+        res
       }
     def isTerm: Boolean = !isNone && !isMulti && symbol.last == '.'
     def isType: Boolean = !isNone && !isMulti && symbol.last == '#'

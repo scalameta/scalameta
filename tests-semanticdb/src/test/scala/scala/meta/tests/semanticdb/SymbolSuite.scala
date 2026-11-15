@@ -24,6 +24,9 @@ class SymbolSuite extends FunSuite {
     assertEquals(Symbols.Multi(symbols).asMulti, expected)
   }
 
+  def checkAsMulti(symbol: String, suffix: List[String], expected: List[String]): Unit =
+    test("  multi: " + symbol + " :: " + suffix)(assertEquals(symbol.asMulti(suffix), expected))
+
   def checkGlobal(symbol: String): Unit = test(" global: " + symbol)(assert(symbol.isGlobal))
 
   def checkNotGlobal(symbol: String): Unit = test("!global: " + symbol)(assert(!symbol.isGlobal))
@@ -69,6 +72,15 @@ class SymbolSuite extends FunSuite {
   checkMultiSyntax(";a.;b." :: ";c.;d." :: Nil, ";a.;b.;c.;d.")
   // A single element that is itself a multi-symbol is returned unchanged.
   checkMultiSyntax(";a.;b." :: Nil, ";a.;b.")
+
+  test(" syntax: Multi(a., b.)")(assertEquals(Symbols.Multi("a.", "b."), ";a.;b."))
+  test(" syntax: Multi(a., a.)")(assertEquals(Symbols.Multi("a.", "a."), "a."))
+  test(" syntax: Multi(a.)")(assertEquals(Symbols.Multi("a."), "a."))
+
+  checkAsMulti("a.", "z." :: Nil, "a." :: "z." :: Nil)
+  checkAsMulti(";a.;b.", "z." :: Nil, "a." :: "b." :: "z." :: Nil)
+  checkAsMulti(";com/`a;b`#;c.", "z." :: Nil, "com/`a;b`#" :: "c." :: "z." :: Nil)
+  checkAsMulti(";c.;com/`a;b`#", "z." :: Nil, "c." :: "com/`a;b`#" :: "z." :: Nil)
 
   checkMultiRoundtrip(Nil)
   checkMultiRoundtrip("com/Bar#" :: Nil)

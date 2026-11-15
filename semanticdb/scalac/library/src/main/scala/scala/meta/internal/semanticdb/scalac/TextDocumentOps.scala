@@ -288,7 +288,7 @@ trait TextDocumentOps {
        */
 
       def addOccurrenceFromSemantic(mpos: m.Position, ssym: String, role: Role): Unit =
-        if (ssym != Symbols.None) occurrences(mpos) = (ssym, role)
+        if (ssym != Symbols.None) occurrences(mpos) = Occurrence(ssym, role)
 
       def setSamOccurrence(
           gsym: g.Symbol,
@@ -299,8 +299,9 @@ trait TextDocumentOps {
         if (ssym == Symbols.None) null
         else {
           // keep the definition of each nested lambda that starts at this position
-          val sdef = map.get(mdef).fold(ssym)(o => Symbols.Multi(o._1.asMulti :+ ssym))
-          map(mdef) = (sdef, Role.DEFINITION)
+          val occ = map.getOrElse(mdef, null)
+          val sdef = if (occ eq null) ssym else Symbols.Multi(occ.symbol.asMulti(ssym :: Nil))
+          map(mdef) = Occurrence(sdef, Role.DEFINITION)
           saveSymbolFromSemantic(gsym, ssym)
         }
       }
@@ -364,7 +365,7 @@ trait TextDocumentOps {
       }
 
       def addPatOccurrenceFromSemantic(mpos: m.Position, ssym: String): Unit =
-        if (ssym != Symbols.None) mpatoccurrences(mpos) = (ssym, Role.DEFINITION)
+        if (ssym != Symbols.None) mpatoccurrences(mpos) = Occurrence(ssym, Role.DEFINITION)
 
       def saveSymbol(gs: g.Symbol): Unit = if (gs.isUsefulSymbolInformation) saveSymbolDo(gs)
       def saveSymbolDo(gs: g.Symbol): Unit = saveSymbolFromSemantic(gs, gs.toSemantic)
@@ -485,7 +486,7 @@ trait TextDocumentOps {
           if (!gsym.isParamAccessor) ssym
           else gsym.owner.primaryConstructor.info.paramss.flatten
             .find(_.symbolName == gsym.symbolName)
-            .fold(ssym)(gparam => Symbols.Multi(List(ssym, gparam.toSemantic)))
+            .fold(ssym)(gparam => Symbols.Multi(ssym, gparam.toSemantic))
         /* if scalac builds a tree of its own at a name, such as the tuple of a `for` at a binder,
          * the tree has another name. If the language rewrites a name, such as `x = 1` into `x_=`,
          * scalac derives the new name from the written one */
@@ -2451,9 +2452,9 @@ trait TextDocumentOps {
         val buf = IndexedSeq.newBuilder[s.SymbolOccurrence]
         for {
           map <- Iterator(occurrences, mpatoccurrences, samoccurrences, sammethodoccurrences)
-          (pos, (sym, role)) <- map
-          flatSym <- sym.asMulti
-        } buf += s.SymbolOccurrence(Some(pos.toRange), flatSym, role)
+          (pos, occ) <- map
+          flatSym <- occ.symbol.asMulti
+        } buf += s.SymbolOccurrence(Some(pos.toRange), flatSym, occ.role)
         buf.result()
       }
 
@@ -2566,7 +2567,7 @@ trait TextDocumentOps {
 object TextDocumentOps {
 
   import s.SymbolOccurrence.Role
-  type Occurrence = (String, Role)
+  case class Occurrence(symbol: String, role: Role)
   def emptyOccurrenceMap() = mutable.Map.empty[m.Position, Occurrence]
 
   private final val Apply = "apply"
