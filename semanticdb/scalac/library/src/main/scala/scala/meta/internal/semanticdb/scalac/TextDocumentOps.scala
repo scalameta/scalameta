@@ -443,6 +443,25 @@ trait TextDocumentOps {
           t.body.iterator.collect { case d: g.DefDef if d.symbol.isGetter => d.symbol }.toSet,
         )
 
+        /** whether `gtree` is the read of an enclosing call to `ssetter`, as in `x.v += 1` */
+        private def isReadOfSetter(gtree: g.Tree, ssetter: String): Boolean = {
+          if (!gtree.isInstanceOf[g.RefTree]) return false
+          val gsym = gtree.symbol
+          if (!gsym.isMethod) return false
+          val gpos = gtree.pos
+          var gtrees = genclosing
+          while (gtrees ne Nil) {
+            gtrees.head match {
+              case g.Apply(f: g.Select, _)
+                  if gpos.samePointAs(f.pos) && f.name == gsym.setterName =>
+                return f.symbol.toSemantic == ssetter
+              case _ =>
+            }
+            gtrees = gtrees.tail
+          }
+          false
+        }
+
         private def isExpansion(gpos: g.Position): Boolean = !gpos.isRange &&
           (mexpansions.getOrNull(gpos.point) ne null)
         private def trySymbolDefinition(gsym: g.Symbol): Unit = {
@@ -505,7 +524,7 @@ trait TextDocumentOps {
           !gsym.isMethod && isConcat(name, mvalue, g.nme.LOCAL_SUFFIX_STRING) ||
           gsym.isClass && mname.isInstanceOf[m.Term.Name] && gsym.thisSym.nameString == mvalue
         }
-        private def success(mtree: m.Name, gsym0: g.Symbol): Unit = {
+        private def success(mtree: m.Name, gsym0: g.Symbol, gtree: g.Tree = null): Unit = {
           // We cannot be guaranteed that all symbols have a position, see
           // https://github.com/scalameta/scalameta/issues/665
           // Instead of crashing with "unsupported file", we ignore these cases.
@@ -523,7 +542,17 @@ trait TextDocumentOps {
           if (gsym0.isConstructor && mtree.isInstanceOf[m.Term.Name]) return
           val pos = mtree.pos
           if (pos == m.Position.None) return
-          if (occurrences.contains(pos)) return
+          val prev = occurrences.getOrElse(pos, null)
+          if (prev ne null) {
+            val ssym = prev.symbol
+            // record the getter once: a multi-symbol already has it
+            if (!ssym.isMulti && isReadOfSetter(gtree, ssym)) {
+              val sgetter = gsym0.toSemantic
+              if (sgetter != Symbols.None)
+                occurrences(pos) = prev.copy(symbol = Symbols.Multi(ssym, sgetter))
+            }
+            return
+          }
 
           val gsym =
             if (gsym0.isConstructor && !mtree.isAny[m.Name.Anonymous, m.Name.This]) gsym0.owner
@@ -736,7 +765,7 @@ trait TextDocumentOps {
               isWrittenName(mname, gsym, gname)
             }
           def claim(mname: m.Name, gsym: g.Symbol): Unit =
-            if (isWritten(mname, gsym)) success(mname, gsym)
+            if (isWritten(mname, gsym)) success(mname, gsym, gtree)
           def tryMstart(pos: Int): Unit = claim(mnameAt(pos), gsym)
           def tryMend(pos: Int): Unit = claim(mnameEndingAt(pos), gsym)
 

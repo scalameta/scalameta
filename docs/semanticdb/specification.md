@@ -2950,7 +2950,9 @@ Notes:
 - Definitions and references of local values and variables resolve to
   [local symbols](#symbol).
 - Reads of a member variable resolve to its getter symbol, while assignments
-  to a member variable resolve to its setter symbol.
+  to a member variable resolve to its setter symbol. An assignment operator
+  such as `y += 1` on a value without a member `+=` reads and assigns, so it
+  resolves to both.
 - The synthetic fields that underlie member values and variables (see
   [SymbolInformation](#scala-symbolinformation)) never produce occurrences.
 

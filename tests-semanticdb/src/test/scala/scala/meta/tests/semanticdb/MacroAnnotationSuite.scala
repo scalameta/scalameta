@@ -1657,6 +1657,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:35..1:36): n <= ma48/K#n().
        |[1:46..1:49): inc <= ma48/K#inc().
        |[1:54..1:55): n => ma48/K#`n_=`().
+       |[1:54..1:55): n => ma48/K#n().
        |[1:56..1:58): += => scala/Int#`+`(+4).
        |""".stripMargin,
   )
