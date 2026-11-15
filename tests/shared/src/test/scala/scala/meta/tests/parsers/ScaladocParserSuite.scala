@@ -21,6 +21,7 @@ class ScaladocParserSuite extends FunSuite {
   ): Unit = {
     assertEquals(parseString(comment), Option(expected))
     assertEquals(parseString(comment.replace("\n", " \t\r\n")), Option(expected))
+    assertEquals(parseString(comment.replace("\n", "\r")), Option(expected))
   }
 
   private def generateTestString(tagType: TagType, testStringToMerge: String)(implicit
@@ -95,9 +96,11 @@ class ScaladocParserSuite extends FunSuite {
 
   test("paragraph parsing, lines ended by a lone CR") {
     val code = "/**\r *\r *Description Body\r *\r *Description Body\r *\r */"
-    val words: Seq[TextPartInfo] = "* *Description Body * *Description Body *".split(' ').toSeq
-      .map(Word.apply)
-    assertEquals(parseString(code), Option(Scaladoc(Seq(Paragraph(Seq(Text(words)))))))
+    val words: Seq[TextPartInfo] = "Description Body".split(' ').toSeq.map(Word.apply)
+    assertEquals(
+      parseString(code),
+      Option(Scaladoc(Seq(Paragraph(Seq(Text(words))), Paragraph(Seq(Text(words)))))),
+    )
   }
 
   test("paragraph parsing with leading space") {
@@ -1901,6 +1904,7 @@ class ScaladocParserSuite extends FunSuite {
       """|foo
          |bar
          |  baz
+         |
          |qux
          |""".stripMargin
     assertEquals(ScaladocParser.stripTrailingSpaces(input), output)

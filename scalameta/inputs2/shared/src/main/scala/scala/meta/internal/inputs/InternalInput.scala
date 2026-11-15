@@ -28,6 +28,7 @@ trait InternalInput {
       lastIsCR = chars(i) == '\r'
       i += 1
     }
+    if (lastIsCR) buf += i
     buf.toArray
   }
 
