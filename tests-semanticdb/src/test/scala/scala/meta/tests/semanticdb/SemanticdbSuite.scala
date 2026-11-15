@@ -78,23 +78,29 @@ abstract class SemanticdbSuite extends FunSuite {
     if (errors.nonEmpty) fail(diagnostics.mkString("\n"))
   }
 
-  protected def computeDatabaseFromSnippet(code: String): s.TextDocument = {
+  private def newUnit(code: String): g.CompilationUnit = {
     val javaFile = File.createTempFile("paradise", ".scala")
     val writer = new PrintWriter(javaFile)
     try writer.write(code)
     finally writer.close()
     config = config.copy(sourceroot = AbsolutePath(javaFile.getParentFile))
-    val run = new g.Run
     val abstractFile = AbstractFile.getFile(javaFile)
     val sourceFile = g.getSourceFile(abstractFile)
-    val unit = new g.CompilationUnit(sourceFile)
-    run.compileUnits(List(unit), run.phaseNamed("terminal"))
+    new g.CompilationUnit(sourceFile)
+  }
+
+  /** @param before sources that the run compiles ahead of `code` */
+  protected def computeDatabaseFromSnippet(code: String, before: String*): s.TextDocument = {
+    val run = new g.Run
+    val unit = newUnit(code)
+    val units = before.map(newUnit).toList :+ unit
+    run.compileUnits(units, run.phaseNamed("terminal"))
 
     g.phase = run.parserPhase
     g.globalPhase = run.parserPhase
     val reporter = new StoreReporter()
     g.reporter = reporter
-    unit.body = g.newUnitParser(unit).parse()
+    units.foreach(unit => unit.body = g.newUnitParser(unit).parse())
     assertNoReporterErrors()
 
     val packageobjectsPhase = run.phaseNamed("packageobjects")
@@ -112,7 +118,7 @@ abstract class SemanticdbSuite extends FunSuite {
       g.phase = phase
       g.globalPhase = phase
       if (phase eq run.typerPhase) g.openPackageModule(g.definitions.ScalaPackage)
-      phase.asInstanceOf[g.GlobalPhase].apply(unit)
+      units.foreach(phase.asInstanceOf[g.GlobalPhase].apply)
       assertNoReporterErrors()
     }
     g.phase = run.phaseNamed("patmat")
@@ -121,8 +127,8 @@ abstract class SemanticdbSuite extends FunSuite {
     unit.toTextDocument
   }
 
-  protected def computePayloadFromSnippet(code: String): String = {
-    val document = computeDatabaseFromSnippet(code)
+  protected def computePayloadFromSnippet(code: String, before: String*): String = {
+    val document = computeDatabaseFromSnippet(code, before: _*)
     val format = scala.meta.metap.Format.Detailed
     s.Print.document(format, document)
   }
@@ -133,8 +139,11 @@ abstract class SemanticdbSuite extends FunSuite {
       .mkString("", EOL, EOL)
   }
 
-  protected def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String =
-    computeSectionFromPayload(computePayloadFromSnippet(code), sectionName)
+  protected def computeDatabaseSectionFromSnippet(
+      code: String,
+      sectionName: String,
+      before: String*,
+  ): String = computeSectionFromPayload(computePayloadFromSnippet(code, before: _*), sectionName)
 
   def checkSection(code: String, expected: String, section: String)(implicit
       loc: munit.Location,
@@ -155,6 +164,17 @@ abstract class SemanticdbSuite extends FunSuite {
   def occurrences(name: TestOptions, code: String, expected: String)(implicit
       loc: munit.Location,
   ): Unit = checkSection(name, code, expected, "Occurrences")
+
+  /** @param before sources that the run compiles ahead of `code` */
+  def occurrences(
+      before: Seq[String],
+      code: String,
+      expected: String,
+      compat: (ScalaVersion.Version, String)*,
+  )(implicit loc: munit.Location): Unit = test(code) {
+    val obtained = computeDatabaseSectionFromSnippet(code, "Occurrences", before: _*)
+    assertNoDiff(obtained, ScalaVersion.getExpected(compat, expected))
+  }
 
   def diagnostics(code: String, expected: String)(implicit loc: munit.Location): Unit =
     throw new UnsupportedOperationException(
