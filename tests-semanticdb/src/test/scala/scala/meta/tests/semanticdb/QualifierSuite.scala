@@ -12074,4 +12074,357 @@ class QualifierSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  occurrences(
+    "a qualified type of a repeated parameter and of a by-name parameter",
+    """|package qs100a { object o { class C } }
+       |object qs100 {
+       |  class K(a: qs100a.o.C*)
+       |  def m(a: qs100a.o.C*)(b: => qs100a.o.C) = a
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs100a <= qs100a/
+       |[0:24..0:25): o <= qs100a/o.
+       |[0:34..0:35): C <= qs100a/o.C#
+       |[0:35..0:35):  <= qs100a/o.C#`<init>`().
+       |[1:7..1:12): qs100 <= _empty_/qs100.
+       |[2:8..2:9): K <= _empty_/qs100.K#
+       |[2:9..2:9):  <= _empty_/qs100.K#`<init>`().
+       |[2:10..2:11): a <= _empty_/qs100.K#`<init>`().(a)
+       |[2:10..2:11): a <= _empty_/qs100.K#a.
+       |[2:13..2:19): qs100a => qs100a/o.C#
+       |[2:20..2:21): o => qs100a/o.
+       |[2:22..2:23): C => qs100a/o.C#
+       |[3:6..3:7): m <= _empty_/qs100.m().
+       |[3:8..3:9): a <= _empty_/qs100.m().(a)
+       |[3:11..3:17): qs100a => qs100a/o.C#
+       |[3:18..3:19): o => qs100a/o.
+       |[3:20..3:21): C => qs100a/o.C#
+       |[3:24..3:25): b <= _empty_/qs100.m().(b)
+       |[3:30..3:36): qs100a => qs100a/
+       |[3:37..3:38): o => qs100a/o.
+       |[3:39..3:40): C => qs100a/o.C#
+       |[3:44..3:45): a => _empty_/qs100.m().(a)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "the qualifier of a repeated parameter's type: a one-level path, `_root_` and `this`",
+    """|package qs104a { class C }
+       |class qs104 {
+       |  class D
+       |  def m(a: scala.Int*) = a
+       |  def n(a: _root_.qs104a.C*) = a
+       |  def k(a: qs104.this.D*) = a
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs104a <= qs104a/
+       |[0:23..0:24): C <= qs104a/C#
+       |[0:24..0:24):  <= qs104a/C#`<init>`().
+       |[1:6..1:11): qs104 <= _empty_/qs104#
+       |[1:12..1:12):  <= _empty_/qs104#`<init>`().
+       |[2:8..2:9): D <= _empty_/qs104#D#
+       |[2:9..2:9):  <= _empty_/qs104#D#`<init>`().
+       |[3:6..3:7): m <= _empty_/qs104#m().
+       |[3:8..3:9): a <= _empty_/qs104#m().(a)
+       |[3:11..3:16): scala => scala/Int#
+       |[3:17..3:20): Int => scala/Int#
+       |[3:25..3:26): a => _empty_/qs104#m().(a)
+       |[4:6..4:7): n <= _empty_/qs104#n().
+       |[4:8..4:9): a <= _empty_/qs104#n().(a)
+       |[4:11..4:17): _root_ => qs104a/C#
+       |[4:18..4:24): qs104a => qs104a/
+       |[4:25..4:26): C => qs104a/C#
+       |[4:31..4:32): a => _empty_/qs104#n().(a)
+       |[5:6..5:7): k <= _empty_/qs104#k().
+       |[5:8..5:9): a <= _empty_/qs104#k().(a)
+       |[5:11..5:16): qs104 => _empty_/qs104#D#
+       |[5:22..5:23): D => _empty_/qs104#D#
+       |[5:28..5:29): a => _empty_/qs104#k().(a)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a projection, a singleton type and a type argument in a repeated parameter's type",
+    """|package qs105a { object o { class C; class G[T] }; class O { class D } }
+       |object qs105 {
+       |  def m(a: qs105a.O#D*) = a
+       |  def n(a: qs105a.o.type*) = a
+       |  def k(a: qs105a.o.G[qs105a.o.C]*) = a
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs105a <= qs105a/
+       |[0:24..0:25): o <= qs105a/o.
+       |[0:34..0:35): C <= qs105a/o.C#
+       |[0:35..0:35):  <= qs105a/o.C#`<init>`().
+       |[0:43..0:44): G <= qs105a/o.G#
+       |[0:45..0:46): T <= qs105a/o.G#[T]
+       |[0:47..0:47):  <= qs105a/o.G#`<init>`().
+       |[0:57..0:58): O <= qs105a/O#
+       |[0:59..0:59):  <= qs105a/O#`<init>`().
+       |[0:67..0:68): D <= qs105a/O#D#
+       |[0:68..0:68):  <= qs105a/O#D#`<init>`().
+       |[1:7..1:12): qs105 <= _empty_/qs105.
+       |[2:6..2:7): m <= _empty_/qs105.m().
+       |[2:8..2:9): a <= _empty_/qs105.m().(a)
+       |[2:11..2:17): qs105a => qs105a/O#D#
+       |[2:18..2:19): O => qs105a/O#
+       |[2:20..2:21): D => qs105a/O#D#
+       |[2:26..2:27): a => _empty_/qs105.m().(a)
+       |[3:6..3:7): n <= _empty_/qs105.n().
+       |[3:8..3:9): a <= _empty_/qs105.n().(a)
+       |[3:11..3:17): qs105a => qs105a/o.
+       |[3:18..3:19): o => qs105a/o.
+       |[3:29..3:30): a => _empty_/qs105.n().(a)
+       |[4:6..4:7): k <= _empty_/qs105.k().
+       |[4:8..4:9): a <= _empty_/qs105.k().(a)
+       |[4:11..4:17): qs105a => qs105a/o.G#
+       |[4:18..4:19): o => qs105a/o.
+       |[4:20..4:21): G => qs105a/o.G#
+       |[4:22..4:28): qs105a => qs105a/
+       |[4:29..4:30): o => qs105a/o.
+       |[4:31..4:32): C => qs105a/o.C#
+       |[4:38..4:39): a => _empty_/qs105.k().(a)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "function, infix, tuple and compound types in a repeated parameter's type",
+    """|package qs106a { object o { class C; trait T } }
+       |object qs106 {
+       |  def m(a: (qs106a.o.C => Int)*) = a
+       |  def n(a: (qs106a.o.C Either Int)*) = a
+       |  def k(a: (qs106a.o.C, Int)*) = a
+       |  def l(a: (qs106a.o.C with qs106a.o.T)*) = a
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs106a <= qs106a/
+       |[0:24..0:25): o <= qs106a/o.
+       |[0:34..0:35): C <= qs106a/o.C#
+       |[0:35..0:35):  <= qs106a/o.C#`<init>`().
+       |[0:43..0:44): T <= qs106a/o.T#
+       |[1:7..1:12): qs106 <= _empty_/qs106.
+       |[2:6..2:7): m <= _empty_/qs106.m().
+       |[2:8..2:9): a <= _empty_/qs106.m().(a)
+       |[2:12..2:18): qs106a => scala/Function1#
+       |[2:19..2:20): o => qs106a/o.
+       |[2:21..2:22): C => qs106a/o.C#
+       |[2:26..2:29): Int => scala/Int#
+       |[2:35..2:36): a => _empty_/qs106.m().(a)
+       |[3:6..3:7): n <= _empty_/qs106.n().
+       |[3:8..3:9): a <= _empty_/qs106.n().(a)
+       |[3:12..3:18): qs106a => scala/util/Either#
+       |[3:19..3:20): o => qs106a/o.
+       |[3:21..3:22): C => qs106a/o.C#
+       |[3:23..3:29): Either => scala/package.Either#
+       |[3:30..3:33): Int => scala/Int#
+       |[3:39..3:40): a => _empty_/qs106.n().(a)
+       |[4:6..4:7): k <= _empty_/qs106.k().
+       |[4:8..4:9): a <= _empty_/qs106.k().(a)
+       |[4:12..4:18): qs106a => qs106a/
+       |[4:19..4:20): o => qs106a/o.
+       |[4:21..4:22): C => qs106a/o.C#
+       |[4:24..4:27): Int => scala/Int#
+       |[4:33..4:34): a => _empty_/qs106.k().(a)
+       |[5:6..5:7): l <= _empty_/qs106.l().
+       |[5:8..5:9): a <= _empty_/qs106.l().(a)
+       |[5:12..5:18): qs106a => qs106a/
+       |[5:19..5:20): o => qs106a/o.
+       |[5:21..5:22): C => qs106a/o.C#
+       |[5:28..5:34): qs106a => qs106a/
+       |[5:35..5:36): o => qs106a/o.
+       |[5:37..5:38): T => qs106a/o.T#
+       |[5:44..5:45): a => _empty_/qs106.l().(a)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a qualified type of a repeated parameter of a case class, a constructor and a local method",
+    """|package qs107a { object o { class C } }
+       |object qs107 {
+       |  case class K(a: qs107a.o.C*)
+       |  object L
+       |  case class L(a: qs107a.o.C*)
+       |  case class M(a: qs107a.o.C*)
+       |  object M
+       |  class N(x: Int) { def this(a: qs107a.o.C*) = this(1) }
+       |  def m = { def l(a: qs107a.o.C*) = a; l() }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs107a <= qs107a/
+       |[0:24..0:25): o <= qs107a/o.
+       |[0:34..0:35): C <= qs107a/o.C#
+       |[0:35..0:35):  <= qs107a/o.C#`<init>`().
+       |[1:7..1:12): qs107 <= _empty_/qs107.
+       |[2:13..2:14): K <= _empty_/qs107.K#
+       |[2:14..2:14):  <= _empty_/qs107.K#`<init>`().
+       |[2:15..2:16): a <= _empty_/qs107.K#`<init>`().(a)
+       |[2:15..2:16): a <= _empty_/qs107.K#a.
+       |[2:18..2:24): qs107a => qs107a/o.C#
+       |[2:25..2:26): o => qs107a/o.
+       |[2:27..2:28): C => qs107a/o.C#
+       |[3:9..3:10): L <= _empty_/qs107.L.
+       |[4:13..4:14): L <= _empty_/qs107.L#
+       |[4:14..4:14):  <= _empty_/qs107.L#`<init>`().
+       |[4:15..4:16): a <= _empty_/qs107.L#`<init>`().(a)
+       |[4:15..4:16): a <= _empty_/qs107.L#a.
+       |[4:18..4:24): qs107a => qs107a/
+       |[4:25..4:26): o => qs107a/o.
+       |[4:27..4:28): C => qs107a/o.C#
+       |[5:13..5:14): M <= _empty_/qs107.M#
+       |[5:14..5:14):  <= _empty_/qs107.M#`<init>`().
+       |[5:15..5:16): a <= _empty_/qs107.M#`<init>`().(a)
+       |[5:15..5:16): a <= _empty_/qs107.M#a.
+       |[5:18..5:24): qs107a => qs107a/o.C#
+       |[5:25..5:26): o => qs107a/o.
+       |[5:27..5:28): C => qs107a/o.C#
+       |[6:9..6:10): M <= _empty_/qs107.M.
+       |[7:8..7:9): N <= _empty_/qs107.N#
+       |[7:9..7:9):  <= _empty_/qs107.N#`<init>`().
+       |[7:10..7:11): x <= _empty_/qs107.N#`<init>`().(x)
+       |[7:10..7:11): x <= _empty_/qs107.N#x.
+       |[7:13..7:16): Int => scala/Int#
+       |[7:24..7:28): this <= _empty_/qs107.N#`<init>`(+1).
+       |[7:29..7:30): a <= _empty_/qs107.N#`<init>`(+1).(a)
+       |[7:32..7:38): qs107a => qs107a/o.C#
+       |[7:39..7:40): o => qs107a/o.
+       |[7:41..7:42): C => qs107a/o.C#
+       |[7:51..7:51):  => _empty_/qs107.N#`<init>`().
+       |[8:6..8:7): m <= _empty_/qs107.m().
+       |[8:16..8:17): l <= local0
+       |[8:18..8:19): a <= local1
+       |[8:21..8:27): qs107a => qs107a/o.C#
+       |[8:28..8:29): o => qs107a/o.
+       |[8:30..8:31): C => qs107a/o.C#
+       |[8:36..8:37): a => local1
+       |[8:39..8:40): l => local0
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a qualified type in a sequence argument and a sequence pattern",
+    """|package qs108a { object o { class C } }
+       |object qs108 {
+       |  def m(a: qs108a.o.C*) = a
+       |  def n(xs: Array[qs108a.o.C]) = m(xs: _*)
+       |  def k(xs: Array[qs108a.o.C]) = xs match { case Array(y: qs108a.o.C, ys @ _*) => y }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs108a <= qs108a/
+       |[0:24..0:25): o <= qs108a/o.
+       |[0:34..0:35): C <= qs108a/o.C#
+       |[0:35..0:35):  <= qs108a/o.C#`<init>`().
+       |[1:7..1:12): qs108 <= _empty_/qs108.
+       |[2:6..2:7): m <= _empty_/qs108.m().
+       |[2:8..2:9): a <= _empty_/qs108.m().(a)
+       |[2:11..2:17): qs108a => qs108a/o.C#
+       |[2:18..2:19): o => qs108a/o.
+       |[2:20..2:21): C => qs108a/o.C#
+       |[2:26..2:27): a => _empty_/qs108.m().(a)
+       |[3:6..3:7): n <= _empty_/qs108.n().
+       |[3:8..3:10): xs <= _empty_/qs108.n().(xs)
+       |[3:12..3:17): Array => scala/Array#
+       |[3:18..3:24): qs108a => qs108a/
+       |[3:25..3:26): o => qs108a/o.
+       |[3:27..3:28): C => qs108a/o.C#
+       |[3:33..3:34): m => _empty_/qs108.m().
+       |[3:35..3:37): xs => _empty_/qs108.n().(xs)
+       |[4:6..4:7): k <= _empty_/qs108.k().
+       |[4:8..4:10): xs <= _empty_/qs108.k().(xs)
+       |[4:12..4:17): Array => scala/Array#
+       |[4:18..4:24): qs108a => qs108a/
+       |[4:25..4:26): o => qs108a/o.
+       |[4:27..4:28): C => qs108a/o.C#
+       |[4:33..4:35): xs => _empty_/qs108.k().(xs)
+       |[4:49..4:54): Array => scala/Array.
+       |[4:55..4:56): y <= local0
+       |[4:58..4:64): qs108a => qs108a/
+       |[4:65..4:66): o => qs108a/o.
+       |[4:67..4:68): C => qs108a/o.C#
+       |[4:70..4:72): ys <= local1
+       |[4:82..4:83): y => local0
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a type parameter in a repeated parameter of a case class",
+    """|object qs109 {
+       |  object K
+       |  case class K[T](a: T*)
+       |  case class L[T](a: T*)
+       |  object L
+       |}
+       |""".stripMargin,
+    """|[0:7..0:12): qs109 <= _empty_/qs109.
+       |[1:9..1:10): K <= _empty_/qs109.K.
+       |[2:13..2:14): K <= _empty_/qs109.K#
+       |[2:15..2:16): T <= _empty_/qs109.K.apply().[T]
+       |[2:17..2:17):  <= _empty_/qs109.K#`<init>`().
+       |[2:18..2:19): a <= _empty_/qs109.K#`<init>`().(a)
+       |[2:18..2:19): a <= _empty_/qs109.K#a.
+       |[2:21..2:22): T => _empty_/qs109.K.apply().[T]
+       |[3:13..3:14): L <= _empty_/qs109.L#
+       |[3:15..3:16): T <= _empty_/qs109.L#[T]
+       |[3:17..3:17):  <= _empty_/qs109.L#`<init>`().
+       |[3:18..3:19): a <= _empty_/qs109.L#`<init>`().(a)
+       |[3:18..3:19): a <= _empty_/qs109.L#a.
+       |[3:21..3:22): T => _empty_/qs109.L#[T]
+       |[4:9..4:10): L <= _empty_/qs109.L.
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a renamed qualifier of a repeated parameter's type",
+    """|object qs110 {
+       |  import java.{util => ju}
+       |  def m(a: ju.List[Int]*) = a
+       |}
+       |""".stripMargin,
+    """|[0:7..0:12): qs110 <= _empty_/qs110.
+       |[1:9..1:13): java => java/
+       |[1:15..1:19): util => java/util/
+       |[2:6..2:7): m <= _empty_/qs110.m().
+       |[2:8..2:9): a <= _empty_/qs110.m().(a)
+       |[2:11..2:13): ju => java/util/List#
+       |[2:14..2:18): List => java/util/List#
+       |[2:19..2:22): Int => scala/Int#
+       |[2:28..2:29): a => _empty_/qs110.m().(a)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a path through a parameter in a repeated parameter's type",
+    """|import scala.reflect.macros.blackbox
+       |object qs111 {
+       |  trait K { class T }
+       |  def m(k: K)(xs: k.T*) = xs
+       |  def impl(c: blackbox.Context)(annottees: c.Tree*) = annottees
+       |}
+       |""".stripMargin,
+    """|[0:7..0:12): scala => scala/
+       |[0:13..0:20): reflect => scala/reflect/
+       |[0:21..0:27): macros => scala/reflect/macros/
+       |[0:28..0:36): blackbox => scala/reflect/macros/blackbox/
+       |[1:7..1:12): qs111 <= _empty_/qs111.
+       |[2:8..2:9): K <= _empty_/qs111.K#
+       |[2:10..2:10):  <= _empty_/qs111.K#`<init>`().
+       |[2:18..2:19): T <= _empty_/qs111.K#T#
+       |[2:19..2:19):  <= _empty_/qs111.K#T#`<init>`().
+       |[3:6..3:7): m <= _empty_/qs111.m().
+       |[3:8..3:9): k <= _empty_/qs111.m().(k)
+       |[3:11..3:12): K => _empty_/qs111.K#
+       |[3:14..3:16): xs <= _empty_/qs111.m().(xs)
+       |[3:18..3:19): k => _empty_/qs111.K#T#
+       |[3:20..3:21): T => _empty_/qs111.K#T#
+       |[3:26..3:28): xs => _empty_/qs111.m().(xs)
+       |[4:6..4:10): impl <= _empty_/qs111.impl().
+       |[4:11..4:12): c <= _empty_/qs111.impl().(c)
+       |[4:14..4:22): blackbox => scala/reflect/macros/blackbox/
+       |[4:23..4:30): Context => scala/reflect/macros/blackbox/Context#
+       |[4:32..4:41): annottees <= _empty_/qs111.impl().(annottees)
+       |[4:43..4:44): c => scala/reflect/api/Trees#Tree#
+       |[4:45..4:49): Tree => scala/reflect/macros/Aliases#Tree#
+       |[4:54..4:63): annottees => _empty_/qs111.impl().(annottees)
+       |""".stripMargin,
+  )
+
 }

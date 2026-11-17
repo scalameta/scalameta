@@ -6442,4 +6442,235 @@ class NameRewriteSuite extends SemanticdbSuite {
     assertEquals(locals.filter(_.attachments.contains[TyperOps#ValDefRhs]), Nil)
   }
 
+  occurrences(
+    "aliases in a repeated parameter's type",
+    """|package n89a { object o { class C; type A = C } }
+       |object n89 {
+       |  import n89a.o._
+       |  def m(a: String*) = a
+       |  def k(a: List[C]*) = a
+       |  def l(a: scala.List[Int]*) = a
+       |  def p(a: n89a.o.A*) = a
+       |  def q(a: A*) = a
+       |  def r(a: (Int Either String)*) = a
+       |}
+       |""".stripMargin,
+    """|[0:8..0:12): n89a <= n89a/
+       |[0:22..0:23): o <= n89a/o.
+       |[0:32..0:33): C <= n89a/o.C#
+       |[0:33..0:33):  <= n89a/o.C#`<init>`().
+       |[0:40..0:41): A <= n89a/o.A#
+       |[0:44..0:45): C => n89a/o.C#
+       |[1:7..1:10): n89 <= _empty_/n89.
+       |[2:9..2:13): n89a => n89a/
+       |[2:14..2:15): o => n89a/o.
+       |[3:6..3:7): m <= _empty_/n89.m().
+       |[3:8..3:9): a <= _empty_/n89.m().(a)
+       |[3:11..3:17): String => java/lang/String#
+       |[3:22..3:23): a => _empty_/n89.m().(a)
+       |[4:6..4:7): k <= _empty_/n89.k().
+       |[4:8..4:9): a <= _empty_/n89.k().(a)
+       |[4:11..4:15): List => scala/collection/immutable/List#
+       |[4:16..4:17): C => n89a/o.C#
+       |[4:23..4:24): a => _empty_/n89.k().(a)
+       |[5:6..5:7): l <= _empty_/n89.l().
+       |[5:8..5:9): a <= _empty_/n89.l().(a)
+       |[5:11..5:16): scala => scala/collection/immutable/List#
+       |[5:17..5:21): List => scala/package.List#
+       |[5:22..5:25): Int => scala/Int#
+       |[5:31..5:32): a => _empty_/n89.l().(a)
+       |[6:6..6:7): p <= _empty_/n89.p().
+       |[6:8..6:9): a <= _empty_/n89.p().(a)
+       |[6:11..6:15): n89a => n89a/o.C#
+       |[6:16..6:17): o => n89a/o.
+       |[6:18..6:19): A => n89a/o.A#
+       |[6:24..6:25): a => _empty_/n89.p().(a)
+       |[7:6..7:7): q <= _empty_/n89.q().
+       |[7:8..7:9): a <= _empty_/n89.q().(a)
+       |[7:11..7:12): A => n89a/o.C#
+       |[7:17..7:18): a => _empty_/n89.q().(a)
+       |[8:6..8:7): r <= _empty_/n89.r().
+       |[8:8..8:9): a <= _empty_/n89.r().(a)
+       |[8:12..8:15): Int => scala/util/Either#
+       |[8:16..8:22): Either => scala/package.Either#
+       |[8:23..8:29): String => scala/Predef.String#
+       |[8:35..8:36): a => _empty_/n89.r().(a)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "the scala package's `Seq` in a repeated parameter's type",
+    """|object n90 {
+       |  def m(a: Seq[Int]*) = a
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n90 <= _empty_/n90.
+             |[1:6..1:7): m <= _empty_/n90.m().
+             |[1:8..1:9): a <= _empty_/n90.m().(a)
+             |[1:11..1:14): Seq => scala/collection/Seq#
+             |[1:15..1:18): Int => scala/Int#
+             |[1:24..1:25): a => _empty_/n90.m().(a)
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n90 <= _empty_/n90.
+         |[1:6..1:7): m <= _empty_/n90.m().
+         |[1:8..1:9): a <= _empty_/n90.m().(a)
+         |[1:11..1:14): Seq => scala/collection/immutable/Seq#
+         |[1:15..1:18): Int => scala/Int#
+         |[1:24..1:25): a => _empty_/n90.m().(a)
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "an alias in a repeated parameter of a case class",
+    """|object n91 {
+       |  case class K(a: String*)
+       |  object L
+       |  case class L(a: String*)
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): n91 <= _empty_/n91.
+       |[1:13..1:14): K <= _empty_/n91.K#
+       |[1:14..1:14):  <= _empty_/n91.K#`<init>`().
+       |[1:15..1:16): a <= _empty_/n91.K#`<init>`().(a)
+       |[1:15..1:16): a <= _empty_/n91.K#a.
+       |[1:18..1:24): String => java/lang/String#
+       |[2:9..2:10): L <= _empty_/n91.L.
+       |[3:13..3:14): L <= _empty_/n91.L#
+       |[3:14..3:14):  <= _empty_/n91.L#`<init>`().
+       |[3:15..3:16): a <= _empty_/n91.L#`<init>`().(a)
+       |[3:15..3:16): a <= _empty_/n91.L#a.
+       |[3:18..3:24): String => java/lang/String#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "aliases in a repeated parameter of a case class after its companion",
+    """|package n92a { object o { class C; type A = C } }
+       |object n92 {
+       |  object K
+       |  case class K(a: n92a.o.A*)
+       |  object L
+       |  case class L(a: List[Int]*)
+       |  object M
+       |  case class M(a: (Int Either String)*)
+       |}
+       |""".stripMargin,
+    """|[0:8..0:12): n92a <= n92a/
+       |[0:22..0:23): o <= n92a/o.
+       |[0:32..0:33): C <= n92a/o.C#
+       |[0:33..0:33):  <= n92a/o.C#`<init>`().
+       |[0:40..0:41): A <= n92a/o.A#
+       |[0:44..0:45): C => n92a/o.C#
+       |[1:7..1:10): n92 <= _empty_/n92.
+       |[2:9..2:10): K <= _empty_/n92.K.
+       |[3:13..3:14): K <= _empty_/n92.K#
+       |[3:14..3:14):  <= _empty_/n92.K#`<init>`().
+       |[3:15..3:16): a <= _empty_/n92.K#`<init>`().(a)
+       |[3:15..3:16): a <= _empty_/n92.K#a.
+       |[3:18..3:22): n92a => n92a/
+       |[3:23..3:24): o => n92a/o.
+       |[3:25..3:26): A => n92a/o.C#
+       |[4:9..4:10): L <= _empty_/n92.L.
+       |[5:13..5:14): L <= _empty_/n92.L#
+       |[5:14..5:14):  <= _empty_/n92.L#`<init>`().
+       |[5:15..5:16): a <= _empty_/n92.L#`<init>`().(a)
+       |[5:15..5:16): a <= _empty_/n92.L#a.
+       |[5:18..5:22): List => scala/collection/immutable/List#
+       |[5:23..5:26): Int => scala/Int#
+       |[6:9..6:10): M <= _empty_/n92.M.
+       |[7:13..7:14): M <= _empty_/n92.M#
+       |[7:14..7:14):  <= _empty_/n92.M#`<init>`().
+       |[7:15..7:16): a <= _empty_/n92.M#`<init>`().(a)
+       |[7:15..7:16): a <= _empty_/n92.M#a.
+       |[7:19..7:22): Int => scala/Int#
+       |[7:23..7:29): Either => scala/util/Either#
+       |[7:30..7:36): String => scala/Predef.String#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "an alias in a repeated parameter before a default argument",
+    """|object n93 {
+       |  object K
+       |  class K(a: String*)(b: Int = 0)
+       |  class L(a: String*)(b: Int = 0)
+       |  object L
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): n93 <= _empty_/n93.
+       |[1:9..1:10): K <= _empty_/n93.K.
+       |[2:8..2:9): K <= _empty_/n93.K#
+       |[2:9..2:9):  <= _empty_/n93.K#`<init>`().
+       |[2:10..2:11): a <= _empty_/n93.K.`<init>$default$2`().(a)
+       |[2:13..2:19): String => java/lang/String#
+       |[2:22..2:23): b <= _empty_/n93.K#`<init>`().(b)
+       |[2:22..2:23): b <= _empty_/n93.K#b.
+       |[2:25..2:28): Int => scala/Int#
+       |[3:8..3:9): L <= _empty_/n93.L#
+       |[3:9..3:9):  <= _empty_/n93.L#`<init>`().
+       |[3:10..3:11): a <= _empty_/n93.L#`<init>`().(a)
+       |[3:10..3:11): a <= _empty_/n93.L#a.
+       |[3:13..3:19): String => java/lang/String#
+       |[3:22..3:23): b <= _empty_/n93.L#`<init>`().(b)
+       |[3:22..3:23): b <= _empty_/n93.L#b.
+       |[3:25..3:28): Int => scala/Int#
+       |[4:9..4:10): L <= _empty_/n93.L.
+       |""".stripMargin,
+  )
+
+  if (ScalaVersion.is212) occurrences(
+    "a repeated parameter of a function type",
+    """|object n94 {
+       |  def f(g: (String*) => Int) = g
+       |  def h(g: (scala.Int*) => Int) = g
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): n94 <= _empty_/n94.
+       |[1:6..1:7): f <= _empty_/n94.f().
+       |[1:8..1:9): g <= _empty_/n94.f().(g)
+       |[1:12..1:18): String => java/lang/String#
+       |[1:24..1:27): Int => scala/Int#
+       |[1:31..1:32): g => _empty_/n94.f().(g)
+       |[2:6..2:7): h <= _empty_/n94.h().
+       |[2:8..2:9): g <= _empty_/n94.h().(g)
+       |[2:12..2:17): scala => scala/Int#
+       |[2:18..2:21): Int => scala/Int#
+       |[2:27..2:30): Int => scala/Int#
+       |[2:34..2:35): g => _empty_/n94.h().(g)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a local alias and a renamed alias in a repeated parameter's type",
+    """|object n95 {
+       |  import scala.{List => L}
+       |  def m = { type A = String; def k(a: A*) = a; k() }
+       |  def l(a: L[Int]*) = a
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): n95 <= _empty_/n95.
+       |[1:9..1:14): scala => scala/
+       |[1:16..1:20): List => scala/package.List#
+       |[1:16..1:20): List => scala/package.List.
+       |[2:6..2:7): m <= _empty_/n95.m().
+       |[2:17..2:18): A <= local0
+       |[2:21..2:27): String => scala/Predef.String#
+       |[2:33..2:34): k <= local1
+       |[2:35..2:36): a <= local2
+       |[2:38..2:39): A => java/lang/String#
+       |[2:44..2:45): a => local2
+       |[2:47..2:48): k => local1
+       |[3:6..3:7): l <= _empty_/n95.l().
+       |[3:8..3:9): a <= _empty_/n95.l().(a)
+       |[3:11..3:12): L => scala/collection/immutable/List#
+       |[3:13..3:16): Int => scala/Int#
+       |[3:22..3:23): a => _empty_/n95.l().(a)
+       |""".stripMargin,
+  )
+
 }
