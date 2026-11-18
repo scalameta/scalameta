@@ -184,12 +184,36 @@ class ImportSuite extends ParseSuite {
 
   test("source3-given-import: unquoted importee, 2.12") {
     def parse() = templStat("import a.{$x}")(dialects.Scala212Source3.unquoteTerm(multiline = false))
-    interceptMessage[UnsupportedOperationException]("unsupported unquoting position")(parse())
+    assertStruct(parse())(
+      """|Import(List(
+         |  Importer(
+         |    Term.Name("a"),
+         |    Importee.Clause(List(
+         |      Importee.Name(Name.Quasi(
+         |        0,
+         |        Term.Name("x")
+         |      ))
+         |    ))
+         |  )
+         |))""".stripMargin,
+    )
   }
 
   test("source3-given-import: unquoted importee, 2.13") {
     def parse() = templStat("import a.{$x}")(dialects.Scala213Source3.unquoteTerm(multiline = false))
-    interceptMessage[UnsupportedOperationException]("unsupported unquoting position")(parse())
+    assertStruct(parse())(
+      """|Import(List(
+         |  Importer(
+         |    Term.Name("a"),
+         |    Importee.Clause(List(
+         |      Importee.Name(Name.Quasi(
+         |        0,
+         |        Term.Name("x")
+         |      ))
+         |    ))
+         |  )
+         |))""".stripMargin,
+    )
   }
 
   test("source3-given-import: unquoted importee beside a wildcard, 2.12") {

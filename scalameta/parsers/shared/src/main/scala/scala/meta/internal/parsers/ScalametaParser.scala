@@ -4080,24 +4080,24 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   }
 
   def importer(): Importer = autoPos {
-    val sid = stableId() match {
+    def name(tn: Term.Name) = copyPos(tn)(Name.Indeterminate(tn.value))
+    (stableId() match {
       case q: Quasi => q.become[Term.Ref]
       case sid @ Term.Select(q: Quasi, name) => copyPos(sid)(Term.Select(q.become[Term.Ref], name))
       case path => path
-    }
-    def dotselectors = Importer(sid, importees())
-    def name(tn: Term.Name) = copyPos(tn)(Name.Indeterminate(tn.value))
-    sid match {
-      case Term.Select(sid: Term.Ref, tn: Term.Name) if sid.isPath =>
-        if (acceptOpt[Dot]) dotselectors
-        else if (acceptIf(soft.KwAs)) Importer(sid, importeeRename(name(tn)))
-        else if (Wildcard.isStar(tn.tokens.head)) Importer(sid, copyPos(tn)(Importee.Wildcard()))
-        else Importer(sid, copyPos(tn)(Importee.Name(name(tn))))
+    }) match {
+      case Term.Select(ref: Term.Ref, tn: Term.Name) if !at[Dot] && ref.isPath =>
+        val clause =
+          if (acceptIf(soft.KwAs)) importeeRename(name(tn))
+          else copyPos(tn)(
+            if (Wildcard.isStar(tn.tokens.head)) Importee.Wildcard() else Importee.Name(name(tn)),
+          )
+        Importer(ref, clause)
       case tn: Term.Name if acceptIf(soft.KwAs) =>
         Importer(atCurPosEmpty(Term.Anonymous()), importeeRename(name(tn)))
-      case _ =>
+      case sid =>
         accept[Dot]
-        dotselectors
+        Importer(sid, importees())
     }
   }
 
@@ -4110,12 +4110,11 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     else autoPos {
       next()
       val importees = inBracesAfterOpen(commaSeparated(importee()))
+      val checkGivens = dialect.allowGivenImports &&
+        importees.exists(_.isInstanceOf[Importee.Wildcard])
       Importee.Clause(
-        if (dialect.allowGivenImports) importees.map {
-          case Importee.Name(nm) if nm.value == "given" && importees.exists {
-                case _: Importee.Wildcard => true
-                case _ => false
-              } => copyPos(nm)(Importee.GivenAll())
+        if (checkGivens) importees.map {
+          case Importee.Name(nm) if nm.value == "given" => copyPos(nm)(Importee.GivenAll())
           case i => i
         }
         else importees,
