@@ -149,15 +149,15 @@ object Implicits {
     }
 
     @inline
-    private def isKind(kind: k): Boolean = info.kind eq kind
+    def isKind(kind: k): Boolean = info.kind eq kind
     @inline
-    private def isLang(lang: l): Boolean = info.language eq lang
+    def isLang(lang: l): Boolean = info.language eq lang
     @inline
-    private def hasProperties(in: Int, out: Int = 0): Boolean = (info.properties & (in | out)) == in
+    def hasProperties(in: Int, out: Int = 0): Boolean = (info.properties & (in | out)) == in
     @inline
-    private def hasAnyProperties(bitmask: Int): Boolean = (info.properties & bitmask) != 0
+    def hasAnyProperties(bitmask: Int): Boolean = (info.properties & bitmask) != 0
     @inline
-    private def hasProperty(prop: p): Boolean = hasAnyProperties(prop.value)
+    def hasProperty(prop: p): Boolean = hasAnyProperties(prop.value)
 
   }
 
