@@ -505,4 +505,57 @@ class DottySuccessSuite extends TreeSuiteBase {
     )
   }
 
+  test("comments: an unquote and a line break in a comment opened after a statement, a statement after it") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n  */")).result()
+    assertTree(
+      q"""def f =
+  a /* $unquoted
+  */ b""",
+    )(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b"))))
+  }
+
+  test("comments: an unquote at the start of a line in a comment opened after a statement, a statement after it") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val a = tname("a").toBuilder.endComment(Seq("/* foo\nx */")).result()
+    assertTree(
+      q"""a /* foo
+$unquoted */ b""",
+    )(Term.SelectPostfix(a, tname("b")))
+  }
+
+  test("comments: an unquote and a line break in a comment opened after an end marker, a definition after it") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a"))
+    val end = Term.SelectPostfix(tname("end"), tname("f")).toBuilder.endComment(Seq("/* x\n  */"))
+      .result()
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
+    assertTree(
+      q"""object O:
+  def f =
+    a
+  end f /* $unquoted
+  */ def g = 1""",
+    )(Defn.Object(Nil, tname("O"), tpl(f, end, g)))
+  }
+
+  test("comments: an unquote at the start of a line in a comment opened after an end marker, a definition after it") {
+    val code =
+      """|def f =
+         |  a
+         |end f /* foo
+         |$x */ def g = 1""".stripMargin
+    val parsed = dialects.Scala3.unquoteTerm(multiline = true)(code).parse[Stat]
+    assertEquals(
+      parsed.toEither.left.map(_.message).map(_.children.map(_.productPrefix)),
+      Right(List("Defn.Def", "Term.SelectPostfix", "Defn.Def")),
+    )
+  }
+
 }
