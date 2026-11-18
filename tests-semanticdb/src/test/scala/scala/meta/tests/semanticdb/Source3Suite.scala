@@ -61,7 +61,7 @@ class Source3Suite extends FunSuite {
        |[2:7..2:8): a <= b/a.
        |[3:6..3:10): func <= b/a.func().
        |[3:11..3:15): args <= b/a.func().(args)
-       |[3:17..3:23): String => java/lang/String#
+       |[3:17..3:23): String => scala/Predef.String#
        |[3:28..3:31): ??? => scala/Predef.`???`().
        |[4:6..4:10): args <= b/a.args.
        |[4:13..4:17): List => scala/package.List.
