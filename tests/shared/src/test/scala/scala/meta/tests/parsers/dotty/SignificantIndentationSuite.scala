@@ -4157,9 +4157,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  */ b
          |""".stripMargin
     val a = tname("a").toBuilder.endComment(Seq("/*\n  */")).result()
-    assertTree(source(code))(Source(
-      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
-    ))
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(a, tname("b"))))))
   }
 
   test("block comment with a line break right after its opener, a `then` body after it on its last line") {
@@ -4210,9 +4208,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    */ b
          |""".stripMargin
     val a = tname("a").toBuilder.endComment(Seq("/*\n    */")).result()
-    assertTree(source(code))(Source(
-      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
-    ))
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(a, tname("b"))))))
   }
 
   test("block comment with ragged lines, its last line at the indent of the statement before it, a statement after it") {
@@ -4277,25 +4273,19 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  */ b
          |""".stripMargin
     val a = tname("a").toBuilder.endComment(Seq("/* x\ny\n      z\n  */")).result()
-    assertTree(source(code))(Source(
-      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
-    ))
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(a, tname("b"))))))
   }
 
   test("block comment opened after a statement, a carriage return right after its opener, a statement after it on its last line") {
     val code = "def f =\n  a /*\r  */ b\n"
     val a = tname("a").toBuilder.endComment(Seq("/*\r  */")).result()
-    assertTree(source(code))(Source(
-      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
-    ))
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(a, tname("b"))))))
   }
 
   test("block comment opened after a statement, a CR LF right after its opener, a statement after it on its last line") {
     val code = "def f =\r\n  a /*\r\n  */ b\r\n"
     val a = tname("a").toBuilder.endComment(Seq("/*\r\n  */")).result()
-    assertTree(source(code))(Source(
-      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
-    ))
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(a, tname("b"))))))
   }
 
   test("block comment opened after a statement, a one-line block comment and a statement after it on its last line") {
@@ -4305,9 +4295,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  */ /* y */ b
          |""".stripMargin
     val a = tname("a").toBuilder.endComment(Seq("/* x\n  */", "/* y */")).result()
-    assertTree(source(code))(Source(
-      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
-    ))
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(a, tname("b"))))))
   }
 
   test("block comment opened after a statement, a second one opened on its last line, a statement after the second") {
@@ -4318,9 +4306,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  */ b
          |""".stripMargin
     val a = tname("a").toBuilder.endComment(Seq("/* x\n  */", "/* y\n  */")).result()
-    assertTree(source(code))(Source(
-      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
-    ))
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(a, tname("b"))))))
   }
 
   test("block comment opened after a statement, a statement on the line after its last line") {
@@ -4353,11 +4339,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    a /* x
          |  */ + b
          |""".stripMargin
-    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a")).toBuilder.endComment(Seq("/* x\n  */"))
-      .result()
-    assertTree(source(code))(Source(
-      List(Defn.Object(Nil, tname("O"), tpl(f, Term.ApplyUnary(tname("+"), tname("b"))))),
-    ))
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n  */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tinfix(a, tname("+"), tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
   }
 
   test("block comment opened after an infix operator, its operand after it on its last line") {
@@ -4418,7 +4402,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     // dotty (a43): `def f = { a; b }`
     val a = tname("a").toBuilder.endComment(Seq("/* x\n    yyyy */")).result()
-    val f = Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(a, tname("b")))
     val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
     assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f, g)))))
   }
@@ -4431,11 +4415,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  def g = 3
          |""".stripMargin
     // dotty (a42): `val a = 1`, `val b = 2` and `def g = 3`
-    val error =
-      """|<input>:3: error: `;` expected but `val` found
-         |  */ val b = 2
-         |     ^""".stripMargin
-    runTestError[Source](code, error)
+    val a = Defn.Val(Nil, List(Pat.Var(tname("a"))), None, int(1)).toBuilder
+      .endComment(Seq("/* x\n  */")).result()
+    val b = Defn.Val(Nil, List(Pat.Var(tname("b"))), None, int(2))
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(3))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(a, b, g)))))
   }
 
   test("block comment opened after `then`, the body after it on a deeper last line") {
@@ -4470,7 +4454,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A: /* x
          |*/ val b = 2
          |""".stripMargin
-    interceptMessage[NoSuchElementException]("token -1 out of 17")(source(code))
+    val error =
+      """|<input>:1: error: template body: `indent` expected but `\n` found
+         |object A: /* x
+         |              ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("block comment opened after the colon of an object, a second one opened on its last line, a definition after the second") {
@@ -4479,7 +4467,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |*/ /* y
          |*/ val b = 2
          |""".stripMargin
-    interceptMessage[NoSuchElementException]("token -1 out of 19")(source(code))
+    val error =
+      """|<input>:1: error: template body: `indent` expected but `\n` found
+         |object A: /* x
+         |              ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("block comment opened after a lambda arrow, the body after it on a deeper last line") {
@@ -4531,7 +4523,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    xs.foo: /* x
          |    */ bar
          |""".stripMargin
-    interceptMessage[NoSuchElementException]("token -1 out of 28")(source(code))
+    val error =
+      """|<input>:3: error: expected fewer-braces method body
+         |    xs.foo: /* x
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("block comment opened after the colon of `new`, a definition after it on a deeper last line") {
@@ -4638,11 +4634,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |      */ y <- ys
          |    yield x
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `outdent` expected but `<-` found
-         |      */ y <- ys
-         |           ^""".stripMargin
-    runTestError[Source](code, error)
+    val x = Enumerator.Generator(Pat.Var(tname("x")), tname("xs")).toBuilder
+      .endComment(Seq("/* x\n      */")).result()
+    val y = Enumerator.Generator(Pat.Var(tname("y")), tname("ys"))
+    val f = Defn
+      .Def(Nil, tname("f"), Nil, None, Term.ForYield(Term.EnumeratorsBlock(List(x, y)), tname("x")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
   }
 
   test("block comment opened after the condition of an `if` in parentheses, the body after it on a deeper last line") {
@@ -4695,10 +4692,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     // dotty, and the same input with a line break in place of the comment: `def f = a + b`
     val a = tname("a").toBuilder.endComment(Seq("/* x\n  */")).result()
-    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(a))
-    val plusB = Term.ApplyUnary(tname("+"), tname("b")).toBuilder.begComment(Seq("/* x\n  */"))
-      .result()
-    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f, plusB)))))
+    val op = tname("+").toBuilder.begComment(Seq("/* x\n  */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tinfix(blk(a), op, tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
   }
 
   test("block comment opened after the colon of a colon argument, a lambda after it on a deeper last line") {
@@ -4761,6 +4757,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Equals [6..7)
          |Indentation.Indent [7..7)
          |Ident(a) [10..11)
+         |LF [16..17)
          |Ident(b) [22..23)
          |Indentation.Outdent [23..23)
          |EOF [24..24)
@@ -4782,6 +4779,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Equals [6..7)
          |Indentation.Indent [7..7)
          |Ident(a) [10..11)
+         |LF [16..17)
          |Ident(b) [32..33)
          |Indentation.Outdent [33..33)
          |EOF [34..34)
@@ -4846,6 +4844,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Equals [6..7)
          |Indentation.Indent [7..7)
          |Ident(a) [10..11)
+         |InfixLF [12..21)
          |Ident(+) [22..23)
          |Ident(b) [24..25)
          |Indentation.Outdent [25..25)
@@ -4868,6 +4867,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Equals [6..7)
          |Indentation.Indent [7..7)
          |Ident(a) [10..11)
+         |InfixLF [22..31)
          |Ident(+) [32..33)
          |Ident(b) [34..35)
          |Indentation.Outdent [35..35)
@@ -4955,6 +4955,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Indentation.Indent [19..19)
          |Ident(a) [24..25)
          |Indentation.Outdent [39..39)
+         |InfixLF [30..39)
          |Ident(+) [40..41)
          |Ident(b) [42..43)
          |Indentation.Outdent [43..43)
@@ -4971,11 +4972,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  end f /* x
          |  */ def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `;` expected but `def` found
-         |  */ def g = 1
-         |     ^""".stripMargin
-    runTestError[Source](code, error)
+    val end = Term.EndMarker(tname("f")).toBuilder.endComment(Seq("/* x\n  */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a"))
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f, end, g)))))
   }
 
   test("block comment opened after an end marker of `if`, a statement after it on its last line") {
@@ -4987,11 +4987,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    end if /* x
          |    */ b
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `outdent` expected but `if` found
-         |    end if /* x
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val end = Term.EndMarker(tname("if")).toBuilder.endComment(Seq("/* x\n    */")).result()
+    val stat = Term.If(tname("c"), tname("a"), Lit.Unit(), Nil)
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(stat, end, tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
   }
 
   test("block comment opened after a statement, an end marker of a definition after it on its last line") {
@@ -5017,11 +5016,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    */ end if
          |    b
          |""".stripMargin
-    val error =
-      """|<input>:6: error: `outdent` expected but `identifier` found
-         |    b
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val stat = Term.If(tname("c"), tname("a"), Lit.Unit(), Nil).toBuilder
+      .endComment(Seq("/* x\n    */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(stat, Term.EndMarker(tname("if")), tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
   }
 
   test("block comment opened after a statement, an end marker of `match` after it on its last line") {
@@ -5033,11 +5031,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    */ end match
          |    b
          |""".stripMargin
-    val error =
-      """|<input>:6: error: `outdent` expected but `identifier` found
-         |    b
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n    */")).result()
+    val m = Term.Match(tname("x"), Term.CasesBlock(List(Case(int(1), None, a))), Nil)
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(m, Term.EndMarker(tname("match")), tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
   }
 
   test("block comment opened after a statement, an end marker of `while` after it on its last line") {
@@ -5049,11 +5046,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    */ end while
          |    b
          |""".stripMargin
-    val error =
-      """|<input>:6: error: `outdent` expected but `identifier` found
-         |    b
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val stat = Term.While(tname("c"), tname("a")).toBuilder.endComment(Seq("/* x\n    */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(stat, Term.EndMarker(tname("while")), tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
   }
 
   test("block comment opened after a statement, an end marker of `for` after it on its last line") {
@@ -5065,11 +5060,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    */ end for
          |    b
          |""".stripMargin
-    val error =
-      """|<input>:6: error: `outdent` expected but `identifier` found
-         |    b
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val stat = Term.For(
+      Term.EnumeratorsBlock(List(Enumerator.Generator(Pat.Var(tname("x")), tname("xs")))),
+      tname("a"),
+    ).toBuilder.endComment(Seq("/* x\n    */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(stat, Term.EndMarker(tname("for")), tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
   }
 
   test(
@@ -5084,11 +5080,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    */ end try
          |    b
          |""".stripMargin
-    val error =
-      """|<input>:7: error: `outdent` expected but `identifier` found
-         |    b
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val stat = Term.Try(tname("a"), None, Some(tname("c"))).toBuilder.endComment(Seq("/* x\n    */"))
+      .result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(stat, Term.EndMarker(tname("try")), tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
   }
 
   test("block comment opened after a statement, a second one opened on its last line, an end marker of `if` after the second") {
@@ -5101,11 +5096,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    */ end if
          |    b
          |""".stripMargin
-    val error =
-      """|<input>:7: error: `outdent` expected but `identifier` found
-         |    b
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val stat = Term.If(tname("c"), tname("a"), Lit.Unit(), Nil).toBuilder
+      .endComment(Seq("/* x\n    */", "/* y\n    */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(stat, Term.EndMarker(tname("if")), tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
   }
 
   test("block comment opened after a statement, an end marker of `val` after it on its last line") {
@@ -5116,11 +5110,13 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  */ end val
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `;` expected but `def` found
-         |  def g = 1
-         |  ^""".stripMargin
-    runTestError[Source](code, error)
+    val pat = Pat.Tuple(List(Pat.Var(tname("x")), Pat.Var(tname("y"))))
+    val v = Defn.Val(Nil, List(pat), None, Term.Tuple(List(int(1), int(2)))).toBuilder
+      .endComment(Seq("/* c\n  */")).result()
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
+    assertTree(source(code))(Source(
+      List(Defn.Object(Nil, tname("O"), tpl(v, Term.EndMarker(tname("val")), g))),
+    ))
   }
 
   test("block comment opened after an extension body, an end marker of `extension` after it on its last line") {
@@ -5168,11 +5164,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  */ /* y
          |  */ def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:6: error: `;` expected but `def` found
-         |  */ def g = 1
-         |     ^""".stripMargin
-    runTestError[Source](code, error)
+    val f = Defn.Def(Nil, tname("f"), Nil, None, int(1))
+    val end = Term.EndMarker(tname("f")).toBuilder.endComment(Seq("/* x\n  */", "/* y\n  */"))
+      .result()
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f, end, g)))))
   }
 
 }
