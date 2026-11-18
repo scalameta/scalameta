@@ -4068,4 +4068,228 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestError[Source](code, error)
   }
 
+  test(
+    "block comment with a line break right after its opener, a statement after it on its last line",
+  ) {
+    val code =
+      """|def f =
+         |  a
+         |  /*
+         |  */ b
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/*\n  */")).result()
+    assertTree(parseStat(code))(Defn.Def(Nil, tname("f"), Nil, None, blk(a)))
+  }
+
+  test("block comment deeper than its last line, a line break right after its opener, a statement after it") {
+    val code =
+      """|def f =
+         |  a
+         |    /*
+         |  x */ b
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/*\n  x */")).result()
+    assertTree(parseStat(code))(Defn.Def(Nil, tname("f"), Nil, None, blk(a)))
+  }
+
+  test("block comment with text after its opener, a statement after it on its last line") {
+    val code =
+      """|def f =
+         |  a
+         |    /* y
+         |  x */ b
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  a
+         |  /* y
+         |  x */ b
+         |}
+         |""".stripMargin
+    val b = tname("b").toBuilder.begComment(Seq("/* y\n  x */")).result()
+    runTestAssert[Stat](code, layout)(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), b)))
+  }
+
+  test("block comment with a line break right after its opener, a statement after it on its last line, at the indent of the enclosing body") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a
+         |    /*
+         |  */ b
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: illegal start of definition `identifier`
+         |  */ b
+         |     ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment with a carriage return right after its opener, a statement after it on its last line") {
+    val code = "def f =\n  a\n  /*\r  */ b\n"
+    val error =
+      """|<input>:4: error: illegal start of definition `identifier`
+         |  */ b
+         |     ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment with a CR LF right after its opener, a statement after it on its last line") {
+    val code = "def f =\r\n  a\r\n  /*\r\n  */ b\r\n"
+    val b = tname("b").toBuilder.begComment(Seq("/*\r\n  */")).result()
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), b)))))
+  }
+
+  test("block comment with a line break right after its opener, a leading infix operator after it on its last line") {
+    val code =
+      """|def f =
+         |  a
+         |  /*
+         |  */ + b
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of definition `identifier`
+         |  */ + b
+         |     ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment opened after a statement, a line break right after its opener, a statement after it on its last line") {
+    val code =
+      """|def f =
+         |  a /*
+         |  */ b
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: illegal start of definition `identifier`
+         |  */ b
+         |     ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment with a line break right after its opener, a `then` body after it on its last line") {
+    val code =
+      """|def f =
+         |  if c then
+         |    /*
+         |    */ b
+         |  else d
+         |""".stripMargin
+    val b = tname("b").toBuilder.begComment(Seq("/*\n    */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, tif(tname("c"), b, tname("d")))),
+    ))
+  }
+
+  test("block comment of several lines, a statement after it on its last line") {
+    val code =
+      """|def f =
+         |  a
+         |  /*
+         | x
+         |  */ b
+         |""".stripMargin
+    val b = tname("b").toBuilder.begComment(Seq("/*\n x\n  */")).result()
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), b)))))
+  }
+
+  test("block comment with a line break right after its opener at the top level, a definition after it on its last line") {
+    val code =
+      """|object A:
+         |  def f = 1
+         |/*
+         |*/ val b = 2
+         |""".stripMargin
+    val layout =
+      """|object A { def f = 1 }
+         |/*
+         |*/ val b = 2
+         |""".stripMargin
+    assertNoDiff(source(code).reprint, layout)
+  }
+
+  test("block comment opened after a statement, a line break right after its opener, a statement after it on a deeper last line") {
+    val code =
+      """|def f =
+         |  a /*
+         |    */ b
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: illegal start of definition `identifier`
+         |    */ b
+         |       ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment with ragged lines, its last line at the indent of the statement before it, a statement after it") {
+    val code =
+      """|def f =
+         |  a
+         |  /* x
+         |y
+         |      z
+         |  */ b
+         |""".stripMargin
+    val b = tname("b").toBuilder.begComment(Seq("/* x\ny\n      z\n  */")).result()
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), b)))))
+  }
+
+  test("block comment with ragged lines, its last line deeper than the statement before it, a statement after it") {
+    val code =
+      """|def f =
+         |  a
+         |  /*
+         |x
+         |    */ b
+         |""".stripMargin
+    val b = tname("b").toBuilder.begComment(Seq("/*\nx\n    */")).result()
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), b)))))
+  }
+
+  test("block comment with ragged lines, a leading infix operator after it on its last line") {
+    val code =
+      """|def f =
+         |  a
+         |  /* x
+         | y
+         |        z
+         |  */ + b
+         |""".stripMargin
+    val plus = tname("+").toBuilder.begComment(Seq("/* x\n y\n        z\n  */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, tinfix(tname("a"), plus, tname("b")))),
+    ))
+  }
+
+  test("block comment with ragged lines and a blank line, a statement after it on its last line") {
+    val code =
+      """|def f =
+         |  a
+         |  /* x
+         |
+         |      z
+         |  */ b
+         |""".stripMargin
+    val b = tname("b").toBuilder.begComment(Seq("/* x\n\n      z\n  */")).result()
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), b)))))
+  }
+
+  test("block comment with ragged lines, its last line left of the body before it, a definition after it") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a
+         |    /* x
+         |        y
+         |z
+         |  */ def g = 1
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n        y\nz\n  */")).result()
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1)).toBuilder
+      .begComment(Seq("/* x\n        y\nz\n  */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Object(Nil, tname("O"), tpl(Defn.Def(Nil, tname("f"), Nil, None, blk(a)), g))),
+    ))
+  }
+
 }
