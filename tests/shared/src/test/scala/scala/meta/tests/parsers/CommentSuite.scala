@@ -537,9 +537,7 @@ class CommentSuite extends ParseSuite {
          |}
          |""".stripMargin
     val a = tname("a").toBuilder.endComment(Seq("/* c1\n  */")).result()
-    assertTree(
-      templStat(code),
-    )(Defn.Def(Nil, tname("f"), Nil, None, blk(Term.SelectPostfix(a, tname("b")))))
+    assertTree(templStat(code))(Defn.Def(Nil, tname("f"), Nil, None, blk(a, tname("b"))))
   }
 
   test(
@@ -552,9 +550,8 @@ class CommentSuite extends ParseSuite {
          |}
          |""".stripMargin
     val a = tname("a").toBuilder.endComment(Seq("/* c1\n  */")).result()
-    assertTree(
-      templStat(code),
-    )(Defn.Def(Nil, tname("f"), Nil, None, blk(tinfix(a, tname("+"), tname("b")))))
+    val plusB = Term.ApplyUnary(tname("+"), tname("b"))
+    assertTree(templStat(code))(Defn.Def(Nil, tname("f"), Nil, None, blk(a, plusB)))
   }
 
   test("block: MLC opened after a statement, an operator and an operand after it on its last line, Scala213Source3") {

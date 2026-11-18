@@ -59,10 +59,15 @@ private[meta] final class ScannerTokens(
     def unapply(token: Token) = apply(token)
   }
 
-  @inline
-  private def isPrecededByNL(index: Int): Boolean = prevNonHTrivia(index).is[AtEOLorF]
-  @inline
-  private def isFollowedByNL(index: Int): Boolean = nextNonHTrivia(index).is[AtEOLorF]
+  @inline // Also true after a multiline comment
+  private def isPrecededByNL(index: Int): Boolean = countIndent(index) >= 0
+  @tailrec
+  private def isFollowedByNL(index: Int): Boolean = tokens.getOrNull(index + 1) match {
+    case _: AtEOLorF => true
+    case t: CommentValue if t.pos.isMultiLine => true
+    case _: HTrivia => isFollowedByNL(index + 1)
+    case _ => false
+  }
 
   @tailrec
   final def isPrecededByDetachedComment(idx: Int, end: Int): Boolean = idx >= end &&
@@ -420,9 +425,12 @@ private[meta] final class ScannerTokens(
     def eolRefAt(rs: List[SepRegion], eolPos: Int, multiEOL: Boolean): TokenRef = {
       val token = tokens(eolPos)
       statEolAfter += prevPos
-      val out =
-        if (!multiEOL || token.is[MultiEOL]) token
-        else LFLF(token.input, token.dialect, token.start, tokens(indentPos).end)
+      val out = token match {
+        case _: MultiEOL => token
+        case _ if multiEOL => LFLF(token.input, token.dialect, token.start, tokens(indentPos).end)
+        case c: CommentValue => LF(token.input, token.dialect, getEOLOffsetIn(c))
+        case _ => token
+      }
       eolRefFor(rs, out, eolPos)
     }
 
@@ -762,8 +770,18 @@ private[meta] final class ScannerTokens(
       else nonTrivial(getNonTrivialRegions(sepRegionsOrig))
     else {
       @tailrec
+      def findFirstCommentEOL(pos: Int): Int = {
+        val tok = tokens(pos)
+        if (tok.isInstanceOf[CommentValue] && tok.pos.isMultiLine) pos
+        else if (pos < indentPos) findFirstCommentEOL(pos + 1)
+        else -1
+      }
+      @tailrec
       def findFirstEOL(pos: Int): Int =
-        if (pos > indentPos) -1 else if (tokens(pos).is[AtEOL]) pos else findFirstEOL(pos + 1)
+        if (pos > indentPos) -1
+        else if (tokens(pos).is[AtEOL]) pos
+        else if (pos == indentPos) findFirstCommentEOL(prevPos + 1)
+        else findFirstEOL(pos + 1)
       @tailrec
       def hasBlank(pos: Int, hadEOL: Boolean = false): Boolean =
         if (pos > indentPos) false
@@ -1386,6 +1404,18 @@ private[meta] object ScannerTokens {
         case _ => loop(idx - 1, 0)
       }
     loop(str.length - 1, 0)
+  }
+
+  private def getEOLOffsetIn(tok: Token): Int = {
+    val chars = tok.input.chars
+    @tailrec
+    def iter(i: Int): Int =
+      if (i >= tok.end) tok.start
+      else chars(i) match {
+        case '\n' | '\r' => i
+        case _ => iter(i + 1)
+      }
+    iter(tok.start)
   }
 
   @tailrec

@@ -514,7 +514,7 @@ class DottySuccessSuite extends TreeSuiteBase {
       q"""def f =
   a /* $unquoted
   */ b""",
-    )(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b"))))
+    )(Defn.Def(Nil, tname("f"), Nil, None, blk(a, tname("b"))))
   }
 
   test("comments: an unquote at the start of a line in a comment opened after a statement, a statement after it") {
@@ -525,7 +525,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     assertTree(
       q"""a /* foo
 $unquoted */ b""",
-    )(Term.SelectPostfix(a, tname("b")))
+    )(blk(a, tname("b")))
   }
 
   test("comments: an unquote and a line break in a comment opened after an end marker, a definition after it") {
@@ -533,8 +533,7 @@ $unquoted */ b""",
     val dialect: Dialect = null
     import dialects.Scala3
     val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a"))
-    val end = Term.SelectPostfix(tname("end"), tname("f")).toBuilder.endComment(Seq("/* x\n  */"))
-      .result()
+    val end = Term.EndMarker(tname("f")).toBuilder.endComment(Seq("/* x\n  */")).result()
     val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
     assertTree(
       q"""object O:
@@ -554,8 +553,23 @@ $unquoted */ b""",
     val parsed = dialects.Scala3.unquoteTerm(multiline = true)(code).parse[Stat]
     assertEquals(
       parsed.toEither.left.map(_.message).map(_.children.map(_.productPrefix)),
-      Right(List("Defn.Def", "Term.SelectPostfix", "Defn.Def")),
+      Right(List("Defn.Def", "Term.EndMarker", "Defn.Def")),
     )
+  }
+
+  test("comments: a quasiquote with an unquote at the start of a line in a comment opened after an end marker, a definition after it") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a"))
+    val end = Term.EndMarker(tname("f")).toBuilder.endComment(Seq("/* foo\nx */")).result()
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
+    assertTree(
+      q"""def f =
+  a
+end f /* foo
+$unquoted */ def g = 1""",
+    )(blk(f, end, g))
   }
 
 }
