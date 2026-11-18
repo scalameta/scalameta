@@ -217,8 +217,8 @@ private[meta] final class ScannerTokens(
         token match {
           case _: AtEOL | _: BOF => Tokens.pack(acc, pos)
           case c: Comment =>
-            if (AsMultilineComment.isMultiline(c)) Tokens.pack(multilineCommentIndent(c), pos)
-            else countIndentInternal(pos - 1)
+            val indent = multilineCommentIndent(c)
+            if (indent >= 0) Tokens.pack(indent, pos) else countIndentInternal(pos - 1)
           case t: HSpace => countIndentInternal(pos - 1, acc + t.len)
           case _ if skipNonTrivia => countIndentInternal(pos - 1)
           case _ => Tokens.pack(-1, -1)
@@ -1377,7 +1377,7 @@ private[meta] object ScannerTokens {
     val str: String = t.value
     @tailrec
     def loop(idx: Int, indent: Int): Int =
-      if (idx <= 0) -1
+      if (idx < 0) -1
       else str.charAt(idx) match {
         case '\n' | '\r' => indent
         case ' ' | '\t' => loop(idx - 1, indent + 1)

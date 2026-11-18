@@ -4077,8 +4077,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  /*
          |  */ b
          |""".stripMargin
-    val a = tname("a").toBuilder.endComment(Seq("/*\n  */")).result()
-    assertTree(parseStat(code))(Defn.Def(Nil, tname("f"), Nil, None, blk(a)))
+    val b = tname("b").toBuilder.begComment(Seq("/*\n  */")).result()
+    assertTree(parseStat(code))(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), b)))
   }
 
   test("block comment deeper than its last line, a line break right after its opener, a statement after it") {
@@ -4088,8 +4088,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    /*
          |  x */ b
          |""".stripMargin
-    val a = tname("a").toBuilder.endComment(Seq("/*\n  x */")).result()
-    assertTree(parseStat(code))(Defn.Def(Nil, tname("f"), Nil, None, blk(a)))
+    val b = tname("b").toBuilder.begComment(Seq("/*\n  x */")).result()
+    assertTree(parseStat(code))(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), b)))
   }
 
   test("block comment with text after its opener, a statement after it on its last line") {
@@ -4118,20 +4118,17 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    /*
          |  */ b
          |""".stripMargin
-    val error =
-      """|<input>:5: error: illegal start of definition `identifier`
-         |  */ b
-         |     ^""".stripMargin
-    runTestError[Source](code, error)
+    val a = tname("a").toBuilder.endComment(Seq("/*\n  */")).result()
+    val b = tname("b").toBuilder.begComment(Seq("/*\n  */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Object(Nil, tname("O"), tpl(Defn.Def(Nil, tname("f"), Nil, None, blk(a)), b))),
+    ))
   }
 
   test("block comment with a carriage return right after its opener, a statement after it on its last line") {
     val code = "def f =\n  a\n  /*\r  */ b\n"
-    val error =
-      """|<input>:4: error: illegal start of definition `identifier`
-         |  */ b
-         |     ^""".stripMargin
-    runTestError[Source](code, error)
+    val b = tname("b").toBuilder.begComment(Seq("/*\r  */")).result()
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), b)))))
   }
 
   test("block comment with a CR LF right after its opener, a statement after it on its last line") {
@@ -4147,11 +4144,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  /*
          |  */ + b
          |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of definition `identifier`
-         |  */ + b
-         |     ^""".stripMargin
-    runTestError[Source](code, error)
+    val plus = tname("+").toBuilder.begComment(Seq("/*\n  */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, tinfix(tname("a"), plus, tname("b")))),
+    ))
   }
 
   test("block comment opened after a statement, a line break right after its opener, a statement after it on its last line") {
@@ -4160,11 +4156,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  a /*
          |  */ b
          |""".stripMargin
-    val error =
-      """|<input>:3: error: illegal start of definition `identifier`
-         |  */ b
-         |     ^""".stripMargin
-    runTestError[Source](code, error)
+    val a = tname("a").toBuilder.endComment(Seq("/*\n  */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
+    ))
   }
 
   test("block comment with a line break right after its opener, a `then` body after it on its last line") {
@@ -4214,11 +4209,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  a /*
          |    */ b
          |""".stripMargin
-    val error =
-      """|<input>:3: error: illegal start of definition `identifier`
-         |    */ b
-         |       ^""".stripMargin
-    runTestError[Source](code, error)
+    val a = tname("a").toBuilder.endComment(Seq("/*\n    */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
+    ))
   }
 
   test("block comment with ragged lines, its last line at the indent of the statement before it, a statement after it") {

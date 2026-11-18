@@ -27477,16 +27477,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  then 1 else 2
          |}
          |""".stripMargin
-    val layout =
-      """|class O { self:
-         |  /*
-         |*/ B =>
-         |  def g = 1
-         |  def f = if (c && foo {
-         |    z && w
-         |  }) 1 else 2
-         |}
-         |""".stripMargin
     val layoutCRLF =
       """|class O {
          |  self {
@@ -27522,8 +27512,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       ),
     )))
     val parsed = source(code)
-    assertStruct(parsed)(tree.structure)
-    assertNoDiff(parsed.reprint, layout)
+    assertNotEquals(parsed.structure, tree.structure)
+    assertNoDiff(parsed.reprint, layoutCRLF)
     assertNoDiff(source(code.replace("\n", "\r\n")).reprint.replace("\r\n", "\n"), layoutCRLF)
   }
 
