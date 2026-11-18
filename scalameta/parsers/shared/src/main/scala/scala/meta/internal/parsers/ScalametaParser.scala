@@ -4090,7 +4090,10 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
         val clause =
           if (acceptIf(soft.KwAs)) importeeRename(name(tn))
           else copyPos(tn)(
-            if (Wildcard.isStar(tn.tokens.head)) Importee.Wildcard() else Importee.Name(name(tn)),
+            if (Wildcard.isStar(tn.tokens.head)) Importee.Wildcard()
+            else if (dialect.allowGivenImports && dialect.allowInfixOperatorAfterNL && // 2.13
+              tn.text == "given") Importee.GivenAll()
+            else Importee.Name(name(tn)),
           )
         Importer(ref, clause)
       case tn: Term.Name if acceptIf(soft.KwAs) =>
@@ -4110,11 +4113,12 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     else autoPos {
       next()
       val importees = inBracesAfterOpen(commaSeparated(importee()))
-      val checkGivens = dialect.allowGivenImports &&
-        importees.exists(_.isInstanceOf[Importee.Wildcard])
+      val checkGivens = dialect.allowGivenImports && {
+        dialect.allowInfixOperatorAfterNL || importees.exists(_.isInstanceOf[Importee.Wildcard])
+      }
       Importee.Clause(
         if (checkGivens) importees.map {
-          case Importee.Name(nm) if nm.value == "given" => copyPos(nm)(Importee.GivenAll())
+          case Importee.Name(nm) if nm.text == "given" => copyPos(nm)(Importee.GivenAll())
           case i => i
         }
         else importees,

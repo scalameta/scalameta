@@ -97,7 +97,7 @@ class ImportSuite extends ParseSuite {
     assertTree {
       implicit val dialect: Dialect = dialects.Scala213Source3
       templStat("import a.b.c.{ given }")
-    }(expectedWithoutWildcard)
+    }(Import(List(Importer(tselect("a", "b", "c"), impclause(Importee.GivenAll())))))
   }
 
   test("source3-given-import: lone given, 2.12")(
@@ -108,7 +108,7 @@ class ImportSuite extends ParseSuite {
 
   test("source3-given-import: lone given, 2.13")(
     assertTree(templStat("import a.given")(dialects.Scala213Source3))(Import(
-      Importer("a", "given") :: Nil,
+      Importer("a", List(Importee.GivenAll())) :: Nil,
     )),
   )
 
@@ -120,7 +120,7 @@ class ImportSuite extends ParseSuite {
 
   test("source3-given-import: given after a rename, 2.13")(
     assertTree(templStat("import a.{c => y, given}")(dialects.Scala213Source3))(Import(
-      Importer("a", impclause("c" -> "y", "given")) :: Nil,
+      Importer("a", impclause("c" -> "y", Importee.GivenAll())) :: Nil,
     )),
   )
 
@@ -172,13 +172,13 @@ class ImportSuite extends ParseSuite {
 
   test("source3-given-import: backquoted given after a wildcard, 2.12")(
     assertTree(templStat("import a.{_, `given`}")(dialects.Scala212Source3))(Import(
-      Importer("a", impclause(impwcard, Importee.GivenAll())) :: Nil,
+      Importer("a", impclause(impwcard, "given")) :: Nil,
     )),
   )
 
   test("source3-given-import: backquoted given after a wildcard, 2.13")(
     assertTree(templStat("import a.{_, `given`}")(dialects.Scala213Source3))(Import(
-      Importer("a", impclause(impwcard, Importee.GivenAll())) :: Nil,
+      Importer("a", impclause(impwcard, "given")) :: Nil,
     )),
   )
 
@@ -219,13 +219,39 @@ class ImportSuite extends ParseSuite {
   test("source3-given-import: unquoted importee beside a wildcard, 2.12") {
     def parse() =
       templStat("import a.{$x, _}")(dialects.Scala212Source3.unquoteTerm(multiline = false))
-    interceptMessage[UnsupportedOperationException]("unsupported unquoting position")(parse())
+    assertStruct(parse()) {
+      """|Import(List(
+         |  Importer(
+         |    Term.Name("a"),
+         |    Importee.Clause(List(
+         |      Importee.Name(Name.Quasi(
+         |        0,
+         |        Term.Name("x")
+         |      )),
+         |      Importee.Wildcard()
+         |    ))
+         |  )
+         |))""".stripMargin
+    }
   }
 
   test("source3-given-import: unquoted importee beside a wildcard, 2.13") {
     def parse() =
       templStat("import a.{$x, _}")(dialects.Scala213Source3.unquoteTerm(multiline = false))
-    interceptMessage[UnsupportedOperationException]("unsupported unquoting position")(parse())
+    assertStruct(parse()) {
+      """|Import(List(
+         |  Importer(
+         |    Term.Name("a"),
+         |    Importee.Clause(List(
+         |      Importee.Name(Name.Quasi(
+         |        0,
+         |        Term.Name("x")
+         |      )),
+         |      Importee.Wildcard()
+         |    ))
+         |  )
+         |))""".stripMargin
+    }
   }
 
   test("source3-star-import: lone star")(
