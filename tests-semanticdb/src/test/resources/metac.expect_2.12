@@ -5963,7 +5963,7 @@ Occurrences:
 [89:27..89:27):  <= types/Test.C#RepeatedType#`<init>`().
 [89:28..89:29): s <= types/Test.C#RepeatedType#`<init>`().(s)
 [89:28..89:29): s <= types/Test.C#RepeatedType#s.
-[89:31..89:37): String => java/lang/String#
+[89:31..89:37): String => scala/Predef.String#
 [90:10..90:12): m1 <= types/Test.C#RepeatedType#m1().
 [90:13..90:14): x <= types/Test.C#RepeatedType#m1().(x)
 [90:16..90:19): Int => scala/Int#
@@ -6687,7 +6687,7 @@ Occurrences:
 [3:14..3:17): Int => scala/Int#
 [4:6..4:10): add2 <= example/Vararg#add2().
 [4:11..4:12): a <= example/Vararg#add2().(a)
-[4:14..4:17): Seq => scala/collection/Seq#
+[4:14..4:17): Seq => scala/package.Seq#
 [4:18..4:21): Int => scala/Int#
 [4:26..4:30): Unit => scala/Unit#
 

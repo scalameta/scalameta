@@ -941,9 +941,6 @@ trait TextDocumentOps {
                   success(mname, wrapAlternatives(altName, import1, import2))
                 }
               }
-            case gtree: g.AppliedTypeTree
-                if gtree.symbol.name == g.typeNames.REPEATED_PARAM_CLASS_NAME =>
-              gtree.args.headOption.foreach(x => success(gstartMtree, x.symbol))
             case _ =>
           }
         }
@@ -2123,7 +2120,6 @@ trait TextDocumentOps {
             if (!gtree.qualifier.pos.isRange) isVisited += gtree.qualifier
             tryFindMtree(gtree)
           case select: g.Select if isSyntheticName(select) => tryFindSynthetic(select)
-          case gtree: g.AppliedTypeTree => tryFindMtree(gtree)
           case gtree: g.ExistentialTypeTree =>
             if (gtree.pos.isDefined) mstartOf[m.Type.Existential](gtree.pos.start) {
               case t: m.Type.Existential => t
