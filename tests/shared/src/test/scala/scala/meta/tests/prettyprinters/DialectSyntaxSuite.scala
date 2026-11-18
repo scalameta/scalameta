@@ -50,14 +50,14 @@ class DialectSyntaxSuite extends TreeSuiteBase {
   private def importA(clause: Importee.ClauseLike) = Import(List(Importer(tname("a"), clause)))
   private val givenName = Importee.Name(Name("given"))
   checkReprint("given name import", importA(givenName))(
-    dialects.Scala212Source3 -> "import a.given",
-    dialects.Scala213Source3 -> "import a.given",
+    dialects.Scala212Source3 -> "import a.`given`",
+    dialects.Scala213Source3 -> "import a.`given`",
     dialects.Scala213 -> "import a.given",
     dialects.Scala3 -> "import a.`given`",
   )
   checkReprint("given name import in braces", importA(Importee.Clause(List(givenName))))(
-    dialects.Scala212Source3 -> "import a.{given}",
-    dialects.Scala213Source3 -> "import a.{given}",
+    dialects.Scala212Source3 -> "import a.{`given`}",
+    dialects.Scala213Source3 -> "import a.{`given`}",
     dialects.Scala213 -> "import a.{given}",
     dialects.Scala3 -> "import a.{`given`}",
   )
@@ -65,8 +65,8 @@ class DialectSyntaxSuite extends TreeSuiteBase {
     "given name import beside a wildcard",
     importA(Importee.Clause(List(givenName, Importee.Wildcard()))),
   )(
-    dialects.Scala212Source3 -> "import a.{given, *}",
-    dialects.Scala213Source3 -> "import a.{given, *}",
+    dialects.Scala212Source3 -> "import a.{`given`, *}",
+    dialects.Scala213Source3 -> "import a.{`given`, *}",
     dialects.Scala213 -> "import a.{given, _}",
     dialects.Scala3 -> "import a.{`given`, *}",
   )
@@ -74,8 +74,8 @@ class DialectSyntaxSuite extends TreeSuiteBase {
     "given rename import beside a wildcard",
     importA(Importee.Clause(List(Importee.Rename(Name("given"), Name("b")), Importee.Wildcard()))),
   )(
-    dialects.Scala212Source3 -> "import a.{given as b, *}",
-    dialects.Scala213Source3 -> "import a.{given as b, *}",
+    dialects.Scala212Source3 -> "import a.{`given` as b, *}",
+    dialects.Scala213Source3 -> "import a.{`given` as b, *}",
     dialects.Scala213 -> "import a.{given => b, _}",
     dialects.Scala3 -> "import a.{`given` as b, *}",
   )
@@ -96,8 +96,8 @@ class DialectSyntaxSuite extends TreeSuiteBase {
     dialects.Scala3 -> "import a.{given, *}",
   )
   checkReprint("given name importee", givenName)(
-    dialects.Scala212Source3 -> "given",
-    dialects.Scala213Source3 -> "given",
+    dialects.Scala212Source3 -> "`given`",
+    dialects.Scala213Source3 -> "`given`",
     dialects.Scala213 -> "given",
     dialects.Scala3 -> "`given`",
   )
@@ -105,8 +105,8 @@ class DialectSyntaxSuite extends TreeSuiteBase {
     "given unimport beside a wildcard",
     importA(Importee.Clause(List(Importee.Unimport(Name("given")), Importee.Wildcard()))),
   )(
-    dialects.Scala212Source3 -> "import a.{given as _, *}",
-    dialects.Scala213Source3 -> "import a.{given as _, *}",
+    dialects.Scala212Source3 -> "import a.{`given` as _, *}",
+    dialects.Scala213Source3 -> "import a.{`given` as _, *}",
     dialects.Scala213 -> "import a.{given => _, _}",
     dialects.Scala3 -> "import a.{`given` as _, *}",
   )
@@ -133,8 +133,8 @@ class DialectSyntaxSuite extends TreeSuiteBase {
     "given name import beside a wildcard reparsed",
     importA(Importee.Clause(List(givenName, Importee.Wildcard()))),
   )(
-    dialects.Scala212Source3 -> importA(Importee.Clause(List(Importee.GivenAll(), Importee.Wildcard()))),
-    dialects.Scala213Source3 -> importA(Importee.Clause(List(Importee.GivenAll(), Importee.Wildcard()))),
+    dialects.Scala212Source3 -> importA(Importee.Clause(List(givenName, Importee.Wildcard()))),
+    dialects.Scala213Source3 -> importA(Importee.Clause(List(givenName, Importee.Wildcard()))),
     dialects.Scala213 -> importA(Importee.Clause(List(givenName, Importee.Wildcard()))),
     dialects.Scala3 -> importA(Importee.Clause(List(givenName, Importee.Wildcard()))),
   )

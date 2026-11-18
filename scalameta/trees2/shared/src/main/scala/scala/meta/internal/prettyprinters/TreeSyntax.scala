@@ -60,6 +60,7 @@ object TreeSyntax {
         "inline" -> Seq(classTag[Term.Apply], classTag[Term.ApplyUsing], classTag[Term.ApplyInfix])
 
       if (dialect.allowStarWildcardImport) seq += "*" -> Seq(classTag[Importee])
+      if (dialect.allowGivenImports) seq += "given" -> Seq(classTag[Importee])
       if (dialect.allowStarAsTypePlaceholder) {
         seq += "*" -> Seq(classTag[Type.ArgClause])
         seq += "-*" -> Seq(classTag[Type.ArgClause])
