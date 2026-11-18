@@ -100,6 +100,132 @@ class ImportSuite extends ParseSuite {
     }(expectedWithoutWildcard)
   }
 
+  test("source3-given-import: lone given, 2.12")(
+    assertTree(templStat("import a.given")(dialects.Scala212Source3))(Import(
+      Importer("a", "given") :: Nil,
+    )),
+  )
+
+  test("source3-given-import: lone given, 2.13")(
+    assertTree(templStat("import a.given")(dialects.Scala213Source3))(Import(
+      Importer("a", "given") :: Nil,
+    )),
+  )
+
+  test("source3-given-import: given after a rename, 2.12")(
+    assertTree(templStat("import a.{c => y, given}")(dialects.Scala212Source3))(Import(
+      Importer("a", impclause("c" -> "y", "given")) :: Nil,
+    )),
+  )
+
+  test("source3-given-import: given after a rename, 2.13")(
+    assertTree(templStat("import a.{c => y, given}")(dialects.Scala213Source3))(Import(
+      Importer("a", impclause("c" -> "y", "given")) :: Nil,
+    )),
+  )
+
+  test("source3-given-import: given after a wildcard, 2.12")(
+    assertTree(templStat("import a.{_, given}")(dialects.Scala212Source3))(Import(
+      Importer("a", impclause(impwcard, Importee.GivenAll())) :: Nil,
+    )),
+  )
+
+  test("source3-given-import: given after a wildcard, 2.13")(
+    assertTree(templStat("import a.{_, given}")(dialects.Scala213Source3))(Import(
+      Importer("a", impclause(impwcard, Importee.GivenAll())) :: Nil,
+    )),
+  )
+
+  test("source3-given-import: given by type, 2.12") {
+    implicit val dialect: Dialect = dialects.Scala212Source3
+    runTestError[Stat]("import a.{given X}", "error: `}` expected but `identifier` found")
+  }
+
+  test("source3-given-import: given by type, 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    runTestError[Stat]("import a.{given X}", "error: `}` expected but `identifier` found")
+  }
+
+  test("source3-given-import: lone backquoted given, 2.12")(
+    assertTree(templStat("import a.`given`")(dialects.Scala212Source3))(Import(
+      Importer("a", "given") :: Nil,
+    )),
+  )
+
+  test("source3-given-import: lone backquoted given, 2.13")(
+    assertTree(templStat("import a.`given`")(dialects.Scala213Source3))(Import(
+      Importer("a", "given") :: Nil,
+    )),
+  )
+
+  test("source3-given-import: backquoted given in braces, 2.12")(
+    assertTree(templStat("import a.{`given`}")(dialects.Scala212Source3))(Import(
+      Importer("a", impclause("given")) :: Nil,
+    )),
+  )
+
+  test("source3-given-import: backquoted given in braces, 2.13")(
+    assertTree(templStat("import a.{`given`}")(dialects.Scala213Source3))(Import(
+      Importer("a", impclause("given")) :: Nil,
+    )),
+  )
+
+  test("source3-given-import: backquoted given after a wildcard, 2.12")(
+    assertTree(templStat("import a.{_, `given`}")(dialects.Scala212Source3))(Import(
+      Importer("a", impclause(impwcard, Importee.GivenAll())) :: Nil,
+    )),
+  )
+
+  test("source3-given-import: backquoted given after a wildcard, 2.13")(
+    assertTree(templStat("import a.{_, `given`}")(dialects.Scala213Source3))(Import(
+      Importer("a", impclause(impwcard, Importee.GivenAll())) :: Nil,
+    )),
+  )
+
+  test("source3-given-import: unquoted importee, 2.12") {
+    def parse() = templStat("import a.{$x}")(dialects.Scala212Source3.unquoteTerm(multiline = false))
+    interceptMessage[UnsupportedOperationException]("unsupported unquoting position")(parse())
+  }
+
+  test("source3-given-import: unquoted importee, 2.13") {
+    def parse() = templStat("import a.{$x}")(dialects.Scala213Source3.unquoteTerm(multiline = false))
+    interceptMessage[UnsupportedOperationException]("unsupported unquoting position")(parse())
+  }
+
+  test("source3-given-import: unquoted importee beside a wildcard, 2.12") {
+    def parse() =
+      templStat("import a.{$x, _}")(dialects.Scala212Source3.unquoteTerm(multiline = false))
+    interceptMessage[UnsupportedOperationException]("unsupported unquoting position")(parse())
+  }
+
+  test("source3-given-import: unquoted importee beside a wildcard, 2.13") {
+    def parse() =
+      templStat("import a.{$x, _}")(dialects.Scala213Source3.unquoteTerm(multiline = false))
+    interceptMessage[UnsupportedOperationException]("unsupported unquoting position")(parse())
+  }
+
+  test("source3-star-import: lone star")(
+    assertTree(templStat("import a.*")(dialects.Scala213Source3))(Import(
+      Importer("a", List(impwcard)) :: Nil,
+    )),
+  )
+
+  test("source3-star-import: lone backquoted star")(
+    assertTree(templStat("import a.`*`")(dialects.Scala213Source3))(Import(Importer("a", "*") :: Nil)),
+  )
+
+  test("source3-star-import: star in braces")(
+    assertTree(templStat("import a.{b, *}")(dialects.Scala213Source3))(Import(
+      Importer("a", impclause("b", impwcard)) :: Nil,
+    )),
+  )
+
+  test("source3-star-import: backquoted star in braces")(
+    assertTree(templStat("import a.{b, `*`}")(dialects.Scala213Source3))(Import(
+      Importer("a", impclause("b", "*")) :: Nil,
+    )),
+  )
+
   test("import with comments") {
     val code =
       """|// c1
