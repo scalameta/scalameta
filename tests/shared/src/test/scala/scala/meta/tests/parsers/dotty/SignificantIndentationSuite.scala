@@ -4268,6 +4268,320 @@ class SignificantIndentationSuite extends BaseDottySuite {
     assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), b)))))
   }
 
+  test("block comment opened after a statement, with ragged lines, a statement after it on its last line") {
+    val code =
+      """|def f =
+         |  a /* x
+         |y
+         |      z
+         |  */ b
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/* x\ny\n      z\n  */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
+    ))
+  }
+
+  test("block comment opened after a statement, a carriage return right after its opener, a statement after it on its last line") {
+    val code = "def f =\n  a /*\r  */ b\n"
+    val a = tname("a").toBuilder.endComment(Seq("/*\r  */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
+    ))
+  }
+
+  test("block comment opened after a statement, a CR LF right after its opener, a statement after it on its last line") {
+    val code = "def f =\r\n  a /*\r\n  */ b\r\n"
+    val a = tname("a").toBuilder.endComment(Seq("/*\r\n  */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
+    ))
+  }
+
+  test("block comment opened after a statement, a one-line block comment and a statement after it on its last line") {
+    val code =
+      """|def f =
+         |  a /* x
+         |  */ /* y */ b
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n  */", "/* y */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
+    ))
+  }
+
+  test("block comment opened after a statement, a second one opened on its last line, a statement after the second") {
+    val code =
+      """|def f =
+         |  a /* x
+         |  */ /* y
+         |  */ b
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n  */", "/* y\n  */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))),
+    ))
+  }
+
+  test("block comment opened after a statement, a statement on the line after its last line") {
+    val code =
+      """|def f =
+         |  a /* x
+         |  */
+         |  b
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n  */")).result()
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, blk(a, tname("b"))))))
+  }
+
+  test("block comment opened after a statement, a leading infix operator after it on its last line") {
+    val code =
+      """|def f =
+         |  a /* x
+         |  */ + b
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n  */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, tinfix(a, tname("+"), tname("b")))),
+    ))
+  }
+
+  test("block comment opened after a statement, a leading infix operator after it on a last line left of the statement") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a /* x
+         |  */ + b
+         |""".stripMargin
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a")).toBuilder.endComment(Seq("/* x\n  */"))
+      .result()
+    assertTree(source(code))(Source(
+      List(Defn.Object(Nil, tname("O"), tpl(f, Term.ApplyUnary(tname("+"), tname("b"))))),
+    ))
+  }
+
+  test("block comment opened after an infix operator, its operand after it on its last line") {
+    val code =
+      """|def f =
+         |  a + /* x
+         |  */ b
+         |""".stripMargin
+    val plus = tname("+").toBuilder.endComment(Seq("/* x\n  */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, tinfix(tname("a"), plus, tname("b")))),
+    ))
+  }
+
+  test("block comment opened after `=`, the body after it on a deeper last line") {
+    val code =
+      """|def f = /* x
+         |  */ b
+         |""".stripMargin
+    val b = tname("b").toBuilder.begComment(Seq("/* x\n  */")).result()
+    assertTree(source(code))(Source(List(Defn.Def(Nil, tname("f"), Nil, None, b))))
+  }
+
+  test("block comment opened after a body, a definition after it on a last line left of the body") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a /* x
+         |  */ def g = 1
+         |""".stripMargin
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a")).toBuilder.endComment(Seq("/* x\n  */"))
+      .result()
+    assertTree(source(code))(Source(
+      List(Defn.Object(Nil, tname("O"), tpl(f, Defn.Def(Nil, tname("g"), Nil, None, int(1))))),
+    ))
+  }
+
+  test("block comment opened after a body, text before its closer, a statement after it on a last line left of the body") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a /* x
+         |  yyyy */ b
+         |""".stripMargin
+    // dotty (a41): `def f = a` and `b`, with the indent of the text before `*/`
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a")).toBuilder
+      .endComment(Seq("/* x\n  yyyy */")).result()
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f, tname("b"))))))
+  }
+
+  test("block comment opened after a statement, text before its closer, a statement after it on its last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a /* x
+         |    yyyy */ b
+         |  def g = 1
+         |""".stripMargin
+    // dotty (a43): `def f = { a; b }`
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n    yyyy */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(a, tname("b")))
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f, g)))))
+  }
+
+  test("block comment opened after a definition, a definition after it on its last line") {
+    val code =
+      """|object O:
+         |  val a = 1 /* x
+         |  */ val b = 2
+         |  def g = 3
+         |""".stripMargin
+    // dotty (a42): `val a = 1`, `val b = 2` and `def g = 3`
+    val error =
+      """|<input>:3: error: `;` expected but `val` found
+         |  */ val b = 2
+         |     ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment opened after `then`, the body after it on a deeper last line") {
+    val code =
+      """|def f =
+         |  if c then /* x
+         |    */ b
+         |  else d
+         |""".stripMargin
+    val b = tname("b").toBuilder.begComment(Seq("/* x\n    */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, tif(tname("c"), b, tname("d")))),
+    ))
+  }
+
+  test("block comment opened after the colon of a colon argument, the argument after it on a deeper last line") {
+    val code =
+      """|def f =
+         |  xs.foo: /* x
+         |    */ bar
+         |""".stripMargin
+    val bar = tname("bar").toBuilder.begComment(Seq("/* x\n    */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Def(Nil, tname("f"), Nil, None, tapply(tselect(tname("xs"), tname("foo")), blk(bar)))),
+    ))
+  }
+
+  test(
+    "block comment opened after the colon of an object, a definition after it on its last line",
+  ) {
+    val code =
+      """|object A: /* x
+         |*/ val b = 2
+         |""".stripMargin
+    interceptMessage[NoSuchElementException]("token -1 out of 17")(source(code))
+  }
+
+  test("block comment opened after the colon of an object, a second one opened on its last line, a definition after the second") {
+    val code =
+      """|object A: /* x
+         |*/ /* y
+         |*/ val b = 2
+         |""".stripMargin
+    interceptMessage[NoSuchElementException]("token -1 out of 19")(source(code))
+  }
+
+  test("block comment opened after a lambda arrow, the body after it on a deeper last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    xs.map: x => /* c
+         |      */ g(x)
+         |    h
+         |""".stripMargin
+    val gx = tapply(tname("g"), tname("x")).toBuilder.begComment(Seq("/* c\n      */")).result()
+    val map = tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("x"))(gx)))
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(map, tname("h")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
+  }
+
+  test("block comment opened after a lambda arrow, a body of two lines starting on its deeper last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    xs.map: x => /* c
+         |      */ g(x)
+         |      k(x)
+         |    h
+         |""".stripMargin
+    val gx = tapply(tname("g"), tname("x")).toBuilder.begComment(Seq("/* c\n      */")).result()
+    val body = blk(gx, tapply(tname("k"), tname("x")))
+    val map = tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("x"))(body)))
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(map, tname("h")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
+  }
+
+  test("block comment opened after an argument, a comma after it on its last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    g(a /* x
+         |    */ , b)
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n    */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tapply(tname("g"), a, tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
+  }
+
+  test("block comment opened after the colon of a colon argument, the argument after it on its last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    xs.foo: /* x
+         |    */ bar
+         |""".stripMargin
+    interceptMessage[NoSuchElementException]("token -1 out of 28")(source(code))
+  }
+
+  test("block comment opened after the colon of `new`, a definition after it on a deeper last line") {
+    val code =
+      """|object O:
+         |  val v = new A: /* c
+         |    */ def f = 1
+         |  val w = 2
+         |""".stripMargin
+    val f = Defn.Def(Nil, tname("f"), Nil, None, int(1)).toBuilder.begComment(Seq("/* c\n    */"))
+      .result()
+    val v = Defn.Val(Nil, List(patvar("v")), None, Term.NewAnonymous(tpl(List(init("A")), List(f))))
+    val w = Defn.Val(Nil, List(patvar("w")), None, int(2))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(v, w)))))
+  }
+
+  test("block comment opened after a `then` body, a definition after it on a last line two regions left") {
+    val code =
+      """|object O:
+         |  def f =
+         |    if c then
+         |      a /* x
+         |  */ def g = 1
+         |""".stripMargin
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tif(tname("c"), tname("a"))).toBuilder
+      .endComment(Seq("/* x\n  */")).result()
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f, g)))))
+  }
+
+  test("block comment opened after a case body, the next case after it on its last line") {
+    val code =
+      """|object O:
+         |  def f = x match
+         |    case 1 => a /* x
+         |    */ case 2 => b
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n    */")).result()
+    val m = tmatch(tname("x"), Case(int(1), None, a), Case(int(2), None, tname("b")))
+    val f = Defn.Def(Nil, tname("f"), Nil, None, m)
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
+  }
+
+  test("block comment opened after a statement, the end of input after it on its last line") {
+    val code = "object O:\n  def f =\n    a /* x\n  */"
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a")).toBuilder.endComment(Seq("/* x\n  */"))
+      .result()
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
+  }
+
   test("block comment with ragged lines, its last line left of the body before it, a definition after it") {
     val code =
       """|object O:
@@ -4284,6 +4598,581 @@ class SignificantIndentationSuite extends BaseDottySuite {
     assertTree(source(code))(Source(
       List(Defn.Object(Nil, tname("O"), tpl(Defn.Def(Nil, tname("f"), Nil, None, blk(a)), g))),
     ))
+  }
+
+  test(
+    "block comment opened after the colon of an object, a definition after it on a deeper last line",
+  ) {
+    val code =
+      """|object O:
+         |  object A: /* x
+         |    */ val b = 2
+         |  val c = 3
+         |""".stripMargin
+    val b = Defn.Val(Nil, List(Pat.Var(tname("b"))), None, int(2)).toBuilder
+      .begComment(Seq("/* x\n    */")).result()
+    val c = Defn.Val(Nil, List(Pat.Var(tname("c"))), None, int(3))
+    assertTree(source(code))(Source(
+      List(Defn.Object(Nil, tname("O"), tpl(Defn.Object(Nil, tname("A"), tpl(b)), c))),
+    ))
+  }
+
+  test("block comment opened after a `then` body, `else` after it on its last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    if c then a /* x
+         |    */ else b
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n    */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, Term.If(tname("c"), a, tname("b"), Nil))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
+  }
+
+  test("block comment opened after an enumerator, an enumerator after it on its last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    for
+         |      x <- xs /* x
+         |      */ y <- ys
+         |    yield x
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `outdent` expected but `<-` found
+         |      */ y <- ys
+         |           ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment opened after the condition of an `if` in parentheses, the body after it on a deeper last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    if (c) /* x
+         |      */ a
+         |    else b
+         |""".stripMargin
+    val a = tname("a").toBuilder.begComment(Seq("/* x\n      */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, Term.If(tname("c"), a, tname("b"), Nil))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
+  }
+
+  test("block comment opened after the condition of a `while` in parentheses, the body after it on a deeper last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    while (c) /* x
+         |      */ a
+         |    b
+         |""".stripMargin
+    val a = tname("a").toBuilder.begComment(Seq("/* x\n      */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(Term.While(tname("c"), a), tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
+  }
+
+  test("block comment opened after the enumerators of a `for` in parentheses, the body after it on a deeper last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    for (x <- xs) /* x
+         |      */ a
+         |    b
+         |""".stripMargin
+    val enums = Term.EnumeratorsBlock(List(Enumerator.Generator(Pat.Var(tname("x")), tname("xs"))))
+      .toBuilder.endComment(Seq("/* x\n      */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(Term.For(enums, tname("a")), tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
+  }
+
+  test("block comment on a line of its own at the indent of the statement before it, a leading infix operator after it on a last line left of the statement") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a
+         |    /* x
+         |  */ + b
+         |""".stripMargin
+    // dotty, and the same input with a line break in place of the comment: `def f = a + b`
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n  */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(a))
+    val plusB = Term.ApplyUnary(tname("+"), tname("b")).toBuilder.begComment(Seq("/* x\n  */"))
+      .result()
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f, plusB)))))
+  }
+
+  test("block comment opened after the colon of a colon argument, a lambda after it on a deeper last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    xs.map: /* c
+         |      */ x => g(x)
+         |    h
+         |""".stripMargin
+    // dotty (a45): `xs.map(x => g(x))` and `h`, as without the comment (a46)
+    val fn = tfunc(tparam("x"))(tapply(tname("g"), tname("x"))).toBuilder
+      .begComment(Seq("/* c\n      */")).result()
+    val map = tapply(tselect(tname("xs"), tname("map")), blk(fn))
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(map, tname("h")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
+  }
+
+  test("block comment on a line of its own after a blank line, a leading infix operator after it on a last line left of the statement") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a
+         |
+         |    /* x
+         |  */ + b
+         |""".stripMargin
+    // dotty (a44): `def f = a` and `+b`
+    val a = tname("a").toBuilder.endComment(Seq("/* x\n  */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(a))
+    val plusB = Term.ApplyUnary(tname("+"), tname("b")).toBuilder.begComment(Seq("/* x\n  */"))
+      .result()
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f, plusB)))))
+  }
+
+  test("block comment on a line of its own after a statement with a trailing comment, a leading infix operator after it on a last line left of the statement") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a // y
+         |    /* x
+         |  */ + b
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("// y", "/* x\n  */")).result()
+    val op = tname("+").toBuilder.begComment(Seq("/* x\n  */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tinfix(blk(a), op, tname("b")))
+    assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
+  }
+
+  test("tokens: block comment opened after a statement, a statement after it on its last line") {
+    val code =
+      """|def f =
+         |  a /* x
+         |  */ b
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwDef [0..3)
+         |Ident(f) [4..5)
+         |Equals [6..7)
+         |Indentation.Indent [7..7)
+         |Ident(a) [10..11)
+         |Ident(b) [22..23)
+         |Indentation.Outdent [23..23)
+         |EOF [24..24)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("tokens: block comment opened after a statement, a second one opened on its last line, a statement after the second") {
+    val code =
+      """|def f =
+         |  a /* x
+         |  */ /* y
+         |  */ b
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwDef [0..3)
+         |Ident(f) [4..5)
+         |Equals [6..7)
+         |Indentation.Indent [7..7)
+         |Ident(a) [10..11)
+         |Ident(b) [32..33)
+         |Indentation.Outdent [33..33)
+         |EOF [34..34)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("tokens: block comment opened after a statement, a statement on the line after its last line") {
+    val code =
+      """|def f =
+         |  a /* x
+         |  */
+         |  b
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwDef [0..3)
+         |Ident(f) [4..5)
+         |Equals [6..7)
+         |Indentation.Indent [7..7)
+         |Ident(a) [10..11)
+         |LF [21..22)
+         |Ident(b) [24..25)
+         |Indentation.Outdent [25..25)
+         |EOF [26..26)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("tokens: block comment on a line of its own, a statement after it on its last line") {
+    val code =
+      """|def f =
+         |  a
+         |  /* x
+         |  */ b
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwDef [0..3)
+         |Ident(f) [4..5)
+         |Equals [6..7)
+         |Indentation.Indent [7..7)
+         |Ident(a) [10..11)
+         |LF [11..12)
+         |Ident(b) [24..25)
+         |Indentation.Outdent [25..25)
+         |EOF [26..26)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("tokens: block comment opened after a statement, a leading infix operator after it on its last line") {
+    val code =
+      """|def f =
+         |  a /* x
+         |  */ + b
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwDef [0..3)
+         |Ident(f) [4..5)
+         |Equals [6..7)
+         |Indentation.Indent [7..7)
+         |Ident(a) [10..11)
+         |Ident(+) [22..23)
+         |Ident(b) [24..25)
+         |Indentation.Outdent [25..25)
+         |EOF [26..26)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("tokens: block comment opened after a statement, a second one opened on its last line, a leading infix operator after the second") {
+    val code =
+      """|def f =
+         |  a /* x
+         |  */ /* y
+         |  */ + b
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwDef [0..3)
+         |Ident(f) [4..5)
+         |Equals [6..7)
+         |Indentation.Indent [7..7)
+         |Ident(a) [10..11)
+         |Ident(+) [32..33)
+         |Ident(b) [34..35)
+         |Indentation.Outdent [35..35)
+         |EOF [36..36)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("tokens: block comment opened after a body, a definition after it on a last line left of the body") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a /* x
+         |  */ def g = 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(O) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |Ident(a) [24..25)
+         |Indentation.Outdent [35..35)
+         |KwDef [36..39)
+         |Ident(g) [40..41)
+         |Equals [42..43)
+         |Constant.Int(1) [44..45)
+         |Indentation.Outdent [45..45)
+         |EOF [46..46)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("tokens: block comment on a line of its own at the indent of the body, a definition after it on a last line left of the body") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a
+         |    /* x
+         |  */ def g = 1
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(O) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |Ident(a) [24..25)
+         |Indentation.Outdent [39..39)
+         |KwDef [40..43)
+         |Ident(g) [44..45)
+         |Equals [46..47)
+         |Constant.Int(1) [48..49)
+         |Indentation.Outdent [49..49)
+         |EOF [50..50)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("tokens: block comment on a line of its own at the indent of the statement before it, a leading infix operator after it on a last line left of the statement") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a
+         |    /* x
+         |  */ + b
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(O) [7..8)
+         |Colon [8..9)
+         |Indentation.Indent [9..9)
+         |KwDef [12..15)
+         |Ident(f) [16..17)
+         |Equals [18..19)
+         |Indentation.Indent [19..19)
+         |Ident(a) [24..25)
+         |Indentation.Outdent [39..39)
+         |Ident(+) [40..41)
+         |Ident(b) [42..43)
+         |Indentation.Outdent [43..43)
+         |EOF [44..44)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Source])
+  }
+
+  test("block comment opened after an end marker, a definition after it on its last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a
+         |  end f /* x
+         |  */ def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `;` expected but `def` found
+         |  */ def g = 1
+         |     ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment opened after an end marker of `if`, a statement after it on its last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    if c then
+         |      a
+         |    end if /* x
+         |    */ b
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `outdent` expected but `if` found
+         |    end if /* x
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment opened after a statement, an end marker of a definition after it on its last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a /* x
+         |  */ end f
+         |""".stripMargin
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a")).toBuilder.endComment(Seq("/* x\n  */"))
+      .result()
+    assertTree(source(code))(Source(
+      List(Defn.Object(Nil, tname("O"), tpl(f, Term.EndMarker(tname("f"))))),
+    ))
+  }
+
+  test("block comment opened after a statement, an end marker of `if` after it on its last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    if c then
+         |      a /* x
+         |    */ end if
+         |    b
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `outdent` expected but `identifier` found
+         |    b
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment opened after a statement, an end marker of `match` after it on its last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    x match
+         |      case 1 => a /* x
+         |    */ end match
+         |    b
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `outdent` expected but `identifier` found
+         |    b
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment opened after a statement, an end marker of `while` after it on its last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    while c do
+         |      a /* x
+         |    */ end while
+         |    b
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `outdent` expected but `identifier` found
+         |    b
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment opened after a statement, an end marker of `for` after it on its last line") {
+    val code =
+      """|object O:
+         |  def f =
+         |    for x <- xs do
+         |      a /* x
+         |    */ end for
+         |    b
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `outdent` expected but `identifier` found
+         |    b
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test(
+    "block comment opened after a `finally` body, an end marker of `try` after it on its last line",
+  ) {
+    val code =
+      """|object O:
+         |  def f =
+         |    try a
+         |    finally
+         |      c /* x
+         |    */ end try
+         |    b
+         |""".stripMargin
+    val error =
+      """|<input>:7: error: `outdent` expected but `identifier` found
+         |    b
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment opened after a statement, a second one opened on its last line, an end marker of `if` after the second") {
+    val code =
+      """|object O:
+         |  def f =
+         |    if c then
+         |      a /* x
+         |    */ /* y
+         |    */ end if
+         |    b
+         |""".stripMargin
+    val error =
+      """|<input>:7: error: `outdent` expected but `identifier` found
+         |    b
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment opened after a statement, an end marker of `val` after it on its last line") {
+    val code =
+      """|object O:
+         |  val (x, y) =
+         |    (1, 2) /* c
+         |  */ end val
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `;` expected but `def` found
+         |  def g = 1
+         |  ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("block comment opened after an extension body, an end marker of `extension` after it on its last line") {
+    val code =
+      """|object O:
+         |  extension (x: Int)
+         |    def f = 1 /* x
+         |  */ end extension
+         |  val w = 2
+         |""".stripMargin
+    val f = Defn.Def(Nil, tname("f"), Nil, None, int(1))
+    val ext = Defn.ExtensionGroup(Nil, List(List(tparam("x", "Int"))), f).toBuilder
+      .endComment(Seq("/* x\n  */")).result()
+    val w = Defn.Val(Nil, List(Pat.Var(tname("w"))), None, int(2))
+    assertTree(source(code))(Source(
+      List(Defn.Object(Nil, tname("O"), tpl(ext, Term.EndMarker(tname("extension")), w))),
+    ))
+  }
+
+  test(
+    "block comment opened after a `given` body, an end marker of `given` after it on its last line",
+  ) {
+    val code =
+      """|object O:
+         |  given A with
+         |    def f = 1 /* x
+         |  */ end given
+         |  val w = 2
+         |""".stripMargin
+    val f = Defn.Def(Nil, tname("f"), Nil, None, int(1)).toBuilder.endComment(Seq("/* x\n  */"))
+      .result()
+    val g = Defn.Given(Nil, anon, Nil, Nil, tpl(List(init(pname("A"))), List(f)))
+    val w = Defn.Val(Nil, List(Pat.Var(tname("w"))), None, int(2))
+    assertTree(source(code))(Source(
+      List(Defn.Object(Nil, tname("O"), tpl(g, Term.EndMarker(tname("given")), w))),
+    ))
+  }
+
+  test("block comment opened after an end marker, a second one opened on its last line, a definition after the second") {
+    val code =
+      """|object O:
+         |  def f =
+         |    1
+         |  end f /* x
+         |  */ /* y
+         |  */ def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `;` expected but `def` found
+         |  */ def g = 1
+         |     ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
 }

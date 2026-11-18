@@ -529,6 +529,48 @@ class CommentSuite extends ParseSuite {
     )("end Term.Name: /* c1 */")
   }
 
+  test("block: MLC opened after a statement, a statement after it on its last line") {
+    val code =
+      """|def f = {
+         |  a /* c1
+         |  */ b
+         |}
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/* c1\n  */")).result()
+    assertTree(
+      templStat(code),
+    )(Defn.Def(Nil, tname("f"), Nil, None, blk(Term.SelectPostfix(a, tname("b")))))
+  }
+
+  test(
+    "block: MLC opened after a statement, an operator and an operand after it on its last line",
+  ) {
+    val code =
+      """|def f = {
+         |  a /* c1
+         |  */ + b
+         |}
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/* c1\n  */")).result()
+    assertTree(
+      templStat(code),
+    )(Defn.Def(Nil, tname("f"), Nil, None, blk(tinfix(a, tname("+"), tname("b")))))
+  }
+
+  test("block: MLC opened after a statement, an operator and an operand after it on its last line, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|def f = {
+         |  a /* c1
+         |  */ + b
+         |}
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/* c1\n  */")).result()
+    assertTree(
+      templStat(code),
+    )(Defn.Def(Nil, tname("f"), Nil, None, blk(tinfix(a, tname("+"), tname("b")))))
+  }
+
   test("case: MLC between two semicolons, next case on the line") {
     val code =
       """|object A {
