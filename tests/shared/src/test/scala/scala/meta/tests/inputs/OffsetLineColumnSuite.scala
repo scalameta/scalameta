@@ -115,4 +115,11 @@ class OffsetLineColumnSuite extends FunSuite {
        |[7, 7) -> [1:3, 1:2] end=(1:3)
        |""".stripMargin
   }
+
+  super.test("isMultiLine") {
+    val input = Input.String("foo\nbar")
+    val ranges = List(0 -> 3, 0 -> 4, 4 -> 4, 2 -> 5, 0 -> 7)
+    val obtained = ranges.map { case (start, end) => Position.Range(input, start, end).isMultiLine }
+    assertEquals(obtained, List(false, true, false, true, true))
+  }
 }
