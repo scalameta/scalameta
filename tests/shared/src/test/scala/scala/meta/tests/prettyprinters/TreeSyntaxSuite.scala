@@ -2410,4 +2410,619 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
+  private val newlineComment = "/* foo\nbar */"
+  private def withNewline(name: String) = tname(name).toBuilder.endComment(Seq(newlineComment))
+    .result()
+  private def withLineComment(name: String) = tname(name).toBuilder.endComment(Seq("// foo")).result()
+  private def printAndParse(tree: Tree)(implicit d: Dialect): (String, Either[String, Stat]) = {
+    val printed = TreeSyntax.reprint(tree)(d).toString
+    val parsed = d(s"{\n$printed\n}").parse[Term] match {
+      case Parsed.Success(Term.Block(stat :: Nil)) => Right(stat)
+      case Parsed.Success(other) => Right(other)
+      case e: Parsed.Error => Left(e.message)
+    }
+    (printed, parsed)
+  }
+
+  test("comment with a newline: a function and its arguments") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.Apply(withNewline("f"), Term.ArgClause(List(tname("x"))))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|f /* foo
+         |bar */ (x)""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(blk(withNewline("f"), tname("x")).structure))
+  }
+
+  test("comment with a newline: a qualifier and a name") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.Select(withNewline("a"), tname("b"))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|a /* foo
+         |bar */ .b""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("comment with a newline: an infix operand and its operator") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = tinfix(withNewline("a"), tname("+"), tname("b"))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|a /* foo
+         |bar */ + b""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("comment with a newline: an infix operand and its operator, scala 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val tree = tinfix(withNewline("a"), tname("+"), tname("b"))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|a /* foo
+         |bar */ + b""".stripMargin,
+    )
+    assertEquals(
+      parsed.map(_.structure),
+      Right(blk(withNewline("a"), unary("+", tname("b"))).structure),
+    )
+  }
+
+  test("comment with a newline: an infix operator and its operand") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = tinfix(tname("a"), withNewline("+"), tname("b"))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|a + /* foo
+         |bar */ b""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("comment with a newline: a function and its type arguments") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.ApplyType(withNewline("f"), Type.ArgClause(List(pname("T"))))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|f /* foo
+         |bar */ [T]""".stripMargin,
+    )
+    assertEquals(parsed.left.map(_.linesIterator.next()), Left("`=>` expected but `\\n` found"))
+  }
+
+  test("comment with a newline: an assignment") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.Assign(withNewline("a"), tname("b"))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|a /* foo
+         |bar */ = b""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("comment with a newline: an ascription") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.Ascribe(withNewline("a"), pname("T"))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|a /* foo
+         |bar */ : T""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("comment with a newline: a match") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.Match(withNewline("a"), List(Case(int(1), None, tname("b"))), Nil)
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|a /* foo
+         |bar */ match {
+         |  case 1 => b
+         |}""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("comment with a newline: a postfix operator") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.SelectPostfix(withNewline("a"), tname("b"))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|a /* foo
+         |bar */ b""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(blk(withNewline("a"), tname("b")).structure))
+  }
+
+  test("comment with a newline: a class and its arguments after new") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.New(Init(
+      pname("A").toBuilder.endComment(Seq(newlineComment)).result(),
+      Name.Anonymous(),
+      List(Term.ArgClause(List(tname("x")))),
+    ))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|new A /* foo
+         |bar */ (x)""".stripMargin,
+    )
+    assertEquals(
+      parsed.map(_.structure),
+      Right(
+        blk(
+          Term.New(Init(pname("A"), Name.Anonymous(), List.empty[Term.ArgClause])).toBuilder
+            .endComment(Seq(newlineComment)).result(),
+          tname("x"),
+        ).structure,
+      ),
+    )
+  }
+
+  test("comment with a newline: a method name and its body") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Defn.Def(Nil, withNewline("f"), Nil, None, int(1))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|def f /* foo
+         |bar */ = 1""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("comment with a newline: a value name and its type") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Defn.Val(Nil, List(Pat.Var(withNewline("v"))), Some(pname("T")), int(1))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|val v /* foo
+         |bar */ : T = 1""".stripMargin,
+    )
+    assertEquals(
+      parsed.map(_.structure),
+      Right(
+        Defn.Val(
+          Nil,
+          List(Pat.Var(tname("v")).toBuilder.endComment(Seq(newlineComment)).result()),
+          Some(pname("T")),
+          int(1),
+        ).structure,
+      ),
+    )
+  }
+
+  test("comment with a newline: a condition in parentheses") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.If(withNewline("c"), tname("a"), tname("b"), Nil)
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|if (c /* foo
+         |bar */ ) a else b""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("comment with a newline: a function and its block argument") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.Apply(withNewline("f"), Term.ArgClause(List(blk(tname("x")))))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|f /* foo
+         |bar */ {
+         |  x
+         |}""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(blk(withNewline("f"), blk(tname("x"))).structure))
+  }
+
+  test("comment with a newline: a function and its block argument, scala 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val tree = Term.Apply(withNewline("f"), Term.ArgClause(List(blk(tname("x")))))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|f /* foo
+         |bar */ {
+         |  x
+         |}""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("comment with a newline: a statement and the next one") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = blk(withNewline("a"), tname("b"))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|{
+         |  a /* foo
+         |bar */
+         |  b
+         |}""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("comment with a newline: a lambda parameter and its body") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term
+      .Function(Term.ParamClause(List(Term.Param(Nil, withNewline("p"), None, None))), tname("x"))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|p /* foo
+         |bar */ => x""".stripMargin,
+    )
+    assertEquals(
+      parsed.map(_.structure),
+      Right(
+        Term.Function(
+          Term.ParamClause(List(Term.Param(Nil, tname("p"), None, None))).toBuilder
+            .endComment(Seq(newlineComment)).result(),
+          tname("x"),
+        ).structure,
+      ),
+    )
+  }
+
+  test("comment with a newline: a tuple element and the next one") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.Tuple(List(withNewline("a"), tname("b")))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|(a /* foo
+         |bar */ , b)""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  private def placeholderArg = {
+    val fun = Term.Select(Term.Placeholder(), tname("f")).toBuilder.endComment(Seq(newlineComment))
+      .result()
+    val arg = Term.AnonymousFunction(Term.Apply(fun, Term.ArgClause(List(tname("x")))))
+    Term.Apply(Term.Select(tname("xs"), tname("map")), Term.ArgClause(List(arg)))
+  }
+  private def extractorCase = {
+    val fun = Term.ApplyType(withNewline("B"), Type.ArgClause(List(pname("T"))))
+    val pat = Pat.Extract(fun, Pat.ArgClause(List(Pat.Var(tname("y")))))
+    Term.Match(tname("x"), List(Case(pat, None, tname("y"))))
+  }
+
+  test("comment with a newline: a placeholder function and its arguments, inside arguments") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val (printed, parsed) = printAndParse(placeholderArg)
+    assertNoDiff(
+      printed,
+      """|xs.map(_.f /* foo
+         |bar */ (x))""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(placeholderArg.structure))
+  }
+
+  test(
+    "comment with a newline: a placeholder function and its arguments, inside arguments, scala 2.13",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala213
+    val (printed, parsed) = printAndParse(placeholderArg)
+    assertNoDiff(
+      printed,
+      """|xs.map(_.f /* foo
+         |bar */ (x))""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(placeholderArg.structure))
+  }
+
+  test("comment with a newline: an extractor and its type arguments in a case") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val (printed, parsed) = printAndParse(extractorCase)
+    assertNoDiff(
+      printed,
+      """|x match {
+         |  case B /* foo
+         |bar */ [T](y) => y
+         |}""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(extractorCase.structure))
+  }
+
+  test("comment with a newline: an extractor and its type arguments in a case, scala 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val (printed, parsed) = printAndParse(extractorCase)
+    assertNoDiff(
+      printed,
+      """|x match {
+         |  case B /* foo
+         |bar */ [T](y) => y
+         |}""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(extractorCase.structure))
+  }
+
+  private def curriedPlaceholderArg = {
+    val fun = Term.Apply(Term.Select(tname("a"), tname("f")), Term.ArgClause(List(Term.Placeholder())))
+      .toBuilder.endComment(Seq(newlineComment)).result()
+    val arg = Term.AnonymousFunction(Term.Apply(fun, Term.ArgClause(List(tname("x")))))
+    Term.Apply(Term.Select(tname("xs"), tname("map")), Term.ArgClause(List(arg)))
+  }
+  private def placeholderOperandArg = {
+    val lhs = Term.Apply(tname("f"), Term.ArgClause(List(Term.Placeholder()))).toBuilder
+      .endComment(Seq(newlineComment)).result()
+    val arg = Term.AnonymousFunction(tinfix(lhs, tname("+"), lit(1)))
+    Term.Apply(Term.Select(tname("xs"), tname("map")), Term.ArgClause(List(arg)))
+  }
+
+  test("comment with a newline: a curried function of a placeholder, inside arguments") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val (printed, parsed) = printAndParse(curriedPlaceholderArg)
+    assertNoDiff(
+      printed,
+      """|xs.map(a.f(_) /* foo
+         |bar */ (x))""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(curriedPlaceholderArg.structure))
+  }
+
+  test(
+    "comment with a newline: a curried function of a placeholder, inside arguments, scala 2.13",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala213
+    val (printed, parsed) = printAndParse(curriedPlaceholderArg)
+    assertNoDiff(
+      printed,
+      """|xs.map(a.f(_) /* foo
+         |bar */ (x))""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(curriedPlaceholderArg.structure))
+  }
+
+  test(
+    "comment with a newline: an infix operand with a placeholder, inside arguments, scala 2.13",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala213
+    val (printed, parsed) = printAndParse(placeholderOperandArg)
+    assertNoDiff(
+      printed,
+      """|xs.map(f(_) /* foo
+         |bar */ + 1)""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(placeholderOperandArg.structure))
+  }
+
+  private def placeholderOperandApply(rhs: Term => Term) = {
+    val apply = Term.Apply(withNewline("g"), Term.ArgClause(List(tname("x"))))
+    val arg = Term.AnonymousFunction(tinfix(Term.Placeholder(), tname("+"), rhs(apply)))
+    Term.Apply(Term.Select(tname("xs"), tname("map")), Term.ArgClause(List(arg)))
+  }
+
+  test("comment with a newline: a function and its arguments in a placeholder function") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = placeholderOperandApply(identity)
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|xs.map(_ + g /* foo
+         |bar */ (x))""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test(
+    "comment with a newline: a function and its arguments in a block in a placeholder function",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = placeholderOperandApply(blk(_))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|xs.map(_ + {
+         |  g /* foo
+         |bar */ (x)
+         |})""".stripMargin,
+    )
+    val parsedTree = placeholderOperandApply(_ => blk(withNewline("g"), tname("x")))
+    assertEquals(parsed.map(_.structure), Right(parsedTree.structure))
+  }
+
+  test("comment with a newline: a function and its placeholder argument") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term
+      .AnonymousFunction(Term.Apply(withNewline("f"), Term.ArgClause(List(Term.Placeholder()))))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|f /* foo
+         |bar */ (_)""".stripMargin,
+    )
+    val parsedTree = Term.AnonymousFunction(blk(withNewline("f"), Term.Placeholder()))
+    assertEquals(parsed.map(_.structure), Right(parsedTree.structure))
+  }
+
+  test("comment with a newline: an infix operand and its alphanumeric operator") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = tinfix(withNewline("a"), tname("foreach"), tname("f"))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|a /* foo
+         |bar */ foreach f""".stripMargin,
+    )
+    val parsedTree = blk(withNewline("a"), Term.SelectPostfix(tname("foreach"), tname("f")))
+    assertEquals(parsed.map(_.structure), Right(parsedTree.structure))
+  }
+
+  test("line comment: an infix operand and its alphanumeric operator") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = tinfix(withLineComment("a"), tname("foreach"), tname("f"))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|a // foo
+         |  foreach f""".stripMargin,
+    )
+    val parsedTree = blk(withLineComment("a"), Term.SelectPostfix(tname("foreach"), tname("f")))
+    assertEquals(parsed.map(_.structure), Right(parsedTree.structure))
+  }
+
+  test("comment with a newline: a typed pattern and its type") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tpe = pname("E").toBuilder.begComment(Seq(newlineComment)).result()
+    val tree = Term.Match(tname("x"), List(Case(Pat.Typed(Pat.Var(tname("e")), tpe), None, tname("e"))))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|x match {
+         |  case e: /* foo
+         |bar */ E => e
+         |}""".stripMargin,
+    )
+    assertEquals(
+      parsed.left.map(_.linesIterator.next()),
+      Left("`identifier` expected but `\\n` found"),
+    )
+  }
+
+  test("comment with a newline: an ascription and its type") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tpe = pname("T").toBuilder.begComment(Seq(newlineComment)).result()
+    val tree = Term.Ascribe(tname("x"), tpe)
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|x: /* foo
+         |bar */ T""".stripMargin,
+    )
+    assertEquals(parsed.left.map(_.linesIterator.next()), Left("expected fewer-braces method body"))
+  }
+
+  test("line comment: a placeholder function and its alphanumeric operator, inside arguments") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val lhs = Term.Select(Term.Placeholder(), tname("name")).toBuilder.endComment(Seq("// foo"))
+      .result()
+    val arg = Term.AnonymousFunction(tinfix(lhs, tname("dropRight"), lit(1)))
+    val tree = Term.Apply(Term.Select(tname("xs"), tname("map")), Term.ArgClause(List(arg)))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|xs.map(
+         |  _.name // foo
+         |    dropRight 1
+         |)""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("line comment: a placeholder function and its arguments, inside arguments, scala 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val fun = Term.Select(Term.Placeholder(), tname("f")).toBuilder.endComment(Seq("// foo")).result()
+    val arg = Term.AnonymousFunction(Term.Apply(fun, Term.ArgClause(List(tname("x")))))
+    val tree = Term.Apply(Term.Select(tname("xs"), tname("map")), Term.ArgClause(List(arg)))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|xs.map(
+         |  (_.f // foo
+         |  )(x)
+         |)""".stripMargin,
+    )
+    val narrowed = Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("f"))).toBuilder
+      .endComment(Seq("// foo")).result()
+    val parsedArg = Term.Apply(narrowed, Term.ArgClause(List(tname("x"))))
+    val parsedTree = Term
+      .Apply(Term.Select(tname("xs"), tname("map")), Term.ArgClause(List(parsedArg)))
+    assertEquals(parsed.map(_.structure), Right(parsedTree.structure))
+  }
+
+  test("line comment before an alphanumeric operator in a placeholder function") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = dialect(
+      """|xs.map(_.value
+         |  // c
+         |  min 10 max 0)""".stripMargin,
+    ).parse[Term].get
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|xs.map(
+         |  _.value
+         |    // c
+         |    min 10 max 0
+         |)""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("line comment: a postfix operator") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.SelectPostfix(withLineComment("a"), tname("b"))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|a // foo
+         |  b""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(blk(withLineComment("a"), tname("b")).structure))
+  }
+
+  test("line comment: a class and its arguments after new") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val tree = Term.New(Init(
+      pname("A").toBuilder.endComment(Seq("// foo")).result(),
+      Name.Anonymous(),
+      List(Term.ArgClause(List(tname("x")))),
+    ))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|new A // foo
+         |  (x)""".stripMargin,
+    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
+  }
+
+  test("line comment: a class and its arguments after new, scala 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val tree = Term.New(Init(
+      pname("A").toBuilder.endComment(Seq("// foo")).result(),
+      Name.Anonymous(),
+      List(Term.ArgClause(List(tname("x")))),
+    ))
+    val (printed, parsed) = printAndParse(tree)
+    assertNoDiff(
+      printed,
+      """|new A // foo
+         |  (x)""".stripMargin,
+    )
+    assertEquals(
+      parsed.map(_.structure),
+      Right(
+        blk(
+          Term.New(Init(pname("A"), Name.Anonymous(), List.empty[Term.ArgClause])).toBuilder
+            .endComment(Seq("// foo")).result(),
+          tname("x"),
+        ).structure,
+      ),
+    )
+  }
+
 }

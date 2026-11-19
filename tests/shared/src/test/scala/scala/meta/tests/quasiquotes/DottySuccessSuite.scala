@@ -572,4 +572,21 @@ $unquoted */ def g = 1""",
     )(blk(f, end, g))
   }
 
+  test("comments: an unquote whose value holds a newline, in a comment between a function and its argument") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val content = Lit.String("foo\nbar")
+    val tree = q"f /* $content */ (x)"
+    val f = tname("f").toBuilder.endComment(Seq("/* foo\nbar */")).result()
+    assertTree(tree)(Term.Apply(f, Term.ArgClause(List(tname("x")))))
+    val printed = tree.reprint
+    assertNoDiff(
+      printed,
+      """|f /* foo
+         |bar */ (x)""".stripMargin,
+    )
+    assertTree(s"{\n$printed\n}".parse[Term].get)(blk(f, tname("x")))
+  }
+
 }
