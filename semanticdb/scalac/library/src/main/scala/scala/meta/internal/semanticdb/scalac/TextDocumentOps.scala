@@ -424,6 +424,8 @@ trait TextDocumentOps {
         private case class Rename(gtree: g.Tree, name: g.Name, start: Int, target: g.Symbol)
         // for each template, the getters with a tree in its body
         private val ggetterTrees = mutable.HashMap.empty[g.Template, Set[g.Symbol]]
+        private val grenameBindings = unit.body.attachments.get(RenameBindingsTag)
+          .getOrElse(NoRenames).byStart
 
         /** a parameter of a named argument, and the rank of the application that passes it */
         private final class NamedParam(var gparam: g.Symbol = null, var rank: Int = -1) {
@@ -755,7 +757,7 @@ trait TextDocumentOps {
           def isWritten(mname: m.Name, gsym: g.Symbol): Boolean = (null eq gsym) ||
             gsym == g.NoSymbol || gsym.isConstructor ||
             (mname match {
-              case mname: m.Term.Name => isRenamedTo(mname, gsym)
+              case mname: m.Term.Name => isBoundTo(mname, gsym)
               case mname => null eq mname
             }) || {
               val gname = gtree match {
@@ -1022,19 +1024,25 @@ trait TextDocumentOps {
             val name = mname.value
             if (name == DisplayNames.RootPackage) gsym.isRoot || gsym.isRootPackage
             else name == gsym.decodedName || gsym.thisSym.decodedName == name ||
-            isRenamedTo(mname, gsym)
+            isBoundTo(mname, gsym)
           case _ => false
         }
-        // an import before the name, in a tree around it, renames the symbol to the name
-        private def isRenamedTo(mname: m.Term.Name, gsym: g.Symbol): Boolean =
-          mrenames(mname.value) && {
-            val gname = encoded(mname)
-            val start = mname.pos.start
-            grenames.exists(r =>
-              r.name == gname && r.start < start &&
-                (r.target == gsym || r.target.moduleClass == gsym || isAliasOf(r.target, gsym)),
-            )
-          }
+
+        /** whether an import renames to the name and the written name is bound to `gsym` */
+        private def isBoundTo(mname: m.Term.Name, gsym: g.Symbol): Boolean = {
+          if (!mrenames.contains(mname.value)) return false
+
+          val start = mname.pos.start
+          // the typer's symbol for the name, or null if the typer recorded none
+          val gbound = grenameBindings.getOrNull(start)
+          if (null ne gbound) return gbound == gsym || gbound.moduleClass == gsym
+
+          val gname = encoded(mname)
+          grenames.exists(r =>
+            r.name == gname && r.start < start &&
+              (r.target == gsym || r.target.moduleClass == gsym || isAliasOf(r.target, gsym)),
+          )
+        }
         // the term holds the object, such as `val Nil = scala.collection.immutable.Nil`
         private def isAliasOf(galias: g.Symbol, gobj: g.Symbol): Boolean = gobj.isModule &&
           !gobj.hasPackageFlag && galias.exists && !galias.isModule && !galias.isOverloaded &&
@@ -2073,6 +2081,14 @@ trait TextDocumentOps {
             traverseAnnotations(t)
             isVisited ++= t.vparamss.flatten
             isVisited += t.rhs
+          } else if (isUnwrittenCompanionMethod(gsym)) {
+            /* skip the parameters of a method that scalac adds to the companion from a constructor:
+             * we record the same parameters at the class */
+            saveParamSymbols(t.tparams)
+            t.vparamss.foreach(saveParamSymbols)
+            isVisited += t.tpt
+            isVisited += t.rhs
+            processMemberDef(t)
           } else if (gsym.owner.isPartialFunctionLambdaClass) {
             // skip what scalac added to a lambda's method, but keep its definition
             trySymbolDefinition(gsym)
@@ -2240,6 +2256,33 @@ trait TextDocumentOps {
             }
             tryFindMtree(t)
           }
+
+        /**
+         * whether scalac adds the method to the companion from a class's constructor: the synthetic
+         * `apply`, `unapply` or `unapplySeq` of a case class, or a default getter of a constructor
+         * or of that `apply`. scalac types these methods at the companion, so a name in them can
+         * bind to another symbol than the same name in the class
+         */
+        private def isUnwrittenCompanionMethod(gsym: g.Symbol): Boolean = gsym match {
+          case gsym: g.MethodSymbol if gsym.isSynthetic =>
+            // scalac sets `DEFAULTPARAM` on each default getter, and `referenced` to its method
+            if (gsym.hasFlag(gf.DEFAULTPARAM)) {
+              val gmethod = gsym.referenced
+              gmethod.isConstructor || gmethod.isCaseApplyOrUnapply
+            } else gsym.isCaseApplyOrUnapply
+          case _ => false
+        }
+
+        /** saves the symbols of the parameters, but does not add an occurrence from them */
+        private def saveParamSymbols(clause: List[g.MemberDef]): Unit = clause.foreach { gparam =>
+          isVisited += gparam
+          trySymbolDefinition(gparam.symbol)
+          gparam match {
+            case t: g.TypeDef => saveParamSymbols(t.tparams)
+            case _ =>
+          }
+        }
+
       }
 
       MyTreeIndexerTraverser(msource)

@@ -3268,18 +3268,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[4:18..4:23): qs38b => qs38a/qs38b/
          |[5:8..5:9): a <= _empty_/qs38.i.a.
          |[5:12..5:19): classOf => scala/Predef.classOf().
-         |[5:20..5:21): q => qs38a/qs38b/package.
+         |[5:20..5:21): q => qs38a/qs38b/
          |[5:22..5:23): C => qs38a/qs38b/package.C#
          |[6:8..6:9): b <= _empty_/qs38.i.b.
          |[6:12..6:16): List => scala/collection/immutable/Nil.
-         |[6:17..6:18): q => qs38a/qs38b/package.
+         |[6:17..6:18): q => qs38a/qs38b/
          |[6:19..6:20): C => qs38a/qs38b/package.C#
          |[7:8..7:9): c <= _empty_/qs38.i.c.
          |[7:12..7:19): classOf => scala/Predef.classOf().
          |[7:20..7:24): List => scala/package.List#
          |[7:25..7:26): X => local0
          |[7:43..7:44): X <= local0
-         |[7:48..7:49): q => qs38a/qs38b/package.
+         |[7:48..7:49): q => qs38a/qs38b/
          |[7:50..7:51): C => qs38a/qs38b/package.C#
          |[8:8..8:9): e <= _empty_/qs38.i.e.
          |[8:11..8:26): PartialFunction => scala/PartialFunction#
@@ -3288,7 +3288,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:32..8:35): Int => scala/Int#
          |[8:39..8:74): (x: q.C) => x match { case _ => 1 } <= local1
          |[8:40..8:41): x <= local8
-         |[8:43..8:44): q => qs38a/qs38b/package.
+         |[8:43..8:44): q => qs38a/qs38b/
          |[8:45..8:46): C => qs38a/qs38b/package.C#
          |[8:51..8:52): x => local8
          |""".stripMargin
@@ -3306,18 +3306,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[4:18..4:23): qs38b => qs38a/qs38b/
          |[5:8..5:9): a <= _empty_/qs38.i.a.
          |[5:12..5:19): classOf => scala/Predef.classOf().
-         |[5:20..5:21): q => qs38a/qs38b/package.
+         |[5:20..5:21): q => qs38a/qs38b/
          |[5:22..5:23): C => qs38a/qs38b/package.C#
          |[6:8..6:9): b <= _empty_/qs38.i.b.
          |[6:12..6:16): List => scala/collection/immutable/Nil.
-         |[6:17..6:18): q => qs38a/qs38b/package.
+         |[6:17..6:18): q => qs38a/qs38b/
          |[6:19..6:20): C => qs38a/qs38b/package.C#
          |[7:8..7:9): c <= _empty_/qs38.i.c.
          |[7:12..7:19): classOf => scala/Predef.classOf().
          |[7:20..7:24): List => scala/package.List#
          |[7:25..7:26): X => local0
          |[7:43..7:44): X <= local0
-         |[7:48..7:49): q => qs38a/qs38b/package.
+         |[7:48..7:49): q => qs38a/qs38b/
          |[7:50..7:51): C => qs38a/qs38b/package.C#
          |[8:8..8:9): e <= _empty_/qs38.i.e.
          |[8:11..8:26): PartialFunction => scala/PartialFunction#
@@ -3427,7 +3427,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[4:18..4:23): qs92b => qs92a/qs92b/
        |[5:8..5:9): f <= _empty_/qs92.i.f().
        |[5:12..5:19): classOf => scala/Predef.classOf().
-       |[5:20..5:21): q => qs92a/qs92b/package.
+       |[5:20..5:21): q => qs92a/qs92b/
        |[5:22..5:23): C => qs92a/qs92b/package.C#
        |""".stripMargin,
   )
@@ -3457,7 +3457,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[5:8..5:9): a <= _empty_/qs93.i.a.
        |[5:12..5:13): f => scala/StringContext#f().
        |[5:16..5:23): classOf => scala/Predef.classOf().
-       |[5:24..5:25): q => qs93a/qs93b/package.
+       |[5:24..5:25): q => qs93a/qs93b/
        |[5:26..5:27): C => qs93a/qs93b/package.C#
        |""".stripMargin,
   )
@@ -3504,8 +3504,8 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:9..7:12): Any => scala/Any#
          |[7:15..7:22): classOf => scala/Predef.classOf().
          |[7:23..7:27): List => scala/package.List#
-         |[7:28..7:29): X => local8
-         |[7:46..7:47): X <= local8
+         |[7:28..7:29): X => local0
+         |[7:46..7:47): X <= local0
          |[7:51..7:52): q => qs39a/o.
          |[7:53..7:54): C => qs39a/o.C#
          |[8:6..8:7): e <= _empty_/qs39.K#`<init>`().(e)
@@ -3514,11 +3514,11 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:25..8:26): q => qs39a/o.
          |[8:27..8:28): C => qs39a/o.C#
          |[8:30..8:33): Int => scala/Int#
-         |[8:37..8:72): (x: q.C) => x match { case _ => 1 } <= local9
-         |[8:38..8:39): x <= local7
+         |[8:37..8:72): (x: q.C) => x match { case _ => 1 } <= local1
+         |[8:38..8:39): x <= local8
          |[8:41..8:42): q => qs39a/o.
          |[8:43..8:44): C => qs39a/o.C#
-         |[8:49..8:50): x => local7
+         |[8:49..8:50): x => local8
          |""".stripMargin
     else
       """|[0:8..0:13): qs39a <= qs39a/
@@ -3548,8 +3548,8 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:9..7:12): Any => scala/Any#
          |[7:15..7:22): classOf => scala/Predef.classOf().
          |[7:23..7:27): List => scala/package.List#
-         |[7:28..7:29): X => local8
-         |[7:46..7:47): X <= local8
+         |[7:28..7:29): X => local0
+         |[7:46..7:47): X <= local0
          |[7:51..7:52): q => qs39a/o.
          |[7:53..7:54): C => qs39a/o.C#
          |[8:6..8:7): e <= _empty_/qs39.K#`<init>`().(e)
@@ -3558,9 +3558,9 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:25..8:26): q => qs39a/o.
          |[8:27..8:28): C => qs39a/o.C#
          |[8:30..8:33): Int => scala/Int#
-         |[8:37..8:72): (x: q.C) => x match { case _ => 1 } <= local9
-         |[8:38..8:39): x <= local7
-         |[8:49..8:50): x => local7
+         |[8:37..8:72): (x: q.C) => x match { case _ => 1 } <= local1
+         |[8:38..8:39): x <= local8
+         |[8:49..8:50): x => local8
          |""".stripMargin,
   )
 
@@ -3609,8 +3609,8 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:9..7:12): Any => scala/Any#
          |[7:15..7:22): classOf => scala/Predef.classOf().
          |[7:23..7:27): List => scala/package.List#
-         |[7:28..7:29): X => local8
-         |[7:46..7:47): X <= local8
+         |[7:28..7:29): X => local0
+         |[7:46..7:47): X <= local0
          |[7:51..7:52): q => qs43a/qs43b/package.
          |[7:53..7:54): C => qs43a/qs43b/package.C#
          |[8:6..8:7): e <= _empty_/qs43.K#`<init>`().(e)
@@ -3619,11 +3619,11 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:25..8:26): q => qs43a/qs43b/package.
          |[8:27..8:28): C => qs43a/qs43b/package.C#
          |[8:30..8:33): Int => scala/Int#
-         |[8:37..8:72): (x: q.C) => x match { case _ => 1 } <= local9
-         |[8:38..8:39): x <= local7
+         |[8:37..8:72): (x: q.C) => x match { case _ => 1 } <= local1
+         |[8:38..8:39): x <= local8
          |[8:41..8:42): q => qs43a/qs43b/package.
          |[8:43..8:44): C => qs43a/qs43b/package.C#
-         |[8:49..8:50): x => local7
+         |[8:49..8:50): x => local8
          |""".stripMargin
     else
       """|[0:8..0:13): qs43a <= qs43a/
@@ -3656,8 +3656,8 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:9..7:12): Any => scala/Any#
          |[7:15..7:22): classOf => scala/Predef.classOf().
          |[7:23..7:27): List => scala/package.List#
-         |[7:28..7:29): X => local8
-         |[7:46..7:47): X <= local8
+         |[7:28..7:29): X => local0
+         |[7:46..7:47): X <= local0
          |[7:51..7:52): q => qs43a/qs43b/package.
          |[7:53..7:54): C => qs43a/qs43b/package.C#
          |[8:6..8:7): e <= _empty_/qs43.K#`<init>`().(e)
@@ -3666,9 +3666,9 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:25..8:26): q => qs43a/qs43b/package.
          |[8:27..8:28): C => qs43a/qs43b/package.C#
          |[8:30..8:33): Int => scala/Int#
-         |[8:37..8:72): (x: q.C) => x match { case _ => 1 } <= local9
-         |[8:38..8:39): x <= local7
-         |[8:49..8:50): x => local7
+         |[8:37..8:72): (x: q.C) => x match { case _ => 1 } <= local1
+         |[8:38..8:39): x <= local8
+         |[8:49..8:50): x => local8
          |""".stripMargin,
   )
 
@@ -3723,21 +3723,21 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:11..9:14): Any => scala/Any#
          |[9:17..9:24): classOf => scala/Predef.classOf().
          |[9:25..9:29): List => scala/package.List#
-         |[9:30..9:31): X => local8
-         |[9:48..9:49): X <= local8
+         |[9:30..9:31): X => local0
+         |[9:48..9:49): X <= local0
          |[9:53..9:54): q => qs51a/x.
          |[9:55..9:56): C => qs51a/x.C#
          |[10:8..10:9): e <= _empty_/qs51.i.K#`<init>`().(e)
          |[10:8..10:9): e <= _empty_/qs51.i.K#e.
          |[10:11..10:26): PartialFunction => scala/PartialFunction#
-         |[10:27..10:28): q => qs51a/o.
-         |[10:29..10:30): C => qs51a/o.C#
+         |[10:27..10:28): q => qs51a/x.
+         |[10:29..10:30): C => qs51a/x.C#
          |[10:32..10:35): Int => scala/Int#
-         |[10:39..10:74): (x: q.C) => x match { case _ => 1 } <= local9
-         |[10:40..10:41): x <= local7
-         |[10:43..10:44): q => qs51a/o.
-         |[10:45..10:46): C => qs51a/o.C#
-         |[10:51..10:52): x => local7
+         |[10:39..10:74): (x: q.C) => x match { case _ => 1 } <= local1
+         |[10:40..10:41): x <= local8
+         |[10:43..10:44): q => qs51a/x.
+         |[10:45..10:46): C => qs51a/x.C#
+         |[10:51..10:52): x => local8
          |""".stripMargin
     else
       """|[0:8..0:13): qs51a <= qs51a/
@@ -3773,19 +3773,19 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:11..9:14): Any => scala/Any#
          |[9:17..9:24): classOf => scala/Predef.classOf().
          |[9:25..9:29): List => scala/package.List#
-         |[9:30..9:31): X => local8
-         |[9:48..9:49): X <= local8
+         |[9:30..9:31): X => local0
+         |[9:48..9:49): X <= local0
          |[9:53..9:54): q => qs51a/x.
          |[9:55..9:56): C => qs51a/x.C#
          |[10:8..10:9): e <= _empty_/qs51.i.K#`<init>`().(e)
          |[10:8..10:9): e <= _empty_/qs51.i.K#e.
          |[10:11..10:26): PartialFunction => scala/PartialFunction#
-         |[10:27..10:28): q => qs51a/o.
-         |[10:29..10:30): C => qs51a/o.C#
+         |[10:27..10:28): q => qs51a/x.
+         |[10:29..10:30): C => qs51a/x.C#
          |[10:32..10:35): Int => scala/Int#
-         |[10:39..10:74): (x: q.C) => x match { case _ => 1 } <= local9
-         |[10:40..10:41): x <= local7
-         |[10:51..10:52): x => local7
+         |[10:39..10:74): (x: q.C) => x match { case _ => 1 } <= local1
+         |[10:40..10:41): x <= local8
+         |[10:51..10:52): x => local8
          |""".stripMargin,
   )
 
@@ -3822,8 +3822,8 @@ class QualifierSuite extends SemanticdbSuite {
        |[6:17..6:18): a <= _empty_/qs88.i.G#`<init>`().(a)
        |[6:17..6:18): a <= _empty_/qs88.i.G#a.
        |[6:20..6:23): Any => scala/Any#
-       |[6:26..6:27): q => qs88a/o.
-       |[6:28..6:29): f => qs88a/o.f().
+       |[6:26..6:27): q => qs88a/x.
+       |[6:28..6:29): f => qs88a/x.f().
        |[6:31..6:32): b <= _empty_/qs88.i.G#`<init>`().(b)
        |[6:31..6:32): b <= _empty_/qs88.i.G#b.
        |[6:34..6:37): Any => scala/Any#
@@ -3922,8 +3922,8 @@ class QualifierSuite extends SemanticdbSuite {
        |[6:16..6:16):  <= local18
        |[6:17..6:18): a <= local1
        |[6:20..6:23): Any => scala/Any#
-       |[6:26..6:27): q => qs90a/o.
-       |[6:28..6:29): f => qs90a/o.f().
+       |[6:26..6:27): q => qs90a/x.
+       |[6:28..6:29): f => qs90a/x.f().
        |[6:31..6:32): b <= local2
        |[6:34..6:37): Any => scala/Any#
        |[6:40..6:47): classOf => scala/Predef.classOf().
@@ -3961,7 +3961,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[6:16..6:16):  <= _empty_/qs94.i.K#`<init>`().
        |[6:17..6:18): a <= _empty_/qs94.i.K#`<init>`().(a)
        |[6:17..6:18): a <= _empty_/qs94.i.K#a.
-       |[6:20..6:21): q => qs94a/qs94b/package.
+       |[6:20..6:21): q => qs94a/qs94b/
        |[6:22..6:23): C => qs94a/qs94b/package.C#
        |""".stripMargin,
   )
@@ -4024,13 +4024,13 @@ class QualifierSuite extends SemanticdbSuite {
        |[5:11..5:16): qs95a => qs95a/
        |[5:18..5:23): qs95b => qs95a/qs95b/
        |[6:15..6:16): K <= _empty_/qs95.i.K#
-       |[6:17..6:18): T <= _empty_/qs95.i.K.apply().[T]
-       |[6:22..6:23): q => qs95a/qs95b/package.
+       |[6:17..6:18): T <= _empty_/qs95.i.K#[T]
+       |[6:22..6:23): q => qs95a/qs95b/
        |[6:24..6:25): C => qs95a/qs95b/package.C#
        |[6:26..6:26):  <= _empty_/qs95.i.K#`<init>`().
        |[6:27..6:28): a <= _empty_/qs95.i.K#`<init>`().(a)
        |[6:27..6:28): a <= _empty_/qs95.i.K#a.
-       |[6:30..6:31): T => _empty_/qs95.i.K.apply().[T]
+       |[6:30..6:31): T => _empty_/qs95.i.K#[T]
        |""".stripMargin,
   )
 
@@ -4099,14 +4099,14 @@ class QualifierSuite extends SemanticdbSuite {
        |[5:11..5:16): qs97a => qs97a/
        |[5:18..5:23): qs97b => qs97a/qs97b/
        |[6:15..6:16): K <= _empty_/qs97.i.K#
-       |[6:17..6:18): T <= _empty_/qs97.i.K.apply().[T]
+       |[6:17..6:18): T <= _empty_/qs97.i.K#[T]
        |[6:20..6:20):  <= _empty_/qs97.i.K#`<init>`().(evidence$1)
        |[6:20..6:20):  <= _empty_/qs97.i.K#evidence$1.
-       |[6:20..6:21): q => qs97a/qs97b/package.
+       |[6:20..6:21): q => qs97a/qs97b/
        |[6:22..6:24): TC => qs97a/qs97b/package.TC#
        |[6:26..6:27): a <= _empty_/qs97.i.K#`<init>`().(a)
        |[6:26..6:27): a <= _empty_/qs97.i.K#a.
-       |[6:29..6:30): T => _empty_/qs97.i.K.apply().[T]
+       |[6:29..6:30): T => _empty_/qs97.i.K#[T]
        |""".stripMargin,
   )
 
@@ -4138,7 +4138,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[6:16..6:16):  <= _empty_/qs98.i.K#`<init>`().
        |[6:17..6:18): a <= _empty_/qs98.i.K#`<init>`().(a)
        |[6:17..6:18): a <= _empty_/qs98.i.K#a.
-       |[6:20..6:21): q => qs98a/qs98b/package.
+       |[6:20..6:21): q => qs98a/qs98b/
        |[6:22..6:23): C => qs98a/qs98b/package.C#
        |""".stripMargin,
   )
@@ -4192,8 +4192,8 @@ class QualifierSuite extends SemanticdbSuite {
        |[5:11..5:16): qs99a => qs99a/
        |[5:18..5:23): qs99b => qs99a/qs99b/
        |[6:10..6:11): K <= _empty_/qs99.i.K#
-       |[6:12..6:13): T <= _empty_/qs99.i.K.`<init>$default$1`().[T]
-       |[6:17..6:18): q => qs99a/qs99b/package.
+       |[6:12..6:13): T <= _empty_/qs99.i.K#[T]
+       |[6:17..6:18): q => qs99a/qs99b/
        |[6:19..6:20): C => qs99a/qs99b/package.C#
        |[6:21..6:21):  <= _empty_/qs99.i.K#`<init>`().
        |[6:22..6:23): a <= _empty_/qs99.i.K#`<init>`().(a)
@@ -4375,41 +4375,41 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:8..7:9): a <= _empty_/qs71.i.K#a.
          |[7:11..7:14): Any => scala/Any#
          |[7:17..7:24): classOf => scala/Predef.classOf().
-         |[7:25..7:26): q => qs71a/qs71b/package.
+         |[7:25..7:26): q => qs71a/qs71b/
          |[7:27..7:28): C => qs71a/qs71b/package.C#
          |[8:8..8:9): b <= _empty_/qs71.i.K#`<init>`().(b)
          |[8:8..8:9): b <= _empty_/qs71.i.K#b.
          |[8:11..8:14): Any => scala/Any#
          |[8:17..8:21): List => scala/collection/immutable/Nil.
-         |[8:22..8:23): q => qs71a/qs71b/package.
+         |[8:22..8:23): q => qs71a/qs71b/
          |[8:24..8:25): C => qs71a/qs71b/package.C#
          |[9:8..9:9): c <= _empty_/qs71.i.K#`<init>`().(c)
          |[9:8..9:9): c <= _empty_/qs71.i.K#c.
          |[9:11..9:14): Any => scala/Any#
          |[9:17..9:24): classOf => scala/Predef.classOf().
          |[9:25..9:29): List => scala/package.List#
-         |[9:30..9:31): X => local9
-         |[9:48..9:49): X <= local9
-         |[9:53..9:54): q => qs71a/qs71b/package.
+         |[9:30..9:31): X => local1
+         |[9:48..9:49): X <= local1
+         |[9:53..9:54): q => qs71a/qs71b/
          |[9:55..9:56): C => qs71a/qs71b/package.C#
          |[10:8..10:9): d <= _empty_/qs71.i.K#`<init>`().(d)
          |[10:8..10:9): d <= _empty_/qs71.i.K#d.
          |[10:11..10:15): List => scala/package.List#
          |[10:16..10:17): X => local0
          |[10:34..10:35): X <= local0
-         |[10:39..10:40): q => qs71a/qs71b/package.
+         |[10:39..10:40): q => qs71a/qs71b/
          |[10:41..10:42): C => qs71a/qs71b/package.C#
          |[11:8..11:9): e <= _empty_/qs71.i.K#`<init>`().(e)
          |[11:8..11:9): e <= _empty_/qs71.i.K#e.
          |[11:11..11:26): PartialFunction => scala/PartialFunction#
-         |[11:27..11:28): q => qs71a/qs71b/package.
+         |[11:27..11:28): q => qs71a/qs71b/
          |[11:29..11:30): C => qs71a/qs71b/package.C#
          |[11:32..11:35): Int => scala/Int#
-         |[11:39..11:74): (x: q.C) => x match { case _ => 1 } <= local10
-         |[11:40..11:41): x <= local8
-         |[11:43..11:44): q => qs71a/qs71b/package.
+         |[11:39..11:74): (x: q.C) => x match { case _ => 1 } <= local2
+         |[11:40..11:41): x <= local9
+         |[11:43..11:44): q => qs71a/qs71b/
          |[11:45..11:46): C => qs71a/qs71b/package.C#
-         |[11:51..11:52): x => local8
+         |[11:51..11:52): x => local9
          |""".stripMargin
     else
       """|[0:8..0:13): qs71a <= qs71a/
@@ -4430,39 +4430,39 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:8..7:9): a <= _empty_/qs71.i.K#a.
          |[7:11..7:14): Any => scala/Any#
          |[7:17..7:24): classOf => scala/Predef.classOf().
-         |[7:25..7:26): q => qs71a/qs71b/package.
+         |[7:25..7:26): q => qs71a/qs71b/
          |[7:27..7:28): C => qs71a/qs71b/package.C#
          |[8:8..8:9): b <= _empty_/qs71.i.K#`<init>`().(b)
          |[8:8..8:9): b <= _empty_/qs71.i.K#b.
          |[8:11..8:14): Any => scala/Any#
          |[8:17..8:21): List => scala/collection/immutable/Nil.
-         |[8:22..8:23): q => qs71a/qs71b/package.
+         |[8:22..8:23): q => qs71a/qs71b/
          |[8:24..8:25): C => qs71a/qs71b/package.C#
          |[9:8..9:9): c <= _empty_/qs71.i.K#`<init>`().(c)
          |[9:8..9:9): c <= _empty_/qs71.i.K#c.
          |[9:11..9:14): Any => scala/Any#
          |[9:17..9:24): classOf => scala/Predef.classOf().
          |[9:25..9:29): List => scala/package.List#
-         |[9:30..9:31): X => local9
-         |[9:48..9:49): X <= local9
-         |[9:53..9:54): q => qs71a/qs71b/package.
+         |[9:30..9:31): X => local1
+         |[9:48..9:49): X <= local1
+         |[9:53..9:54): q => qs71a/qs71b/
          |[9:55..9:56): C => qs71a/qs71b/package.C#
          |[10:8..10:9): d <= _empty_/qs71.i.K#`<init>`().(d)
          |[10:8..10:9): d <= _empty_/qs71.i.K#d.
          |[10:11..10:15): List => scala/package.List#
          |[10:16..10:17): X => local0
          |[10:34..10:35): X <= local0
-         |[10:39..10:40): q => qs71a/qs71b/package.
+         |[10:39..10:40): q => qs71a/qs71b/
          |[10:41..10:42): C => qs71a/qs71b/package.C#
          |[11:8..11:9): e <= _empty_/qs71.i.K#`<init>`().(e)
          |[11:8..11:9): e <= _empty_/qs71.i.K#e.
          |[11:11..11:26): PartialFunction => scala/PartialFunction#
-         |[11:27..11:28): q => qs71a/qs71b/package.
+         |[11:27..11:28): q => qs71a/qs71b/
          |[11:29..11:30): C => qs71a/qs71b/package.C#
          |[11:32..11:35): Int => scala/Int#
-         |[11:39..11:74): (x: q.C) => x match { case _ => 1 } <= local10
-         |[11:40..11:41): x <= local8
-         |[11:51..11:52): x => local8
+         |[11:39..11:74): (x: q.C) => x match { case _ => 1 } <= local2
+         |[11:40..11:41): x <= local9
+         |[11:51..11:52): x => local9
          |""".stripMargin,
   )
 
@@ -4578,7 +4578,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:27..8:28): q => qs54a/o.
          |[8:29..8:30): C => qs54a/o.C#
          |[8:32..8:35): Int => scala/Int#
-         |[8:39..8:74): (x: q.C) => x match { case _ => 1 } <= local9
+         |[8:39..8:74): (x: q.C) => x match { case _ => 1 } <= local1
          |[8:40..8:41): x <= local8
          |[8:43..8:44): q => qs54a/o.
          |[8:45..8:46): C => qs54a/o.C#
@@ -4628,7 +4628,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:27..8:28): q => qs54a/o.
          |[8:29..8:30): C => qs54a/o.C#
          |[8:32..8:35): Int => scala/Int#
-         |[8:39..8:74): (x: q.C) => x match { case _ => 1 } <= local9
+         |[8:39..8:74): (x: q.C) => x match { case _ => 1 } <= local1
          |[8:40..8:41): x <= local8
          |[8:51..8:52): x => local8
          |[10:11..10:16): qs54a => qs54a/
@@ -4710,18 +4710,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:89..8:92): Int => scala/Int#
          |[9:8..9:9): a <= _empty_/qs44.F#a.
          |[9:12..9:19): classOf => scala/Predef.classOf().
-         |[9:20..9:21): q => qs44a/qs44b/package.
+         |[9:20..9:21): q => qs44a/qs44b/
          |[9:22..9:23): C => qs44a/qs44b/package.C#
          |[10:8..10:9): b <= _empty_/qs44.F#b.
          |[10:12..10:16): List => scala/collection/immutable/Nil.
-         |[10:17..10:18): q => qs44a/qs44b/package.
+         |[10:17..10:18): q => qs44a/qs44b/
          |[10:19..10:20): C => qs44a/qs44b/package.C#
          |[11:8..11:9): c <= _empty_/qs44.F#c.
          |[11:12..11:19): classOf => scala/Predef.classOf().
          |[11:20..11:24): List => scala/package.List#
          |[11:25..11:26): X => local9
          |[11:43..11:44): X <= local9
-         |[11:48..11:49): q => qs44a/qs44b/package.
+         |[11:48..11:49): q => qs44a/qs44b/
          |[11:50..11:51): C => qs44a/qs44b/package.C#
          |[12:8..12:9): e <= _empty_/qs44.F#e.
          |[12:11..12:26): PartialFunction => scala/PartialFunction#
@@ -4730,7 +4730,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[12:32..12:35): Int => scala/Int#
          |[12:39..12:74): (x: q.C) => x match { case _ => 1 } <= local10
          |[12:40..12:41): x <= local17
-         |[12:43..12:44): q => qs44a/qs44b/package.
+         |[12:43..12:44): q => qs44a/qs44b/
          |[12:45..12:46): C => qs44a/qs44b/package.C#
          |[12:51..12:52): x => local17
          |""".stripMargin
@@ -4787,18 +4787,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:89..8:92): Int => scala/Int#
          |[9:8..9:9): a <= _empty_/qs44.F#a.
          |[9:12..9:19): classOf => scala/Predef.classOf().
-         |[9:20..9:21): q => qs44a/qs44b/package.
+         |[9:20..9:21): q => qs44a/qs44b/
          |[9:22..9:23): C => qs44a/qs44b/package.C#
          |[10:8..10:9): b <= _empty_/qs44.F#b.
          |[10:12..10:16): List => scala/collection/immutable/Nil.
-         |[10:17..10:18): q => qs44a/qs44b/package.
+         |[10:17..10:18): q => qs44a/qs44b/
          |[10:19..10:20): C => qs44a/qs44b/package.C#
          |[11:8..11:9): c <= _empty_/qs44.F#c.
          |[11:12..11:19): classOf => scala/Predef.classOf().
          |[11:20..11:24): List => scala/package.List#
          |[11:25..11:26): X => local9
          |[11:43..11:44): X <= local9
-         |[11:48..11:49): q => qs44a/qs44b/package.
+         |[11:48..11:49): q => qs44a/qs44b/
          |[11:50..11:51): C => qs44a/qs44b/package.C#
          |[12:8..12:9): e <= _empty_/qs44.F#e.
          |[12:11..12:26): PartialFunction => scala/PartialFunction#
@@ -4852,12 +4852,12 @@ class QualifierSuite extends SemanticdbSuite {
          |[6:8..6:9): a <= _empty_/qs70.F#`<init>`(+1).(a)
          |[6:11..6:14): Any => scala/Any#
          |[6:17..6:24): classOf => scala/Predef.classOf().
-         |[6:25..6:26): q => qs70a/qs70b/package.
+         |[6:25..6:26): q => qs70a/qs70b/
          |[6:27..6:28): C => qs70a/qs70b/package.C#
          |[7:8..7:9): b <= _empty_/qs70.F#`<init>`(+1).(b)
          |[7:11..7:14): Any => scala/Any#
          |[7:17..7:21): List => scala/collection/immutable/Nil.
-         |[7:22..7:23): q => qs70a/qs70b/package.
+         |[7:22..7:23): q => qs70a/qs70b/
          |[7:24..7:25): C => qs70a/qs70b/package.C#
          |[8:8..8:9): c <= _empty_/qs70.F#`<init>`(+1).(c)
          |[8:11..8:14): Any => scala/Any#
@@ -4865,22 +4865,22 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:25..8:29): List => scala/package.List#
          |[8:30..8:31): X => local0
          |[8:48..8:49): X <= local0
-         |[8:53..8:54): q => qs70a/qs70b/package.
+         |[8:53..8:54): q => qs70a/qs70b/
          |[8:55..8:56): C => qs70a/qs70b/package.C#
          |[9:8..9:9): d <= _empty_/qs70.F#`<init>`(+1).(d)
          |[9:11..9:15): List => scala/package.List#
          |[9:16..9:17): X => local1
          |[9:34..9:35): X <= local1
-         |[9:39..9:40): q => qs70a/qs70b/package.
+         |[9:39..9:40): q => qs70a/qs70b/
          |[9:41..9:42): C => qs70a/qs70b/package.C#
          |[10:8..10:9): e <= _empty_/qs70.F#`<init>`(+1).(e)
          |[10:11..10:26): PartialFunction => scala/PartialFunction#
          |[10:27..10:28): q => qs70a/qs70b/
          |[10:29..10:30): C => qs70a/qs70b/package.C#
          |[10:32..10:35): Int => scala/Int#
-         |[10:39..10:74): (y: q.C) => y match { case _ => 1 } <= local19
+         |[10:39..10:74): (y: q.C) => y match { case _ => 1 } <= local2
          |[10:40..10:41): y <= local9
-         |[10:43..10:44): q => qs70a/qs70b/package.
+         |[10:43..10:44): q => qs70a/qs70b/
          |[10:45..10:46): C => qs70a/qs70b/package.C#
          |[10:51..10:52): y => local9
          |[11:12..11:12):  => _empty_/qs70.F#`<init>`().
@@ -4930,12 +4930,12 @@ class QualifierSuite extends SemanticdbSuite {
          |[6:8..6:9): a <= _empty_/qs70.F#`<init>`(+1).(a)
          |[6:11..6:14): Any => scala/Any#
          |[6:17..6:24): classOf => scala/Predef.classOf().
-         |[6:25..6:26): q => qs70a/qs70b/package.
+         |[6:25..6:26): q => qs70a/qs70b/
          |[6:27..6:28): C => qs70a/qs70b/package.C#
          |[7:8..7:9): b <= _empty_/qs70.F#`<init>`(+1).(b)
          |[7:11..7:14): Any => scala/Any#
          |[7:17..7:21): List => scala/collection/immutable/Nil.
-         |[7:22..7:23): q => qs70a/qs70b/package.
+         |[7:22..7:23): q => qs70a/qs70b/
          |[7:24..7:25): C => qs70a/qs70b/package.C#
          |[8:8..8:9): c <= _empty_/qs70.F#`<init>`(+1).(c)
          |[8:11..8:14): Any => scala/Any#
@@ -4943,20 +4943,20 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:25..8:29): List => scala/package.List#
          |[8:30..8:31): X => local0
          |[8:48..8:49): X <= local0
-         |[8:53..8:54): q => qs70a/qs70b/package.
+         |[8:53..8:54): q => qs70a/qs70b/
          |[8:55..8:56): C => qs70a/qs70b/package.C#
          |[9:8..9:9): d <= _empty_/qs70.F#`<init>`(+1).(d)
          |[9:11..9:15): List => scala/package.List#
          |[9:16..9:17): X => local1
          |[9:34..9:35): X <= local1
-         |[9:39..9:40): q => qs70a/qs70b/package.
+         |[9:39..9:40): q => qs70a/qs70b/
          |[9:41..9:42): C => qs70a/qs70b/package.C#
          |[10:8..10:9): e <= _empty_/qs70.F#`<init>`(+1).(e)
          |[10:11..10:26): PartialFunction => scala/PartialFunction#
          |[10:27..10:28): q => qs70a/qs70b/
          |[10:29..10:30): C => qs70a/qs70b/package.C#
          |[10:32..10:35): Int => scala/Int#
-         |[10:39..10:74): (y: q.C) => y match { case _ => 1 } <= local19
+         |[10:39..10:74): (y: q.C) => y match { case _ => 1 } <= local2
          |[10:40..10:41): y <= local9
          |[10:51..10:52): y => local9
          |[11:12..11:12):  => _empty_/qs70.F#`<init>`().
@@ -5044,7 +5044,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:27..9:28): q => qs45a/o.
          |[9:29..9:30): C => qs45a/o.C#
          |[9:32..9:35): Int => scala/Int#
-         |[9:39..9:74): (y: q.C) => y match { case _ => 1 } <= local9
+         |[9:39..9:74): (y: q.C) => y match { case _ => 1 } <= local1
          |[9:40..9:41): y <= local8
          |[9:43..9:44): q => qs45a/o.
          |[9:45..9:46): C => qs45a/o.C#
@@ -5093,7 +5093,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:27..9:28): q => qs45a/o.
          |[9:29..9:30): C => qs45a/o.C#
          |[9:32..9:35): Int => scala/Int#
-         |[9:39..9:74): (y: q.C) => y match { case _ => 1 } <= local9
+         |[9:39..9:74): (y: q.C) => y match { case _ => 1 } <= local1
          |[9:40..9:41): y <= local8
          |[9:51..9:52): y => local8
          |[10:12..10:12):  => _empty_/qs45.F#`<init>`().
@@ -5316,18 +5316,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[4:17..4:18): q => qs46x/q/
          |[5:8..5:9): a <= _empty_/qs46.i.a.
          |[5:12..5:19): classOf => scala/Predef.classOf().
-         |[5:20..5:21): q => qs46x/q/package.
+         |[5:20..5:21): q => qs46x/q/
          |[5:22..5:23): C => qs46x/q/package.C#
          |[6:8..6:9): b <= _empty_/qs46.i.b.
          |[6:12..6:16): List => scala/collection/immutable/Nil.
-         |[6:17..6:18): q => qs46x/q/package.
+         |[6:17..6:18): q => qs46x/q/
          |[6:19..6:20): C => qs46x/q/package.C#
          |[7:8..7:9): c <= _empty_/qs46.i.c.
          |[7:12..7:19): classOf => scala/Predef.classOf().
          |[7:20..7:24): List => scala/package.List#
          |[7:25..7:26): X => local0
          |[7:43..7:44): X <= local0
-         |[7:48..7:49): q => qs46x/q/package.
+         |[7:48..7:49): q => qs46x/q/
          |[7:50..7:51): C => qs46x/q/package.C#
          |[8:8..8:9): e <= _empty_/qs46.i.e.
          |[8:11..8:26): PartialFunction => scala/PartialFunction#
@@ -5336,7 +5336,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:32..8:35): Int => scala/Int#
          |[8:39..8:74): (x: q.C) => x match { case _ => 1 } <= local1
          |[8:40..8:41): x <= local8
-         |[8:43..8:44): q => qs46x/q/package.
+         |[8:43..8:44): q => qs46x/q/
          |[8:45..8:46): C => qs46x/q/package.C#
          |[8:51..8:52): x => local8
          |""".stripMargin
@@ -5354,18 +5354,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[4:17..4:18): q => qs46x/q/
          |[5:8..5:9): a <= _empty_/qs46.i.a.
          |[5:12..5:19): classOf => scala/Predef.classOf().
-         |[5:20..5:21): q => qs46x/q/package.
+         |[5:20..5:21): q => qs46x/q/
          |[5:22..5:23): C => qs46x/q/package.C#
          |[6:8..6:9): b <= _empty_/qs46.i.b.
          |[6:12..6:16): List => scala/collection/immutable/Nil.
-         |[6:17..6:18): q => qs46x/q/package.
+         |[6:17..6:18): q => qs46x/q/
          |[6:19..6:20): C => qs46x/q/package.C#
          |[7:8..7:9): c <= _empty_/qs46.i.c.
          |[7:12..7:19): classOf => scala/Predef.classOf().
          |[7:20..7:24): List => scala/package.List#
          |[7:25..7:26): X => local0
          |[7:43..7:44): X <= local0
-         |[7:48..7:49): q => qs46x/q/package.
+         |[7:48..7:49): q => qs46x/q/
          |[7:50..7:51): C => qs46x/q/package.C#
          |[8:8..8:9): e <= _empty_/qs46.i.e.
          |[8:11..8:26): PartialFunction => scala/PartialFunction#
@@ -10770,7 +10770,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:6..8:7): e <= _empty_/qs66#K#`<init>`().(e)
          |[8:6..8:7): e <= _empty_/qs66#K#e.
          |[8:9..8:12): Any => scala/Any#
-         |[8:16..8:54): (x: this.T) => x match { case _ => 1 } <= local10
+         |[8:16..8:54): (x: this.T) => x match { case _ => 1 } <= local2
          |[8:17..8:18): x <= local9
          |[8:25..8:26): T => _empty_/qs66p#T#
          |[8:31..8:32): x => local9
@@ -10802,21 +10802,21 @@ class QualifierSuite extends SemanticdbSuite {
          |[16:11..16:14): Any => scala/Any#
          |[16:17..16:24): classOf => scala/Predef.classOf().
          |[16:25..16:29): List => scala/package.List#
-         |[16:30..16:31): X => local18
-         |[16:48..16:49): X <= local18
+         |[16:30..16:31): X => local10
+         |[16:48..16:49): X <= local10
          |[16:58..16:59): T => _empty_/qs66p#T#
          |[17:8..17:9): d <= _empty_/qs66#J#`<init>`(+1).(d)
          |[17:11..17:14): Any => scala/Any#
          |[17:23..17:27): List => scala/package.List#
-         |[17:28..17:29): X => local19
-         |[17:46..17:47): X <= local19
+         |[17:28..17:29): X => local11
+         |[17:46..17:47): X <= local11
          |[17:56..17:57): T => _empty_/qs66p#T#
          |[18:8..18:9): e <= _empty_/qs66#J#`<init>`(+1).(e)
          |[18:11..18:14): Any => scala/Any#
-         |[18:18..18:56): (x: this.T) => x match { case _ => 1 } <= local28
-         |[18:19..18:20): x <= local27
+         |[18:18..18:56): (x: this.T) => x match { case _ => 1 } <= local12
+         |[18:19..18:20): x <= local19
          |[18:27..18:28): T => _empty_/qs66p#T#
-         |[18:33..18:34): x => local27
+         |[18:33..18:34): x => local19
          |[18:59..18:74): PartialFunction => scala/PartialFunction#
          |[18:80..18:81): T => _empty_/qs66p#T#
          |[18:83..18:86): Int => scala/Int#
@@ -10834,17 +10834,17 @@ class QualifierSuite extends SemanticdbSuite {
          |[25:18..25:19): T => _empty_/qs66p#T#
          |[26:8..26:15): classOf => scala/Predef.classOf().
          |[26:16..26:20): List => scala/package.List#
-         |[26:21..26:22): X => local36
-         |[26:39..26:40): X <= local36
+         |[26:21..26:22): X => local20
+         |[26:39..26:40): X <= local20
          |[26:49..26:50): T => _empty_/qs66p#T#
          |[27:14..27:18): List => scala/package.List#
-         |[27:19..27:20): X => local37
-         |[27:37..27:38): X <= local37
+         |[27:19..27:20): X => local21
+         |[27:37..27:38): X <= local21
          |[27:47..27:48): T => _empty_/qs66p#T#
-         |[28:9..28:47): (x: this.T) => x match { case _ => 1 } <= local38
-         |[28:10..28:11): x <= local45
+         |[28:9..28:47): (x: this.T) => x match { case _ => 1 } <= local22
+         |[28:10..28:11): x <= local29
          |[28:18..28:19): T => _empty_/qs66p#T#
-         |[28:24..28:25): x => local45
+         |[28:24..28:25): x => local29
          |[28:50..28:65): PartialFunction => scala/PartialFunction#
          |[28:71..28:72): T => _empty_/qs66p#T#
          |[28:74..28:77): Int => scala/Int#
@@ -10896,7 +10896,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:6..8:7): e <= _empty_/qs66#K#`<init>`().(e)
          |[8:6..8:7): e <= _empty_/qs66#K#e.
          |[8:9..8:12): Any => scala/Any#
-         |[8:16..8:54): (x: this.T) => x match { case _ => 1 } <= local10
+         |[8:16..8:54): (x: this.T) => x match { case _ => 1 } <= local2
          |[8:17..8:18): x <= local9
          |[8:31..8:32): x => local9
          |[8:57..8:72): PartialFunction => scala/PartialFunction#
@@ -10927,20 +10927,20 @@ class QualifierSuite extends SemanticdbSuite {
          |[16:11..16:14): Any => scala/Any#
          |[16:17..16:24): classOf => scala/Predef.classOf().
          |[16:25..16:29): List => scala/package.List#
-         |[16:30..16:31): X => local18
-         |[16:48..16:49): X <= local18
+         |[16:30..16:31): X => local10
+         |[16:48..16:49): X <= local10
          |[16:58..16:59): T => _empty_/qs66p#T#
          |[17:8..17:9): d <= _empty_/qs66#J#`<init>`(+1).(d)
          |[17:11..17:14): Any => scala/Any#
          |[17:23..17:27): List => scala/package.List#
-         |[17:28..17:29): X => local19
-         |[17:46..17:47): X <= local19
+         |[17:28..17:29): X => local11
+         |[17:46..17:47): X <= local11
          |[17:56..17:57): T => _empty_/qs66p#T#
          |[18:8..18:9): e <= _empty_/qs66#J#`<init>`(+1).(e)
          |[18:11..18:14): Any => scala/Any#
-         |[18:18..18:56): (x: this.T) => x match { case _ => 1 } <= local28
-         |[18:19..18:20): x <= local27
-         |[18:33..18:34): x => local27
+         |[18:18..18:56): (x: this.T) => x match { case _ => 1 } <= local12
+         |[18:19..18:20): x <= local19
+         |[18:33..18:34): x => local19
          |[18:59..18:74): PartialFunction => scala/PartialFunction#
          |[18:80..18:81): T => _empty_/qs66p#T#
          |[18:83..18:86): Int => scala/Int#
@@ -10958,16 +10958,16 @@ class QualifierSuite extends SemanticdbSuite {
          |[25:18..25:19): T => _empty_/qs66p#T#
          |[26:8..26:15): classOf => scala/Predef.classOf().
          |[26:16..26:20): List => scala/package.List#
-         |[26:21..26:22): X => local36
-         |[26:39..26:40): X <= local36
+         |[26:21..26:22): X => local20
+         |[26:39..26:40): X <= local20
          |[26:49..26:50): T => _empty_/qs66p#T#
          |[27:14..27:18): List => scala/package.List#
-         |[27:19..27:20): X => local37
-         |[27:37..27:38): X <= local37
+         |[27:19..27:20): X => local21
+         |[27:37..27:38): X <= local21
          |[27:47..27:48): T => _empty_/qs66p#T#
-         |[28:9..28:47): (x: this.T) => x match { case _ => 1 } <= local38
-         |[28:10..28:11): x <= local45
-         |[28:24..28:25): x => local45
+         |[28:9..28:47): (x: this.T) => x match { case _ => 1 } <= local22
+         |[28:10..28:11): x <= local29
+         |[28:24..28:25): x => local29
          |[28:50..28:65): PartialFunction => scala/PartialFunction#
          |[28:71..28:72): T => _empty_/qs66p#T#
          |[28:74..28:77): Int => scala/Int#
@@ -11075,7 +11075,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:6..7:7): e <= _empty_/qs77#qs77#`<init>`().(e)
          |[7:6..7:7): e <= _empty_/qs77#qs77#e.
          |[7:9..7:12): Any => scala/Any#
-         |[7:16..7:59): (x: qs77.this.T) => x match { case _ => 1 } <= local75
+         |[7:16..7:59): (x: qs77.this.T) => x match { case _ => 1 } <= local9
          |[7:17..7:18): x <= local16
          |[7:30..7:31): T => _empty_/qs77#T#
          |[7:36..7:37): x => local16
@@ -11217,7 +11217,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[36:61..36:62): T => _empty_/qs77#T#
          |[37:8..37:9): e <= _empty_/qs77#qs77#`<init>`(+1).(e)
          |[37:11..37:14): Any => scala/Any#
-         |[37:18..37:61): (x: qs77.this.T) => x match { case _ => 1 } <= local83
+         |[37:18..37:61): (x: qs77.this.T) => x match { case _ => 1 } <= local49
          |[37:19..37:20): x <= local56
          |[37:32..37:33): T => _empty_/qs77#T#
          |[37:38..37:39): x => local56
@@ -11323,7 +11323,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[7:6..7:7): e <= _empty_/qs77#qs77#`<init>`().(e)
          |[7:6..7:7): e <= _empty_/qs77#qs77#e.
          |[7:9..7:12): Any => scala/Any#
-         |[7:16..7:59): (x: qs77.this.T) => x match { case _ => 1 } <= local75
+         |[7:16..7:59): (x: qs77.this.T) => x match { case _ => 1 } <= local9
          |[7:17..7:18): x <= local16
          |[7:36..7:37): x => local16
          |[7:62..7:77): PartialFunction => scala/PartialFunction#
@@ -11462,7 +11462,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[36:61..36:62): T => _empty_/qs77#T#
          |[37:8..37:9): e <= _empty_/qs77#qs77#`<init>`(+1).(e)
          |[37:11..37:14): Any => scala/Any#
-         |[37:18..37:61): (x: qs77.this.T) => x match { case _ => 1 } <= local83
+         |[37:18..37:61): (x: qs77.this.T) => x match { case _ => 1 } <= local49
          |[37:19..37:20): x <= local56
          |[37:38..37:39): x => local56
          |[37:64..37:79): PartialFunction => scala/PartialFunction#
@@ -11604,7 +11604,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:6..8:7): e <= _empty_/qs67#K#`<init>`().(e)
          |[8:6..8:7): e <= _empty_/qs67#K#e.
          |[8:9..8:12): Any => scala/Any#
-         |[8:16..8:55): (x: super.T) => x match { case _ => 1 } <= local10
+         |[8:16..8:55): (x: super.T) => x match { case _ => 1 } <= local2
          |[8:17..8:18): x <= local9
          |[8:26..8:27): T => _empty_/qs67p#T#
          |[8:32..8:33): x => local9
@@ -11634,23 +11634,23 @@ class QualifierSuite extends SemanticdbSuite {
          |[15:11..15:14): Any => scala/Any#
          |[15:17..15:24): classOf => scala/Predef.classOf().
          |[15:25..15:29): List => scala/package.List#
-         |[15:30..15:31): X => local18
-         |[15:48..15:49): X <= local18
+         |[15:30..15:31): X => local10
+         |[15:48..15:49): X <= local10
          |[15:59..15:60): T => _empty_/qs67p#T#
          |[16:8..16:9): d <= _empty_/qs67#J#`<init>`(+1).(d)
          |[16:11..16:14): Any => scala/Any#
          |[16:23..16:27): List => scala/package.List#
-         |[16:28..16:29): X => local19
-         |[16:46..16:47): X <= local19
+         |[16:28..16:29): X => local11
+         |[16:46..16:47): X <= local11
          |[16:51..16:51):  => _empty_/qs67#
          |[16:56..16:56):  => _empty_/qs67p#
          |[16:57..16:58): T => _empty_/qs67p#T#
          |[17:8..17:9): e <= _empty_/qs67#J#`<init>`(+1).(e)
          |[17:11..17:14): Any => scala/Any#
-         |[17:18..17:57): (x: super.T) => x match { case _ => 1 } <= local28
-         |[17:19..17:20): x <= local27
+         |[17:18..17:57): (x: super.T) => x match { case _ => 1 } <= local12
+         |[17:19..17:20): x <= local19
          |[17:28..17:29): T => _empty_/qs67p#T#
-         |[17:34..17:35): x => local27
+         |[17:34..17:35): x => local19
          |[17:60..17:75): PartialFunction => scala/PartialFunction#
          |[17:76..17:76):  => _empty_/qs67#
          |[17:81..17:81):  => _empty_/qs67p#
@@ -11667,19 +11667,19 @@ class QualifierSuite extends SemanticdbSuite {
          |[23:19..23:20): T => _empty_/qs67p#T#
          |[24:8..24:15): classOf => scala/Predef.classOf().
          |[24:16..24:20): List => scala/package.List#
-         |[24:21..24:22): X => local36
-         |[24:39..24:40): X <= local36
+         |[24:21..24:22): X => local20
+         |[24:39..24:40): X <= local20
          |[24:50..24:51): T => _empty_/qs67p#T#
          |[25:14..25:18): List => scala/package.List#
-         |[25:19..25:20): X => local37
-         |[25:37..25:38): X <= local37
+         |[25:19..25:20): X => local21
+         |[25:37..25:38): X <= local21
          |[25:42..25:42):  => _empty_/qs67#
          |[25:47..25:47):  => _empty_/qs67p#
          |[25:48..25:49): T => _empty_/qs67p#T#
-         |[26:9..26:48): (x: super.T) => x match { case _ => 1 } <= local38
-         |[26:10..26:11): x <= local45
+         |[26:9..26:48): (x: super.T) => x match { case _ => 1 } <= local22
+         |[26:10..26:11): x <= local29
          |[26:19..26:20): T => _empty_/qs67p#T#
-         |[26:25..26:26): x => local45
+         |[26:25..26:26): x => local29
          |[26:51..26:66): PartialFunction => scala/PartialFunction#
          |[26:67..26:67):  => _empty_/qs67#
          |[26:72..26:72):  => _empty_/qs67p#
@@ -11734,7 +11734,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[8:6..8:7): e <= _empty_/qs67#K#`<init>`().(e)
          |[8:6..8:7): e <= _empty_/qs67#K#e.
          |[8:9..8:12): Any => scala/Any#
-         |[8:16..8:55): (x: super.T) => x match { case _ => 1 } <= local10
+         |[8:16..8:55): (x: super.T) => x match { case _ => 1 } <= local2
          |[8:17..8:18): x <= local9
          |[8:32..8:33): x => local9
          |[8:58..8:73): PartialFunction => scala/PartialFunction#
@@ -11763,22 +11763,22 @@ class QualifierSuite extends SemanticdbSuite {
          |[15:11..15:14): Any => scala/Any#
          |[15:17..15:24): classOf => scala/Predef.classOf().
          |[15:25..15:29): List => scala/package.List#
-         |[15:30..15:31): X => local18
-         |[15:48..15:49): X <= local18
+         |[15:30..15:31): X => local10
+         |[15:48..15:49): X <= local10
          |[15:59..15:60): T => _empty_/qs67p#T#
          |[16:8..16:9): d <= _empty_/qs67#J#`<init>`(+1).(d)
          |[16:11..16:14): Any => scala/Any#
          |[16:23..16:27): List => scala/package.List#
-         |[16:28..16:29): X => local19
-         |[16:46..16:47): X <= local19
+         |[16:28..16:29): X => local11
+         |[16:46..16:47): X <= local11
          |[16:51..16:51):  => _empty_/qs67#
          |[16:56..16:56):  => _empty_/qs67p#
          |[16:57..16:58): T => _empty_/qs67p#T#
          |[17:8..17:9): e <= _empty_/qs67#J#`<init>`(+1).(e)
          |[17:11..17:14): Any => scala/Any#
-         |[17:18..17:57): (x: super.T) => x match { case _ => 1 } <= local28
-         |[17:19..17:20): x <= local27
-         |[17:34..17:35): x => local27
+         |[17:18..17:57): (x: super.T) => x match { case _ => 1 } <= local12
+         |[17:19..17:20): x <= local19
+         |[17:34..17:35): x => local19
          |[17:60..17:75): PartialFunction => scala/PartialFunction#
          |[17:76..17:76):  => _empty_/qs67#
          |[17:81..17:81):  => _empty_/qs67p#
@@ -11795,18 +11795,18 @@ class QualifierSuite extends SemanticdbSuite {
          |[23:19..23:20): T => _empty_/qs67p#T#
          |[24:8..24:15): classOf => scala/Predef.classOf().
          |[24:16..24:20): List => scala/package.List#
-         |[24:21..24:22): X => local36
-         |[24:39..24:40): X <= local36
+         |[24:21..24:22): X => local20
+         |[24:39..24:40): X <= local20
          |[24:50..24:51): T => _empty_/qs67p#T#
          |[25:14..25:18): List => scala/package.List#
-         |[25:19..25:20): X => local37
-         |[25:37..25:38): X <= local37
+         |[25:19..25:20): X => local21
+         |[25:37..25:38): X <= local21
          |[25:42..25:42):  => _empty_/qs67#
          |[25:47..25:47):  => _empty_/qs67p#
          |[25:48..25:49): T => _empty_/qs67p#T#
-         |[26:9..26:48): (x: super.T) => x match { case _ => 1 } <= local38
-         |[26:10..26:11): x <= local45
-         |[26:25..26:26): x => local45
+         |[26:9..26:48): (x: super.T) => x match { case _ => 1 } <= local22
+         |[26:10..26:11): x <= local29
+         |[26:25..26:26): x => local29
          |[26:51..26:66): PartialFunction => scala/PartialFunction#
          |[26:67..26:67):  => _empty_/qs67#
          |[26:72..26:72):  => _empty_/qs67p#
@@ -12982,11 +12982,11 @@ class QualifierSuite extends SemanticdbSuite {
     """|[0:7..0:12): qs109 <= _empty_/qs109.
        |[1:9..1:10): K <= _empty_/qs109.K.
        |[2:13..2:14): K <= _empty_/qs109.K#
-       |[2:15..2:16): T <= _empty_/qs109.K.apply().[T]
+       |[2:15..2:16): T <= _empty_/qs109.K#[T]
        |[2:17..2:17):  <= _empty_/qs109.K#`<init>`().
        |[2:18..2:19): a <= _empty_/qs109.K#`<init>`().(a)
        |[2:18..2:19): a <= _empty_/qs109.K#a.
-       |[2:21..2:22): T => _empty_/qs109.K.apply().[T]
+       |[2:21..2:22): T => _empty_/qs109.K#[T]
        |[3:13..3:14): L <= _empty_/qs109.L#
        |[3:15..3:16): T <= _empty_/qs109.L#[T]
        |[3:17..3:17):  <= _empty_/qs109.L#`<init>`().

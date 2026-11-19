@@ -2215,14 +2215,14 @@ class CtorSuite extends SemanticdbSuite {
     """|[0:7..0:9): c2 <= _empty_/c2.
        |[1:9..1:10): K <= _empty_/c2.K.
        |[2:13..2:14): K <= _empty_/c2.K#
-       |[2:15..2:16): T <= _empty_/c2.K.apply().[T]
+       |[2:15..2:16): T <= _empty_/c2.K#[T]
        |[2:17..2:17):  <= _empty_/c2.K#`<init>`().
        |[2:18..2:19): a <= _empty_/c2.K#`<init>`().(a)
        |[2:18..2:19): a <= _empty_/c2.K#a.
-       |[2:21..2:22): T => _empty_/c2.K.apply().[T]
+       |[2:21..2:22): T => _empty_/c2.K#[T]
        |[3:9..3:10): J <= _empty_/c2.J.
        |[4:8..4:9): J <= _empty_/c2.J#
-       |[4:10..4:11): T <= _empty_/c2.J.`<init>$default$2`().[T]
+       |[4:10..4:11): T <= _empty_/c2.J#[T]
        |[4:12..4:12):  <= _empty_/c2.J#`<init>`().
        |[4:13..4:14): a <= _empty_/c2.J#`<init>`().(a)
        |[4:13..4:14): a <= _empty_/c2.J#a.
@@ -2244,12 +2244,13 @@ class CtorSuite extends SemanticdbSuite {
        |[1:9..1:10): K <= _empty_/c3.K.
        |[2:8..2:9): K <= _empty_/c3.K#
        |[2:9..2:9):  <= _empty_/c3.K#`<init>`().
-       |[2:10..2:11): a <= _empty_/c3.K.`<init>$default$2`().(a)
+       |[2:10..2:11): a <= _empty_/c3.K#`<init>`().(a)
+       |[2:10..2:11): a <= _empty_/c3.K#a.
        |[2:13..2:16): Int => scala/Int#
        |[2:18..2:19): b <= _empty_/c3.K#`<init>`().(b)
        |[2:18..2:19): b <= _empty_/c3.K#b.
        |[2:21..2:24): Int => scala/Int#
-       |[2:27..2:28): a => _empty_/c3.K.`<init>$default$2`().(a)
+       |[2:27..2:28): a => _empty_/c3.K#`<init>`().(a)
        |""".stripMargin,
   )
 
@@ -2312,12 +2313,13 @@ class CtorSuite extends SemanticdbSuite {
        |[1:9..1:10): K <= _empty_/c5.K.
        |[2:13..2:14): K <= _empty_/c5.K#
        |[2:14..2:14):  <= _empty_/c5.K#`<init>`().
-       |[2:15..2:16): a <= _empty_/c5.K.`<init>$default$2`().(a)
+       |[2:15..2:16): a <= _empty_/c5.K#`<init>`().(a)
+       |[2:15..2:16): a <= _empty_/c5.K#a.
        |[2:18..2:21): Int => scala/Int#
        |[2:23..2:24): b <= _empty_/c5.K#`<init>`().(b)
        |[2:23..2:24): b <= _empty_/c5.K#b.
        |[2:26..2:29): Int => scala/Int#
-       |[2:32..2:33): a => _empty_/c5.K.`<init>$default$2`().(a)
+       |[2:32..2:33): a => _empty_/c5.K#`<init>`().(a)
        |[3:9..3:10): J <= _empty_/c5.J.
        |[4:8..4:9): J <= _empty_/c5.J#
        |[4:9..4:9):  <= _empty_/c5.J#`<init>`().
@@ -2325,11 +2327,11 @@ class CtorSuite extends SemanticdbSuite {
        |[4:10..4:11): a <= _empty_/c5.J#a.
        |[4:13..4:16): Int => scala/Int#
        |[4:24..4:28): this <= _empty_/c5.J#`<init>`(+1).
-       |[4:29..4:30): c <= _empty_/c5.J.`<init>$default$2`().(c)
+       |[4:29..4:30): c <= _empty_/c5.J#`<init>`(+1).(c)
        |[4:32..4:38): String => scala/Predef.String#
        |[4:40..4:41): e <= _empty_/c5.J#`<init>`(+1).(e)
        |[4:43..4:46): Int => scala/Int#
-       |[4:49..4:50): c => _empty_/c5.J.`<init>$default$2`().(c)
+       |[4:49..4:50): c => _empty_/c5.J#`<init>`(+1).(c)
        |[4:51..4:57): length => java/lang/String#length().
        |[4:65..4:65):  => _empty_/c5.J#`<init>`().
        |[4:66..4:67): e => _empty_/c5.J#`<init>`(+1).(e)

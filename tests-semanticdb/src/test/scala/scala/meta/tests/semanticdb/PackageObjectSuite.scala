@@ -1062,7 +1062,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[4:18..4:23): po26b => po26a/po26b/
        |[5:8..5:9): a <= _empty_/po26.i.a.
        |[5:12..5:19): classOf => scala/Predef.classOf().
-       |[5:20..5:21): q => po26a/po26b/package.
+       |[5:20..5:21): q => po26a/po26b/
        |[5:22..5:23): C => po26a/po26b/package.C#
        |""".stripMargin,
   )

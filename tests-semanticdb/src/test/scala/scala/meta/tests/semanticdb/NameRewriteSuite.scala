@@ -3628,16 +3628,16 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[14:8..14:9): a <= _empty_/n48.i.K#`<init>`().(a)
          |[14:8..14:9): a <= _empty_/n48.i.K#a.
          |[14:11..14:14): Any => scala/Any#
-         |[14:17..14:18): L => scala/collection/immutable/List.
+         |[14:17..14:18): L => scala/package.List.
          |[15:8..15:9): b <= _empty_/n48.i.K#`<init>`().(b)
          |[15:8..15:9): b <= _empty_/n48.i.K#b.
          |[15:11..15:14): Any => scala/Any#
-         |[15:17..15:18): S => scala/collection/Seq.
+         |[15:17..15:18): S => scala/package.Seq.
          |[15:19..15:24): empty => scala/collection/SeqFactory.Delegate#empty().
          |[16:8..16:9): c <= _empty_/n48.i.K#`<init>`().(c)
          |[16:8..16:9): c <= _empty_/n48.i.K#c.
-         |[16:11..16:12): N => scala/collection/immutable/Nil.
-         |[16:20..16:21): N => scala/collection/immutable/Nil.
+         |[16:11..16:12): N => scala/package.Nil.
+         |[16:20..16:21): N => scala/package.Nil.
          |[17:8..17:9): d <= _empty_/n48.i.K#`<init>`().(d)
          |[17:8..17:9): d <= _empty_/n48.i.K#d.
          |[17:11..17:14): Any => scala/Any#
@@ -3784,7 +3784,7 @@ class NameRewriteSuite extends SemanticdbSuite {
        |[5:16..5:16):  <= _empty_/n88.i.K#`<init>`().
        |[5:17..5:18): a <= _empty_/n88.i.K#`<init>`().(a)
        |[5:17..5:18): a <= _empty_/n88.i.K#a.
-       |[5:20..5:21): L => scala/collection/immutable/List#
+       |[5:20..5:21): L => scala/package.List#
        |[5:22..5:25): Int => scala/Int#
        |""".stripMargin,
   )
@@ -6727,7 +6727,8 @@ class NameRewriteSuite extends SemanticdbSuite {
        |[1:9..1:10): K <= _empty_/n93.K.
        |[2:8..2:9): K <= _empty_/n93.K#
        |[2:9..2:9):  <= _empty_/n93.K#`<init>`().
-       |[2:10..2:11): a <= _empty_/n93.K.`<init>$default$2`().(a)
+       |[2:10..2:11): a <= _empty_/n93.K#`<init>`().(a)
+       |[2:10..2:11): a <= _empty_/n93.K#a.
        |[2:13..2:19): String => scala/Predef.String#
        |[2:22..2:23): b <= _empty_/n93.K#`<init>`().(b)
        |[2:22..2:23): b <= _empty_/n93.K#b.
