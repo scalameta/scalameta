@@ -1,6 +1,7 @@
 package scala.meta.tests.semanticdb
 
 import scala.meta.cli.Metac
+import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.{AbsolutePath, RelativePath}
@@ -86,6 +87,156 @@ class ConfigSuite extends FunSuite {
        |}
        |""".stripMargin,
     doc => assert(doc.symbols.isEmpty),
+  )
+
+  private def symbolsOf(doc: s.TextDocument): String = doc.symbols.map(_.symbol).sorted
+    .mkString("\n")
+
+  check(
+    "symbols:local-only, a local case class",
+    List("-P:semanticdb:symbols:local-only"),
+    """|
+       |/A.scala
+       |object A {
+       |  def m = {
+       |    case class L(a: Int) { var v = 1 }
+       |    L(1).a
+       |  }
+       |}
+       |""".stripMargin,
+    { doc =>
+      assert(doc.symbols.forall(_.symbol.isLocal))
+      assert(doc.symbols.exists(_.displayName == "copy"))
+    },
+  )
+
+  check(
+    "symbols:none, a local case class",
+    List("-P:semanticdb:symbols:none"),
+    """|
+       |/A.scala
+       |object A {
+       |  def m = {
+       |    case class L(a: Int) { var v = 1 }
+       |    L(1).a
+       |  }
+       |}
+       |""".stripMargin,
+    doc => assert(doc.symbols.isEmpty),
+  )
+
+  check(
+    "symbols:local-only, a SAM lambda",
+    List("-P:semanticdb:symbols:local-only"),
+    """|
+       |/A.scala
+       |object A {
+       |  val r: Runnable = () => ()
+       |}
+       |""".stripMargin,
+    { doc =>
+      val expected =
+        """|local0
+           |local1
+           |""".stripMargin
+      assertNoDiff(symbolsOf(doc), expected)
+    },
+  )
+
+  check(
+    "symbols:local-only, an implicit class",
+    List("-P:semanticdb:symbols:local-only"),
+    """|
+       |/A.scala
+       |object A {
+       |  implicit class R(x: Int) { def r = x }
+       |}
+       |""".stripMargin,
+    doc => assertNoDiff(symbolsOf(doc), "_empty_/A.R()."),
+  )
+
+  check(
+    "symbols:all, an implicit class",
+    List("-P:semanticdb:symbols:all"),
+    """|
+       |/A.scala
+       |object A {
+       |  implicit class R(x: Int) { def r = x }
+       |}
+       |""".stripMargin,
+    { doc =>
+      val expected =
+        """|_empty_/A.
+           |_empty_/A.R#
+           |_empty_/A.R#`<init>`().
+           |_empty_/A.R#`<init>`().(x)
+           |_empty_/A.R#r().
+           |_empty_/A.R#x.
+           |_empty_/A.R().
+           |_empty_/A.R().(x)
+           |""".stripMargin
+      assertNoDiff(symbolsOf(doc), expected)
+    },
+  )
+
+  check(
+    "symbols:none, an implicit class",
+    List("-P:semanticdb:symbols:none"),
+    """|
+       |/A.scala
+       |object A {
+       |  implicit class R(x: Int) { def r = x }
+       |}
+       |""".stripMargin,
+    doc => assertNoDiff(symbolsOf(doc), "_empty_/A.R()."),
+  )
+
+  check(
+    "symbols:local-only, a default argument",
+    List("-P:semanticdb:symbols:local-only"),
+    """|
+       |/A.scala
+       |object A {
+       |  def f(a: Int = 1) = a
+       |}
+       |""".stripMargin,
+    doc => assertNoDiff(symbolsOf(doc), "_empty_/A.f$default$1()."),
+  )
+
+  check(
+    "symbols:none, a default argument",
+    List("-P:semanticdb:symbols:none"),
+    """|
+       |/A.scala
+       |object A {
+       |  def f(a: Int = 1) = a
+       |}
+       |""".stripMargin,
+    doc => assertNoDiff(symbolsOf(doc), "_empty_/A.f$default$1()."),
+  )
+
+  check(
+    "symbols:local-only, a tuple pattern",
+    List("-P:semanticdb:symbols:local-only"),
+    """|
+       |/A.scala
+       |object A {
+       |  val (a, b) = (1, 2)
+       |}
+       |""".stripMargin,
+    doc => assertNoDiff(symbolsOf(doc), "_empty_/A.x$1."),
+  )
+
+  check(
+    "symbols:none, a tuple pattern",
+    List("-P:semanticdb:symbols:none"),
+    """|
+       |/A.scala
+       |object A {
+       |  val (a, b) = (1, 2)
+       |}
+       |""".stripMargin,
+    doc => assertNoDiff(symbolsOf(doc), "_empty_/A.x$1."),
   )
 
   check(
