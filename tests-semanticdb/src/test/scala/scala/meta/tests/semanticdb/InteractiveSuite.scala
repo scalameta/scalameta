@@ -477,4 +477,62 @@ class InteractiveSuite extends FunSuite {
     ScalaVersion.atMost("2.13.16") -> expectedIa1,
   )
 
+  check(
+    """|package ia2 { package object b { class C } }
+       |object ia2o {
+       |  import ia2.b.{`package` => q}
+       |  object i {
+       |    import ia2.{b => q}
+       |    val a = classOf[q.C]
+       |  }
+       |}
+       |""".stripMargin,
+    """|interactive.scala
+       |-----------------
+       |
+       |Summary:
+       |Schema => SemanticDB v4
+       |Uri => interactive.scala
+       |Text => non-empty
+       |Language => Scala
+       |Symbols => 6 entries
+       |Occurrences => 15 entries
+       |Diagnostics => 1 entries
+       |
+       |Symbols:
+       |_empty_/ia2o. => final object ia2o extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/ia2o.i. => final object i extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/ia2o.i.a. => val method a: Class[C]
+       |  Class => java/lang/Class#
+       |  C => ia2/b/package.C#
+       |ia2/b/package. => final package object b extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |ia2/b/package.C# => class C extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |ia2/b/package.C#`<init>`(). => primary ctor <init>()
+       |
+       |Occurrences:
+       |[0:8..0:11): ia2 <= ia2/
+       |[0:29..0:30): b <= ia2/b/package.
+       |[0:39..0:40): C <= ia2/b/package.C#
+       |[0:40..0:40):  <= ia2/b/package.C#`<init>`().
+       |[1:7..1:11): ia2o <= _empty_/ia2o.
+       |[2:9..2:12): ia2 => ia2/
+       |[2:13..2:14): b => ia2/b/
+       |[2:16..2:25): `package` => ia2/b/package.
+       |[3:9..3:10): i <= _empty_/ia2o.i.
+       |[4:11..4:14): ia2 => ia2/
+       |[4:16..4:17): b => ia2/b/
+       |[5:8..5:9): a <= _empty_/ia2o.i.a.
+       |[5:12..5:19): classOf => scala/Predef.classOf().
+       |[5:20..5:21): q => ia2/b/package.
+       |[5:22..5:23): C => ia2/b/package.C#
+       |
+       |Diagnostics:
+       |[2:16..2:25) [warning] Unused import
+       |""".stripMargin,
+  )
+
 }

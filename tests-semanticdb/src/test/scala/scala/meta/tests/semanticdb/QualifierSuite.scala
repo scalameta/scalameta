@@ -5,6 +5,11 @@ class QualifierSuite extends SemanticdbSuite {
   private def occurrences(name: String, code: String, expected: String)(implicit
       loc: munit.Location,
   ): Unit = checkSection(s"$name: occurrences", code, expected, "Occurrences")
+  private def occurrences(name: String, before: Seq[String], code: String, expected: String)(
+      implicit loc: munit.Location,
+  ): Unit = test(s"$name: occurrences")(
+    assertNoDiff(computeDatabaseSectionFromSnippet(code, "Occurrences", before: _*), expected),
+  )
 
   occurrences(
     "a package path",
@@ -3326,6 +3331,138 @@ class QualifierSuite extends SemanticdbSuite {
   )
 
   occurrences(
+    "members through renames of a package and its package object to one name, the inner one after a use",
+    """|package qs87a { package object qs87b { class C; def f = 1 } }
+       |object qs87 {
+       |  import qs87a.qs87b.{`package` => q}
+       |  def j = {
+       |    import qs87a.{qs87b => q}
+       |    q.f
+       |  }
+       |  object i {
+       |    val a = q.f
+       |    import qs87a.{qs87b => q}
+       |    val b = q.f
+       |    val c = new q.C
+       |    class D extends q.C
+       |    def e(s: Any) = s match { case _: q.C => 1 }
+       |    def g = { val h = q.f; h }
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs87a <= qs87a/
+       |[0:31..0:36): qs87b <= qs87a/qs87b/package.
+       |[0:45..0:46): C <= qs87a/qs87b/package.C#
+       |[0:46..0:46):  <= qs87a/qs87b/package.C#`<init>`().
+       |[0:52..0:53): f <= qs87a/qs87b/package.f().
+       |[1:7..1:11): qs87 <= _empty_/qs87.
+       |[2:9..2:14): qs87a => qs87a/
+       |[2:15..2:20): qs87b => qs87a/qs87b/
+       |[2:22..2:31): `package` => qs87a/qs87b/package.
+       |[3:6..3:7): j <= _empty_/qs87.j().
+       |[4:11..4:16): qs87a => qs87a/
+       |[4:18..4:23): qs87b => qs87a/qs87b/
+       |[5:4..5:5): q => qs87a/qs87b/
+       |[5:6..5:7): f => qs87a/qs87b/package.f().
+       |[7:9..7:10): i <= _empty_/qs87.i.
+       |[8:8..8:9): a <= _empty_/qs87.i.a.
+       |[8:12..8:13): q => qs87a/qs87b/package.
+       |[8:14..8:15): f => qs87a/qs87b/package.f().
+       |[9:11..9:16): qs87a => qs87a/
+       |[9:18..9:23): qs87b => qs87a/qs87b/
+       |[10:8..10:9): b <= _empty_/qs87.i.b.
+       |[10:12..10:13): q => qs87a/qs87b/
+       |[10:14..10:15): f => qs87a/qs87b/package.f().
+       |[11:8..11:9): c <= _empty_/qs87.i.c.
+       |[11:16..11:17): q => qs87a/qs87b/
+       |[11:18..11:19): C => qs87a/qs87b/package.C#
+       |[11:19..11:19):  => qs87a/qs87b/package.C#`<init>`().
+       |[12:10..12:11): D <= _empty_/qs87.i.D#
+       |[12:12..12:12):  <= _empty_/qs87.i.D#`<init>`().
+       |[12:20..12:21): q => qs87a/qs87b/
+       |[12:22..12:23): C => qs87a/qs87b/package.C#
+       |[12:23..12:23):  => qs87a/qs87b/package.C#`<init>`().
+       |[13:8..13:9): e <= _empty_/qs87.i.e().
+       |[13:10..13:11): s <= _empty_/qs87.i.e().(s)
+       |[13:13..13:16): Any => scala/Any#
+       |[13:20..13:21): s => _empty_/qs87.i.e().(s)
+       |[13:38..13:39): q => qs87a/qs87b/
+       |[13:40..13:41): C => qs87a/qs87b/package.C#
+       |[14:8..14:9): g <= _empty_/qs87.i.g().
+       |[14:18..14:19): h <= local0
+       |[14:22..14:23): q => qs87a/qs87b/
+       |[14:24..14:25): f => qs87a/qs87b/package.f().
+       |[14:27..14:28): h => local0
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a type through renames of a package and its package object to one name, used by another file",
+    Seq(
+      """|object qs92u {
+         |  import qs92a.{qs92b => r}
+         |  val v = (qs92.i.f, classOf[r.C])
+         |}
+         |""".stripMargin,
+    ),
+    """|package qs92a { package object qs92b { class C } }
+       |object qs92 {
+       |  import qs92a.qs92b.{`package` => q}
+       |  object i {
+       |    import qs92a.{qs92b => q}
+       |    def f = classOf[q.C]
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs92a <= qs92a/
+       |[0:31..0:36): qs92b <= qs92a/qs92b/package.
+       |[0:45..0:46): C <= qs92a/qs92b/package.C#
+       |[0:46..0:46):  <= qs92a/qs92b/package.C#`<init>`().
+       |[1:7..1:11): qs92 <= _empty_/qs92.
+       |[2:9..2:14): qs92a => qs92a/
+       |[2:15..2:20): qs92b => qs92a/qs92b/
+       |[2:22..2:31): `package` => qs92a/qs92b/package.
+       |[3:9..3:10): i <= _empty_/qs92.i.
+       |[4:11..4:16): qs92a => qs92a/
+       |[4:18..4:23): qs92b => qs92a/qs92b/
+       |[5:8..5:9): f <= _empty_/qs92.i.f().
+       |[5:12..5:19): classOf => scala/Predef.classOf().
+       |[5:20..5:21): q => qs92a/qs92b/package.
+       |[5:22..5:23): C => qs92a/qs92b/package.C#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a type through renames of a package and its package object to one name, in a macro's argument",
+    """|package qs93a { package object qs93b { class C } }
+       |object qs93 {
+       |  import qs93a.qs93b.{`package` => q}
+       |  object i {
+       |    import qs93a.{qs93b => q}
+       |    val a = f"${classOf[q.C]}%s"
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs93a <= qs93a/
+       |[0:31..0:36): qs93b <= qs93a/qs93b/package.
+       |[0:45..0:46): C <= qs93a/qs93b/package.C#
+       |[0:46..0:46):  <= qs93a/qs93b/package.C#`<init>`().
+       |[1:7..1:11): qs93 <= _empty_/qs93.
+       |[2:9..2:14): qs93a => qs93a/
+       |[2:15..2:20): qs93b => qs93a/qs93b/
+       |[2:22..2:31): `package` => qs93a/qs93b/package.
+       |[3:9..3:10): i <= _empty_/qs93.i.
+       |[4:11..4:16): qs93a => qs93a/
+       |[4:18..4:23): qs93b => qs93a/qs93b/
+       |[5:8..5:9): a <= _empty_/qs93.i.a.
+       |[5:12..5:13): f => scala/StringContext#f().
+       |[5:16..5:23): classOf => scala/Predef.classOf().
+       |[5:24..5:25): q => qs93a/qs93b/package.
+       |[5:26..5:27): C => qs93a/qs93b/package.C#
+       |""".stripMargin,
+  )
+
+  occurrences(
     "a type through a renamed object in constructor defaults",
     """|package qs39a { object o { class C } }
        |object qs39 {
@@ -3650,6 +3787,495 @@ class QualifierSuite extends SemanticdbSuite {
          |[10:40..10:41): x <= local7
          |[10:51..10:52): x => local7
          |""".stripMargin,
+  )
+
+  occurrences(
+    "terms and types through renamed objects in case class defaults, with a companion first and an import between them",
+    """|package qs88a { object o { class C; def f = 1 }; object x { class C; def f = 2 } }
+       |object qs88 {
+       |  import qs88a.{o => q}
+       |  object i {
+       |    object G
+       |    import qs88a.{x => q}
+       |    case class G(a: Any = q.f, b: Any = classOf[q.C], c: Any = List[q.C]())
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs88a <= qs88a/
+       |[0:23..0:24): o <= qs88a/o.
+       |[0:33..0:34): C <= qs88a/o.C#
+       |[0:34..0:34):  <= qs88a/o.C#`<init>`().
+       |[0:40..0:41): f <= qs88a/o.f().
+       |[0:56..0:57): x <= qs88a/x.
+       |[0:66..0:67): C <= qs88a/x.C#
+       |[0:67..0:67):  <= qs88a/x.C#`<init>`().
+       |[0:73..0:74): f <= qs88a/x.f().
+       |[1:7..1:11): qs88 <= _empty_/qs88.
+       |[2:9..2:14): qs88a => qs88a/
+       |[2:16..2:17): o => qs88a/o.
+       |[3:9..3:10): i <= _empty_/qs88.i.
+       |[4:11..4:12): G <= _empty_/qs88.i.G.
+       |[5:11..5:16): qs88a => qs88a/
+       |[5:18..5:19): x => qs88a/x.
+       |[6:15..6:16): G <= _empty_/qs88.i.G#
+       |[6:16..6:16):  <= _empty_/qs88.i.G#`<init>`().
+       |[6:17..6:18): a <= _empty_/qs88.i.G#`<init>`().(a)
+       |[6:17..6:18): a <= _empty_/qs88.i.G#a.
+       |[6:20..6:23): Any => scala/Any#
+       |[6:26..6:27): q => qs88a/o.
+       |[6:28..6:29): f => qs88a/o.f().
+       |[6:31..6:32): b <= _empty_/qs88.i.G#`<init>`().(b)
+       |[6:31..6:32): b <= _empty_/qs88.i.G#b.
+       |[6:34..6:37): Any => scala/Any#
+       |[6:40..6:47): classOf => scala/Predef.classOf().
+       |[6:48..6:49): q => qs88a/x.
+       |[6:50..6:51): C => qs88a/x.C#
+       |[6:54..6:55): c <= _empty_/qs88.i.G#`<init>`().(c)
+       |[6:54..6:55): c <= _empty_/qs88.i.G#c.
+       |[6:57..6:60): Any => scala/Any#
+       |[6:63..6:67): List => scala/collection/immutable/Nil.
+       |[6:68..6:69): q => qs88a/x.
+       |[6:70..6:71): C => qs88a/x.C#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "terms and types through renamed objects in case class defaults, with an import before the class and the companion after it",
+    """|package qs102a { object o { class C; def f = 1 }; object x { class C; def f = 2 } }
+       |object qs102 {
+       |  import qs102a.{o => q}
+       |  object i {
+       |    import qs102a.{x => q}
+       |    case class G(a: Any = q.f, b: Any = classOf[q.C], c: Any = List[q.C]())
+       |    object G
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs102a <= qs102a/
+       |[0:24..0:25): o <= qs102a/o.
+       |[0:34..0:35): C <= qs102a/o.C#
+       |[0:35..0:35):  <= qs102a/o.C#`<init>`().
+       |[0:41..0:42): f <= qs102a/o.f().
+       |[0:57..0:58): x <= qs102a/x.
+       |[0:67..0:68): C <= qs102a/x.C#
+       |[0:68..0:68):  <= qs102a/x.C#`<init>`().
+       |[0:74..0:75): f <= qs102a/x.f().
+       |[1:7..1:12): qs102 <= _empty_/qs102.
+       |[2:9..2:15): qs102a => qs102a/
+       |[2:17..2:18): o => qs102a/o.
+       |[3:9..3:10): i <= _empty_/qs102.i.
+       |[4:11..4:17): qs102a => qs102a/
+       |[4:19..4:20): x => qs102a/x.
+       |[5:15..5:16): G <= _empty_/qs102.i.G#
+       |[5:16..5:16):  <= _empty_/qs102.i.G#`<init>`().
+       |[5:17..5:18): a <= _empty_/qs102.i.G#`<init>`().(a)
+       |[5:17..5:18): a <= _empty_/qs102.i.G#a.
+       |[5:20..5:23): Any => scala/Any#
+       |[5:26..5:27): q => qs102a/x.
+       |[5:28..5:29): f => qs102a/x.f().
+       |[5:31..5:32): b <= _empty_/qs102.i.G#`<init>`().(b)
+       |[5:31..5:32): b <= _empty_/qs102.i.G#b.
+       |[5:34..5:37): Any => scala/Any#
+       |[5:40..5:47): classOf => scala/Predef.classOf().
+       |[5:48..5:49): q => qs102a/x.
+       |[5:50..5:51): C => qs102a/x.C#
+       |[5:54..5:55): c <= _empty_/qs102.i.G#`<init>`().(c)
+       |[5:54..5:55): c <= _empty_/qs102.i.G#c.
+       |[5:57..5:60): Any => scala/Any#
+       |[5:63..5:67): List => scala/collection/immutable/Nil.
+       |[5:68..5:69): q => qs102a/x.
+       |[5:70..5:71): C => qs102a/x.C#
+       |[6:11..6:12): G <= _empty_/qs102.i.G.
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "terms and types through renamed objects in a local case class's defaults, with a companion first and an import between them",
+    """|package qs90a { object o { class C; def f = 1 }; object x { class C; def f = 2 } }
+       |object qs90 {
+       |  import qs90a.{o => q}
+       |  def m = {
+       |    object G
+       |    import qs90a.{x => q}
+       |    case class G(a: Any = q.f, b: Any = classOf[q.C])
+       |    G()
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs90a <= qs90a/
+       |[0:23..0:24): o <= qs90a/o.
+       |[0:33..0:34): C <= qs90a/o.C#
+       |[0:34..0:34):  <= qs90a/o.C#`<init>`().
+       |[0:40..0:41): f <= qs90a/o.f().
+       |[0:56..0:57): x <= qs90a/x.
+       |[0:66..0:67): C <= qs90a/x.C#
+       |[0:67..0:67):  <= qs90a/x.C#`<init>`().
+       |[0:73..0:74): f <= qs90a/x.f().
+       |[1:7..1:11): qs90 <= _empty_/qs90.
+       |[2:9..2:14): qs90a => qs90a/
+       |[2:16..2:17): o => qs90a/o.
+       |[3:6..3:7): m <= _empty_/qs90.m().
+       |[4:11..4:12): G <= local8
+       |[5:11..5:16): qs90a => qs90a/
+       |[5:18..5:19): x => qs90a/x.
+       |[6:15..6:16): G <= local0
+       |[6:16..6:16):  <= local18
+       |[6:17..6:18): a <= local1
+       |[6:20..6:23): Any => scala/Any#
+       |[6:26..6:27): q => qs90a/o.
+       |[6:28..6:29): f => qs90a/o.f().
+       |[6:31..6:32): b <= local2
+       |[6:34..6:37): Any => scala/Any#
+       |[6:40..6:47): classOf => scala/Predef.classOf().
+       |[6:48..6:49): q => qs90a/x.
+       |[6:50..6:51): C => qs90a/x.C#
+       |[7:4..7:5): G => local8
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a type through renames of a package and its package object in a case class's parameter, with a companion first and the import of the package between them",
+    """|package qs94a { package object qs94b { class C } }
+       |object qs94 {
+       |  import qs94a.qs94b.{`package` => q}
+       |  object i {
+       |    object K
+       |    import qs94a.{qs94b => q}
+       |    case class K(a: q.C)
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs94a <= qs94a/
+       |[0:31..0:36): qs94b <= qs94a/qs94b/package.
+       |[0:45..0:46): C <= qs94a/qs94b/package.C#
+       |[0:46..0:46):  <= qs94a/qs94b/package.C#`<init>`().
+       |[1:7..1:11): qs94 <= _empty_/qs94.
+       |[2:9..2:14): qs94a => qs94a/
+       |[2:15..2:20): qs94b => qs94a/qs94b/
+       |[2:22..2:31): `package` => qs94a/qs94b/package.
+       |[3:9..3:10): i <= _empty_/qs94.i.
+       |[4:11..4:12): K <= _empty_/qs94.i.K.
+       |[5:11..5:16): qs94a => qs94a/
+       |[5:18..5:23): qs94b => qs94a/qs94b/
+       |[6:15..6:16): K <= _empty_/qs94.i.K#
+       |[6:16..6:16):  <= _empty_/qs94.i.K#`<init>`().
+       |[6:17..6:18): a <= _empty_/qs94.i.K#`<init>`().(a)
+       |[6:17..6:18): a <= _empty_/qs94.i.K#a.
+       |[6:20..6:21): q => qs94a/qs94b/package.
+       |[6:22..6:23): C => qs94a/qs94b/package.C#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a type through renames of a package and its package object in a case class's parameter, with the import of the package before the class and the companion after it",
+    """|package qs103a { package object qs103b { class C } }
+       |object qs103 {
+       |  import qs103a.qs103b.{`package` => q}
+       |  object i {
+       |    import qs103a.{qs103b => q}
+       |    case class K(a: q.C)
+       |    object K
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs103a <= qs103a/
+       |[0:32..0:38): qs103b <= qs103a/qs103b/package.
+       |[0:47..0:48): C <= qs103a/qs103b/package.C#
+       |[0:48..0:48):  <= qs103a/qs103b/package.C#`<init>`().
+       |[1:7..1:12): qs103 <= _empty_/qs103.
+       |[2:9..2:15): qs103a => qs103a/
+       |[2:16..2:22): qs103b => qs103a/qs103b/
+       |[2:24..2:33): `package` => qs103a/qs103b/package.
+       |[3:9..3:10): i <= _empty_/qs103.i.
+       |[4:11..4:17): qs103a => qs103a/
+       |[4:19..4:25): qs103b => qs103a/qs103b/
+       |[5:15..5:16): K <= _empty_/qs103.i.K#
+       |[5:16..5:16):  <= _empty_/qs103.i.K#`<init>`().
+       |[5:17..5:18): a <= _empty_/qs103.i.K#`<init>`().(a)
+       |[5:17..5:18): a <= _empty_/qs103.i.K#a.
+       |[5:20..5:21): q => qs103a/qs103b/
+       |[5:22..5:23): C => qs103a/qs103b/package.C#
+       |[6:11..6:12): K <= _empty_/qs103.i.K.
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a type through renames of a package and its package object in a case class's type parameter bound, with a companion first and the import of the package between them",
+    """|package qs95a { package object qs95b { class C } }
+       |object qs95 {
+       |  import qs95a.qs95b.{`package` => q}
+       |  object i {
+       |    object K
+       |    import qs95a.{qs95b => q}
+       |    case class K[T <: q.C](a: T)
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs95a <= qs95a/
+       |[0:31..0:36): qs95b <= qs95a/qs95b/package.
+       |[0:45..0:46): C <= qs95a/qs95b/package.C#
+       |[0:46..0:46):  <= qs95a/qs95b/package.C#`<init>`().
+       |[1:7..1:11): qs95 <= _empty_/qs95.
+       |[2:9..2:14): qs95a => qs95a/
+       |[2:15..2:20): qs95b => qs95a/qs95b/
+       |[2:22..2:31): `package` => qs95a/qs95b/package.
+       |[3:9..3:10): i <= _empty_/qs95.i.
+       |[4:11..4:12): K <= _empty_/qs95.i.K.
+       |[5:11..5:16): qs95a => qs95a/
+       |[5:18..5:23): qs95b => qs95a/qs95b/
+       |[6:15..6:16): K <= _empty_/qs95.i.K#
+       |[6:17..6:18): T <= _empty_/qs95.i.K.apply().[T]
+       |[6:22..6:23): q => qs95a/qs95b/package.
+       |[6:24..6:25): C => qs95a/qs95b/package.C#
+       |[6:26..6:26):  <= _empty_/qs95.i.K#`<init>`().
+       |[6:27..6:28): a <= _empty_/qs95.i.K#`<init>`().(a)
+       |[6:27..6:28): a <= _empty_/qs95.i.K#a.
+       |[6:30..6:31): T => _empty_/qs95.i.K.apply().[T]
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "an annotation through renames of a package and its package object on a case class's parameter, with a companion first and the import of the package between them",
+    """|package qs96a { package object qs96b { class A extends scala.annotation.StaticAnnotation } }
+       |object qs96 {
+       |  import qs96a.qs96b.{`package` => q}
+       |  object i {
+       |    object K
+       |    import qs96a.{qs96b => q}
+       |    case class K(@q.A a: Int)
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs96a <= qs96a/
+       |[0:31..0:36): qs96b <= qs96a/qs96b/package.
+       |[0:45..0:46): A <= qs96a/qs96b/package.A#
+       |[0:47..0:47):  <= qs96a/qs96b/package.A#`<init>`().
+       |[0:55..0:60): scala => scala/
+       |[0:61..0:71): annotation => scala/annotation/
+       |[0:72..0:88): StaticAnnotation => scala/annotation/StaticAnnotation#
+       |[0:88..0:88):  => scala/annotation/Annotation#`<init>`().
+       |[1:7..1:11): qs96 <= _empty_/qs96.
+       |[2:9..2:14): qs96a => qs96a/
+       |[2:15..2:20): qs96b => qs96a/qs96b/
+       |[2:22..2:31): `package` => qs96a/qs96b/package.
+       |[3:9..3:10): i <= _empty_/qs96.i.
+       |[4:11..4:12): K <= _empty_/qs96.i.K.
+       |[5:11..5:16): qs96a => qs96a/
+       |[5:18..5:23): qs96b => qs96a/qs96b/
+       |[6:15..6:16): K <= _empty_/qs96.i.K#
+       |[6:16..6:16):  <= _empty_/qs96.i.K#`<init>`().
+       |[6:18..6:19): q => qs96a/qs96b/
+       |[6:20..6:21): A => qs96a/qs96b/package.A#
+       |[6:21..6:21):  => qs96a/qs96b/package.A#`<init>`().
+       |[6:22..6:23): a <= _empty_/qs96.i.K#`<init>`().(a)
+       |[6:22..6:23): a <= _empty_/qs96.i.K#a.
+       |[6:25..6:28): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a type through renames of a package and its package object in a case class's context bound, with a companion first and the import of the package between them",
+    """|package qs97a { package object qs97b { class TC[T] } }
+       |object qs97 {
+       |  import qs97a.qs97b.{`package` => q}
+       |  object i {
+       |    object K
+       |    import qs97a.{qs97b => q}
+       |    case class K[T: q.TC](a: T)
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs97a <= qs97a/
+       |[0:31..0:36): qs97b <= qs97a/qs97b/package.
+       |[0:45..0:47): TC <= qs97a/qs97b/package.TC#
+       |[0:48..0:49): T <= qs97a/qs97b/package.TC#[T]
+       |[0:50..0:50):  <= qs97a/qs97b/package.TC#`<init>`().
+       |[1:7..1:11): qs97 <= _empty_/qs97.
+       |[2:9..2:14): qs97a => qs97a/
+       |[2:15..2:20): qs97b => qs97a/qs97b/
+       |[2:22..2:31): `package` => qs97a/qs97b/package.
+       |[3:9..3:10): i <= _empty_/qs97.i.
+       |[4:11..4:12): K <= _empty_/qs97.i.K.
+       |[5:11..5:16): qs97a => qs97a/
+       |[5:18..5:23): qs97b => qs97a/qs97b/
+       |[6:15..6:16): K <= _empty_/qs97.i.K#
+       |[6:17..6:18): T <= _empty_/qs97.i.K.apply().[T]
+       |[6:20..6:20):  <= _empty_/qs97.i.K#`<init>`().(evidence$1)
+       |[6:20..6:20):  <= _empty_/qs97.i.K#evidence$1.
+       |[6:20..6:21): q => qs97a/qs97b/package.
+       |[6:22..6:24): TC => qs97a/qs97b/package.TC#
+       |[6:26..6:27): a <= _empty_/qs97.i.K#`<init>`().(a)
+       |[6:26..6:27): a <= _empty_/qs97.i.K#a.
+       |[6:29..6:30): T => _empty_/qs97.i.K.apply().[T]
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a type through renames of a package and its package object in a case class's repeated parameter, with a companion first and the import of the package between them",
+    """|package qs98a { package object qs98b { class C } }
+       |object qs98 {
+       |  import qs98a.qs98b.{`package` => q}
+       |  object i {
+       |    object K
+       |    import qs98a.{qs98b => q}
+       |    case class K(a: q.C*)
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs98a <= qs98a/
+       |[0:31..0:36): qs98b <= qs98a/qs98b/package.
+       |[0:45..0:46): C <= qs98a/qs98b/package.C#
+       |[0:46..0:46):  <= qs98a/qs98b/package.C#`<init>`().
+       |[1:7..1:11): qs98 <= _empty_/qs98.
+       |[2:9..2:14): qs98a => qs98a/
+       |[2:15..2:20): qs98b => qs98a/qs98b/
+       |[2:22..2:31): `package` => qs98a/qs98b/package.
+       |[3:9..3:10): i <= _empty_/qs98.i.
+       |[4:11..4:12): K <= _empty_/qs98.i.K.
+       |[5:11..5:16): qs98a => qs98a/
+       |[5:18..5:23): qs98b => qs98a/qs98b/
+       |[6:15..6:16): K <= _empty_/qs98.i.K#
+       |[6:16..6:16):  <= _empty_/qs98.i.K#`<init>`().
+       |[6:17..6:18): a <= _empty_/qs98.i.K#`<init>`().(a)
+       |[6:17..6:18): a <= _empty_/qs98.i.K#a.
+       |[6:20..6:21): q => qs98a/qs98b/package.
+       |[6:22..6:23): C => qs98a/qs98b/package.C#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a qualified type of a case class's repeated parameter, with a companion first",
+    """|package qs101a { object o { class C } }
+       |object qs101 {
+       |  object K
+       |  case class K(a: qs101a.o.C*)
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs101a <= qs101a/
+       |[0:24..0:25): o <= qs101a/o.
+       |[0:34..0:35): C <= qs101a/o.C#
+       |[0:35..0:35):  <= qs101a/o.C#`<init>`().
+       |[1:7..1:12): qs101 <= _empty_/qs101.
+       |[2:9..2:10): K <= _empty_/qs101.K.
+       |[3:13..3:14): K <= _empty_/qs101.K#
+       |[3:14..3:14):  <= _empty_/qs101.K#`<init>`().
+       |[3:15..3:16): a <= _empty_/qs101.K#`<init>`().(a)
+       |[3:15..3:16): a <= _empty_/qs101.K#a.
+       |[3:18..3:24): qs101a => qs101a/
+       |[3:25..3:26): o => qs101a/o.
+       |[3:27..3:28): C => qs101a/o.C#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a type through renames of a package and its package object in a type parameter bound of a class with a default, with a companion first and the import of the package between them",
+    """|package qs99a { package object qs99b { class C } }
+       |object qs99 {
+       |  import qs99a.qs99b.{`package` => q}
+       |  object i {
+       |    object K
+       |    import qs99a.{qs99b => q}
+       |    class K[T <: q.C](a: Int = 1)
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs99a <= qs99a/
+       |[0:31..0:36): qs99b <= qs99a/qs99b/package.
+       |[0:45..0:46): C <= qs99a/qs99b/package.C#
+       |[0:46..0:46):  <= qs99a/qs99b/package.C#`<init>`().
+       |[1:7..1:11): qs99 <= _empty_/qs99.
+       |[2:9..2:14): qs99a => qs99a/
+       |[2:15..2:20): qs99b => qs99a/qs99b/
+       |[2:22..2:31): `package` => qs99a/qs99b/package.
+       |[3:9..3:10): i <= _empty_/qs99.i.
+       |[4:11..4:12): K <= _empty_/qs99.i.K.
+       |[5:11..5:16): qs99a => qs99a/
+       |[5:18..5:23): qs99b => qs99a/qs99b/
+       |[6:10..6:11): K <= _empty_/qs99.i.K#
+       |[6:12..6:13): T <= _empty_/qs99.i.K.`<init>$default$1`().[T]
+       |[6:17..6:18): q => qs99a/qs99b/package.
+       |[6:19..6:20): C => qs99a/qs99b/package.C#
+       |[6:21..6:21):  <= _empty_/qs99.i.K#`<init>`().
+       |[6:22..6:23): a <= _empty_/qs99.i.K#`<init>`().(a)
+       |[6:22..6:23): a <= _empty_/qs99.i.K#a.
+       |[6:25..6:28): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a type through a renamed package object, with an inner object and a parameter of that name",
+    """|package qs89a { package object qs89b { class C }; object o { class C } }
+       |object qs89 {
+       |  import qs89a.qs89b.{`package` => q}
+       |  object i {
+       |    object q { class C }
+       |    val a = classOf[q.C]
+       |    val b = List[q.C]()
+       |  }
+       |  def m(q: qs89a.o.type) = List[q.C]()
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs89a <= qs89a/
+       |[0:31..0:36): qs89b <= qs89a/qs89b/package.
+       |[0:45..0:46): C <= qs89a/qs89b/package.C#
+       |[0:46..0:46):  <= qs89a/qs89b/package.C#`<init>`().
+       |[0:57..0:58): o <= qs89a/o.
+       |[0:67..0:68): C <= qs89a/o.C#
+       |[0:68..0:68):  <= qs89a/o.C#`<init>`().
+       |[1:7..1:11): qs89 <= _empty_/qs89.
+       |[2:9..2:14): qs89a => qs89a/
+       |[2:15..2:20): qs89b => qs89a/qs89b/
+       |[2:22..2:31): `package` => qs89a/qs89b/package.
+       |[3:9..3:10): i <= _empty_/qs89.i.
+       |[4:11..4:12): q <= _empty_/qs89.i.q.
+       |[4:21..4:22): C <= _empty_/qs89.i.q.C#
+       |[4:22..4:22):  <= _empty_/qs89.i.q.C#`<init>`().
+       |[5:8..5:9): a <= _empty_/qs89.i.a.
+       |[5:12..5:19): classOf => scala/Predef.classOf().
+       |[5:20..5:21): q => _empty_/qs89.i.q.
+       |[5:22..5:23): C => _empty_/qs89.i.q.C#
+       |[6:8..6:9): b <= _empty_/qs89.i.b.
+       |[6:12..6:16): List => scala/collection/immutable/Nil.
+       |[6:17..6:18): q => _empty_/qs89.i.q.
+       |[6:19..6:20): C => _empty_/qs89.i.q.C#
+       |[8:6..8:7): m <= _empty_/qs89.m().
+       |[8:8..8:9): q <= _empty_/qs89.m().(q)
+       |[8:11..8:16): qs89a => qs89a/
+       |[8:17..8:18): o => qs89a/o.
+       |[8:27..8:31): List => scala/collection/immutable/Nil.
+       |[8:32..8:33): q => _empty_/qs89.m().(q)
+       |[8:34..8:35): C => qs89a/o.C#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a stable identifier pattern through renames of a package and its package object to one name",
+    """|package qs91a { package object qs91b { object X } }
+       |object qs91 {
+       |  import qs91a.qs91b.{`package` => q}
+       |  object i {
+       |    import qs91a.{qs91b => q}
+       |    def e(s: Any) = s match { case q.X => 1 }
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:13): qs91a <= qs91a/
+       |[0:31..0:36): qs91b <= qs91a/qs91b/package.
+       |[0:46..0:47): X <= qs91a/qs91b/package.X.
+       |[1:7..1:11): qs91 <= _empty_/qs91.
+       |[2:9..2:14): qs91a => qs91a/
+       |[2:15..2:20): qs91b => qs91a/qs91b/
+       |[2:22..2:31): `package` => qs91a/qs91b/package.
+       |[3:9..3:10): i <= _empty_/qs91.i.
+       |[4:11..4:16): qs91a => qs91a/
+       |[4:18..4:23): qs91b => qs91a/qs91b/
+       |[5:8..5:9): e <= _empty_/qs91.i.e().
+       |[5:10..5:11): s <= _empty_/qs91.i.e().(s)
+       |[5:13..5:16): Any => scala/Any#
+       |[5:20..5:21): s => _empty_/qs91.i.e().(s)
+       |[5:35..5:36): q => qs91a/qs91b/
+       |[5:37..5:38): X => qs91a/qs91b/package.X.
+       |""".stripMargin,
   )
 
   occurrences(
