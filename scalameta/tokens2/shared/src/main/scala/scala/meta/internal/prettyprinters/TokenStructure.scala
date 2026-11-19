@@ -21,9 +21,9 @@ object TokenStructure {
       case t: Interpolation.Part => Chars.escape(t.value)
       case t: Interpolation.End => t.text
       case t: Xml.Part => Chars.escape(t.value)
-      case t: Comment => Chars.escape(t.value)
+      case t: CommentValue => Chars.escape(t.value)
       case t: Ellipsis => t.rank.toString
-      case t: Unquote => t.text
+      case _: Unquote | _: CommentUnquote => x.text
       case t: MultiHS => t.len.toString
       case t: MultiNL => t.tokens.length.toString
       case t: Invalid => t.error

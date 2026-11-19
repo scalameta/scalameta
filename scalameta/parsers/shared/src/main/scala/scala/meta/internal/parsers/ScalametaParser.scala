@@ -465,7 +465,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
         else {
           start = firstNonTrivia
           endExcl =
-            if (!tokens(nonSpaceEnd).is[Comment]) nonSpaceEnd + 1
+            if (!tokens(nonSpaceEnd).is[CommentLike]) nonSpaceEnd + 1
             else {
               val end = tokens.rskipIf(isHTrivia, nonSpaceEnd - 1, firstNonTrivia)
               (if (tokens(end).is[AtEOLorF]) nonSpaceEnd else end) + 1
@@ -845,11 +845,11 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     if (indent < 0) return false
 
     val nlIdx = Tokens.indexOf(packed) // non-negative if indent is non-negative
-    if (nextNonWhitespace(nlIdx).isInstanceOf[Comment]) return true
+    if (nextNonWhitespace(nlIdx).isInstanceOf[CommentLike]) return true
     val prevNonWS = prevNonWhitespaceAt(nlIdx + 1)
-    if (!tokens.getOrNull(prevNonWS).isInstanceOf[Comment]) return false
+    if (!tokens.getOrNull(prevNonWS).isInstanceOf[CommentLike]) return false
 
-    val commentIndent = countIndent(prevNonWS)
+    val commentIndent = countIndent(tokens.rskipIf(!_.isAny[Comment, CommentStart], prevNonWS))
     commentIndent >= 0 && commentIndent <= indent
   }
 
