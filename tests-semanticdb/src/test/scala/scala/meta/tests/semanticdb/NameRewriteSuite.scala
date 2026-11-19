@@ -3657,6 +3657,139 @@ class NameRewriteSuite extends SemanticdbSuite {
   )
 
   occurrences(
+    "renamed `List` in a method body and a template body, the inner rename after a use",
+    """|object n87 {
+       |  import scala.collection.immutable.{List => L}
+       |  def j = {
+       |    import scala.{List => L}
+       |    L(1)
+       |  }
+       |  object i {
+       |    val a = L(1)
+       |    import scala.{List => L}
+       |    val b = L(1)
+       |    val c = L.empty[Int]
+       |    val d: L.type = L
+       |    def e(s: Any) = s match { case L(x) => x }
+       |    def f = { val g = L(2); g }
+       |  }
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:10): n87 <= _empty_/n87.
+             |[1:9..1:14): scala => scala/
+             |[1:15..1:25): collection => scala/collection/
+             |[1:26..1:35): immutable => scala/collection/immutable/
+             |[1:37..1:41): List => scala/collection/immutable/List#
+             |[1:37..1:41): List => scala/collection/immutable/List.
+             |[2:6..2:7): j <= _empty_/n87.j().
+             |[3:11..3:16): scala => scala/
+             |[3:18..3:22): List => scala/package.List#
+             |[3:18..3:22): List => scala/package.List.
+             |[4:4..4:5): L => scala/collection/immutable/List.
+             |[6:9..6:10): i <= _empty_/n87.i.
+             |[7:8..7:9): a <= _empty_/n87.i.a.
+             |[7:12..7:13): L => scala/collection/immutable/List.
+             |[8:11..8:16): scala => scala/
+             |[8:18..8:22): List => scala/package.List#
+             |[8:18..8:22): List => scala/package.List.
+             |[9:8..9:9): b <= _empty_/n87.i.b.
+             |[9:12..9:13): L => scala/collection/immutable/List.
+             |[10:8..10:9): c <= _empty_/n87.i.c.
+             |[10:12..10:13): L => scala/collection/immutable/List.
+             |[10:14..10:19): empty => scala/collection/immutable/List.empty().
+             |[10:20..10:23): Int => scala/Int#
+             |[11:8..11:9): d <= _empty_/n87.i.d.
+             |[11:11..11:12): L => scala/collection/immutable/List.
+             |[11:20..11:21): L => scala/collection/immutable/List.
+             |[12:8..12:9): e <= _empty_/n87.i.e().
+             |[12:10..12:11): s <= _empty_/n87.i.e().(s)
+             |[12:13..12:16): Any => scala/Any#
+             |[12:20..12:21): s => _empty_/n87.i.e().(s)
+             |[12:35..12:36): L => scala/collection/immutable/List.
+             |[12:37..12:38): x <= local1
+             |[12:43..12:44): x => local1
+             |[13:8..13:9): f <= _empty_/n87.i.f().
+             |[13:18..13:19): g <= local2
+             |[13:22..13:23): L => scala/collection/immutable/List.
+             |[13:28..13:29): g => local2
+             |""".stripMargin
+      },
+      """|[0:7..0:10): n87 <= _empty_/n87.
+         |[1:9..1:14): scala => scala/
+         |[1:15..1:25): collection => scala/collection/
+         |[1:26..1:35): immutable => scala/collection/immutable/
+         |[1:37..1:41): List => scala/collection/immutable/List#
+         |[1:37..1:41): List => scala/collection/immutable/List.
+         |[2:6..2:7): j <= _empty_/n87.j().
+         |[3:11..3:16): scala => scala/
+         |[3:18..3:22): List => scala/package.List#
+         |[3:18..3:22): List => scala/package.List.
+         |[4:4..4:5): L => scala/package.List.
+         |[6:9..6:10): i <= _empty_/n87.i.
+         |[7:8..7:9): a <= _empty_/n87.i.a.
+         |[7:12..7:13): L => scala/collection/immutable/List.
+         |[8:11..8:16): scala => scala/
+         |[8:18..8:22): List => scala/package.List#
+         |[8:18..8:22): List => scala/package.List.
+         |[9:8..9:9): b <= _empty_/n87.i.b.
+         |[9:12..9:13): L => scala/package.List.
+         |[10:8..10:9): c <= _empty_/n87.i.c.
+         |[10:12..10:13): L => scala/package.List.
+         |[10:14..10:19): empty => scala/collection/immutable/List.empty().
+         |[10:20..10:23): Int => scala/Int#
+         |[11:8..11:9): d <= _empty_/n87.i.d.
+         |[11:11..11:12): L => scala/package.List.
+         |[11:20..11:21): L => scala/package.List.
+         |[12:8..12:9): e <= _empty_/n87.i.e().
+         |[12:10..12:11): s <= _empty_/n87.i.e().(s)
+         |[12:13..12:16): Any => scala/Any#
+         |[12:20..12:21): s => _empty_/n87.i.e().(s)
+         |[12:35..12:36): L => scala/package.List.
+         |[12:37..12:38): x <= local1
+         |[12:43..12:44): x => local1
+         |[13:8..13:9): f <= _empty_/n87.i.f().
+         |[13:18..13:19): g <= local2
+         |[13:22..13:23): L => scala/package.List.
+         |[13:28..13:29): g => local2
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "renamed `List` in a case class's parameter, with a companion first and the inner rename between them",
+    """|object n88 {
+       |  import scala.collection.immutable.{List => L}
+       |  object i {
+       |    object K
+       |    import scala.{List => L}
+       |    case class K(a: L[Int])
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:7..0:10): n88 <= _empty_/n88.
+       |[1:9..1:14): scala => scala/
+       |[1:15..1:25): collection => scala/collection/
+       |[1:26..1:35): immutable => scala/collection/immutable/
+       |[1:37..1:41): List => scala/collection/immutable/List#
+       |[1:37..1:41): List => scala/collection/immutable/List.
+       |[2:9..2:10): i <= _empty_/n88.i.
+       |[3:11..3:12): K <= _empty_/n88.i.K.
+       |[4:11..4:16): scala => scala/
+       |[4:18..4:22): List => scala/package.List#
+       |[4:18..4:22): List => scala/package.List.
+       |[5:15..5:16): K <= _empty_/n88.i.K#
+       |[5:16..5:16):  <= _empty_/n88.i.K#`<init>`().
+       |[5:17..5:18): a <= _empty_/n88.i.K#`<init>`().(a)
+       |[5:17..5:18): a <= _empty_/n88.i.K#a.
+       |[5:20..5:21): L => scala/collection/immutable/List#
+       |[5:22..5:25): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
     "a renamed user alias of `List`",
     """|object n49 {
        |  object o { val L = scala.collection.immutable.List }
