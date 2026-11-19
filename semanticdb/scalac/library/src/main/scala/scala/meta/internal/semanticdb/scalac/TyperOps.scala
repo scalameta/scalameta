@@ -1,5 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.reflect.classTag
 import scala.reflect.internal.Mode
@@ -18,6 +19,28 @@ trait TyperOps {
   /** the typed copy of a tree in a Java annotation's arguments, kept because scalac discards it */
   private[meta] final class TypedAnnotArg(val tree: Tree)
   private[scalac] val TypedAnnotArgTag = classTag[TypedAnnotArg]
+
+  /**
+   * the names that the imports of a unit rename to. `byStart` maps the start of each identifier
+   * with one of these names to the symbol that the typer bound it to
+   */
+  private[meta] final class RenameBindings(val names: Set[Name]) {
+    val byStart = new mutable.LongMap[Symbol]
+  }
+  private[scalac] val RenameBindingsTag = classTag[RenameBindings]
+  private[scalac] val NoRenames = new RenameBindings(Set.empty)
+  private def scanRenames(body: Tree): RenameBindings = {
+    val names = Set.newBuilder[Name]
+    body.foreach {
+      case t: Import => t.selectors.foreach { sel =>
+          val rename = sel.rename
+          if ((rename ne null) && rename != sel.name && rename != nme.WILDCARD) names += rename
+        }
+      case _ =>
+    }
+    val result = names.result()
+    if (result.isEmpty) NoRenames else new RenameBindings(result)
+  }
 
   /** the argument trees of the Java annotation `ann` by range, the outermost at each range */
   private final class AnnotArgs private (private val byRange: mutable.LongMap[Tree]) {
@@ -55,6 +78,7 @@ trait TyperOps {
 
   private[scalac] object TyperRecorder extends AnalyzerPlugin {
     override def pluginsTyped(tpe: Type, typer: Typer, tree: Tree, mode: Mode, pt: Type): Type = {
+      recordBinding(typer, tree)
       try tree match {
           case t: ValDef if (null ne currentRun) && !isPastTyper => // we just need the typer phase
             val gsym = t.symbol
@@ -85,6 +109,67 @@ trait TyperOps {
         }
       catch { case ex if NonFatal(ex) => }
       tpe
+    }
+
+    /**
+     * the body of the last unit that the typer typed. The typer calls `pluginsTyped` for every
+     * tree, so `updateLastBody` looks up the attachment only when the typer moves to another unit
+     */
+    private var lastBody: Tree = null
+
+    /** the bindings of `lastBody`, or `NoRenames` if its unit has no rename */
+    private var bindings: RenameBindings = NoRenames
+
+    private def updateLastBody(body: Tree): Boolean = (body eq lastBody) || {
+      val ok = (null ne currentRun) && !isPastTyper
+      if (ok) {
+        bindings = // do this first, in case it throws
+          if (body eq EmptyTree) NoRenames // never attach to a shared tree
+          else body.attachments.get(RenameBindingsTag) match {
+            case Some(b) => b
+            case _ =>
+              val b =
+                try scanRenames(body)
+                catch { case ex if NonFatal(ex) => NoRenames }
+              body.updateAttachment(b)(RenameBindingsTag)
+              b
+          }
+        lastBody = body
+      }
+      ok
+    }
+
+    /**
+     * records the symbol of a written identifier in the unit's `RenameBindings`, if an import of
+     * the unit renames to the identifier's name
+     */
+    private def recordBinding(typer: Typer, tree: Tree): Unit =
+      try { // keep the compile going if `exists` throws while it loads a class file
+        val unit = typer.context.unit
+        if (updateLastBody(unit.body)) if (bindings ne NoRenames) tree match {
+          case t: RefTree =>
+            val pos = t.pos
+            /* skip a tree in a method that scalac adds to the companion, such as a constructor's
+             * default getter: it has no range. Skip a tree of another source: its offsets are in
+             * another text */
+            if (t.name.isTermName && pos.isRange && hasNoWrittenQualifier(t) &&
+              (pos.source eq unit.source) && bindings.names(t.name) && (null ne currentRun) &&
+              !isPastTyper) {
+              val sym = t.symbol
+              if ((sym ne null) && sym.exists && !sym.isError) bindings.byStart(pos.start) = sym
+            }
+          case _ =>
+        }
+      } catch { case ex if NonFatal(ex) => }
+
+    /**
+     * scalac built every qualifier of the tree, as it does for an imported name or for a member of
+     * a package object: none has an opaque range
+     */
+    @tailrec
+    private def hasNoWrittenQualifier(tree: Tree): Boolean = tree match {
+      case t: Select => !t.qualifier.pos.isOpaqueRange && hasNoWrittenQualifier(t.qualifier)
+      case _ => true
     }
   }
 

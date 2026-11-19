@@ -527,7 +527,7 @@ class InteractiveSuite extends FunSuite {
        |[4:16..4:17): b => ia2/b/
        |[5:8..5:9): a <= _empty_/ia2o.i.a.
        |[5:12..5:19): classOf => scala/Predef.classOf().
-       |[5:20..5:21): q => ia2/b/package.
+       |[5:20..5:21): q => ia2/b/
        |[5:22..5:23): C => ia2/b/package.C#
        |
        |Diagnostics:
