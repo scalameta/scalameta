@@ -71,6 +71,12 @@ object Token {
   @branch
   trait HTrivia extends Trivia
   @branch
+  trait CommentLike extends HTrivia
+  @branch
+  trait CommentValue extends CommentLike {
+    def value: String
+  }
+  @branch
   trait Whitespace extends Trivia
   @branch
   trait HSpace extends Whitespace with HTrivia
@@ -331,15 +337,15 @@ object Token {
     override def newlines: Int = tokens.length
   }
   @freeform("comment")
-  class Comment(value: String) extends HTrivia
+  class Comment(value: String) extends CommentValue
   @freeform("comment_start")
-  class CommentStart(value: String) extends HTrivia
+  class CommentStart(value: String) extends CommentValue
   @freeform("comment_part")
-  class CommentPart(value: String) extends HTrivia
+  class CommentPart(value: String) extends CommentValue
   @freeform("comment_end")
-  class CommentEnd(value: String) extends HTrivia
+  class CommentEnd(value: String) extends CommentValue
   @freeform("comment_unquote")
-  class CommentUnquote extends HTrivia
+  class CommentUnquote extends CommentLike
   @freeform("beginning of file")
   class BOF extends AtEOLorF {
     def this(input: Input, dialect: Dialect) = this(input, dialect, 0)

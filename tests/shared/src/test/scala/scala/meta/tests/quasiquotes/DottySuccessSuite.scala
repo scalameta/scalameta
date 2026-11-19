@@ -294,7 +294,7 @@ class DottySuccessSuite extends TreeSuiteBase {
   a
   /* $unquoted
   */ b""",
-    )(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(tname("a"), b)))
+    )(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), b)))
   }
 
   test("comments: a line break and an unquote in a comment on its own line, a statement after it") {
@@ -307,7 +307,7 @@ class DottySuccessSuite extends TreeSuiteBase {
   a
   /*
   $unquoted */ b""",
-    )(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(tname("a"), b)))
+    )(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), b)))
   }
 
   test("comments: an unquote and a line break in a comment on its own line, a leading infix operator after it") {
@@ -365,7 +365,7 @@ class DottySuccessSuite extends TreeSuiteBase {
       q"""def f =
   a
   + /* $unquoted */ b""",
-    )(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), Term.ApplyUnary(plus, tname("b")))))
+    )(Defn.Def(Nil, tname("f"), Nil, None, tinfix(tname("a"), plus, tname("b"))))
   }
 
   test("comments: an unquote in a one-line comment after a leading infix operator, its operand on the next line") {
@@ -379,7 +379,7 @@ class DottySuccessSuite extends TreeSuiteBase {
   a
   + /* $unquoted */
     b""",
-    )(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), plus, tname("b"))))
+    )(Defn.Def(Nil, tname("f"), Nil, None, tinfix(tname("a"), plus, tname("b"))))
   }
 
   test(
@@ -389,9 +389,9 @@ class DottySuccessSuite extends TreeSuiteBase {
     val dialect: Dialect = null
     import dialects.Scala3
     // without the unquote: `def f = { a }`, with the comment attached to `a`
-    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a"))
-    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1)).toBuilder
-      .begComment(detachedComments("/* x */")).result()
+    val a = tname("a").toBuilder.endComment(Seq("/* x */")).result()
+    val f = Defn.Def(Nil, tname("f"), Nil, None, blk(a))
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
     assertTree(
       q"""object O:
   def f =
@@ -432,7 +432,7 @@ class DottySuccessSuite extends TreeSuiteBase {
       q"""extension (y: Int)
   /* $unquoted */
   def f = 1""",
-    )(Defn.ExtensionGroup(Some(group), f))
+    )(Defn.ExtensionGroup(Some(group), blk(f)))
   }
 
   test("comments: an unquote in a one-line comment on its own line before `then`") {
@@ -440,6 +440,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     val dialect: Dialect = null
     import dialects.Scala3
     // without the unquote: the `then` body is a block with the comment attached
+    val thenp = blk(tname("a")).toBuilder.begComment(detachedComments("/* x */")).result()
     assertTree(
       q"""def f =
   if c
@@ -447,7 +448,7 @@ class DottySuccessSuite extends TreeSuiteBase {
   then
     a
   else b""",
-    )(Defn.Def(Nil, tname("f"), Nil, None, tif(tname("c"), tname("a"), tname("b"))))
+    )(Defn.Def(Nil, tname("f"), Nil, None, tif(tname("c"), thenp, tname("b"))))
   }
 
   test("comments: an unquote in a one-line comment before `then` on its line") {
@@ -455,13 +456,14 @@ class DottySuccessSuite extends TreeSuiteBase {
     val dialect: Dialect = null
     import dialects.Scala3
     // without the unquote: the `then` body is a block with the comment attached
+    val thenp = blk(tname("a")).toBuilder.begComment(detachedComments("/* x */")).result()
     assertTree(
       q"""def f =
   if c
   /* $unquoted */ then
     a
   else b""",
-    )(Defn.Def(Nil, tname("f"), Nil, None, tif(tname("c"), tname("a"), tname("b"))))
+    )(Defn.Def(Nil, tname("f"), Nil, None, tif(tname("c"), thenp, tname("b"))))
   }
 
   test("comments: an unquote on the last line of a comment on lines of its own before `then`") {
@@ -469,6 +471,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     val dialect: Dialect = null
     import dialects.Scala3
     // without the unquote: the `then` body is a block with the comment attached
+    val thenp = blk(tname("a")).toBuilder.begComment(detachedComments("/* foo\n   * x */")).result()
     assertTree(
       q"""def f =
   if c
@@ -477,7 +480,7 @@ class DottySuccessSuite extends TreeSuiteBase {
   then
     a
   else b""",
-    )(Defn.Def(Nil, tname("f"), Nil, None, tif(tname("c"), tname("a"), tname("b"))))
+    )(Defn.Def(Nil, tname("f"), Nil, None, tif(tname("c"), thenp, tname("b"))))
   }
 
   test("comments: an unquote in a one-line comment after the last statement of a case") {

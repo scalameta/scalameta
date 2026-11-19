@@ -67,7 +67,7 @@ private[meta] final class ScannerTokens(
   @tailrec
   final def isPrecededByDetachedComment(idx: Int, end: Int): Boolean = idx >= end &&
     (tokens(idx) match {
-      case _: Comment => isPrecededByNL(idx)
+      case _: CommentLike => prevNonHTrivia(idx).is[AtEOLorF]
       case _: Whitespace => isPrecededByDetachedComment(idx - 1, end)
       case _ => false
     })
@@ -216,12 +216,13 @@ private[meta] final class ScannerTokens(
         val token = tokens(pos)
         token match {
           case _: AtEOL | _: BOF => Tokens.pack(acc, pos)
-          case c: Comment =>
+          case c: CommentValue =>
             val indent = multilineCommentIndent(c)
             if (indent >= 0) Tokens.pack(indent, pos) else countIndentInternal(pos - 1)
           case t: HSpace => countIndentInternal(pos - 1, acc + t.len)
-          case _ if skipNonTrivia => countIndentInternal(pos - 1)
-          case _ => Tokens.pack(-1, -1)
+          case t =>
+            if (skipNonTrivia || t.isInstanceOf[CommentLike]) countIndentInternal(pos - 1)
+            else Tokens.pack(-1, -1)
         }
       }
 
@@ -277,7 +278,7 @@ private[meta] final class ScannerTokens(
         case t: AtEOL => iter(i + 1, i, 0, numEOL + t.newlines)
         case t: HSpace if indent >= 0 => iter(i + 1, pos, indent + t.len, numEOL)
         case _: Whitespace => iter(i + 1, pos, indent, numEOL)
-        case _: Comment
+        case _: HTrivia
             if indent < 0 || outdent < indent || outdent == indent && (okBlank || numEOL < 2) =>
           iter(i + 1, i + 1, -1)
         case _ => pos
@@ -1334,9 +1335,10 @@ private[meta] final class ScannerTokens(
     def iter(pos: Int, indent: Int, prevNoNL: Boolean): LeadingInfix = tokens(pos) match {
       case _: EOL => if (prevNoNL) iter(pos + 1, 0, false) else LeadingInfix.No
       case t: HSpace => iter(pos + 1, if (prevNoNL) indent else indent + t.len, prevNoNL)
-      case c: Comment =>
+      case c: CommentValue =>
         val commentIndent = multilineCommentIndent(c)
         iter(pos + 1, if (commentIndent < 0) indent else commentIndent, true)
+      case _: CommentLike => iter(pos + 1, indent, true)
       case t =>
         if (!canBeLeadingInfixArg(t, pos)) LeadingInfix.No
         else if (indent >= 0 && indent < nextIndent) LeadingInfix.InvalidArg
@@ -1345,7 +1347,7 @@ private[meta] final class ScannerTokens(
     tokens(afterOpPos) match {
       case _: EOL => iter(afterOpPos + 1, 0, false)
       case _: HSpace => iter(afterOpPos + 1, -1, true)
-      case _: Comment => LeadingInfix.InvalidArg
+      case _: HTrivia => LeadingInfix.InvalidArg
       case _ => LeadingInfix.No
     }
   }
@@ -1373,7 +1375,7 @@ private[meta] object ScannerTokens {
   val isHTrivia: Token => Boolean = _.is[HTrivia]
   val isHToken: Token => Boolean = !_.is[AtEOL]
 
-  def multilineCommentIndent(t: Comment): Int = {
+  def multilineCommentIndent(t: CommentValue): Int = {
     val str: String = t.value
     @tailrec
     def loop(idx: Int, indent: Int): Int =
