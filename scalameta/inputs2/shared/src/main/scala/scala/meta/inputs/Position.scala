@@ -34,6 +34,8 @@ sealed trait Position extends InputRange {
   def lastColumn: Int // inclusive
 
   final def isEmpty: Boolean = start >= end
+  final def len: Int = end - start
+  final def isMultiLine: Boolean = startLine < endLine
 }
 
 object Position {
@@ -60,7 +62,7 @@ object Position {
     def startColumn: Int = Tokens.countOf(startPacked)
     def endLine: Int = Tokens.indexOf(endPacked)
     def endColumn: Int = Tokens.countOf(endPacked)
-    lazy val text = if (isEmpty) "" else new String(input.chars, start, end - start)
+    lazy val text = if (isEmpty) "" else new String(input.chars, start, len)
     def lastLine: Int = if (endColumn > 0) endLine else endLine - 1
     def lastColumn: Int =
       if (endColumn > 0) endColumn - 1
