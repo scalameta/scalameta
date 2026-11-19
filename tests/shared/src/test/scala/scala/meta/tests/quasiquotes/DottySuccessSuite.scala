@@ -282,4 +282,224 @@ class DottySuccessSuite extends TreeSuiteBase {
     )
   }
 
+  private val unquoted = q""""x""""
+
+  test("comments: an unquote and a line break in a comment on its own line, a statement after it") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val b = tname("b").toBuilder.begComment(Seq("/* x\n  */")).result()
+    assertTree(
+      q"""def f =
+  a
+  /* $unquoted
+  */ b""",
+    )(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(tname("a"), b)))
+  }
+
+  test("comments: a line break and an unquote in a comment on its own line, a statement after it") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val b = tname("b").toBuilder.begComment(Seq("/*\n x */")).result()
+    assertTree(
+      q"""def f =
+  a
+  /*
+  $unquoted */ b""",
+    )(Defn.Def(Nil, tname("f"), Nil, None, Term.SelectPostfix(tname("a"), b)))
+  }
+
+  test("comments: an unquote and a line break in a comment on its own line, a leading infix operator after it") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val plus = tname("+").toBuilder.begComment(Seq("/* x\n  */")).result()
+    assertTree(
+      q"""def f =
+  a
+  /* $unquoted
+  */ + b""",
+    )(Defn.Def(Nil, tname("f"), Nil, None, tinfix(tname("a"), plus, tname("b"))))
+  }
+
+  test("comments: an unquote in a one-line comment after a statement, an outdent after it") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a")).toBuilder.endComment(Seq("/* x */"))
+      .result()
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
+    assertTree(
+      q"""object O:
+  def f =
+    a /* $unquoted */
+  def g = 1""",
+    )(Defn.Object(Nil, tname("O"), tpl(f, g)))
+  }
+
+  test(
+    "comments: an unquote at the end of a one-line comment after a statement, an outdent after it",
+  ) {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a")).toBuilder.endComment(Seq("/* y x*/"))
+      .result()
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
+    assertTree(
+      q"""object O:
+  def f =
+    a /* y $unquoted*/
+  def g = 1""",
+    )(Defn.Object(Nil, tname("O"), tpl(f, g)))
+  }
+
+  test("comments: an unquote in a one-line comment after a leading infix operator, its operand after it") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    // without the unquote: `a + b`
+    val plus = tname("+").toBuilder.endComment(Seq("/* x */")).result()
+    assertTree(
+      q"""def f =
+  a
+  + /* $unquoted */ b""",
+    )(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), Term.ApplyUnary(plus, tname("b")))))
+  }
+
+  test("comments: an unquote in a one-line comment after a leading infix operator, its operand on the next line") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    // without the unquote: `a + b`
+    val plus = tname("+").toBuilder.endComment(Seq("/* x */")).result()
+    assertTree(
+      q"""def f =
+  a
+  + /* $unquoted */
+    b""",
+    )(Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), plus, tname("b"))))
+  }
+
+  test(
+    "comments: an unquote in a one-line comment on its own line after the last statement of a body",
+  ) {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    // without the unquote: `def f = { a }`, with the comment attached to `a`
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a"))
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1)).toBuilder
+      .begComment(detachedComments("/* x */")).result()
+    assertTree(
+      q"""object O:
+  def f =
+    a
+    /* $unquoted */
+  def g = 1""",
+    )(Defn.Object(Nil, tname("O"), tpl(f, g)))
+  }
+
+  test(
+    "comments: a line break and an unquote in a comment opened after the last statement of a body",
+  ) {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a")).toBuilder
+      .endComment(Seq("/* foo\n    bar x */")).result()
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
+    assertTree(
+      q"""object O:
+  def f =
+    a /* foo
+    bar $unquoted */
+  def g = 1""",
+    )(Defn.Object(Nil, tname("O"), tpl(f, g)))
+  }
+
+  test("comments: an unquote in a one-line comment on its own line before the only method of an extension") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    // without the unquote: the method is in a block
+    val f = Defn.Def(Nil, tname("f"), Nil, None, int(1)).toBuilder
+      .begComment(detachedComments("/* x */")).result()
+    val group = Member
+      .ParamClauseGroup(Type.ParamClause(Nil), List(Term.ParamClause(List(tparam("y", "Int")))))
+    assertTree(
+      q"""extension (y: Int)
+  /* $unquoted */
+  def f = 1""",
+    )(Defn.ExtensionGroup(Some(group), f))
+  }
+
+  test("comments: an unquote in a one-line comment on its own line before `then`") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    // without the unquote: the `then` body is a block with the comment attached
+    assertTree(
+      q"""def f =
+  if c
+  /* $unquoted */
+  then
+    a
+  else b""",
+    )(Defn.Def(Nil, tname("f"), Nil, None, tif(tname("c"), tname("a"), tname("b"))))
+  }
+
+  test("comments: an unquote in a one-line comment before `then` on its line") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    // without the unquote: the `then` body is a block with the comment attached
+    assertTree(
+      q"""def f =
+  if c
+  /* $unquoted */ then
+    a
+  else b""",
+    )(Defn.Def(Nil, tname("f"), Nil, None, tif(tname("c"), tname("a"), tname("b"))))
+  }
+
+  test("comments: an unquote on the last line of a comment on lines of its own before `then`") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    // without the unquote: the `then` body is a block with the comment attached
+    assertTree(
+      q"""def f =
+  if c
+  /* foo
+   * $unquoted */
+  then
+    a
+  else b""",
+    )(Defn.Def(Nil, tname("f"), Nil, None, tif(tname("c"), tname("a"), tname("b"))))
+  }
+
+  test("comments: an unquote in a one-line comment after the last statement of a case") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val quoted =
+      q"""y match
+  case 1 => a /* $unquoted */"""
+    assertPositions(
+      quoted,
+      """|<casesBlock>Term.CasesBlock {
+         |  case 1 => a /* x */
+         |}</casesBlock> [10:case 1 => a:21)
+         |<cases0>Case case 1 => a /* x */
+         |</cases0> [10:case 1 => a:21)
+         |<body>Term.Name a /* x */
+         |</body> [20:a:21)
+         |""".stripMargin,
+      showPosition = true,
+      showFieldName = true,
+    )
+  }
+
 }

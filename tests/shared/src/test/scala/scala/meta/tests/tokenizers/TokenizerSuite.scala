@@ -2053,6 +2053,21 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |""".stripMargin,
   )
 
+  testTokenizedStructLines(
+    "comment with an unquote within multi-line quasiquotes",
+    dialects.Scala213.unquoteTerm(multiline = true),
+  )(
+    "a /* foo $x bar */",
+    """|BOF [0..0)
+       |Ident(a) [0..1)
+       |Space [1..2)
+       |CommentStart [2..9)
+       |CommentUnquote [9..11)
+       |CommentEnd [11..18)
+       |EOF [18..18)
+       |""".stripMargin,
+  )
+
   testTokenizedStructLines("interpolator with $ character")(
     """s"$$$foo$$"""",
     """|BOF [0..0)
