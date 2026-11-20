@@ -2010,32 +2010,14 @@ trait TextDocumentOps {
         }
 
         private def traverseNoOriginal(gtree: g.Tree): Unit = gtree match {
+          case t: g.DefTree => processDefTree(t)
+
           // skip an annotation that scalac added, like `@unchecked` on a desugared match
           case t: g.Annotated if !t.annot.pos.isOpaqueRange => isVisited += t.annot
 
-          /* skip a setter but for its annotations: only the setter has `@(a @setter)`.
-           * We find the name through the getter, which has the same position. */
-          case t: g.DefDef if t.symbol.isSetter =>
-            traverseAnnotations(t)
-            isVisited ++= t.vparamss.flatten
-            isVisited += t.rhs
-
-          // skip the parents, the types and the default cases of a lambda's class
           case t: g.Template if t.symbol.owner.isPartialFunctionLambdaClass =>
             isVisited ++= t.parents
             isVisited += t.self
-          case t: g.DefDef if t.symbol.owner.isPartialFunctionLambdaClass =>
-            trySymbolDefinition(t.symbol)
-            isVisited ++= t.tparams
-            isVisited += t.tpt
-            // skip the default case that scalac adds to call `default`
-            t.rhs match {
-              case rhs: g.Match if t.name == g.nme.applyOrElse => isVisited ++= rhs.cases.lastOption
-              case _ =>
-            }
-          case t: g.Bind
-              if t.symbol.isDefaultCaseBinder &&
-                t.symbol.owner.owner.isPartialFunctionLambdaClass =>
           // skip the cast of a lambda's parameter that scalac adds to the methods of its class
           case t: g.TypeApply if (t.fun match {
                 case g.Select(q: g.Ident, _) => q.symbol.isPartialFunctionLambdaAnyParam &&
@@ -2091,14 +2073,6 @@ trait TextDocumentOps {
               case body => traverse(body)
             }
             tryFindMtree(t)
-          case t: g.ValDef =>
-            if (t.hasSyntheticSymbol) {
-              traverse(t.tpt)
-              t.symbol.removeAttachment(ValDefRhsTag)
-            }
-            traverse(t.rhs)
-            processMemberDef(t)
-          case t: g.MemberDef => processMemberDef(t)
           case t: g.Ident => t.pos match {
               case p: gu.RangePosition if p.start >= p.end => // do nothing, empty identifier (such as empty package)
               case _ if t.hasSyntheticSymbol && tryRecoverValDefRhs(t.symbol) =>
@@ -2202,6 +2176,47 @@ trait TextDocumentOps {
             }
             tryFindMtree(t)
           case _ => tryFindMtree(gtree)
+        }
+
+        private def processDefTree(t: g.DefTree): Unit = t match {
+          case t: g.DefDef => processDefDef(t)
+
+          case t: g.Bind // skip what scalac added to a lambda's class
+              if t.symbol.isDefaultCaseBinder &&
+                t.symbol.owner.owner.isPartialFunctionLambdaClass =>
+
+          case t: g.ValDef =>
+            if (t.hasSyntheticSymbol) {
+              traverse(t.tpt)
+              t.symbol.removeAttachment(ValDefRhsTag)
+            }
+            traverse(t.rhs)
+            processMemberDef(t)
+
+          case t: g.MemberDef => processMemberDef(t)
+
+          case t => tryFindMtree(t)
+        }
+
+        private def processDefDef(t: g.DefDef): Unit = {
+          val gsym = t.symbol
+          if (gsym.isSetter) {
+            /* skip a setter but for its annotations: only the setter has `@(a @setter)`.
+             * We find the name through the getter, which has the same position. */
+            traverseAnnotations(t)
+            isVisited ++= t.vparamss.flatten
+            isVisited += t.rhs
+          } else if (gsym.owner.isPartialFunctionLambdaClass) {
+            // skip what scalac added to a lambda's method, but keep its definition
+            trySymbolDefinition(gsym)
+            isVisited ++= t.tparams
+            isVisited += t.tpt
+            // skip the default case that scalac adds to call `default`
+            t.rhs match {
+              case rhs: g.Match if t.name == g.nme.applyOrElse => isVisited ++= rhs.cases.lastOption
+              case _ =>
+            }
+          } else processMemberDef(t)
         }
       }
 
