@@ -2013,6 +2013,7 @@ trait TextDocumentOps {
           case t: g.DefTree => processDefTree(t)
           case t: g.Function => processFunction(t)
           case t: g.GenericApply => processGenericApply(t)
+          case t: g.RefTree => processRefTree(t)
 
           // skip an annotation that scalac added, like `@unchecked` on a desugared match
           case t: g.Annotated if !t.annot.pos.isOpaqueRange => isVisited += t.annot
@@ -2033,16 +2034,6 @@ trait TextDocumentOps {
               }
             } else tryFindMtree(t)
 
-          case t: g.Ident => t.pos match {
-              case p: gu.RangePosition if p.start >= p.end => // do nothing, empty identifier (such as empty package)
-              case _ if t.hasSyntheticSymbol && tryRecoverValDefRhs(t.symbol) =>
-              case _ => tryFindMtree(t)
-            }
-          case gtree: g.Select if gtree.symbol != null && gtree.symbol.isDefaultGetter =>
-            // the qualifier of a default argument may have its offset at another name
-            if (!gtree.qualifier.pos.isRange) isVisited += gtree.qualifier
-            tryFindMtree(gtree)
-          case select: g.Select if isSyntheticName(select) => tryFindSynthetic(select)
           case gtree: g.ExistentialTypeTree =>
             if (gtree.pos.isDefined) mstartOf[m.Type.Existential](gtree.pos.start) {
               case t: m.Type.Existential => t
@@ -2224,6 +2215,22 @@ trait TextDocumentOps {
               case v: g.ApplyImplicitView => v.args.headOption.foreach(traverse)
               case _ =>
             }
+        }
+
+        private def processRefTree(t: g.RefTree): Unit = t match {
+          case t: g.Ident => t.pos match {
+              case p: gu.RangePosition if p.start >= p.end => // do nothing, empty identifier (such as empty package)
+              case _ if t.hasSyntheticSymbol && tryRecoverValDefRhs(t.symbol) =>
+              case _ => tryFindMtree(t)
+            }
+          case t: g.Select =>
+            if (t.symbol != null && t.symbol.isDefaultGetter) {
+              // the qualifier of a default argument may have its offset at another name
+              if (!t.qualifier.pos.isRange) isVisited += t.qualifier
+              tryFindMtree(t)
+            } else if (isSyntheticName(t)) tryFindSynthetic(t)
+            else tryFindMtree(t)
+          case _ => tryFindMtree(t)
         }
       }
 
