@@ -13,7 +13,7 @@ addSbtPlugin("com.github.sbt" % "sbt-shading" % "2.1.9")
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.1.0-RC2")
 addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.2.1")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.22.0")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.23.0")
 addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.5.12")
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.9.2")
 addSbtPlugin("org.scalameta" % "sbt-munit" % "1.3.6")
