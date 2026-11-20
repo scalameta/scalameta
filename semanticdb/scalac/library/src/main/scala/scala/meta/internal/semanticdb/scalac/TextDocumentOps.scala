@@ -2032,16 +2032,16 @@ trait TextDocumentOps {
               }
             } else tryFindMtree(t)
 
-          case gtree: g.ExistentialTypeTree =>
-            if (gtree.pos.isDefined) mstartOf[m.Type.Existential](gtree.pos.start) {
-              case t: m.Type.Existential => t
-              case _ => null
-            } match {
-              case mtpe: m.Type.Existential =>
-                tryFindDecls(mtpe.stats, gtree.whereClauses.map(_.symbol))
-              case _ =>
+          case t: g.ExistentialTypeTree =>
+            if (t.pos.isDefined) {
+              val mtpe = mstartOf[m.Type.Existential](t.pos.start) {
+                case x: m.Type.Existential => x
+                case _ => null
+              }
+              if (mtpe ne null) tryFindDecls(mtpe.stats, t.whereClauses.map(_.symbol))
             }
-            tryFindMtree(gtree)
+            tryFindMtree(t)
+
           case _ => tryFindMtree(gtree)
         }
 
