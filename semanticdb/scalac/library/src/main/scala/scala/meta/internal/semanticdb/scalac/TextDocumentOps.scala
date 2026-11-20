@@ -2011,6 +2011,7 @@ trait TextDocumentOps {
 
         private def traverseNoOriginal(gtree: g.Tree): Unit = gtree match {
           case t: g.DefTree => processDefTree(t)
+          case t: g.Function => processFunction(t)
 
           // skip an annotation that scalac added, like `@unchecked` on a desugared match
           case t: g.Annotated if !t.annot.pos.isOpaqueRange => isVisited += t.annot
@@ -2037,42 +2038,6 @@ trait TextDocumentOps {
               }
             } else tryFindMtree(t)
 
-          case t: g.Function =>
-            val gfor = genclosing match {
-              case _ :: (gapply: g.Apply) :: _ => forMethod(gapply.fun)
-              case _ => null
-            }
-            addSamOccurrence(t, gfor ne null)
-            // the parameter of a guard repeats that of its generator, which defines the `_`
-            val isGuard = (gfor ne null) && gfor.name == g.nme.withFilter
-            // a for matches the parameter of its closure on the pattern
-            val gpat = t.body match {
-              case g.Match(_, cd :: Nil) => cd.pat
-              case _ => g.EmptyTree
-            }
-            /* a for unpacks `y` of `y = x; _ <- ys` with a tuple pattern that has no range;
-             * this parameter defines no `_`, though scalac 2.12 puts it at the one of `ys` */
-            val isUnpacking = gpat.isInstanceOf[g.Apply] && !gpat.pos.isRange
-            // scalac 2.13.15 may put a closure of a for at its body, but its pattern at `_`
-            def findParamUnderscore(p: g.ValDef): m.Position = {
-              val mpos = findUnderscore(gpat)
-              if (mpos ne null) mpos else findUnderscore(p)
-            }
-            t.vparams.foreach(p =>
-              if (!(p.symbol.isSynthetic || p.symbol.hasFreshName)) traverse(p)
-              else if (isUnpacking) {}
-              else if (!isGuard) defineUnderscore(findParamUnderscore(p), p.symbol)
-              // mark it visited, or traversing the function would define the `_`
-              else if (isVisited.add(p) && (findParamUnderscore(p) ne null)) saveUnderscore(p.symbol),
-            )
-            t.body match {
-              /* skip the match of a pattern on the parameter.
-               * Its position can be the name after `yield`. */
-              case g.Match(sel: g.Typed, cases) if t.vparams.exists(_.symbol == sel.expr.symbol) =>
-                cases.foreach(traverse)
-              case body => traverse(body)
-            }
-            tryFindMtree(t)
           case t: g.Ident => t.pos match {
               case p: gu.RangePosition if p.start >= p.end => // do nothing, empty identifier (such as empty package)
               case _ if t.hasSyntheticSymbol && tryRecoverValDefRhs(t.symbol) =>
@@ -2217,6 +2182,44 @@ trait TextDocumentOps {
               case _ =>
             }
           } else processMemberDef(t)
+        }
+
+        private def processFunction(t: g.Function): Unit = {
+          val gfor = genclosing match {
+            case _ :: (gapply: g.Apply) :: _ => forMethod(gapply.fun)
+            case _ => null
+          }
+          addSamOccurrence(t, gfor ne null)
+          // the parameter of a guard repeats that of its generator, which defines the `_`
+          val isGuard = (gfor ne null) && gfor.name == g.nme.withFilter
+          // a for matches the parameter of its closure on the pattern
+          val gpat = t.body match {
+            case g.Match(_, cd :: Nil) => cd.pat
+            case _ => g.EmptyTree
+          }
+          /* a for unpacks `y` of `y = x; _ <- ys` with a tuple pattern that has no range;
+           * this parameter defines no `_`, though scalac 2.12 puts it at the one of `ys` */
+          val isUnpacking = gpat.isInstanceOf[g.Apply] && !gpat.pos.isRange
+          // scalac 2.13.15 may put a closure of a for at its body, but its pattern at `_`
+          def findParamUnderscore(p: g.ValDef): m.Position = {
+            val mpos = findUnderscore(gpat)
+            if (mpos ne null) mpos else findUnderscore(p)
+          }
+          t.vparams.foreach(p =>
+            if (!(p.symbol.isSynthetic || p.symbol.hasFreshName)) traverse(p)
+            else if (isUnpacking) {}
+            else if (!isGuard) defineUnderscore(findParamUnderscore(p), p.symbol)
+            // mark it visited, or traversing the function would define the `_`
+            else if (isVisited.add(p) && (findParamUnderscore(p) ne null)) saveUnderscore(p.symbol),
+          )
+          t.body match {
+            /* skip the match of a pattern on the parameter.
+             * Its position can be the name after `yield`. */
+            case g.Match(sel: g.Typed, cases) if t.vparams.exists(_.symbol == sel.expr.symbol) =>
+              cases.foreach(traverse)
+            case body => traverse(body)
+          }
+          tryFindMtree(t)
         }
       }
 
