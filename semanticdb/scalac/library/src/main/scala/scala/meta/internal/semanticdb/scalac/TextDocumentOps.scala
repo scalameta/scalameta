@@ -2012,6 +2012,7 @@ trait TextDocumentOps {
         private def traverseNoOriginal(gtree: g.Tree): Unit = gtree match {
           case t: g.DefTree => processDefTree(t)
           case t: g.Function => processFunction(t)
+          case t: g.GenericApply => processGenericApply(t)
 
           // skip an annotation that scalac added, like `@unchecked` on a desugared match
           case t: g.Annotated if !t.annot.pos.isOpaqueRange => isVisited += t.annot
@@ -2019,12 +2020,6 @@ trait TextDocumentOps {
           case t: g.Template if t.symbol.owner.isPartialFunctionLambdaClass =>
             isVisited ++= t.parents
             isVisited += t.self
-          // skip the cast of a lambda's parameter that scalac adds to the methods of its class
-          case t: g.TypeApply if (t.fun match {
-                case g.Select(q: g.Ident, _) => q.symbol.isPartialFunctionLambdaAnyParam &&
-                  q.pos == t.pos
-                case _ => false
-              }) => isVisited += t.fun
 
           case t: g.Literal if t.tpe != null && t.tpe.typeSymbol == g.definitions.ClassClass =>
             val mpos = t.toMeta
@@ -2042,17 +2037,6 @@ trait TextDocumentOps {
               case p: gu.RangePosition if p.start >= p.end => // do nothing, empty identifier (such as empty package)
               case _ if t.hasSyntheticSymbol && tryRecoverValDefRhs(t.symbol) =>
               case _ => tryFindMtree(t)
-            }
-          case _: g.GenericApply =>
-            tryFindSynthetic(gtree)
-            gtree match {
-              case t: g.Apply if t.pos.isRange => tryNamedArgs(t)
-              case _ =>
-            }
-            // fix #2040
-            gtree match {
-              case v: g.ApplyImplicitView => v.args.headOption.foreach(traverse)
-              case _ =>
             }
           case gtree: g.Select if gtree.symbol != null && gtree.symbol.isDefaultGetter =>
             // the qualifier of a default argument may have its offset at another name
@@ -2220,6 +2204,26 @@ trait TextDocumentOps {
             case body => traverse(body)
           }
           tryFindMtree(t)
+        }
+
+        private def processGenericApply(t: g.GenericApply): Unit = t match {
+          // skip the cast of a lambda's parameter that scalac adds to the methods of its class
+          case t: g.TypeApply if (t.fun match {
+                case g.Select(q: g.Ident, _) => q.symbol.isPartialFunctionLambdaAnyParam &&
+                  q.pos == t.pos
+                case _ => false
+              }) => isVisited += t.fun
+          case _ =>
+            tryFindSynthetic(t)
+            t match {
+              case t: g.Apply if t.pos.isRange => tryNamedArgs(t)
+              case _ =>
+            }
+            // fix #2040
+            t match {
+              case v: g.ApplyImplicitView => v.args.headOption.foreach(traverse)
+              case _ =>
+            }
         }
       }
 
