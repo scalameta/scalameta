@@ -1351,6 +1351,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:12..1:19): example => example/
        |[1:20..1:29): RenameDef => example/RenameDef#
        |[1:34..1:35): f <= ma49/O.f().
+       |[1:36..1:37): x <= ma49/O.f$impl().(x)
        |[1:36..1:37): x <= ma49/O.f().(x)
        |[1:39..1:42): Int => scala/Int#
        |[1:52..1:53): y <= local0
@@ -1408,6 +1409,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:26..1:27): C <= ma50/C#
        |[1:28..1:28):  <= ma50/C#`<init>`().
        |[1:34..1:35): f <= ma50/C#f().
+       |[1:36..1:37): x <= ma50/C#f$impl().(x)
        |[1:36..1:37): x <= ma50/C#f().(x)
        |[1:39..1:42): Int => scala/Int#
        |[1:52..1:53): y <= local0
@@ -1468,6 +1470,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:26..1:27): C <= ma51/C#
        |[1:28..1:28):  <= ma51/C#`<init>`().
        |[1:34..1:35): f <= ma51/C#f().
+       |[1:36..1:37): x <= ma51/C#f$impl().(x)
        |[1:36..1:37): x <= ma51/C#f().(x)
        |[1:39..1:42): Int => scala/Int#
        |[1:52..1:53): y <= local0
@@ -1529,6 +1532,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:12..1:19): example => example/
        |[1:20..1:29): RenameDef => example/RenameDef#
        |[1:34..1:35): f <= ma52/O.f().
+       |[1:36..1:37): x <= ma52/O.f$impl().(x)
        |[1:36..1:37): x <= ma52/O.f().(x)
        |[1:39..1:42): Int => scala/Int#
        |[1:52..1:53): y <= local0
@@ -1583,6 +1587,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:20..1:38): RenameDefCopyFirst => example/RenameDefCopyFirst#
        |[1:43..1:44): f <= ma53/O.f().
        |[1:45..1:46): x <= ma53/O.f$impl().(x)
+       |[1:45..1:46): x <= ma53/O.f().(x)
        |[1:48..1:51): Int => scala/Int#
        |[1:61..1:62): y <= local0
        |[1:65..1:66): x => ma53/O.f$impl().(x)
@@ -1636,6 +1641,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:20..1:36): PrependForwarder => example/PrependForwarder#
        |[1:41..1:42): f <= ma54/O.f().
        |[1:43..1:44): x <= ma54/O.f$fwd().(x)
+       |[1:43..1:44): x <= ma54/O.f().(x)
        |[1:46..1:49): Int => scala/Int#
        |[1:59..1:60): y <= local0
        |[1:63..1:64): x => ma54/O.f().(x)
@@ -1688,6 +1694,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:12..1:19): example => example/
        |[1:20..1:35): AppendForwarder => example/AppendForwarder#
        |[1:40..1:41): f <= ma55/O.f().
+       |[1:42..1:43): x <= ma55/O.f$fwd().(x)
        |[1:42..1:43): x <= ma55/O.f().(x)
        |[1:45..1:48): Int => scala/Int#
        |[1:58..1:59): y <= local0
@@ -1739,6 +1746,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:30..1:39): RenameDef => example/RenameDef#
        |[1:44..1:45): f <= local0
        |[1:46..1:47): x <= local1
+       |[1:46..1:47): x <= local3
        |[1:49..1:52): Int => scala/Int#
        |[1:56..1:57): x => local3
        |[1:58..1:59): + => scala/Int#`+`(+4).
@@ -1759,6 +1767,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[2:3..2:10): example => example/
        |[2:11..2:20): RenameDef => example/RenameDef#
        |[2:25..2:26): f <= ma57/O.f().
+       |[2:27..2:28): x <= ma57/O.f$impl().(x)
        |[2:27..2:28): x <= ma57/O.f().(x)
        |[2:30..2:33): Int => scala/Int#
        |[2:43..2:44): g <= local0
@@ -1787,7 +1796,9 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:12..1:19): example => example/
        |[1:20..1:36): RenameGenericDef => example/RenameGenericDef#
        |[1:41..1:42): f <= ma58/O.f().
+       |[1:43..1:44): T <= ma58/O.f$impl().[T]
        |[1:43..1:44): T <= ma58/O.f().[T]
+       |[1:46..1:47): x <= ma58/O.f$impl().(x)
        |[1:46..1:47): x <= ma58/O.f().(x)
        |[1:49..1:50): T => ma58/O.f().[T]
        |[1:53..1:59): Option => scala/Option#
@@ -1816,6 +1827,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:20..1:36): PrependForwarder => example/PrependForwarder#
        |[1:41..1:42): f <= ma59/O.f().
        |[1:43..1:44): x <= ma59/O.f$fwd().(x)
+       |[1:43..1:44): x <= ma59/O.f().(x)
        |[1:46..1:49): Int => scala/Int#
        |[1:59..1:60): y <= local0
        |[1:63..1:64): x => ma59/O.f().(x)
@@ -1840,6 +1852,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:12..1:19): example => example/
        |[1:20..1:35): AppendForwarder => example/AppendForwarder#
        |[1:40..1:41): f <= ma60/O.f().
+       |[1:42..1:43): x <= ma60/O.f$fwd().(x)
        |[1:42..1:43): x <= ma60/O.f().(x)
        |[1:45..1:48): Int => scala/Int#
        |[1:58..1:59): y <= local0
@@ -1890,6 +1903,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:12..1:19): example => example/
        |[1:20..1:36): RenameDefWrapped => example/RenameDefWrapped#
        |[1:41..1:42): f <= ma62/O.f().
+       |[1:43..1:44): x <= ma62/O.f$impl().(x)
        |[1:43..1:44): x <= ma62/O.f().(x)
        |[1:46..1:49): Int => scala/Int#
        |[1:53..1:54): x => ma62/O.f$impl().(x)
@@ -1913,9 +1927,11 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:9..1:23): CompanionApply => example/CompanionApply#
        |[1:30..1:31): B <= ma63/B#
        |[1:32..1:33): T <= ma63/B#[T]
+       |[1:32..1:33): T <= ma63/B.apply().[T]
        |[1:34..1:34):  <= ma63/B#`<init>`().
        |[1:35..1:36): t <= ma63/B#`<init>`().(t)
        |[1:35..1:36): t <= ma63/B#t.
+       |[1:35..1:36): t <= ma63/B.apply().(t)
        |[1:38..1:39): T => ma63/B#[T]
        |[2:7..2:8): U <= ma63/U.
        |[2:15..2:16): g <= ma63/U.g().
@@ -1939,6 +1955,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:33..1:34): a <= ma64/C#a.
        |[1:36..1:39): Int => scala/Int#
        |[1:47..1:48): f <= ma64/C#f().
+       |[1:49..1:50): x <= ma64/C#f$impl().(x)
        |[1:49..1:50): x <= ma64/C#f().(x)
        |[1:52..1:55): Int => scala/Int#
        |[1:59..1:60): x => ma64/C#f$impl().(x)
@@ -1965,8 +1982,10 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:12..1:19): example => example/
        |[1:20..1:36): RenameGenericDef => example/RenameGenericDef#
        |[1:41..1:42): f <= ma65/O.f().
+       |[1:43..1:44): T <= ma65/O.f$impl().[T]
        |[1:43..1:44): T <= ma65/O.f().[T]
        |[1:46..1:54): Ordering => scala/package.Ordering#
+       |[1:56..1:57): x <= ma65/O.f$impl().(x)
        |[1:56..1:57): x <= ma65/O.f().(x)
        |[1:59..1:60): T => ma65/O.f().[T]
        |[1:64..1:65): x => ma65/O.f$impl().(x)
@@ -1983,6 +2002,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:12..1:19): example => example/
        |[1:20..1:29): RenameDef => example/RenameDef#
        |[1:34..1:35): f <= ma66/O.f().
+       |[1:36..1:38): xs <= ma66/O.f$impl().(xs)
        |[1:36..1:38): xs <= ma66/O.f().(xs)
        |[1:40..1:44): List => scala/package.List#
        |[1:45..1:48): Int => scala/Int#
