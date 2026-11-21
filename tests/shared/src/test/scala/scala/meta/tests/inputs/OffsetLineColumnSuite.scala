@@ -6,6 +6,7 @@ import scala.meta._
 import munit._
 
 class OffsetLineColumnSuite extends FunSuite {
+
   private def test(s: String)(expected: String)(implicit loc: munit.Location): Unit = {
     val testName = if (s != "") s.replace("\n", "\\n").replace("\r", "\\r") else "empty string"
     super.test(testName) {
@@ -122,4 +123,14 @@ class OffsetLineColumnSuite extends FunSuite {
     val obtained = ranges.map { case (start, end) => Position.Range(input, start, end).hasNewlines }
     assertEquals(obtained, List(false, true, false, true, true))
   }
+
+  super.test("hasNewlinesBeforeEnd") {
+    val input = Input.String("foo\nbar")
+    val ranges = List(0 -> 3, 0 -> 4, 4 -> 4, 2 -> 5, 0 -> 7)
+    val obtained = ranges.map { case (start, end) =>
+      Position.Range(input, start, end).hasNewlinesBeforeEnd
+    }
+    assertEquals(obtained, List(false, false, false, true, true))
+  }
+
 }
