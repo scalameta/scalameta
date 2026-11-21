@@ -2014,6 +2014,7 @@ trait TextDocumentOps {
           case t: g.Function => processFunction(t)
           case t: g.GenericApply => processGenericApply(t)
           case t: g.RefTree => processRefTree(t)
+          case t: g.Block => processBlock(t)
 
           // skip an annotation that scalac added, like `@unchecked` on a desugared match
           case t: g.Annotated if !t.annot.pos.isOpaqueRange => isVisited += t.annot
@@ -2044,41 +2045,6 @@ trait TextDocumentOps {
               case _ =>
             }
             tryFindMtree(gtree)
-          case gblock @ NamedApplyBlock(_) =>
-            // Given the result of NamesDefaults.transformNamedApplication, such as:
-            //    BLOCK: {
-            //      <artifact> val qual$1: helper = test.this.qualifier
-            //      <artifact> val x$1: Int = ao.this.local;
-            //      <artifact> val x$2: Int = 3;
-            //      <artifact> val x$3: Int = ao.this.foo$default$2;
-            //      qual1$.foo(x$1, x$3, x$2)
-            //    }
-            //
-            // Three issues:
-            // 1 - In the case of an explicitly passed argument (ex: x$1 above), the generated ValDef and its RHS
-            //     both have a Position identical to the original argument. We want to avoid matching the original
-            //     argument with this ValDef, which has its own Symbol, and ensure we match it to the RHS.
-            // 2 - In the case of a default-valued argument (ex: x$3 above), the generated ValDef, and several of
-            //     its RHS sub-trees, have Positions starting and ending at the start of the method name in the
-            //     original source. We want to avoid matching any of these w/ our "tryMstart" implementations.
-            // 3 - In the case of a non-stable qualifier reference, a qual$ ValDef is generated. In these cases
-            //     the Select(qual$1, foo) has a position which corresponds to `.foo` in the originating source
-            //     (the period is captured).
-            //
-            // Current Solutions:
-            // For case #1, explicitly traverse the ValDef RHS, to claim the proper association before general
-            // recursion continues.
-            // For case #2, explicitly traverse the function invocation, to claim the proper association before
-            // recursion continues.
-            // For case #3, we do not change traversal order, but have added an additional end-only match case
-            // for Select's against a qual$ Ident.
-            gblock.stats.foreach {
-              case t: g.ValDef =>
-                val rhs = t.rhs
-                if (rhs.symbol == null || !rhs.symbol.isDefaultGetter) traverse(rhs)
-              case _ =>
-            }
-            traverse(gblock.expr)
           case t: g.Template =>
             // context bounds could be moved into body
             t.body.foreach {
@@ -2232,6 +2198,44 @@ trait TextDocumentOps {
             else tryFindMtree(t)
           case _ => tryFindMtree(t)
         }
+
+        private def processBlock(t: g.Block): Unit =
+          /* Given the result of NamesDefaults.transformNamedApplication, such as:
+           *    BLOCK: {
+           *      <artifact> val qual$1: helper = test.this.qualifier
+           *      <artifact> val x$1: Int = ao.this.local;
+           *      <artifact> val x$2: Int = 3;
+           *      <artifact> val x$3: Int = ao.this.foo$default$2;
+           *      qual1$.foo(x$1, x$3, x$2)
+           *    }
+           *
+           * Three issues:
+           * 1 - In the case of an explicitly passed argument (ex: x$1 above), the generated ValDef and its RHS
+           *     both have a Position identical to the original argument. We want to avoid matching the original
+           *     argument with this ValDef, which has its own Symbol, and ensure we match it to the RHS.
+           * 2 - In the case of a default-valued argument (ex: x$3 above), the generated ValDef, and several of
+           *     its RHS sub-trees, have Positions starting and ending at the start of the method name in the
+           *     original source. We want to avoid matching any of these w/ our "tryMstart" implementations.
+           * 3 - In the case of a non-stable qualifier reference, a qual$ ValDef is generated. In these cases
+           *     the Select(qual$1, foo) has a position which corresponds to `.foo` in the originating source
+           *     (the period is captured).
+           *
+           * Current Solutions:
+           * For case #1, explicitly traverse the ValDef RHS, to claim the proper association before general
+           * recursion continues.
+           * For case #2, explicitly traverse the function invocation, to claim the proper association before
+           * recursion continues.
+           * For case #3, we do not change traversal order, but have added an additional end-only match case
+           * for Select's against a qual$ Ident. */
+          if (t.attachments.contains[g.analyzer.NamedApplyInfo]) {
+            t.stats.foreach {
+              case t: g.ValDef =>
+                val rhs = t.rhs
+                if (rhs.symbol == null || !rhs.symbol.isDefaultGetter) traverse(rhs)
+              case _ =>
+            }
+            traverse(t.expr)
+          } else tryFindMtree(t)
       }
 
       MyTreeIndexerTraverser(msource)
