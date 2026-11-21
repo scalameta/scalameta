@@ -119,14 +119,14 @@ class DiagnosticSuite extends SemanticdbSuite {
     reporter.error(NoPosition, "boom")
     reporter.reset()
     assertEquals((reporter.errorCount, reporter.warningCount), (0, 0))
-    assertEquals((wrapped.errorCount, wrapped.warningCount, wrapped.infos.size), (1, 1, 2))
+    assertEquals((wrapped.errorCount, wrapped.warningCount, wrapped.infos.size), (0, 0, 0))
   }
 
   test("SemanticdbReporter: cancel, then reset") {
     val wrapped = new Wrapped
     val reporter = new SemanticdbReporter(wrapped)
     reporter.cancelled = true
-    assertEquals(wrapped.cancelled, false)
+    assertEquals(wrapped.cancelled, true)
     reporter.reset()
     assertEquals(wrapped.cancelled, false)
   }
@@ -136,7 +136,7 @@ class DiagnosticSuite extends SemanticdbSuite {
     val reporter = new SemanticdbReporter(wrapped)
     reporter.flush()
     reporter.finish()
-    assertEquals(wrapped.calls.result(), Nil)
+    assertEquals(wrapped.calls.result(), List("flush", "finish"))
   }
 
 }

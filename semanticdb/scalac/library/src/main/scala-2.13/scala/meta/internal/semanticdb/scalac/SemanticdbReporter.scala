@@ -22,6 +22,26 @@ class SemanticdbReporter(underlying: FilteringReporter)
     super.increment(severity)
     underlying.increment(severity)
   }
+
+  override def reset(): Unit = {
+    super.reset()
+    underlying.reset()
+  }
+
+  override def cancelled_=(b: Boolean): Unit = {
+    super.cancelled_=(b)
+    underlying.cancelled = b
+  }
+
+  override def flush(): Unit = {
+    super.flush()
+    underlying.flush()
+  }
+
+  override def finish(): Unit = {
+    super.finish()
+    underlying.finish()
+  }
 }
 object SemanticdbReporter {
   def defaultSettings(s: Settings): Settings = {
