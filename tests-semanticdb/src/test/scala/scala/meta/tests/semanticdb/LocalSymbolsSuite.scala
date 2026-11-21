@@ -3881,9 +3881,9 @@ class LocalSymbolsSuite extends FunSuite {
            |  x$1 => local6
            |  Any => scala/Any#
            |  Boolean => scala/Boolean#
-           |local7 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+           |local7 => synthetic override method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
            |  String => java/lang/String#
-           |local8 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+           |local8 => synthetic override method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
            |  x$1 => local9
            |  Any => scala/Any#
            |  Boolean => scala/Boolean#
@@ -3940,9 +3940,9 @@ class LocalSymbolsSuite extends FunSuite {
            |  x$1 => local27
            |  Any => scala/Any#
            |  Boolean => scala/Boolean#
-           |local28 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+           |local28 => synthetic override method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
            |  String => java/lang/String#
-           |local29 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+           |local29 => synthetic override method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
            |  x$1 => local30
            |  Any => scala/Any#
            |  Boolean => scala/Boolean#
@@ -3957,7 +3957,7 @@ class LocalSymbolsSuite extends FunSuite {
            |  AnyRef => scala/AnyRef#
            |local33 => typeparam T
            |local34 => typeparam T
-           |local35 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+           |local35 => synthetic final override method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
            |  String => java/lang/String#
            |local36 => synthetic method apply[+T](t: T): k[T]
            |  T => local1
@@ -3981,9 +3981,9 @@ class LocalSymbolsSuite extends FunSuite {
            |  x$1 => local6
            |  Any => scala/Any#
            |  Boolean => scala/Boolean#
-           |local7 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+           |local7 => synthetic override method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
            |  String => java/lang/String#
-           |local8 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+           |local8 => synthetic override method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
            |  x$1 => local9
            |  Any => scala/Any#
            |  Boolean => scala/Boolean#
@@ -4042,9 +4042,9 @@ class LocalSymbolsSuite extends FunSuite {
            |  x$1 => local28
            |  Any => scala/Any#
            |  Boolean => scala/Boolean#
-           |local29 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+           |local29 => synthetic override method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
            |  String => java/lang/String#
-           |local30 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+           |local30 => synthetic override method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
            |  x$1 => local31
            |  Any => scala/Any#
            |  Boolean => scala/Boolean#
@@ -4061,7 +4061,7 @@ class LocalSymbolsSuite extends FunSuite {
            |  AnyRef => scala/AnyRef#
            |local35 => typeparam T
            |local36 => typeparam T
-           |local37 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+           |local37 => synthetic final override method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
            |  String => java/lang/String#
            |local38 => synthetic method apply[+T](t: T): k[T]
            |  T => local1
@@ -4099,9 +4099,9 @@ class LocalSymbolsSuite extends FunSuite {
          |  x$1 => local3
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
-         |local4 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |local4 => synthetic override method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local5 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |local5 => synthetic override method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
          |  x$1 => local6
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
@@ -4113,7 +4113,7 @@ class LocalSymbolsSuite extends FunSuite {
          |  x$1 => local10
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
-         |local11 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |local11 => synthetic override method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
          |local12 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
          |  x$1 => local13
@@ -4123,9 +4123,9 @@ class LocalSymbolsSuite extends FunSuite {
          |  x$1 => local15
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
-         |local16 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |local16 => synthetic override method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local17 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |local17 => synthetic override method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
          |  x$1 => local18
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
@@ -4137,17 +4137,17 @@ class LocalSymbolsSuite extends FunSuite {
          |  x$1 => local22
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
-         |local23 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |local23 => synthetic override method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local24 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |local24 => synthetic override method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
          |  x$1 => local25
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
-         |local26 => synthetic final method toString(): String <: scala/Function1#toString()., java/lang/Object#toString()., scala/Any#toString().
+         |local26 => synthetic final override method toString(): String <: scala/Function1#toString()., java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local27 => synthetic final method toString(): String <: scala/Function0#toString()., java/lang/Object#toString()., scala/Any#toString().
+         |local27 => synthetic final override method toString(): String <: scala/Function0#toString()., java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local28 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |local28 => synthetic final override method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
          |""".stripMargin,
     )
@@ -4183,7 +4183,7 @@ class LocalSymbolsSuite extends FunSuite {
   test("a partial function literal") {
     assertNoDiff(
       infos(localDefinitionsDoc, "applyOrElse", "isDefinedAt"),
-      """|local0 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+      """|local0 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local1
          |  Int => scala/Int#
          |  B1 => local2
@@ -4340,9 +4340,9 @@ class LocalSymbolsSuite extends FunSuite {
          |  x$1 => local4
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
-         |local5 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |local5 => synthetic override method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local6 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |local6 => synthetic override method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
          |  x$1 => local7
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
@@ -5589,7 +5589,7 @@ class LocalSymbolsSuite extends FunSuite {
            |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
            |  Int => scala/Int#
            |  Serializable => scala/Serializable#
-           |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+           |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
            |  A1 => local7
            |  Int => scala/Int#
            |  B1 => local6
@@ -5631,7 +5631,7 @@ class LocalSymbolsSuite extends FunSuite {
            |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
            |  Int => scala/Int#
            |  Serializable => java/io/Serializable#
-           |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+           |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
            |  A1 => local7
            |  Int => scala/Int#
            |  B1 => local6

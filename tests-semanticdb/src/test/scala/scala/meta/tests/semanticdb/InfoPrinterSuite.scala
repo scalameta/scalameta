@@ -119,7 +119,7 @@ class InfoPrinterSuite extends FunSuite {
     val obtained = Print.info(Format.Compact, info, emptyPrinterSymtab)
     assertNoDiff(
       obtained,
-      """_empty_/Declaration# => synthetic abstract final sealed implicit lazy case covariant contravariant val var static primary enum default given inline open transparent infix opaque extension native synchronized transient volatile class Declaration""",
+      """_empty_/Declaration# => synthetic abstract final override sealed implicit lazy case covariant contravariant val var static primary enum default given inline open transparent infix opaque extension native synchronized transient volatile class Declaration""",
     )
   }
 
@@ -188,14 +188,14 @@ class InfoPrinterSuite extends FunSuite {
     )
     assertNoDiff(
       infos.map(Print.info(Format.Compact, _, emptyPrinterSymtab)).mkString("\n"),
-      """|_empty_/C#plain(). => method plain
-         |_empty_/C#finalMethod(). => final method finalMethod
-         |_empty_/C#stacked(). => abstract method stacked""".stripMargin,
+      """|_empty_/C#plain(). => override method plain
+         |_empty_/C#finalMethod(). => final override method finalMethod
+         |_empty_/C#stacked(). => abstract override method stacked""".stripMargin,
     )
     val tpe = s.StructuralType(declarations = Some(s.Scope(hardlinks = infos)))
     assertNoDiff(
       Print.tpe(Format.Compact, tpe, emptyPrinterSymtab),
-      "{ def plain; final def finalMethod; def stacked }",
+      "{ override def plain; final override def finalMethod; override def stacked }",
     )
   }
 

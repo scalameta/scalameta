@@ -64,7 +64,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -94,7 +94,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local10 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Int => scala/Int#
          |  B1 => local14
@@ -142,7 +142,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -172,7 +172,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local10 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Int => scala/Int#
          |  B1 => local14
@@ -284,7 +284,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -314,7 +314,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local10 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Int => scala/Int#
          |  B1 => local14
@@ -355,7 +355,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -385,7 +385,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local10 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Int => scala/Int#
          |  B1 => local14
@@ -430,7 +430,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -539,7 +539,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local3 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local3 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local8
          |  Int => scala/Int#
          |  B1 => local7
@@ -599,7 +599,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local3 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local3 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local8
          |  Int => scala/Int#
          |  B1 => local7
@@ -653,7 +653,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -681,7 +681,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local10 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local10 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local15
        |  Int => scala/Int#
        |  B1 => local14
@@ -798,7 +798,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -892,7 +892,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -963,7 +963,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -1036,7 +1036,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  String => scala/Predef.String#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: String](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: String](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -1115,7 +1115,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -1143,7 +1143,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local10 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local10 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local15
        |  Int => scala/Int#
        |  B1 => local14
@@ -1218,7 +1218,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -1285,7 +1285,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -1360,7 +1360,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -1431,7 +1431,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -1459,7 +1459,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local9 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local9 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local14
        |  Int => scala/Int#
        |  B1 => local13
@@ -1487,7 +1487,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local17 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local17 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local22
        |  Int => scala/Int#
        |  B1 => local21
@@ -1584,7 +1584,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  String => scala/Predef.String#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: List[Int], B1 >: String](xs: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: List[Int], B1 >: String](xs: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  List => scala/package.List#
        |  Int => scala/Int#
@@ -1620,7 +1620,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  String => scala/Predef.String#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local11 => final method applyOrElse[A1 <: String, B1 >: Int](s: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local11 => final override method applyOrElse[A1 <: String, B1 >: Int](s: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local16
        |  String => scala/Predef.String#
        |  B1 => local15
@@ -1765,7 +1765,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -1793,7 +1793,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local9 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local9 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local14
        |  Int => scala/Int#
        |  B1 => local13
@@ -1821,7 +1821,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local17 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local17 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local22
        |  Int => scala/Int#
        |  B1 => local21
@@ -1850,7 +1850,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  PartialFunction => scala/PartialFunction#
        |  Serializable => java/io/Serializable#
-       |local25 => final method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local25 => final override method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local30
        |  Int => scala/Int#
        |  B1 => local29
@@ -1878,7 +1878,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local32 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local32 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local37
        |  Int => scala/Int#
        |  B1 => local36
@@ -1909,7 +1909,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  PartialFunction => scala/PartialFunction#
        |  Serializable => java/io/Serializable#
-       |local41 => final method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local41 => final override method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local46
        |  Int => scala/Int#
        |  B1 => local45
@@ -1937,7 +1937,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local48 => final method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local48 => final override method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local53
        |  Int => scala/Int#
        |  B1 => local52
@@ -2087,7 +2087,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  String => scala/Predef.String#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: String](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: String](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -2118,7 +2118,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local11 => final method applyOrElse[A1 <: Int, B1 >: Int](x$4: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local11 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$4: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local16
        |  Int => scala/Int#
        |  B1 => local15
@@ -2148,7 +2148,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local20 => final method applyOrElse[A1 <: Int, B1 >: Int](x$6: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local20 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$6: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local25
        |  Int => scala/Int#
        |  B1 => local24
@@ -2179,7 +2179,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  List => scala/package.List#
        |  Serializable => java/io/Serializable#
-       |local29 => final method applyOrElse[A1 <: Int, B1 >: List[Int]](x$8: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local29 => final override method applyOrElse[A1 <: Int, B1 >: List[Int]](x$8: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local34
        |  Int => scala/Int#
        |  B1 => local33
@@ -2214,7 +2214,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  PartialFunction => scala/PartialFunction#
        |  Serializable => java/io/Serializable#
-       |local39 => final method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x$11: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local39 => final override method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x$11: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local44
        |  Int => scala/Int#
        |  B1 => local43
@@ -2244,7 +2244,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local47 => final method applyOrElse[A1 <: Int, B1 >: Int](x$12: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local47 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$12: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local52
        |  Int => scala/Int#
        |  B1 => local51
@@ -2394,7 +2394,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -2422,7 +2422,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local9 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local9 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local14
        |  Int => scala/Int#
        |  B1 => local13
@@ -2452,7 +2452,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local18 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local18 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local23
        |  Int => scala/Int#
        |  B1 => local22
@@ -2482,7 +2482,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local27 => final method applyOrElse[A1 <: Int, B1 >: A1](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local27 => final override method applyOrElse[A1 <: Int, B1 >: A1](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local32
        |  Int => scala/Int#
        |  B1 => local31
@@ -2512,7 +2512,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local36 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local36 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local41
        |  Int => scala/Int#
        |  B1 => local40
@@ -2645,7 +2645,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  List => scala/package.List#
        |  Serializable => java/io/Serializable#
-       |local3 => final method applyOrElse[A1 <: Int, B1 >: List[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local3 => final override method applyOrElse[A1 <: Int, B1 >: List[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local8
        |  Int => scala/Int#
        |  B1 => local7
@@ -2677,7 +2677,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local12 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local12 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local17
        |  Int => scala/Int#
        |  B1 => local16
@@ -2712,7 +2712,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Tuple2 => scala/Tuple2#
        |  Serializable => java/io/Serializable#
-       |local23 => final method applyOrElse[A1 <: Int, B1 >: Tuple2[Int, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local23 => final override method applyOrElse[A1 <: Int, B1 >: Tuple2[Int, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local28
        |  Int => scala/Int#
        |  B1 => local27
@@ -2742,7 +2742,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local31 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local31 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local36
        |  Int => scala/Int#
        |  B1 => local35
@@ -2770,7 +2770,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local39 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local39 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local44
        |  Int => scala/Int#
        |  B1 => local43
@@ -2863,7 +2863,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -2895,7 +2895,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local11 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local11 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local16
          |  Int => scala/Int#
          |  B1 => local15
@@ -2928,7 +2928,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  List => scala/package.List#
          |  Serializable => scala/Serializable#
-         |local21 => final method applyOrElse[A1 <: Int, B1 >: List[Int]](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local21 => final override method applyOrElse[A1 <: Int, B1 >: List[Int]](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local26
          |  Int => scala/Int#
          |  B1 => local25
@@ -2976,7 +2976,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -3008,7 +3008,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local11 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local11 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local16
          |  Int => scala/Int#
          |  B1 => local15
@@ -3041,7 +3041,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  List => scala/package.List#
          |  Serializable => java/io/Serializable#
-         |local21 => final method applyOrElse[A1 <: Int, B1 >: List[Int]](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local21 => final override method applyOrElse[A1 <: Int, B1 >: List[Int]](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local26
          |  Int => scala/Int#
          |  B1 => local25
@@ -3183,7 +3183,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  List => scala/collection/immutable/List#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: List[A1]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: List[A1]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -3213,7 +3213,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local9 => final method applyOrElse[A1 <: Int, B1 >: A1](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local9 => final override method applyOrElse[A1 <: Int, B1 >: A1](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local14
        |  Int => scala/Int#
        |  B1 => local13
@@ -3245,7 +3245,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  List => scala/collection/immutable/List#
        |  Serializable => java/io/Serializable#
-       |local18 => final method applyOrElse[A1 <: Int, B1 >: List[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local18 => final override method applyOrElse[A1 <: Int, B1 >: List[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local23
        |  Int => scala/Int#
        |  B1 => local22
@@ -3275,7 +3275,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local26 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local26 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local31
        |  Int => scala/Int#
        |  B1 => local30
@@ -3330,7 +3330,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local3 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local3 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local8
        |  Int => scala/Int#
        |  B1 => local7
@@ -3361,7 +3361,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Any => scala/Any#
        |  Serializable => java/io/Serializable#
-       |local12 => final method applyOrElse[A1 <: Int, B1 = Any](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local12 => final override method applyOrElse[A1 <: Int, B1 = Any](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local17
        |  Int => scala/Int#
        |  B1 => local16
@@ -3420,7 +3420,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  x => local3
        |  Int => scala/Int#
        |  Boolean => scala/Boolean#
-       |local2 => method applyOrElse[A1 <: Int, B1 >: Int](x: A1, d: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, d: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -3469,7 +3469,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -3497,7 +3497,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local9 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local9 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local14
          |  Int => scala/Int#
          |  B1 => local13
@@ -3525,7 +3525,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local17 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local17 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local22
          |  Int => scala/Int#
          |  B1 => local21
@@ -3566,7 +3566,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -3594,7 +3594,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local9 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local9 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local14
          |  Int => scala/Int#
          |  B1 => local13
@@ -3622,7 +3622,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local17 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local17 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local22
          |  Int => scala/Int#
          |  B1 => local21
@@ -3706,7 +3706,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -3800,7 +3800,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -3882,7 +3882,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  Int => scala/Int#
          |  B1 => local6
@@ -3912,7 +3912,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local11 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local11 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local16
          |  Int => scala/Int#
          |  B1 => local15
@@ -3958,7 +3958,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  Int => scala/Int#
          |  B1 => local6
@@ -3988,7 +3988,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local11 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local11 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local16
          |  Int => scala/Int#
          |  B1 => local15
@@ -4141,7 +4141,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -4240,7 +4240,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local3 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local3 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local8
        |  Int => scala/Int#
        |  B1 => local7
@@ -4270,7 +4270,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local12 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local12 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local17
        |  Int => scala/Int#
        |  B1 => local16
@@ -4300,7 +4300,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local21 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local21 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local26
        |  Int => scala/Int#
        |  B1 => local25
@@ -4330,7 +4330,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local30 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local30 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local35
        |  Int => scala/Int#
        |  B1 => local34
@@ -4360,7 +4360,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local39 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local39 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local44
        |  Int => scala/Int#
        |  B1 => local43
@@ -4548,7 +4548,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -4577,7 +4577,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Unit => scala/Unit#
        |  Serializable => java/io/Serializable#
-       |local9 => final method applyOrElse[A1 <: Int, B1 >: Unit](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local9 => final override method applyOrElse[A1 <: Int, B1 >: Unit](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local14
        |  Int => scala/Int#
        |  B1 => local13
@@ -4609,7 +4609,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Unit => scala/Unit#
        |  Serializable => java/io/Serializable#
-       |local18 => final method applyOrElse[A1 <: Int, B1 >: Unit](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local18 => final override method applyOrElse[A1 <: Int, B1 >: Unit](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local23
        |  Int => scala/Int#
        |  B1 => local22
@@ -4638,7 +4638,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local26 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local26 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local31
        |  Int => scala/Int#
        |  B1 => local30
@@ -4807,7 +4807,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Unit => scala/Unit#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: Unit](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: Unit](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -4837,7 +4837,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Unit => scala/Unit#
        |  Serializable => java/io/Serializable#
-       |local9 => final method applyOrElse[A1 <: Int, B1 >: Unit](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local9 => final override method applyOrElse[A1 <: Int, B1 >: Unit](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local14
        |  Int => scala/Int#
        |  B1 => local13
@@ -4867,7 +4867,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Unit => scala/Unit#
        |  Serializable => java/io/Serializable#
-       |local17 => final method applyOrElse[A1 <: Int, B1 >: Unit](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local17 => final override method applyOrElse[A1 <: Int, B1 >: Unit](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local22
        |  Int => scala/Int#
        |  B1 => local21
@@ -4897,7 +4897,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Unit => scala/Unit#
        |  Serializable => java/io/Serializable#
-       |local25 => final method applyOrElse[A1 <: Int, B1 >: Unit](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local25 => final override method applyOrElse[A1 <: Int, B1 >: Unit](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local30
        |  Int => scala/Int#
        |  B1 => local29
@@ -4928,7 +4928,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local34 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local34 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local39
        |  Int => scala/Int#
        |  B1 => local38
@@ -4958,7 +4958,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local43 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local43 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local48
        |  Int => scala/Int#
        |  B1 => local47
@@ -5267,7 +5267,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local3 => final method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local3 => final override method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local8
              |  Int => scala/Int#
              |  B1 => local7
@@ -5293,7 +5293,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local10 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local10 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local15
              |  Int => scala/Int#
              |  B1 => local14
@@ -5359,7 +5359,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local3 => final method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local3 => final override method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local8
          |  Int => scala/Int#
          |  B1 => local7
@@ -5386,7 +5386,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  ann => _empty_/t210.ann#
          |  Serializable => java/io/Serializable#
-         |local10 => final method applyOrElse[A1 <: Int @ann, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Int @ann, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Int => scala/Int#
          |  ann => _empty_/t210.ann#
@@ -5415,7 +5415,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local17 => final method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local17 => final override method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local22
          |  Int => scala/Int#
          |  B1 => local21
@@ -6104,7 +6104,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Tuple2 => scala/Tuple2#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: Tuple2[A1, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: Tuple2[A1, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -6635,7 +6635,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -6667,7 +6667,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local11 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local11 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local16
          |  Int => scala/Int#
          |  B1 => local15
@@ -6699,7 +6699,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local21 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local21 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local26
          |  Int => scala/Int#
          |  B1 => local25
@@ -6757,7 +6757,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -6789,7 +6789,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local11 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local11 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local16
          |  Int => scala/Int#
          |  B1 => local15
@@ -6821,7 +6821,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local21 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local21 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local26
          |  Int => scala/Int#
          |  B1 => local25
@@ -6877,7 +6877,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  List => scala/package.List#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: List[Int], B1 >: List[Int]](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: List[Int], B1 >: List[Int]](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  List => scala/package.List#
        |  Int => scala/Int#
@@ -6913,7 +6913,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  List => scala/package.List#
        |  Serializable => java/io/Serializable#
-       |local10 => final method applyOrElse[A1 <: Int, B1 >: List[Int]](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local10 => final override method applyOrElse[A1 <: Int, B1 >: List[Int]](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local15
        |  Int => scala/Int#
        |  B1 => local14
@@ -6946,7 +6946,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  List => scala/package.List#
        |  Serializable => java/io/Serializable#
-       |local19 => final method applyOrElse[A1 <: Int, B1 >: List[Int]](x$3: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local19 => final override method applyOrElse[A1 <: Int, B1 >: List[Int]](x$3: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local24
        |  Int => scala/Int#
        |  B1 => local23
@@ -7019,7 +7019,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -7050,7 +7050,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => scala/package.List#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local10 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  List => scala/package.List#
          |  Int => scala/Int#
@@ -7085,7 +7085,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local19 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  Int => scala/Int#
          |  B1 => local23
@@ -7115,7 +7115,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local28 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  Int => scala/Int#
          |  B1 => local32
@@ -7170,7 +7170,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local6
              |  Int => scala/Int#
              |  B1 => local5
@@ -7201,7 +7201,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local10 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local10 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local15
              |  List => scala/package.List#
              |  Int => scala/Int#
@@ -7236,7 +7236,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local19 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local19 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local24
              |  Int => scala/Int#
              |  B1 => local23
@@ -7266,7 +7266,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local28 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local28 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local33
              |  Int => scala/Int#
              |  B1 => local32
@@ -7320,7 +7320,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  I => _empty_/t218.I#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: I, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: I, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  I => _empty_/t218.I#
          |  B1 => local5
@@ -7352,7 +7352,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Seq => scala/package.Seq#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local10 => final method applyOrElse[A1 <: Seq[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Seq[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Seq => scala/package.Seq#
          |  Int => scala/Int#
@@ -7388,7 +7388,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  ann => _empty_/t218.ann#
          |  Serializable => java/io/Serializable#
-         |local19 => final method applyOrElse[A1 <: Int @ann, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: Int @ann, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  Int => scala/Int#
          |  ann => _empty_/t218.ann#
@@ -7424,7 +7424,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  I => _empty_/t218.I#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local28 => final method applyOrElse[A1 <: I, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: I, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  I => _empty_/t218.I#
          |  B1 => local32
@@ -7518,7 +7518,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local7
              |  Int => scala/Int#
              |  B1 => local6
@@ -7547,7 +7547,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local10 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local10 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local15
              |  List => scala/package.List#
              |  Int => scala/Int#
@@ -7579,7 +7579,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local18 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local18 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local23
              |  Int => scala/Int#
              |  B1 => local22
@@ -7607,7 +7607,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local26 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local26 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local31
              |  Int => scala/Int#
              |  B1 => local30
@@ -7636,7 +7636,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local34 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local34 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local39
              |  List => scala/package.List#
              |  Int => scala/Int#
@@ -7668,7 +7668,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local42 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local42 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local47
              |  Int => scala/Int#
              |  B1 => local46
@@ -7697,7 +7697,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  B => _empty_/t219.pg().[B]
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local50 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local50 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local55
              |  B => _empty_/t219.pg().[B]
              |  B1 => local54
@@ -7770,7 +7770,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  I => _empty_/t219.I#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local2 => final method applyOrElse[A1 <: I, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: I, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  I => _empty_/t219.I#
          |  B1 => local6
@@ -7800,7 +7800,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Seq => scala/package.Seq#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local10 => final method applyOrElse[A1 <: Seq[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Seq[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Seq => scala/package.Seq#
          |  Int => scala/Int#
@@ -7833,7 +7833,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  ann => _empty_/t219.ann#
          |  Serializable => java/io/Serializable#
-         |local18 => final method applyOrElse[A1 <: Int @ann, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local18 => final override method applyOrElse[A1 <: Int @ann, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local23
          |  Int => scala/Int#
          |  ann => _empty_/t219.ann#
@@ -7866,7 +7866,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  I => _empty_/t219.I#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local26 => final method applyOrElse[A1 <: I, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local26 => final override method applyOrElse[A1 <: I, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local31
          |  I => _empty_/t219.I#
          |  B1 => local30
@@ -7896,7 +7896,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Seq => scala/package.Seq#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local34 => final method applyOrElse[A1 <: Seq[Int], B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local34 => final override method applyOrElse[A1 <: Seq[Int], B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local39
          |  Seq => scala/package.Seq#
          |  Int => scala/Int#
@@ -7929,7 +7929,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  I => _empty_/t219.I#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local42 => final method applyOrElse[A1 <: I, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local42 => final override method applyOrElse[A1 <: I, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local47
          |  I => _empty_/t219.I#
          |  B1 => local46
@@ -7959,7 +7959,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  A => _empty_/t219.pg().[A]
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local50 => final method applyOrElse[A1 <: A, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local50 => final override method applyOrElse[A1 <: A, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local55
          |  A => _empty_/t219.pg().[A]
          |  B1 => local54
@@ -8402,7 +8402,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => scala/package.List#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  List => scala/package.List#
          |  Int => scala/Int#
@@ -8437,7 +8437,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local10 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Int => scala/Int#
          |  B1 => local14
@@ -8467,7 +8467,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local19 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  Int => scala/Int#
          |  B1 => local23
@@ -8498,7 +8498,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => scala/package.List#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local28 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  List => scala/package.List#
          |  Int => scala/Int#
@@ -8534,7 +8534,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => scala/package.List#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local37 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local37 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local42
          |  List => scala/package.List#
          |  Int => scala/Int#
@@ -8570,7 +8570,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => scala/package.List#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local46 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local46 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local51
          |  List => scala/package.List#
          |  Int => scala/Int#
@@ -8606,7 +8606,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Function1 => scala/Function1#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local55 => final method applyOrElse[A1 <: Function1[Int, Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local55 => final override method applyOrElse[A1 <: Function1[Int, Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local60
          |  Function1 => scala/Function1#
          |  Int => scala/Int#
@@ -8641,7 +8641,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local64 => final method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local64 => final override method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local69
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
@@ -8677,7 +8677,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t221.k().[B]
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local73 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local73 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local78
          |  B => _empty_/t221.k().[B]
          |  B1 => local77
@@ -8757,7 +8757,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local1 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local1 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local6
              |  List => scala/package.List#
              |  Int => scala/Int#
@@ -8792,7 +8792,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local10 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local10 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local15
              |  Int => scala/Int#
              |  B1 => local14
@@ -8822,7 +8822,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local19 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local19 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local24
              |  Int => scala/Int#
              |  B1 => local23
@@ -8853,7 +8853,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local28 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local28 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local33
              |  List => scala/package.List#
              |  Int => scala/Int#
@@ -8889,7 +8889,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local37 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local37 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local42
              |  List => scala/package.List#
              |  Int => scala/Int#
@@ -8925,7 +8925,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local46 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local46 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local51
              |  List => scala/package.List#
              |  Int => scala/Int#
@@ -8961,7 +8961,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Function1 => scala/Function1#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local55 => final method applyOrElse[A1 <: Function1[Int, Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local55 => final override method applyOrElse[A1 <: Function1[Int, Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local60
              |  Function1 => scala/Function1#
              |  Int => scala/Int#
@@ -8996,7 +8996,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Tuple2 => scala/Tuple2#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local64 => final method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local64 => final override method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local69
              |  Tuple2 => scala/Tuple2#
              |  Int => scala/Int#
@@ -9032,7 +9032,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  B => _empty_/t221.k().[B]
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local73 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local73 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local78
              |  B => _empty_/t221.k().[B]
              |  B1 => local77
@@ -9110,7 +9110,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  L => _empty_/t221.L#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: L[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: L[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  L => _empty_/t221.L#
          |  Int => scala/Int#
@@ -9146,7 +9146,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  I => _empty_/t221.I#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local10 => final method applyOrElse[A1 <: I, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: I, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  I => _empty_/t221.I#
          |  B1 => local14
@@ -9178,7 +9178,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  I => _empty_/t221.I#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local19 => final method applyOrElse[A1 <: I, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: I, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  I => _empty_/t221.I#
          |  B1 => local23
@@ -9210,7 +9210,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Seq => scala/package.Seq#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local28 => final method applyOrElse[A1 <: Seq[Int], B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: Seq[Int], B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  Seq => scala/package.Seq#
          |  Int => scala/Int#
@@ -9246,7 +9246,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Seq => scala/collection/Seq#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local37 => final method applyOrElse[A1 <: Seq[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local37 => final override method applyOrElse[A1 <: Seq[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local42
          |  Seq => scala/collection/Seq#
          |  Int => scala/Int#
@@ -9284,7 +9284,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
          |local46 => abstract type _
-         |local47 => final method applyOrElse[A1 <: List[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local47 => final override method applyOrElse[A1 <: List[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local52
          |  List => scala/package.List#
          |  _ => local46
@@ -9321,7 +9321,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Function1 => scala/Function1#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local56 => final method applyOrElse[A1 <: Function1[Int, Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local56 => final override method applyOrElse[A1 <: Function1[Int, Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local61
          |  Function1 => scala/Function1#
          |  Int => scala/Int#
@@ -9356,7 +9356,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local65 => final method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local65 => final override method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local70
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
@@ -9392,7 +9392,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  A => _empty_/t221.k().[A]
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local74 => final method applyOrElse[A1 <: A, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local74 => final override method applyOrElse[A1 <: A, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local79
          |  A => _empty_/t221.k().[A]
          |  B1 => local78
@@ -9990,7 +9990,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -10024,7 +10024,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local12 => final method applyOrElse[A1 <: Int, B1 >: Int](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local12 => final override method applyOrElse[A1 <: Int, B1 >: Int](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local17
        |  Int => scala/Int#
        |  B1 => local16
@@ -10057,7 +10057,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local22 => final method applyOrElse[A1 <: Int, B1 >: A1](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local22 => final override method applyOrElse[A1 <: Int, B1 >: A1](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local27
        |  Int => scala/Int#
        |  B1 => local26
@@ -10087,7 +10087,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local31 => final method applyOrElse[A1 <: Int, B1 >: Int](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local31 => final override method applyOrElse[A1 <: Int, B1 >: Int](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local36
        |  Int => scala/Int#
        |  B1 => local35
@@ -10246,7 +10246,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local2 => final method applyOrElse[A1 <: Int, B1 >: A1](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: Int, B1 >: A1](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  Int => scala/Int#
          |  B1 => local6
@@ -10282,7 +10282,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local13 => final method applyOrElse[A1 <: Int, B1 >: A1](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local13 => final override method applyOrElse[A1 <: Int, B1 >: A1](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local18
          |  Int => scala/Int#
          |  B1 => local17
@@ -10317,7 +10317,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local24 => final method applyOrElse[A1 <: Int, B1 >: A1](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local24 => final override method applyOrElse[A1 <: Int, B1 >: A1](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local29
          |  Int => scala/Int#
          |  B1 => local28
@@ -10349,7 +10349,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local34 => final method applyOrElse[A1 <: Int, B1 >: Int](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local34 => final override method applyOrElse[A1 <: Int, B1 >: Int](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local39
          |  Int => scala/Int#
          |  B1 => local38
@@ -10397,7 +10397,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local2 => final method applyOrElse[A1 <: Int, B1 >: A1](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: Int, B1 >: A1](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  Int => scala/Int#
          |  B1 => local6
@@ -10433,7 +10433,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local13 => final method applyOrElse[A1 <: Int, B1 >: A1](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local13 => final override method applyOrElse[A1 <: Int, B1 >: A1](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local18
          |  Int => scala/Int#
          |  B1 => local17
@@ -10468,7 +10468,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local24 => final method applyOrElse[A1 <: Int, B1 >: A1](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local24 => final override method applyOrElse[A1 <: Int, B1 >: A1](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local29
          |  Int => scala/Int#
          |  B1 => local28
@@ -10500,7 +10500,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local34 => final method applyOrElse[A1 <: Int, B1 >: Int](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local34 => final override method applyOrElse[A1 <: Int, B1 >: Int](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local39
          |  Int => scala/Int#
          |  B1 => local38
@@ -10763,7 +10763,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  Boolean => scala/Boolean#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Boolean](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Boolean](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -10794,7 +10794,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local10 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Int => scala/Int#
          |  B1 => local14
@@ -10824,7 +10824,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local19 => final method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  Int => scala/Int#
          |  B1 => local23
@@ -10855,7 +10855,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  Boolean => scala/Boolean#
          |  Serializable => scala/Serializable#
-         |local28 => final method applyOrElse[A1 <: Int, B1 >: Boolean](check$ifrefutable$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: Int, B1 >: Boolean](check$ifrefutable$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  Int => scala/Int#
          |  B1 => local32
@@ -10886,7 +10886,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local37 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local37 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local42
          |  Int => scala/Int#
          |  B1 => local41
@@ -10966,7 +10966,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  Boolean => scala/Boolean#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Boolean](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Boolean](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -10997,7 +10997,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local10 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Int => scala/Int#
          |  B1 => local14
@@ -11027,7 +11027,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local19 => final method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  Int => scala/Int#
          |  B1 => local23
@@ -11058,7 +11058,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  Boolean => scala/Boolean#
          |  Serializable => java/io/Serializable#
-         |local28 => final method applyOrElse[A1 <: Int, B1 >: Boolean](check$ifrefutable$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: Int, B1 >: Boolean](check$ifrefutable$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  Int => scala/Int#
          |  B1 => local32
@@ -11089,7 +11089,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local37 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local37 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local42
          |  Int => scala/Int#
          |  B1 => local41
@@ -11467,7 +11467,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => _empty_/t231.o.Int#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => _empty_/t231.o.Int#
          |  B1 => local5
@@ -11497,7 +11497,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => scala/package.List#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local9 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local9 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local14
          |  List => scala/package.List#
          |  Int => scala/Int#
@@ -11567,7 +11567,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => _empty_/t231.Int#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => _empty_/t231.Int#
          |  B1 => local5
@@ -11597,7 +11597,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => _empty_/t231.List#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local9 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local9 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local14
          |  List => _empty_/t231.List#
          |  Int => scala/Int#
@@ -11817,7 +11817,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => _empty_/t232.o.Int#
              |  Int => scala/Int#
              |  Serializable => scala/Serializable#
-             |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local6
              |  Int => _empty_/t232.o.Int#
              |  B1 => local5
@@ -11847,7 +11847,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  Int => scala/Int#
              |  Serializable => scala/Serializable#
-             |local9 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local9 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local14
              |  List => scala/package.List#
              |  Int => scala/Int#
@@ -11923,7 +11923,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => _empty_/t232.o.Int#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local6
              |  Int => _empty_/t232.o.Int#
              |  B1 => local5
@@ -11953,7 +11953,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local9 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local9 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local14
              |  List => scala/package.List#
              |  Int => scala/Int#
@@ -12029,7 +12029,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => _empty_/t232.Int#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => _empty_/t232.Int#
          |  B1 => local5
@@ -12059,7 +12059,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => _empty_/t232.List#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local9 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local9 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local14
          |  List => _empty_/t232.List#
          |  Int => scala/Int#
@@ -12561,7 +12561,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => java/util/List#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  List => java/util/List#
          |  Int => scala/Int#
@@ -12609,7 +12609,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => java/util/List#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  List => java/util/List#
          |  Int => scala/Int#
@@ -12733,7 +12733,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |  Serializable => scala/Serializable#
              |local1 => synthetic abstract type _
-             |local2 => final method applyOrElse[A1 <: List[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local2 => final override method applyOrElse[A1 <: List[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local7
              |  List => scala/package.List#
              |  _ => local1
@@ -12788,7 +12788,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
              |local1 => synthetic abstract type _
-             |local2 => final method applyOrElse[A1 <: List[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local2 => final override method applyOrElse[A1 <: List[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local7
              |  List => scala/package.List#
              |  _ => local1
@@ -12843,7 +12843,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
          |local1 => abstract type _
-         |local2 => final method applyOrElse[A1 <: List[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: List[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  List => scala/package.List#
          |  _ => local1
@@ -12970,7 +12970,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -13001,7 +13001,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  String => scala/Predef.String#
          |  Serializable => scala/Serializable#
-         |local10 => final method applyOrElse[A1 <: Int, B1 >: String](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Int, B1 >: String](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Int => scala/Int#
          |  B1 => local14
@@ -13033,7 +13033,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  PartialFunction => scala/PartialFunction#
          |  Serializable => scala/Serializable#
-         |local19 => final method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  Int => scala/Int#
          |  B1 => local23
@@ -13065,7 +13065,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local28 => final method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  Int => scala/Int#
          |  B1 => local32
@@ -13096,7 +13096,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  PartialFunction => scala/PartialFunction#
          |  Serializable => scala/Serializable#
-         |local37 => final method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x$3: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local37 => final override method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x$3: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local42
          |  Int => scala/Int#
          |  B1 => local41
@@ -13128,7 +13128,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local46 => final method applyOrElse[A1 <: Int, B1 >: Int](x$4: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local46 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$4: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local51
          |  Int => scala/Int#
          |  B1 => local50
@@ -13158,7 +13158,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local55 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local55 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local60
          |  Int => scala/Int#
          |  B1 => local59
@@ -13188,7 +13188,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local64 => final method applyOrElse[A1 <: Int, B1 >: A1](x$5: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local64 => final override method applyOrElse[A1 <: Int, B1 >: A1](x$5: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local69
          |  Int => scala/Int#
          |  B1 => local68
@@ -13241,7 +13241,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -13272,7 +13272,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  String => scala/Predef.String#
          |  Serializable => java/io/Serializable#
-         |local10 => final method applyOrElse[A1 <: Int, B1 >: String](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Int, B1 >: String](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Int => scala/Int#
          |  B1 => local14
@@ -13304,7 +13304,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  PartialFunction => scala/PartialFunction#
          |  Serializable => java/io/Serializable#
-         |local19 => final method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  Int => scala/Int#
          |  B1 => local23
@@ -13336,7 +13336,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local28 => final method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  Int => scala/Int#
          |  B1 => local32
@@ -13367,7 +13367,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  PartialFunction => scala/PartialFunction#
          |  Serializable => java/io/Serializable#
-         |local37 => final method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x$3: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local37 => final override method applyOrElse[A1 <: Int, B1 >: PartialFunction[Int, Int]](x$3: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local42
          |  Int => scala/Int#
          |  B1 => local41
@@ -13399,7 +13399,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local46 => final method applyOrElse[A1 <: Int, B1 >: Int](x$4: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local46 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$4: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local51
          |  Int => scala/Int#
          |  B1 => local50
@@ -13429,7 +13429,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local55 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local55 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local60
          |  Int => scala/Int#
          |  B1 => local59
@@ -13459,7 +13459,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local64 => final method applyOrElse[A1 <: Int, B1 >: A1](x$5: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local64 => final override method applyOrElse[A1 <: Int, B1 >: A1](x$5: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local69
          |  Int => scala/Int#
          |  B1 => local68
@@ -13675,7 +13675,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -13705,7 +13705,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local10 => final method applyOrElse[A1 <: Int, B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Int => scala/Int#
          |  B1 => local14
@@ -13764,7 +13764,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -13794,7 +13794,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local10 => final method applyOrElse[A1 <: Int, B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  Int => scala/Int#
          |  B1 => local14
@@ -13977,7 +13977,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Tuple2 => scala/Tuple2#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: Tuple2[A1, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: Tuple2[A1, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -14011,7 +14011,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local10 => final method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local10 => final override method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local15
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
@@ -14044,7 +14044,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  D => _empty_/t216.D#
        |  Serializable => java/io/Serializable#
-       |local18 => final method applyOrElse[A1 <: Int, B1 >: D[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local18 => final override method applyOrElse[A1 <: Int, B1 >: D[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local23
        |  Int => scala/Int#
        |  B1 => local22
@@ -14073,7 +14073,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Tuple2 => scala/Tuple2#
        |  Serializable => java/io/Serializable#
-       |local25 => final method applyOrElse[A1 <: Int, B1 >: Tuple2[A1, Int]](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local25 => final override method applyOrElse[A1 <: Int, B1 >: Tuple2[A1, Int]](z: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local30
        |  Int => scala/Int#
        |  B1 => local29
@@ -14109,7 +14109,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local35 => final method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local35 => final override method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Int](x$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local40
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
@@ -14142,7 +14142,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Tuple2 => scala/Tuple2#
        |  Serializable => java/io/Serializable#
-       |local43 => final method applyOrElse[A1 <: Int, B1 >: Tuple2[A1, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local43 => final override method applyOrElse[A1 <: Int, B1 >: Tuple2[A1, Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local48
        |  Int => scala/Int#
        |  B1 => local47
@@ -14177,7 +14177,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Unit => scala/Unit#
        |  Serializable => java/io/Serializable#
-       |local52 => final method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Unit](x$3: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local52 => final override method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Unit](x$3: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local57
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
@@ -14211,7 +14211,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Tuple2 => scala/Tuple2#
        |  Serializable => java/io/Serializable#
-       |local60 => final method applyOrElse[A1 <: Int, B1 >: Tuple2[A1, Tuple2[A1, A1]]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local60 => final override method applyOrElse[A1 <: Int, B1 >: Tuple2[A1, Tuple2[A1, A1]]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local65
        |  Int => scala/Int#
        |  B1 => local64
@@ -14246,7 +14246,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local70 => final method applyOrElse[A1 <: Tuple2[Int, Tuple2[Int, Int]], B1 >: Int](x$6: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local70 => final override method applyOrElse[A1 <: Tuple2[Int, Tuple2[Int, Int]], B1 >: Int](x$6: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local75
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
@@ -14279,7 +14279,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Boolean => scala/Boolean#
        |  Serializable => java/io/Serializable#
-       |local78 => final method applyOrElse[A1 <: Int, B1 >: Boolean](check$ifrefutable$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local78 => final override method applyOrElse[A1 <: Int, B1 >: Boolean](check$ifrefutable$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local83
        |  Int => scala/Int#
        |  B1 => local82
@@ -14311,7 +14311,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Tuple2 => scala/Tuple2#
        |  Serializable => java/io/Serializable#
-       |local87 => final method applyOrElse[A1 <: Int, B1 >: Tuple2[A1, A1]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local87 => final override method applyOrElse[A1 <: Int, B1 >: Tuple2[A1, A1]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local92
        |  Int => scala/Int#
        |  B1 => local91
@@ -14342,7 +14342,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local95 => final method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Int](x$7: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local95 => final override method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Int](x$7: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local100
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
@@ -14376,7 +14376,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Boolean => scala/Boolean#
        |  Serializable => java/io/Serializable#
-       |local104 => final method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Boolean](check$ifrefutable$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local104 => final override method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Boolean](check$ifrefutable$2: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local109
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
@@ -14414,7 +14414,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local114 => final method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Tuple2[Tuple2[Int, Int], Int]](x$9: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local114 => final override method applyOrElse[A1 <: Tuple2[Int, Int], B1 >: Tuple2[Tuple2[Int, Int], Int]](x$9: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local119
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
@@ -14450,7 +14450,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local123 => final method applyOrElse[A1 <: Tuple2[Tuple2[Int, Int], Int], B1 >: Int](x$10: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local123 => final override method applyOrElse[A1 <: Tuple2[Tuple2[Int, Int], Int], B1 >: Int](x$10: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local128
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
@@ -14506,7 +14506,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -14534,7 +14534,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local9 => final method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local9 => final override method applyOrElse[A1 <: Int, B1 >: Int](x$1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local14
        |  Int => scala/Int#
        |  B1 => local13
@@ -16265,7 +16265,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Seq => scala/collection/Seq#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Seq[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Seq[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Seq => scala/collection/Seq#
          |  Int => scala/Int#
@@ -16301,7 +16301,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t238.o.B#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local10 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  B => _empty_/t238.o.B#
          |  B1 => local14
@@ -16333,7 +16333,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  v => _empty_/t238.o.v.
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local19 => final method applyOrElse[A1 <: v.type, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: v.type, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  v => _empty_/t238.o.v.
          |  B1 => local23
@@ -16366,7 +16366,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  C => _empty_/t238.o.B#C#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local28 => final method applyOrElse[A1 <: B#C, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: B#C, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  B => _empty_/t238.o.B#
          |  C => _empty_/t238.o.B#C#
@@ -16405,7 +16405,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t238.o.B#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local37 => final method applyOrElse[A1 <: List[List[B]], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local37 => final override method applyOrElse[A1 <: List[List[B]], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local42
          |  List => scala/package.List#
          |  List => java/util/List#
@@ -16447,7 +16447,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  ann => _empty_/t238.o.ann#
          |  Serializable => scala/Serializable#
-         |local46 => final method applyOrElse[A1 <: Int @ann, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local46 => final override method applyOrElse[A1 <: Int @ann, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local51
          |  Int => scala/Int#
          |  ann => _empty_/t238.o.ann#
@@ -16483,7 +16483,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
          |  Serializable => scala/Serializable#
-         |local55 => final method applyOrElse[A1 <: Int @uncheckedVariance, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local55 => final override method applyOrElse[A1 <: Int @uncheckedVariance, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local60
          |  Int => scala/Int#
          |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
@@ -16599,7 +16599,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Seq => scala/collection/Seq#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Seq[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Seq[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Seq => scala/collection/Seq#
          |  Int => scala/Int#
@@ -16635,7 +16635,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t238.o.B#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local10 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  B => _empty_/t238.o.B#
          |  B1 => local14
@@ -16667,7 +16667,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  v => _empty_/t238.o.v.
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local19 => final method applyOrElse[A1 <: v.type, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: v.type, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  v => _empty_/t238.o.v.
          |  B1 => local23
@@ -16700,7 +16700,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  C => _empty_/t238.o.B#C#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local28 => final method applyOrElse[A1 <: B#C, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: B#C, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  B => _empty_/t238.o.B#
          |  C => _empty_/t238.o.B#C#
@@ -16739,7 +16739,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t238.o.B#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local37 => final method applyOrElse[A1 <: List[List[B]], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local37 => final override method applyOrElse[A1 <: List[List[B]], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local42
          |  List => scala/package.List#
          |  List => java/util/List#
@@ -16781,7 +16781,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  ann => _empty_/t238.o.ann#
          |  Serializable => java/io/Serializable#
-         |local46 => final method applyOrElse[A1 <: Int @ann, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local46 => final override method applyOrElse[A1 <: Int @ann, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local51
          |  Int => scala/Int#
          |  ann => _empty_/t238.o.ann#
@@ -16817,7 +16817,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
          |  Serializable => java/io/Serializable#
-         |local55 => final method applyOrElse[A1 <: Int @uncheckedVariance, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local55 => final override method applyOrElse[A1 <: Int @uncheckedVariance, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local60
          |  Int => scala/Int#
          |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
@@ -16946,7 +16946,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  Int => scala/Int#
              |  Serializable => scala/Serializable#
-             |local1 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local1 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local6
              |  List => scala/package.List#
              |  Int => scala/Int#
@@ -16982,7 +16982,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  D => _empty_/t239.o.D#
              |  Int => scala/Int#
              |  Serializable => scala/Serializable#
-             |local10 => final method applyOrElse[A1 <: D, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local10 => final override method applyOrElse[A1 <: D, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local15
              |  D => _empty_/t239.o.D#
              |  B1 => local14
@@ -17015,7 +17015,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  E => _empty_/t239.o.D#E#
              |  Int => scala/Int#
              |  Serializable => scala/Serializable#
-             |local19 => final method applyOrElse[A1 <: D#E, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local19 => final override method applyOrElse[A1 <: D#E, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local24
              |  D => _empty_/t239.o.D#
              |  E => _empty_/t239.o.D#E#
@@ -17053,7 +17053,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  ArrayList => java/util/ArrayList#
              |  Int => scala/Int#
              |  Serializable => scala/Serializable#
-             |local28 => final method applyOrElse[A1 <: List[ArrayList[Int]], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local28 => final override method applyOrElse[A1 <: List[ArrayList[Int]], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local33
              |  List => scala/package.List#
              |  ArrayList => java/util/ArrayList#
@@ -17093,7 +17093,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => scala/Serializable#
-             |local37 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local37 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local42
              |  Int => scala/Int#
              |  B1 => local41
@@ -17192,7 +17192,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local1 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local1 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local6
              |  List => scala/package.List#
              |  Int => scala/Int#
@@ -17228,7 +17228,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  D => _empty_/t239.o.D#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local10 => final method applyOrElse[A1 <: D, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local10 => final override method applyOrElse[A1 <: D, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local15
              |  D => _empty_/t239.o.D#
              |  B1 => local14
@@ -17261,7 +17261,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  E => _empty_/t239.o.D#E#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local19 => final method applyOrElse[A1 <: D#E, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local19 => final override method applyOrElse[A1 <: D#E, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local24
              |  D => _empty_/t239.o.D#
              |  E => _empty_/t239.o.D#E#
@@ -17299,7 +17299,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  ArrayList => java/util/ArrayList#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local28 => final method applyOrElse[A1 <: List[ArrayList[Int]], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local28 => final override method applyOrElse[A1 <: List[ArrayList[Int]], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local33
              |  List => scala/package.List#
              |  ArrayList => java/util/ArrayList#
@@ -17339,7 +17339,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
-             |local37 => final method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local37 => final override method applyOrElse[A1 <: Int, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local42
              |  Int => scala/Int#
              |  B1 => local41
@@ -17438,7 +17438,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Seq => scala/collection/Seq#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Seq[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Seq[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Seq => scala/collection/Seq#
          |  Int => scala/Int#
@@ -17474,7 +17474,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t239.o.B#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local10 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  B => _empty_/t239.o.B#
          |  B1 => local14
@@ -17507,7 +17507,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  C => _empty_/t239.o.B#C#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local19 => final method applyOrElse[A1 <: B#C, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: B#C, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  B => _empty_/t239.o.B#
          |  C => _empty_/t239.o.B#C#
@@ -17545,7 +17545,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractList => java/util/AbstractList#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local28 => final method applyOrElse[A1 <: List[AbstractList[Int]], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: List[AbstractList[Int]], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  List => scala/package.List#
          |  AbstractList => java/util/AbstractList#
@@ -17586,7 +17586,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  ann => _empty_/t239.q.ann#
          |  Serializable => java/io/Serializable#
-         |local37 => final method applyOrElse[A1 <: Int @ann, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local37 => final override method applyOrElse[A1 <: Int @ann, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local42
          |  Int => scala/Int#
          |  ann => _empty_/t239.q.ann#
@@ -17704,7 +17704,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t240.o.B#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  B => _empty_/t240.o.B#
          |  B1 => local5
@@ -17736,7 +17736,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t240.o.B#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local10 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  B => _empty_/t240.o.B#
          |  B1 => local14
@@ -17768,7 +17768,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t240.o.B#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local19 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  B => _empty_/t240.o.B#
          |  B1 => local23
@@ -17800,7 +17800,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t240.o.B#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local28 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  B => _empty_/t240.o.B#
          |  B1 => local32
@@ -17832,7 +17832,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t240.o.B#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local37 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local37 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local42
          |  B => _empty_/t240.o.B#
          |  B1 => local41
@@ -17864,7 +17864,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => java/util/List#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local46 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local46 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local51
          |  List => java/util/List#
          |  Int => scala/Int#
@@ -17957,7 +17957,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t240.o.B#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  B => _empty_/t240.o.B#
          |  B1 => local5
@@ -17989,7 +17989,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t240.o.B#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local10 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local10 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local15
          |  B => _empty_/t240.o.B#
          |  B1 => local14
@@ -18021,7 +18021,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t240.o.B#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local19 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local19 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local24
          |  B => _empty_/t240.o.B#
          |  B1 => local23
@@ -18053,7 +18053,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t240.o.B#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local28 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  B => _empty_/t240.o.B#
          |  B1 => local32
@@ -18085,7 +18085,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B => _empty_/t240.o.B#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local37 => final method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local37 => final override method applyOrElse[A1 <: B, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local42
          |  B => _empty_/t240.o.B#
          |  B1 => local41
@@ -18117,7 +18117,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => java/util/List#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local46 => final method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local46 => final override method applyOrElse[A1 <: List[Int], B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local51
          |  List => java/util/List#
          |  Int => scala/Int#
@@ -18279,7 +18279,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |local5 => synthetic abstract type _ >: Null <: AnyRef
              |  Null => scala/Null#
              |  AnyRef => scala/AnyRef#
-             |local6 => final method applyOrElse[A1 <: List[_] forSome { type _ >: Null <: AnyRef }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local6 => final override method applyOrElse[A1 <: List[_] forSome { type _ >: Null <: AnyRef }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local11
              |  List => scala/package.List#
              |  _ => local5
@@ -18339,7 +18339,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Serializable => scala/Serializable#
              |local17 => abstract type T <: AnyRef
              |  AnyRef => scala/AnyRef#
-             |local19 => final method applyOrElse[A1 <: Tuple2[List[T], v.type] forSome { type T <: AnyRef; type v.type <: AnyRef with Singleton {} }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local19 => final override method applyOrElse[A1 <: Tuple2[List[T], v.type] forSome { type T <: AnyRef; type v.type <: AnyRef with Singleton {} }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local24
              |  Tuple2 => scala/Tuple2#
              |  List => scala/package.List#
@@ -18418,7 +18418,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |local38 => abstract val method v: Int
              |  Int => scala/Int#
-             |local39 => final method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local39 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local44
              |  AnyRef => scala/AnyRef#
              |  T => local35
@@ -18525,7 +18525,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Function1 => scala/Function1#
              |  B => local62
              |  Int => scala/Int#
-             |local64 => final method applyOrElse[A1 <: AnyRef { def g[A](a: A)(implicit evidence$1: Ordering[A]): Int; def h[B](b: B)(implicit evidence$2: Function1[B, Int]): Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local64 => final override method applyOrElse[A1 <: AnyRef { def g[A](a: A)(implicit evidence$1: Ordering[A]): Int; def h[B](b: B)(implicit evidence$2: Function1[B, Int]): Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local69
              |  AnyRef => scala/AnyRef#
              |  g => local56
@@ -18760,7 +18760,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |local5 => synthetic abstract type _ >: Null <: AnyRef
              |  Null => scala/Null#
              |  AnyRef => scala/AnyRef#
-             |local6 => final method applyOrElse[A1 <: List[_] forSome { type _ >: Null <: AnyRef }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local6 => final override method applyOrElse[A1 <: List[_] forSome { type _ >: Null <: AnyRef }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local11
              |  List => scala/package.List#
              |  _ => local5
@@ -18820,7 +18820,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Serializable => java/io/Serializable#
              |local17 => abstract type T <: AnyRef
              |  AnyRef => scala/AnyRef#
-             |local19 => final method applyOrElse[A1 <: Tuple2[List[T], v.type] forSome { type T <: AnyRef; type v.type <: AnyRef with Singleton {} }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local19 => final override method applyOrElse[A1 <: Tuple2[List[T], v.type] forSome { type T <: AnyRef; type v.type <: AnyRef with Singleton {} }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local24
              |  Tuple2 => scala/Tuple2#
              |  List => scala/package.List#
@@ -18899,7 +18899,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |local38 => abstract val method v: Int
              |  Int => scala/Int#
-             |local39 => final method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local39 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local44
              |  AnyRef => scala/AnyRef#
              |  T => local35
@@ -19006,7 +19006,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Function1 => scala/Function1#
              |  B => local62
              |  Int => scala/Int#
-             |local64 => final method applyOrElse[A1 <: AnyRef { def g[A](a: A)(implicit evidence$1: Ordering[A]): Int; def h[B](b: B)(implicit evidence$2: Function1[B, Int]): Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local64 => final override method applyOrElse[A1 <: AnyRef { def g[A](a: A)(implicit evidence$1: Ordering[A]): Int; def h[B](b: B)(implicit evidence$2: Function1[B, Int]): Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local69
              |  AnyRef => scala/AnyRef#
              |  g => local56
@@ -19241,7 +19241,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |local5 => abstract type _ >: Null <: AnyRef
          |  Null => scala/Null#
          |  AnyRef => scala/AnyRef#
-         |local6 => final method applyOrElse[A1 <: List[_] forSome { type _ >: Null <: AnyRef }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local6 => final override method applyOrElse[A1 <: List[_] forSome { type _ >: Null <: AnyRef }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local11
          |  List => scala/package.List#
          |  _ => local5
@@ -19304,7 +19304,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Serializable => java/io/Serializable#
          |local18 => abstract type T <: AnyRef
          |  AnyRef => scala/AnyRef#
-         |local20 => final method applyOrElse[A1 <: Tuple2[List[T], v.type] forSome { type T <: AnyRef; type v.type <: AnyRef with Singleton {} }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local20 => final override method applyOrElse[A1 <: Tuple2[List[T], v.type] forSome { type T <: AnyRef; type v.type <: AnyRef with Singleton {} }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local25
          |  Tuple2 => scala/Tuple2#
          |  List => scala/package.List#
@@ -19387,7 +19387,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local42 => abstract val method v: Int
          |  Int => scala/Int#
-         |local43 => final method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local43 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local48
          |  AnyRef => scala/AnyRef#
          |  T => local39
@@ -19502,7 +19502,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Function1 => scala/Function1#
          |  B => local70
          |  Int => scala/Int#
-         |local72 => final method applyOrElse[A1 <: AnyRef { def g[A](a: A)(implicit evidence$3: Ordering[A]): Int; def h[B](b: B)(implicit evidence$4: Function1[B, Int]): Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local72 => final override method applyOrElse[A1 <: AnyRef { def g[A](a: A)(implicit evidence$3: Ordering[A]): Int; def h[B](b: B)(implicit evidence$4: Function1[B, Int]): Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local77
          |  AnyRef => scala/AnyRef#
          |  g => local64
@@ -19766,7 +19766,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |  Serializable => scala/Serializable#
              |local1 => synthetic abstract type _
-             |local2 => final method applyOrElse[A1 <: List[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local2 => final override method applyOrElse[A1 <: List[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local7
              |  List => scala/package.List#
              |  _ => local1
@@ -19808,7 +19808,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Serializable => scala/Serializable#
              |local13 => synthetic abstract type _ <: Int
              |  Int => scala/Int#
-             |local14 => final method applyOrElse[A1 <: List[_] forSome { type _ <: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local14 => final override method applyOrElse[A1 <: List[_] forSome { type _ <: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local19
              |  List => scala/package.List#
              |  _ => local13
@@ -19855,7 +19855,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |  Serializable => scala/Serializable#
              |local25 => abstract type T
-             |local26 => final method applyOrElse[A1 <: List[T] forSome { type T }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local26 => final override method applyOrElse[A1 <: List[T] forSome { type T }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local31
              |  List => scala/package.List#
              |  T => local25
@@ -19909,7 +19909,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |local41 => abstract method k: Int
              |  Int => scala/Int#
-             |local42 => final method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local42 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local47
              |  AnyRef => scala/AnyRef#
              |  T => local37
@@ -20007,7 +20007,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  A => local62
              |local64 => abstract method k: Int
              |  Int => scala/Int#
-             |local65 => final method applyOrElse[A1 <: AnyRef { def g[A](a: A)(implicit evidence$1: Ordering[A]): Int; def k: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local65 => final override method applyOrElse[A1 <: AnyRef { def g[A](a: A)(implicit evidence$1: Ordering[A]): Int; def k: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local70
              |  AnyRef => scala/AnyRef#
              |  g => local60
@@ -20176,7 +20176,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
              |local1 => synthetic abstract type _
-             |local2 => final method applyOrElse[A1 <: List[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local2 => final override method applyOrElse[A1 <: List[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local7
              |  List => scala/package.List#
              |  _ => local1
@@ -20218,7 +20218,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Serializable => java/io/Serializable#
              |local13 => synthetic abstract type _ <: Int
              |  Int => scala/Int#
-             |local14 => final method applyOrElse[A1 <: List[_] forSome { type _ <: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local14 => final override method applyOrElse[A1 <: List[_] forSome { type _ <: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local19
              |  List => scala/package.List#
              |  _ => local13
@@ -20265,7 +20265,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |  Serializable => java/io/Serializable#
              |local25 => abstract type T
-             |local26 => final method applyOrElse[A1 <: List[T] forSome { type T }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local26 => final override method applyOrElse[A1 <: List[T] forSome { type T }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local31
              |  List => scala/package.List#
              |  T => local25
@@ -20319,7 +20319,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |local41 => abstract method k: Int
              |  Int => scala/Int#
-             |local42 => final method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local42 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local47
              |  AnyRef => scala/AnyRef#
              |  T => local37
@@ -20417,7 +20417,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  A => local62
              |local64 => abstract method k: Int
              |  Int => scala/Int#
-             |local65 => final method applyOrElse[A1 <: AnyRef { def g[A](a: A)(implicit evidence$1: Ordering[A]): Int; def k: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local65 => final override method applyOrElse[A1 <: AnyRef { def g[A](a: A)(implicit evidence$1: Ordering[A]): Int; def k: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local70
              |  AnyRef => scala/AnyRef#
              |  g => local60
@@ -20586,7 +20586,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
          |local1 => abstract type _
-         |local2 => final method applyOrElse[A1 <: L[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: L[_] forSome { type _ }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  L => _empty_/t242.L#
          |  _ => local1
@@ -20630,7 +20630,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Serializable => java/io/Serializable#
          |local14 => abstract type _ <: AnyVal
          |  AnyVal => scala/AnyVal#
-         |local15 => final method applyOrElse[A1 <: Seq[_] forSome { type _ <: AnyVal }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local15 => final override method applyOrElse[A1 <: Seq[_] forSome { type _ <: AnyVal }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local20
          |  Seq => scala/package.Seq#
          |  _ => local14
@@ -20680,7 +20680,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
          |local27 => abstract type T
-         |local28 => final method applyOrElse[A1 <: Seq[T] forSome { type T }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local28 => final override method applyOrElse[A1 <: Seq[T] forSome { type T }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local33
          |  Seq => scala/package.Seq#
          |  T => local27
@@ -20732,7 +20732,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local43 => abstract val method v: Int
          |  Int => scala/Int#
-         |local44 => final method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local44 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local49
          |  AnyRef => scala/AnyRef#
          |  T => local40
@@ -20833,7 +20833,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |local70 => synthetic implicit param evidence$2: Ordering[A]
          |  Ordering => scala/package.Ordering#
          |  A => local69
-         |local71 => final method applyOrElse[A1 <: AnyRef { def g[A](a: A)(implicit evidence$2: Ordering[A]): Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local71 => final override method applyOrElse[A1 <: AnyRef { def g[A](a: A)(implicit evidence$2: Ordering[A]): Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local76
          |  AnyRef => scala/AnyRef#
          |  g => local67
@@ -22229,7 +22229,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Serializable => scala/Serializable#
          |local1 => abstract type T <: AnyRef
          |  AnyRef => scala/AnyRef#
-         |local3 => final method applyOrElse[A1 <: Tuple2[List[T], v.type] forSome { type v.type <: AnyRef with Singleton {}; type T <: AnyRef }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local3 => final override method applyOrElse[A1 <: Tuple2[List[T], v.type] forSome { type v.type <: AnyRef with Singleton {}; type T <: AnyRef }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local8
          |  Tuple2 => scala/Tuple2#
          |  List => scala/package.List#
@@ -22288,7 +22288,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Serializable => scala/Serializable#
          |local14 => abstract type T <: AnyRef
          |  AnyRef => scala/AnyRef#
-         |local15 => final method applyOrElse[A1 <: Tuple2[v.type, w.type] forSome { type T <: AnyRef; type w.type <: AnyRef with Singleton {}; type v.type <: AnyRef with Singleton {} }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local15 => final override method applyOrElse[A1 <: Tuple2[v.type, w.type] forSome { type T <: AnyRef; type w.type <: AnyRef with Singleton {}; type v.type <: AnyRef with Singleton {} }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local20
          |  Tuple2 => scala/Tuple2#
          |  v.type => local12
@@ -22395,7 +22395,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Serializable => java/io/Serializable#
          |local1 => abstract type T <: AnyRef
          |  AnyRef => scala/AnyRef#
-         |local3 => final method applyOrElse[A1 <: Tuple2[List[T], v.type] forSome { type v.type <: AnyRef with Singleton {}; type T <: AnyRef }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local3 => final override method applyOrElse[A1 <: Tuple2[List[T], v.type] forSome { type v.type <: AnyRef with Singleton {}; type T <: AnyRef }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local8
          |  Tuple2 => scala/Tuple2#
          |  List => scala/package.List#
@@ -22458,7 +22458,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Serializable => java/io/Serializable#
          |local17 => abstract type T <: AnyRef
          |  AnyRef => scala/AnyRef#
-         |local18 => final method applyOrElse[A1 <: Tuple2[v.type, w.type] forSome { type T <: AnyRef; type w.type <: AnyRef with Singleton {}; type v.type <: AnyRef with Singleton {} }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local18 => final override method applyOrElse[A1 <: Tuple2[v.type, w.type] forSome { type T <: AnyRef; type w.type <: AnyRef with Singleton {}; type v.type <: AnyRef with Singleton {} }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local23
          |  Tuple2 => scala/Tuple2#
          |  v.type => local15
@@ -22571,7 +22571,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Serializable => java/io/Serializable#
          |local1 => abstract type T <: AnyRef
          |  AnyRef => scala/AnyRef#
-         |local3 => final method applyOrElse[A1 <: Tuple2[List[T], v.type] forSome { type v.type <: AnyRef with Singleton {}; type T <: AnyRef }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local3 => final override method applyOrElse[A1 <: Tuple2[List[T], v.type] forSome { type v.type <: AnyRef with Singleton {}; type T <: AnyRef }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local8
          |  Tuple2 => scala/Tuple2#
          |  List => scala/package.List#
@@ -22630,7 +22630,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Serializable => java/io/Serializable#
          |local14 => abstract type T <: AnyRef
          |  AnyRef => scala/AnyRef#
-         |local15 => final method applyOrElse[A1 <: Tuple2[v.type, w.type] forSome { type T <: AnyRef; type w.type <: AnyRef with Singleton {}; type v.type <: AnyRef with Singleton {} }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local15 => final override method applyOrElse[A1 <: Tuple2[v.type, w.type] forSome { type T <: AnyRef; type w.type <: AnyRef with Singleton {}; type v.type <: AnyRef with Singleton {} }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local20
          |  Tuple2 => scala/Tuple2#
          |  v.type => local12
@@ -22733,7 +22733,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Class => java/lang/Class#
        |  T => local1
        |  Serializable => java/io/Serializable#
-       |local3 => final method applyOrElse[A1 <: Int, B1 >: Class[T] forSome { type T <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local3 => final override method applyOrElse[A1 <: Int, B1 >: Class[T] forSome { type T <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local8
        |  Int => scala/Int#
        |  B1 => local7
@@ -22776,7 +22776,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Class => java/lang/Class#
        |  T => local15
        |  Serializable => java/io/Serializable#
-       |local17 => final method applyOrElse[A1 <: String, B1 >: Class[T] forSome { type T <: String }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local17 => final override method applyOrElse[A1 <: String, B1 >: Class[T] forSome { type T <: String }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local22
        |  String => java/lang/String#
        |  B1 => local21
@@ -22842,7 +22842,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Class => java/lang/Class#
          |  T => local1
          |  Serializable => scala/Serializable#
-         |local3 => final method applyOrElse[A1 <: Int, B1 >: Class[T] forSome { type T <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local3 => final override method applyOrElse[A1 <: Int, B1 >: Class[T] forSome { type T <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local8
          |  Int => scala/Int#
          |  B1 => local7
@@ -22902,7 +22902,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Class => java/lang/Class#
          |  T => local1
          |  Serializable => java/io/Serializable#
-         |local3 => final method applyOrElse[A1 <: Int, B1 >: Class[T] forSome { type T <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local3 => final override method applyOrElse[A1 <: Int, B1 >: Class[T] forSome { type T <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local8
          |  Int => scala/Int#
          |  B1 => local7
@@ -23017,7 +23017,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -23051,7 +23051,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  Some => scala/Some#
          |  Serializable => scala/Serializable#
-         |local11 => final method applyOrElse[A1 <: Option[Int], B1 >: Some[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local11 => final override method applyOrElse[A1 <: Option[Int], B1 >: Some[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local16
          |  Option => scala/Option#
          |  Int => scala/Int#
@@ -23101,7 +23101,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -23135,7 +23135,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  Some => scala/Some#
          |  Serializable => java/io/Serializable#
-         |local11 => final method applyOrElse[A1 <: Option[Int], B1 >: Some[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local11 => final override method applyOrElse[A1 <: Option[Int], B1 >: Some[Int]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local16
          |  Option => scala/Option#
          |  Int => scala/Int#
@@ -23232,7 +23232,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  List => scala/collection/immutable/List#
        |  AnyVal => scala/AnyVal#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: List[AnyVal]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: List[AnyVal]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -23266,7 +23266,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  AnyVal => scala/AnyVal#
        |  Serializable => java/io/Serializable#
-       |local10 => final method applyOrElse[A1 <: Int, B1 >: AnyVal](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local10 => final override method applyOrElse[A1 <: Int, B1 >: AnyVal](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local15
        |  Int => scala/Int#
        |  B1 => local14
@@ -23374,7 +23374,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => scala/collection/immutable/List#
          |  AnyVal => scala/AnyVal#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: List[AnyVal]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: List[AnyVal]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -23412,7 +23412,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  AnyVal => scala/AnyVal#
          |  Serializable => scala/Serializable#
-         |local12 => final method applyOrElse[A1 <: Int, B1 >: AnyVal](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local12 => final override method applyOrElse[A1 <: Int, B1 >: AnyVal](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local17
          |  Int => scala/Int#
          |  B1 => local16
@@ -23473,7 +23473,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => scala/collection/immutable/List#
          |  AnyVal => scala/AnyVal#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: List[AnyVal]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: List[AnyVal]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -23511,7 +23511,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  AnyVal => scala/AnyVal#
          |  Serializable => java/io/Serializable#
-         |local12 => final method applyOrElse[A1 <: Int, B1 >: AnyVal](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local12 => final override method applyOrElse[A1 <: Int, B1 >: AnyVal](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local17
          |  Int => scala/Int#
          |  B1 => local16
@@ -23673,7 +23673,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  _ => local0
        |  T => _empty_/t262.f().[T]
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: T }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: T }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -23774,7 +23774,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  _ => local0
          |  T => _empty_/t263.f().[T]
          |  Serializable => scala/Serializable#
-         |local2 => final method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: T }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: T }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  Int => scala/Int#
          |  B1 => local6
@@ -23840,7 +23840,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  _ => local0
          |  T => _empty_/t263.f().[T]
          |  Serializable => java/io/Serializable#
-         |local2 => final method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: T }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: T }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  Int => scala/Int#
          |  B1 => local6
@@ -23972,7 +23972,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  AnyRef => scala/AnyRef#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: AnyRef](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: AnyRef](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -24014,7 +24014,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  A1 => local13
        |  AnyRef => scala/AnyRef#
        |  Serializable => java/io/Serializable#
-       |local15 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { class A1 extends AnyRef { +1 decls } }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local15 => final override method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { class A1 extends AnyRef { +1 decls } }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local20
        |  Int => scala/Int#
        |  B1 => local19
@@ -24121,7 +24121,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  A1 => local0
          |  AnyRef => scala/AnyRef#
          |  Serializable => scala/Serializable#
-         |local2 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { class A1 extends AnyRef { +1 decls } }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { class A1 extends AnyRef { +1 decls } }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  Int => scala/Int#
          |  B1 => local6
@@ -24181,7 +24181,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  A1 => local0
          |  AnyRef => scala/AnyRef#
          |  Serializable => java/io/Serializable#
-         |local2 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { class A1 extends AnyRef { +1 decls } }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { class A1 extends AnyRef { +1 decls } }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  Int => scala/Int#
          |  B1 => local6
@@ -24308,7 +24308,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -24397,7 +24397,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local2 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  Int => scala/Int#
          |  B1 => local6
@@ -24432,7 +24432,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  Set => scala/Predef.Set#
          |  Serializable => scala/Serializable#
-         |local14 => final method applyOrElse[A1 <: Int, B1 >: Set[A1]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local14 => final override method applyOrElse[A1 <: Int, B1 >: Set[A1]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local19
          |  Int => scala/Int#
          |  B1 => local18
@@ -24495,7 +24495,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local2 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local2 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local7
          |  Int => scala/Int#
          |  B1 => local6
@@ -24530,7 +24530,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  Set => scala/Predef.Set#
          |  Serializable => java/io/Serializable#
-         |local14 => final method applyOrElse[A1 <: Int, B1 >: Set[A1]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local14 => final override method applyOrElse[A1 <: Int, B1 >: Set[A1]](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local19
          |  Int => scala/Int#
          |  B1 => local18
@@ -24675,7 +24675,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => scala/Serializable#
-       |local2 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local2 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local7
        |  Int => scala/Int#
        |  B1 => local6
@@ -24768,7 +24768,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  Int => scala/Int#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  Int => scala/Int#
        |  B1 => local5
@@ -24859,7 +24859,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -24917,7 +24917,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  Int => scala/Int#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: Int, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  Int => scala/Int#
          |  B1 => local5
@@ -25047,7 +25047,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
        |  String => java/lang/String#
        |  Serializable => java/io/Serializable#
-       |local1 => final method applyOrElse[A1 <: String, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local1 => final override method applyOrElse[A1 <: String, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local6
        |  String => java/lang/String#
        |  B1 => local5
@@ -25078,7 +25078,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  A1 => local9
        |  String => java/lang/String#
        |  Serializable => java/io/Serializable#
-       |local11 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: String }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local11 => final override method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: String }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local16
        |  Int => scala/Int#
        |  B1 => local15
@@ -25171,7 +25171,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  String => java/lang/String#
          |  Serializable => scala/Serializable#
-         |local1 => final method applyOrElse[A1 <: String, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: String, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  String => java/lang/String#
          |  B1 => local5
@@ -25204,7 +25204,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  A1 => local10
          |  String => java/lang/String#
          |  Serializable => scala/Serializable#
-         |local12 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: String }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local12 => final override method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: String }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local17
          |  Int => scala/Int#
          |  B1 => local16
@@ -25261,7 +25261,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  String => java/lang/String#
          |  Serializable => java/io/Serializable#
-         |local1 => final method applyOrElse[A1 <: String, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local1 => final override method applyOrElse[A1 <: String, B1 >: A1](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local6
          |  String => java/lang/String#
          |  B1 => local5
@@ -25294,7 +25294,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  A1 => local10
          |  String => java/lang/String#
          |  Serializable => java/io/Serializable#
-         |local12 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: String }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local12 => final override method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: String }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local17
          |  Int => scala/Int#
          |  B1 => local16
@@ -25434,7 +25434,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
        |  Set => scala/collection/immutable/Set#
        |  A1 => local2
        |  Serializable => java/io/Serializable#
-       |local4 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+       |local4 => final override method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
        |  A1 => local9
        |  Int => scala/Int#
        |  B1 => local8
@@ -25526,7 +25526,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Set => scala/collection/immutable/Set#
          |  A1 => local1
          |  Serializable => scala/Serializable#
-         |local3 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local3 => final override method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local8
          |  Int => scala/Int#
          |  B1 => local7
@@ -25580,7 +25580,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Set => scala/collection/immutable/Set#
          |  A1 => local1
          |  Serializable => java/io/Serializable#
-         |local3 => final method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local3 => final override method applyOrElse[A1 <: Int, B1 >: Set[A1] forSome { type A1 <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local8
          |  Int => scala/Int#
          |  B1 => local7
@@ -25738,7 +25738,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Class => java/lang/Class#
          |  _ => local1
          |  Serializable => scala/Serializable#
-         |local3 => final method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local3 => final override method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local8
          |  Int => scala/Int#
          |  B1 => local7
@@ -25819,7 +25819,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Class => java/lang/Class#
          |  _ => local1
          |  Serializable => java/io/Serializable#
-         |local3 => final method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local3 => final override method applyOrElse[A1 <: Int, B1 >: Class[_] forSome { type _ <: Int }](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local8
          |  Int => scala/Int#
          |  B1 => local7
