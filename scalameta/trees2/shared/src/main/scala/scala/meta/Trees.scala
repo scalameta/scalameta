@@ -212,6 +212,13 @@ object Tree extends InternalTreeXtensions {
       val len = part.length
       (len == 4 || len > 4 && part.charAt(2) != '*') && part.startsWith("/*")
     }
+    final def hasNewlines: Boolean = origin match {
+      case _: Origin.Parsed => pos.hasNewlines // not ParsedPartial: can cover unexpanded quasiquotes
+      case _ => parts.exists { x =>
+          val part = x.value
+          part.indexOf('\n') >= 0 || part.indexOf('\r') >= 0
+        }
+    }
   }
   object Comment {
     private[meta] implicit class ImplicitComments(private val self: List[Comment]) extends AnyVal {
@@ -221,6 +228,7 @@ object Tree extends InternalTreeXtensions {
         case x :: xs if xs.nonEmpty => x.hasNewlinesAfter || xs.hasNewlinesBeforeLast
         case _ => false
       }
+      final def hasNewlines: Boolean = self.exists(_.hasNewlines)
     }
   }
 
@@ -236,6 +244,7 @@ object Tree extends InternalTreeXtensions {
     final def hasNewlinesBeforeLast: Boolean = isDetached || values.hasNewlinesBeforeLast
     final def hasNewlinesAfter: Boolean = values.hasNewlinesAfter
     final def hasNewlinesBeforeOrAfter: Boolean = isDetached || hasNewlinesAfter
+    final def hasNewlines: Boolean = values.hasNewlines
   }
 
 }
