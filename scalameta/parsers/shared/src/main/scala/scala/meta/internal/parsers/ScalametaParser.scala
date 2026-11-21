@@ -712,7 +712,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     var idx = start - 1
     var inRegion = false // the scan crossed the newline that opened a region
     var continued = false // the scan crossed a token that continues the tree before it
-    while (tokens.getOrNull(idx) match {
+    // an outdent ends the comments of the tree before this one
+    while ((!isOutdentAt(idx) || isIndentAt(idx)) &&
+      (tokens.getOrNull(idx) match {
         case t: Comment =>
           if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
           begBuf.prepend(asComment(t, idx))
@@ -741,10 +743,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
           if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
           begBuf.prepend(asComment(parts.toList, idx, endIdx))
           true
-        // a blank line or an outdent separates the comments of the tree before from ours
+        // a blank line ends the comments of the tree before this one
         case _: AtEOL =>
           val wasIndent = isIndentAt(idx)
-          (wasIndent || !isOutdentAt(idx)) &&
           (continued || !tokens.findNotOrNull(_.is[HSpace], idx + 1).isInstanceOf[AtEOL] || {
             val prev = prevNonTriviaAt(idx)
             // a token that can end a statement ends the tree only where the statement ends
@@ -772,7 +773,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
           continued = true
           true
         case t => t.isEmpty // cannot separate a leading comment from the tree
-      }) idx -= 1
+      })) idx -= 1
     // exclude the comments that the trailing scan of the tree before took
     if (begBuf ne null) {
       val prev = prevNonTriviaAt(begBuf.head.begTokenIdx)
