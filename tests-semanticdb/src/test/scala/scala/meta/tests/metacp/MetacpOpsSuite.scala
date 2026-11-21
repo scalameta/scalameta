@@ -20,7 +20,7 @@ class MetacpOpsSuite extends FunSuite {
 
   test("method signature with throws") {
     val sig = s.MethodSignature(typeParams, List(params), ref("a/R#"), throws)
-    assertEquals(references(sig), List("a/C#m().(x)", "a/R#"))
+    assertEquals(references(sig), List("a/C#m().(x)", "a/R#", "a/E#"))
   }
 
   test("extended method signature with throws") {
@@ -29,8 +29,7 @@ class MetacpOpsSuite extends FunSuite {
       ref("a/R#"),
       throws,
     )
-    val e = intercept[RuntimeException](references(sig))
-    assertEquals(e.getMessage.takeWhile(_ != ':'), "unexpected signature")
+    assertEquals(references(sig), List("a/C#m().(x)", "a/R#", "a/E#"))
   }
 
 }
