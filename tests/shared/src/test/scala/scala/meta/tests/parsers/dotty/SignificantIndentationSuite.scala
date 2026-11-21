@@ -4119,7 +4119,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  */ b
          |""".stripMargin
     val a = tname("a").toBuilder.endComment(Seq("/*\n  */")).result()
-    val b = tname("b").toBuilder.begComment(Seq("/*\n  */")).result()
+    val b = tname("b")
     assertTree(source(code))(Source(
       List(Defn.Object(Nil, tname("O"), tpl(Defn.Def(Nil, tname("f"), Nil, None, blk(a)), b))),
     ))
@@ -4134,7 +4134,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  */b
          |""".stripMargin
     val a = tname("a").toBuilder.endComment(Seq("/*\n  */")).result()
-    val b = tname("b").toBuilder.begComment(Seq("/*\n  */")).result()
+    val b = tname("b")
     assertTree(source(code))(Source(
       List(Defn.Object(Nil, tname("O"), tpl(Defn.Def(Nil, tname("f"), Nil, None, blk(a)), b))),
     ))
@@ -4604,8 +4604,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  */ def g = 1
          |""".stripMargin
     val a = tname("a").toBuilder.endComment(Seq("/* x\n        y\nz\n  */")).result()
-    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1)).toBuilder
-      .begComment(Seq("/* x\n        y\nz\n  */")).result()
+    val g = Defn.Def(Nil, tname("g"), Nil, None, int(1))
     assertTree(source(code))(Source(
       List(Defn.Object(Nil, tname("O"), tpl(Defn.Def(Nil, tname("f"), Nil, None, blk(a)), g))),
     ))
@@ -4707,7 +4706,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     // dotty, and the same input with a line break in place of the comment: `def f = a + b`
     val a = tname("a").toBuilder.endComment(Seq("/* x\n  */")).result()
-    val op = tname("+").toBuilder.begComment(Seq("/* x\n  */")).result()
+    val op = tname("+")
     val f = Defn.Def(Nil, tname("f"), Nil, None, tinfix(blk(a), op, tname("b")))
     assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
   }
@@ -4740,8 +4739,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     // dotty (a44): `def f = a` and `+b`
     val a = tname("a").toBuilder.endComment(Seq("/* x\n  */")).result()
     val f = Defn.Def(Nil, tname("f"), Nil, None, blk(a))
-    val plusB = Term.ApplyUnary(tname("+"), tname("b")).toBuilder.begComment(Seq("/* x\n  */"))
-      .result()
+    val plusB = Term.ApplyUnary(tname("+"), tname("b"))
     assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f, plusB)))))
   }
 
@@ -4754,7 +4752,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  */ + b
          |""".stripMargin
     val a = tname("a").toBuilder.endComment(Seq("// y", "/* x\n  */")).result()
-    val op = tname("+").toBuilder.begComment(Seq("/* x\n  */")).result()
+    val op = tname("+")
     val f = Defn.Def(Nil, tname("f"), Nil, None, tinfix(blk(a), op, tname("b")))
     assertTree(source(code))(Source(List(Defn.Object(Nil, tname("O"), tpl(f)))))
   }

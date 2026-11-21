@@ -30461,11 +30461,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  a
          |  // note
          |  /* more */
-         |}
-         |// note
-         |/* more */ finally b
+         |} finally b
          |""".stripMargin
-    val b = tnameComments("b")("// note", "/* more */")()
+    val b = tname("b")
     val tree = Defn.Def(
       Nil,
       "f",
@@ -30487,10 +30485,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|def f = try {
          |  a
          |  /* note */
-         |}
-         |/* note */ finally b
+         |} finally b
          |""".stripMargin
-    val b = tnameComments("b")("/* note */")()
+    val b = tname("b")
     val tree = Defn
       .Def(Nil, "f", Nil, None, Term.Try(blk(tnameComments("a")()("/* note */")), Nil, Some(b)))
     runTestAssert[Stat](code, layout)(tree)
@@ -30508,13 +30505,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|def f = try {
          |  a
          |  /* note */
-         |}
-         |/* note */ catch {
+         |} catch {
          |  case _ => b
          |}
          |""".stripMargin
-    val cases = Term.CasesBlock.newBuilder(List(Case(Pat.Wildcard(), None, tname("b"))))
-      .begComment(Seq("/* note */")).result()
+    val cases = Term.CasesBlock(List(Case(Pat.Wildcard(), None, tname("b"))))
     val tree = Defn
       .Def(Nil, "f", Nil, None, Term.Try(blk(tnameComments("a")()("/* note */")), Some(cases), None))
     runTestAssert[Stat](code, layout)(tree)
@@ -30532,11 +30527,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  a
          |  /* note */
          |} catch {
-         |  /* note */ case _ => 1
+         |  case _ => 1
          |}
          |""".stripMargin
-    val cases =
-      List(Case.newBuilder(Pat.Wildcard(), None, lit(1)).begComment(Seq("/* note */")).result())
+    val cases = List(Case(Pat.Wildcard(), None, lit(1)))
     val tree = Defn
       .Def(Nil, "f", Nil, None, Term.Try(blk(tnameComments("a")()("/* note */")), cases, None))
     runTestAssert[Stat](code, layout)(tree)
@@ -30554,10 +30548,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  case _ =>
          |    b
          |  /* note */
-         |}
-         |/* note */ finally c
+         |} finally c
          |""".stripMargin
-    val c = tnameComments("c")("/* note */")()
+    val c = tname("c")
     val tree = Defn.Def(
       Nil,
       "f",
@@ -30584,11 +30577,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|def f = if ({
          |  a
          |  /* note */
-         |})
-         |  /* note */ b
-         |else c
+         |}) b else c
          |""".stripMargin
-    val b = tnameComments("b")("/* note */")()
+    val b = tname("b")
     val tree = Defn
       .Def(Nil, "f", Nil, None, Term.If(blk(tnameComments("a")()("/* note */")), b, tname("c"), Nil))
     runTestAssert[Stat](code, layout)(tree)
@@ -30605,11 +30596,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|def f = if ({
          |  a
          |  /* note */
-         |})
-         |  /* note */ b
-         |else c
+         |}) b else c
          |""".stripMargin
-    val b = tnameComments("b")("/* note */")()
+    val b = tname("b")
     val tree = Defn
       .Def(Nil, "f", Nil, None, Term.If(blk(tnameComments("a")()("/* note */")), b, tname("c"), Nil))
     runTestAssert[Stat](code, layout)(tree)
@@ -30626,10 +30615,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|def f = while ({
          |  a
          |  /* note */
-         |})
-         |  /* note */ b
+         |}) b
          |""".stripMargin
-    val b = tnameComments("b")("/* note */")()
+    val b = tname("b")
     val tree = Defn.Def(Nil, "f", Nil, None, Term.While(blk(tnameComments("a")()("/* note */")), b))
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -30645,10 +30633,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|def f = while ({
          |  a
          |  /* note */
-         |})
-         |  /* note */ b
+         |}) b
          |""".stripMargin
-    val b = tnameComments("b")("/* note */")()
+    val b = tname("b")
     val tree = Defn.Def(Nil, "f", Nil, None, Term.While(blk(tnameComments("a")()("/* note */")), b))
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -30666,11 +30653,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  a
          |  /* note
          |    */
-         |})
-         |  /* note
-         |    */ b
+         |}) b
          |""".stripMargin
-    val b = tnameComments("b")("/* note\n    */")()
+    val b = tname("b")
     val tree = Defn
       .Def(Nil, "f", Nil, None, Term.While(blk(tnameComments("a")()("/* note\n    */")), b))
     runTestAssert[Stat](code, layout)(tree)
@@ -30708,15 +30693,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|def f = try {
          |  a
          |  /* note */
-         |}
-         |/* note */ finally b
+         |} finally b
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       "f",
       Nil,
       None,
-      Term.Try(blk(tnameComments("a")()("/* note */")), Nil, Some(tnameComments("b")("/* note */")())),
+      Term.Try(blk(tnameComments("a")()("/* note */")), Nil, Some(tname("b"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -30733,11 +30717,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  x
          |  /* note */
          |} catch {
-         |  /* note */ case _ => 1
+         |  case _ => 1
          |}
          |""".stripMargin
-    val cases =
-      List(Case.newBuilder(Pat.Wildcard(), None, lit(1)).begComment(Seq("/* note */")).result())
+    val cases = List(Case(Pat.Wildcard(), None, lit(1)))
     val tree = Defn
       .Def(Nil, "f", Nil, None, Term.Try(blk(tnameComments("x")()("/* note */")), cases, None))
     runTestAssert[Stat](code, layout)(tree)
