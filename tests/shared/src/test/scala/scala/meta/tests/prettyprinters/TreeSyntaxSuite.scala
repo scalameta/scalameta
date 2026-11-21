@@ -2430,10 +2430,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val (printed, parsed) = printAndParse(tree)
     assertNoDiff(
       printed,
-      """|f /* foo
-         |bar */ (x)""".stripMargin,
+      """|(f /* foo
+         |bar */ )(x)""".stripMargin,
     )
-    assertEquals(parsed.map(_.structure), Right(blk(withNewline("f"), tname("x")).structure))
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
   }
 
   test("comment with a newline: a qualifier and a name") {
@@ -2466,13 +2466,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val (printed, parsed) = printAndParse(tree)
     assertNoDiff(
       printed,
-      """|a /* foo
-         |bar */ + b""".stripMargin,
+      """|(a /* foo
+         |bar */ ) + b""".stripMargin,
     )
-    assertEquals(
-      parsed.map(_.structure),
-      Right(blk(withNewline("a"), unary("+", tname("b"))).structure),
-    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
   }
 
   test("comment with a newline: an infix operator and its operand") {
@@ -2493,10 +2490,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val (printed, parsed) = printAndParse(tree)
     assertNoDiff(
       printed,
-      """|f /* foo
-         |bar */ [T]""".stripMargin,
+      """|(f /* foo
+         |bar */ )[T]""".stripMargin,
     )
-    assertEquals(parsed.left.map(_.linesIterator.next()), Left("`=>` expected but `\\n` found"))
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
   }
 
   test("comment with a newline: an assignment") {
@@ -2626,12 +2623,12 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val (printed, parsed) = printAndParse(tree)
     assertNoDiff(
       printed,
-      """|f /* foo
-         |bar */ {
+      """|(f /* foo
+         |bar */ ) {
          |  x
          |}""".stripMargin,
     )
-    assertEquals(parsed.map(_.structure), Right(blk(withNewline("f"), blk(tname("x"))).structure))
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
   }
 
   test("comment with a newline: a function and its block argument, scala 2.13") {
@@ -2640,8 +2637,8 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val (printed, parsed) = printAndParse(tree)
     assertNoDiff(
       printed,
-      """|f /* foo
-         |bar */ {
+      """|(f /* foo
+         |bar */ ) {
          |  x
          |}""".stripMargin,
     )
@@ -2821,8 +2818,8 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val (printed, parsed) = printAndParse(tree)
     assertNoDiff(
       printed,
-      """|xs.map(_ + g /* foo
-         |bar */ (x))""".stripMargin,
+      """|xs.map(_ + (g /* foo
+         |bar */ )(x))""".stripMargin,
     )
     assertEquals(parsed.map(_.structure), Right(tree.structure))
   }
@@ -2836,12 +2833,11 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertNoDiff(
       printed,
       """|xs.map(_ + {
-         |  g /* foo
-         |bar */ (x)
+         |  (g /* foo
+         |bar */ )(x)
          |})""".stripMargin,
     )
-    val parsedTree = placeholderOperandApply(_ => blk(withNewline("g"), tname("x")))
-    assertEquals(parsed.map(_.structure), Right(parsedTree.structure))
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
   }
 
   test("comment with a newline: a function and its placeholder argument") {
@@ -2851,11 +2847,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val (printed, parsed) = printAndParse(tree)
     assertNoDiff(
       printed,
-      """|f /* foo
-         |bar */ (_)""".stripMargin,
+      """|(f /* foo
+         |bar */ )(_)""".stripMargin,
     )
-    val parsedTree = Term.AnonymousFunction(blk(withNewline("f"), Term.Placeholder()))
-    assertEquals(parsed.map(_.structure), Right(parsedTree.structure))
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
   }
 
   test("comment with a newline: an infix operand and its alphanumeric operator") {
@@ -2864,11 +2859,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val (printed, parsed) = printAndParse(tree)
     assertNoDiff(
       printed,
-      """|a /* foo
-         |bar */ foreach f""".stripMargin,
+      """|(a /* foo
+         |bar */ ) foreach f""".stripMargin,
     )
-    val parsedTree = blk(withNewline("a"), Term.SelectPostfix(tname("foreach"), tname("f")))
-    assertEquals(parsed.map(_.structure), Right(parsedTree.structure))
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
   }
 
   test("line comment: an infix operand and its alphanumeric operator") {
@@ -2877,11 +2871,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val (printed, parsed) = printAndParse(tree)
     assertNoDiff(
       printed,
-      """|a // foo
-         |  foreach f""".stripMargin,
+      """|(a // foo
+         |) foreach f""".stripMargin,
     )
-    val parsedTree = blk(withLineComment("a"), Term.SelectPostfix(tname("foreach"), tname("f")))
-    assertEquals(parsed.map(_.structure), Right(parsedTree.structure))
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
   }
 
   test("comment with a newline: a typed pattern and its type") {
@@ -2892,14 +2885,11 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertNoDiff(
       printed,
       """|x match {
-         |  case e: /* foo
-         |bar */ E => e
+         |  case e: ( /* foo
+         |bar */ E) => e
          |}""".stripMargin,
     )
-    assertEquals(
-      parsed.left.map(_.linesIterator.next()),
-      Left("`identifier` expected but `\\n` found"),
-    )
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
   }
 
   test("comment with a newline: an ascription and its type") {
@@ -2909,10 +2899,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val (printed, parsed) = printAndParse(tree)
     assertNoDiff(
       printed,
-      """|x: /* foo
-         |bar */ T""".stripMargin,
+      """|x: ( /* foo
+         |bar */ T)""".stripMargin,
     )
-    assertEquals(parsed.left.map(_.linesIterator.next()), Left("expected fewer-braces method body"))
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
   }
 
   test("line comment: a placeholder function and its alphanumeric operator, inside arguments") {
@@ -2941,16 +2931,11 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertNoDiff(
       printed,
       """|xs.map(
-         |  (_.f // foo
-         |  )(x)
+         |  _.f // foo
+         |    (x)
          |)""".stripMargin,
     )
-    val narrowed = Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("f"))).toBuilder
-      .endComment(Seq("// foo")).result()
-    val parsedArg = Term.Apply(narrowed, Term.ArgClause(List(tname("x"))))
-    val parsedTree = Term
-      .Apply(Term.Select(tname("xs"), tname("map")), Term.ArgClause(List(parsedArg)))
-    assertEquals(parsed.map(_.structure), Right(parsedTree.structure))
+    assertEquals(parsed.map(_.structure), Right(tree.structure))
   }
 
   test("line comment before an alphanumeric operator in a placeholder function") {

@@ -77,8 +77,13 @@ object TreeSyntax {
 
     def p(og: TreeSyntacticGroup, t: Tree, force: Boolean = false) = parens(og, s(t), force)
     // the expression goes on after the tree, so a comment that ends its line needs the parens
-    private def pContinued(og: TreeSyntacticGroup, t: Tree) =
-      p(og, t, force = ownEndComments(t).hasNewlinesAfter)
+    private def pContinued(og: TreeSyntacticGroup, t: Tree) = {
+      val c = ownEndComments(t)
+      p(og, t, force = (c.hasNewlinesAfter || c.hasNewlines) && sameInParens(t))
+    }
+    // in scala 3, the type must start on the same line as the colon
+    private def pAfterColon(og: TreeSyntacticGroup, t: Tree) =
+      p(og, t, force = ownBegComments(t).hasNewlines)
     private def parens(og: TreeSyntacticGroup, res: Show.Result, force: Boolean = false) = res match {
       case x: Show.Meta =>
         val needParens = force ||
@@ -349,7 +354,7 @@ object TreeSyntax {
         m(Expr1, s(kw("return"), if (guessHasExpr(t)) s(" ", p(Expr, t.expr)) else s()))
       case t: Term.Throw => m(Expr1, s(kw("throw"), " ", p(Expr, t.expr)))
       case t: Term.Ascribe =>
-        m(Expr1, s(p(PostfixExpr, t.expr), nosp(s(kw(": "), p(AnyInfixTyp, t.tpe)))))
+        m(Expr1, s(p(PostfixExpr, t.expr), nosp(s(kw(": "), pAfterColon(AnyInfixTyp, t.tpe)))))
       case t: Term.Annotate => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.annots))
       case t: Term.Tuple => m(SimpleExpr1, delimited(t, "(", t.args, ")")(showTree))
       case t: Term.Block =>
@@ -608,7 +613,7 @@ object TreeSyntax {
       case Pat.Typed(lhs, rhs: Lit) =>
         m(Pattern1, s(p(SimplePattern, lhs), kw(":"), " ", p(Literal, rhs)))
       case t: Pat.Typed =>
-        m(Pattern1, s(p(SimplePattern, t.lhs), nosp(s(kw(": "), p(RefineTyp, t.rhs)))))
+        m(Pattern1, s(p(SimplePattern, t.lhs), nosp(s(kw(": "), pAfterColon(RefineTyp, t.rhs)))))
 
       // Lit
       case Lit.Boolean(value) => m(Literal, s(value.toString))
@@ -1133,11 +1138,13 @@ object TreeSyntax {
         rest: Show.Result,
     ): Show.Result =
       // an operator may start a line after the lhs, so its comments need no parens
-      if (dialect.allowInfixOperatorAfterNL) m(sg, s(p(sg, t.lhs), rest))
+      if (dialect.allowInfixOperatorAfterNL &&
+        (t.op.is[Quasi] || t.op.value.isIdentSymbolicNonBackquotedInfixOperator))
+        m(sg, s(p(sg, t.lhs), rest))
       else {
         // without leading operators, only the parens continue the infix at the operator
         val res = s(pContinued(sg, t.lhs), rest)
-        val needParens = hasComments(t.op) && hasBreaksAroundBegComments(t.op)
+        val needParens = hasComments(t.op) && hasBreaksAroundBegComments(t.op) && sameInParens(t)
         if (needParens) m(enclosed, s("(", res, ")")) else m(sg, res)
       }
 
@@ -1422,6 +1429,16 @@ object TreeSyntax {
       case None => false
       case Some(xs) => xs.hasNewlinesBeforeOrAfter
     }
+    final def hasNewlines: Boolean = self match {
+      case None => false
+      case Some(xs) => xs.hasNewlines
+    }
+  }
+
+  /** false if parens change the tree */
+  private def sameInParens(tree: Tree): Boolean = tree.parent match {
+    case Some(x: Term.ApplyType) if x.parent.is[Pat.Extract] => false
+    case _ => !PlaceholderChecks.hasPlaceholder(tree, includeArg = false)
   }
 
   private def ownBegComments(tree: Tree): Option[Tree.Comments] = ownComments(tree)(_.begComment)

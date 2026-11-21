@@ -583,10 +583,10 @@ $unquoted */ def g = 1""",
     val printed = tree.reprint
     assertNoDiff(
       printed,
-      """|f /* foo
-         |bar */ (x)""".stripMargin,
+      """|(f /* foo
+         |bar */ )(x)""".stripMargin,
     )
-    assertTree(s"{\n$printed\n}".parse[Term].get)(blk(f, tname("x")))
+    assertTree(s"{\n$printed\n}".parse[Term].get)(blk(Term.Apply(f, Term.ArgClause(List(tname("x"))))))
   }
 
 }
