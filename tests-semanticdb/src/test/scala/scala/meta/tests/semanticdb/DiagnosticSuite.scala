@@ -2,7 +2,7 @@ package scala.meta.tests.semanticdb
 
 import scala.meta.internal.io.FileIO
 import scala.meta.internal.semanticdb.TextDocuments
-import scala.meta.internal.semanticdb.scalac.SemanticdbOps
+import scala.meta.internal.semanticdb.scalac.{SemanticdbOps, SemanticdbReporter}
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 import scala.meta.metap.Format
@@ -10,6 +10,7 @@ import scala.meta.metap.Format
 import java.io.File
 import java.nio.file.Files
 
+import scala.reflect.internal.util.NoPosition
 import scala.tools.nsc.reporters.StoreReporter
 import scala.tools.nsc.{Global, Settings}
 
@@ -103,6 +104,39 @@ class DiagnosticSuite extends SemanticdbSuite {
       .filter(_.startsWith("failed to generate semanticdb"))
       .map(msg => msg.substring(msg.lastIndexOf(File.separatorChar) + 1).stripSuffix(":"))
     assertEquals(failed, if (isScala213) List("NoParse.scala") else Nil)
+  }
+
+  private class Wrapped extends StoreReporter() {
+    val calls = List.newBuilder[String]
+    override def flush(): Unit = calls += "flush"
+    override def finish(): Unit = calls += "finish"
+  }
+
+  test("SemanticdbReporter: a warning and an error, then reset") {
+    val wrapped = new Wrapped
+    val reporter = new SemanticdbReporter(wrapped)
+    reporter.warning(NoPosition, "careful")
+    reporter.error(NoPosition, "boom")
+    reporter.reset()
+    assertEquals((reporter.errorCount, reporter.warningCount), (0, 0))
+    assertEquals((wrapped.errorCount, wrapped.warningCount, wrapped.infos.size), (1, 1, 2))
+  }
+
+  test("SemanticdbReporter: cancel, then reset") {
+    val wrapped = new Wrapped
+    val reporter = new SemanticdbReporter(wrapped)
+    reporter.cancelled = true
+    assertEquals(wrapped.cancelled, false)
+    reporter.reset()
+    assertEquals(wrapped.cancelled, false)
+  }
+
+  test("SemanticdbReporter: flush and finish") {
+    val wrapped = new Wrapped
+    val reporter = new SemanticdbReporter(wrapped)
+    reporter.flush()
+    reporter.finish()
+    assertEquals(wrapped.calls.result(), Nil)
   }
 
 }
