@@ -12,22 +12,18 @@ import s._
 
 object SymbolInformationPrinter {
 
-  // One row per modifier, in print order (shared by both styles).
-  //   prop   the SemanticDB property bit this row renders.
-  //   word   how the property is printed. This is the rule for every style; `defn` and `defnOK`
-  //          are the only exceptions to it.
-  //   defn   an occasional Definition-only deviation from `word`: null (default) keeps `word`,
-  //          so most rows omit this arg; "" drops the modifier, which Definition does not model
-  //          (synthetic, primary, default, given, inline, open, transparent, infix, opaque,
-  //          extension); any other string replaces it (variance prints +/- rather than
-  //          covariant/contravariant).
-  //   defnOK an extra Definition gate keyed on kind, not property, for the two modifiers Scala
-  //          keeps only in some positions: `abstract` only on classes, `final` only off objects
-  //          (Scala implies it there). Declaration ignores it.
+  /**
+   * A modifier for a property. `modifiers` lists them in the order that metap prints them.
+   *
+   * @param defnKW
+   *   if non-null, overrides `kw` in `Definition` style; "" omits it
+   * @param defnOK
+   *   whether the modifier appears in `Definition` style for a symbol
+   */
   private final case class Modifier(
       prop: Property,
-      word: String,
-      defn: String = null,
+      kw: String,
+      defnKW: String = null,
       defnOK: SymbolInformation => Boolean = _ => true,
   )
 
@@ -254,10 +250,7 @@ trait SymbolInformationPrinter extends BasePrinter {
     }
 
     protected sealed trait SymbolStyle
-    // InfoStyle renders the full symbol information; Reference renders just the display name.
-    // Keeping Reference outside InfoStyle means printInfo cannot be reached with a style that
-    // would silently print a name and signature without modifiers or kind.
-    protected sealed trait InfoStyle extends SymbolStyle
+    protected sealed trait InfoStyle extends SymbolStyle // prints the whole information, not just name
     protected case object Declaration extends InfoStyle
     protected case object Reference extends SymbolStyle
     protected case object Definition extends InfoStyle
@@ -279,24 +272,19 @@ trait SymbolInformationPrinter extends BasePrinter {
       printSignature(info)
     }
 
-    // See SymbolInformationPrinter.modifiers for the per-style words. Declaration prints the
-    // SemanticDB word for every set modifier; Definition prints its Scala-like word, skipping
-    // the modifiers it does not model and honouring each modifier's positional guard.
+    /** Prints the words that `modifiers` lists for the properties of `info`. */
     private def printModifiers(info: SymbolInformation, style: InfoStyle): Unit = {
       val props = info.properties
       SymbolInformationPrinter.modifiers.foreach(m =>
         if ((props & m.prop.value) != 0) str(style match {
-          case Declaration => m.word
-          case Definition if m.defnOK(info) => if (m.defn ne null) m.defn else m.word
+          case Declaration => m.kw
+          case Definition if m.defnOK(info) => if (m.defnKW ne null) m.defnKW else m.kw
           case _ => ""
         }),
       )
     }
 
-    // Declaration prints SemanticDB kind names (method, ctor, param, ...); Definition prints
-    // the closest Scala keyword: `def` for both methods and constructors, and no keyword at
-    // all for locals, fields, params and type params. Only those deltas are style-specific;
-    // every other kind renders identically, so it is spelled out once below.
+    /** Prints the SemanticDB name of the kind, or in `Definition` style its Scala keyword. */
     private def printKind(info: SymbolInformation, style: InfoStyle): Unit = str {
       info.kind match {
         case METHOD | CONSTRUCTOR if style == Definition => "def "
