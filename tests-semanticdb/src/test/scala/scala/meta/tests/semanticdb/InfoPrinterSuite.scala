@@ -88,6 +88,7 @@ class InfoPrinterSuite extends FunSuite {
       properties = properties(
         p.SYNTHETIC,
         p.ABSTRACT,
+        p.OVERRIDE,
         p.FINAL,
         p.SEALED,
         p.IMPLICIT,
@@ -169,6 +170,32 @@ class InfoPrinterSuite extends FunSuite {
     assertNoDiff(
       obtained,
       "{ abstract class AbstractClass; def abstractMethod; object FinalObject }",
+    )
+  }
+
+  test("info printer renders overriding members") {
+    val p = s.SymbolInformation.Property
+    def method(name: String, props: s.SymbolInformation.Property*) = s.SymbolInformation(
+      symbol = s"_empty_/C#$name().",
+      kind = s.SymbolInformation.Kind.METHOD,
+      properties = properties(props: _*),
+      displayName = name,
+    )
+    val infos = List(
+      method("plain", p.OVERRIDE),
+      method("finalMethod", p.OVERRIDE, p.FINAL),
+      method("stacked", p.ABSTRACT, p.OVERRIDE),
+    )
+    assertNoDiff(
+      infos.map(Print.info(Format.Compact, _, emptyPrinterSymtab)).mkString("\n"),
+      """|_empty_/C#plain(). => method plain
+         |_empty_/C#finalMethod(). => final method finalMethod
+         |_empty_/C#stacked(). => abstract method stacked""".stripMargin,
+    )
+    val tpe = s.StructuralType(declarations = Some(s.Scope(hardlinks = infos)))
+    assertNoDiff(
+      Print.tpe(Format.Compact, tpe, emptyPrinterSymtab),
+      "{ def plain; final def finalMethod; def stacked }",
     )
   }
 
