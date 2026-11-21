@@ -4125,6 +4125,21 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
+  test("block comment with a line break right after its opener, a statement right after it on its last line, at the indent of the enclosing body") {
+    val code =
+      """|object O:
+         |  def f =
+         |    a
+         |    /*
+         |  */b
+         |""".stripMargin
+    val a = tname("a").toBuilder.endComment(Seq("/*\n  */")).result()
+    val b = tname("b").toBuilder.begComment(Seq("/*\n  */")).result()
+    assertTree(source(code))(Source(
+      List(Defn.Object(Nil, tname("O"), tpl(Defn.Def(Nil, tname("f"), Nil, None, blk(a)), b))),
+    ))
+  }
+
   test("block comment with a carriage return right after its opener, a statement after it on its last line") {
     val code = "def f =\n  a\n  /*\r  */ b\n"
     val b = tname("b").toBuilder.begComment(Seq("/*\r  */")).result()

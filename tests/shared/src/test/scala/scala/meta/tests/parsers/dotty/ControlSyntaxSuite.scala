@@ -30448,6 +30448,234 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("indented try body, a comment line and a comment before finally at the body indent") {
+    val code =
+      """|def f =
+         |  try
+         |    a
+         |    // note
+         |    /* more */ finally b
+         |""".stripMargin
+    val layout =
+      """|def f = try {
+         |  a
+         |  // note
+         |  /* more */
+         |}
+         |// note
+         |/* more */ finally b
+         |""".stripMargin
+    val b = tnameComments("b")("// note", "/* more */")()
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.Try(blk(tnameComments("a")()("// note", "/* more */")), Nil, Some(b)),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented try body, a comment right before finally at the body indent") {
+    val code =
+      """|def f =
+         |  try
+         |    a
+         |    /* note */finally b
+         |""".stripMargin
+    val layout =
+      """|def f = try {
+         |  a
+         |  /* note */
+         |}
+         |/* note */ finally b
+         |""".stripMargin
+    val b = tnameComments("b")("/* note */")()
+    val tree = Defn
+      .Def(Nil, "f", Nil, None, Term.Try(blk(tnameComments("a")()("/* note */")), Nil, Some(b)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented try body, a comment before catch at the body indent, cases on the next line") {
+    val code =
+      """|def f =
+         |  try
+         |    a
+         |    /* note */ catch
+         |      case _ => b
+         |""".stripMargin
+    val layout =
+      """|def f = try {
+         |  a
+         |  /* note */
+         |}
+         |/* note */ catch {
+         |  case _ => b
+         |}
+         |""".stripMargin
+    val cases = Term.CasesBlock.newBuilder(List(Case(Pat.Wildcard(), None, tname("b"))))
+      .begComment(Seq("/* note */")).result()
+    val tree = Defn
+      .Def(Nil, "f", Nil, None, Term.Try(blk(tnameComments("a")()("/* note */")), Some(cases), None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented try body, a comment right before catch at the body indent") {
+    val code =
+      """|def f =
+         |  try
+         |    a
+         |    /* note */catch case _ => 1
+         |""".stripMargin
+    val layout =
+      """|def f = try {
+         |  a
+         |  /* note */
+         |} catch {
+         |  /* note */ case _ => 1
+         |}
+         |""".stripMargin
+    val cases =
+      List(Case.newBuilder(Pat.Wildcard(), None, lit(1)).begComment(Seq("/* note */")).result())
+    val tree = Defn
+      .Def(Nil, "f", Nil, None, Term.Try(blk(tnameComments("a")()("/* note */")), cases, None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented catch cases, a comment before finally at the case indent") {
+    val code =
+      """|def f =
+         |  try a catch
+         |    case _ => b
+         |    /* note */ finally c
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case _ =>
+         |    b
+         |  /* note */
+         |}
+         |/* note */ finally c
+         |""".stripMargin
+    val c = tnameComments("c")("/* note */")()
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      None,
+      Term.Try(
+        tname("a"),
+        List(Case.newBuilder(Pat.Wildcard(), None, tname("b")).endComment(Seq("/* note */")).result()),
+        Some(c),
+      ),
+    )
+    // parsing the reprint attaches the comment to `b`, not to the case
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("indented condition, a comment before then at the body indent") {
+    val code =
+      """|def f =
+         |  if
+         |    a
+         |    /* note */ then b else c
+         |""".stripMargin
+    val layout =
+      """|def f = if ({
+         |  a
+         |  /* note */
+         |})
+         |  /* note */ b
+         |else c
+         |""".stripMargin
+    val b = tnameComments("b")("/* note */")()
+    val tree = Defn
+      .Def(Nil, "f", Nil, None, Term.If(blk(tnameComments("a")()("/* note */")), b, tname("c"), Nil))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented condition, a comment right before then at the body indent") {
+    val code =
+      """|def f =
+         |  if
+         |    a
+         |    /* note */then b else c
+         |""".stripMargin
+    val layout =
+      """|def f = if ({
+         |  a
+         |  /* note */
+         |})
+         |  /* note */ b
+         |else c
+         |""".stripMargin
+    val b = tnameComments("b")("/* note */")()
+    val tree = Defn
+      .Def(Nil, "f", Nil, None, Term.If(blk(tnameComments("a")()("/* note */")), b, tname("c"), Nil))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented while condition, a comment before do at the body indent") {
+    val code =
+      """|def f =
+         |  while
+         |    a
+         |    /* note */ do b
+         |""".stripMargin
+    val layout =
+      """|def f = while ({
+         |  a
+         |  /* note */
+         |})
+         |  /* note */ b
+         |""".stripMargin
+    val b = tnameComments("b")("/* note */")()
+    val tree = Defn.Def(Nil, "f", Nil, None, Term.While(blk(tnameComments("a")()("/* note */")), b))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented while condition, a comment right before do at the body indent") {
+    val code =
+      """|def f =
+         |  while
+         |    a
+         |    /* note */do b
+         |""".stripMargin
+    val layout =
+      """|def f = while ({
+         |  a
+         |  /* note */
+         |})
+         |  /* note */ b
+         |""".stripMargin
+    val b = tnameComments("b")("/* note */")()
+    val tree = Defn.Def(Nil, "f", Nil, None, Term.While(blk(tnameComments("a")()("/* note */")), b))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented while condition, a multi-line comment before do at the body indent") {
+    val code =
+      """|def f =
+         |  while
+         |    a
+         |    /* note
+         |    */ do b
+         |""".stripMargin
+    val layout =
+      """|def f = while ({
+         |  a
+         |  /* note
+         |    */
+         |})
+         |  /* note
+         |    */ b
+         |""".stripMargin
+    val b = tnameComments("b")("/* note\n    */")()
+    val tree = Defn
+      .Def(Nil, "f", Nil, None, Term.While(blk(tnameComments("a")()("/* note\n    */")), b))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   test("indented then body, a comment before else at the body indent") {
     val code =
       """|def f =
@@ -30508,17 +30736,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  /* note */ case _ => 1
          |}
          |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      "f",
-      Nil,
-      None,
-      Term.Try(
-        blk(tnameComments("x")()("/* note */")),
-        List(Case.newBuilder(Pat.Wildcard(), None, lit(1)).begComment(Seq("/* note */")).result()),
-        None,
-      ),
-    )
+    val cases =
+      List(Case.newBuilder(Pat.Wildcard(), None, lit(1)).begComment(Seq("/* note */")).result())
+    val tree = Defn
+      .Def(Nil, "f", Nil, None, Term.Try(blk(tnameComments("x")()("/* note */")), cases, None))
     runTestAssert[Stat](code, layout)(tree)
   }
 
