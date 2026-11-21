@@ -2015,13 +2015,10 @@ trait TextDocumentOps {
           case t: g.GenericApply => processGenericApply(t)
           case t: g.RefTree => processRefTree(t)
           case t: g.Block => processBlock(t)
+          case t: g.Template => processTemplate(t)
 
           // skip an annotation that scalac added, like `@unchecked` on a desugared match
           case t: g.Annotated if !t.annot.pos.isOpaqueRange => isVisited += t.annot
-
-          case t: g.Template if t.symbol.owner.isPartialFunctionLambdaClass =>
-            isVisited ++= t.parents
-            isVisited += t.self
 
           case t: g.Literal if t.tpe != null && t.tpe.typeSymbol == g.definitions.ClassClass =>
             val mpos = t.toMeta
@@ -2045,42 +2042,6 @@ trait TextDocumentOps {
               case _ =>
             }
             tryFindMtree(gtree)
-          case t: g.Template =>
-            // context bounds could be moved into body
-            t.body.foreach {
-              case s: g.ValDef =>
-                if (s.symbol.hasAllFlags(Flags.IMPLICIT | Flags.SYNTHETIC)) traverse(s.tpt)
-              case _ =>
-            }
-            t.parents.foreach {
-              // a parent with inferred type arguments, like `n.P(1)`, has no original tree
-              case p: g.TypeTree if p.original == null && p.pos.isRange =>
-                mparentAt(p.pos.start) match {
-                  case mtpe: m.Type => if (!tryFindParent(mtpe, p.tpe)) mtpe match {
-                      case mtpe: m.Type.Select => success(mtpe.name, p.tpe.typeSymbol)
-                      case _ => tryFindType(mtpe, p.tpe)
-                    }
-                  case _ =>
-                }
-              case _ =>
-            }
-            t.self.tpt match {
-              case tpt: g.TypeTree if tpt.original != null && tpt.original.pos.isDefined =>
-                // the tree of `_` in `this: List[_] =>` defines it, not the type below
-                traverse(t.self)
-                // scalac types `this: T =>` in class C as `C with T`
-                val gtpe = tpt.tpe match {
-                  case g.RefinedType(gcls :: gtpe :: Nil, _) if gcls.typeSymbol == t.symbol.owner =>
-                    gtpe
-                  case gtpe => gtpe
-                }
-                mselfTypeAt(tpt.original.pos.start) match {
-                  case mtpe: m.Type => tryFindType(mtpe, gtpe)
-                  case _ =>
-                }
-              case _ =>
-            }
-            tryFindMtree(t)
           case _ => tryFindMtree(gtree)
         }
 
@@ -2236,6 +2197,49 @@ trait TextDocumentOps {
             }
             traverse(t.expr)
           } else tryFindMtree(t)
+
+        private def processTemplate(t: g.Template): Unit =
+          if (t.symbol.owner.isPartialFunctionLambdaClass) {
+            // skip what scalac added to a lambda's class
+            isVisited ++= t.parents
+            isVisited += t.self
+          } else {
+            // context bounds could be moved into body
+            t.body.foreach {
+              case s: g.ValDef =>
+                if (s.symbol.hasAllFlags(Flags.IMPLICIT | Flags.SYNTHETIC)) traverse(s.tpt)
+              case _ =>
+            }
+            t.parents.foreach {
+              // a parent with inferred type arguments, like `n.P(1)`, has no original tree
+              case p: g.TypeTree if p.original == null && p.pos.isRange =>
+                mparentAt(p.pos.start) match {
+                  case mtpe: m.Type => if (!tryFindParent(mtpe, p.tpe)) mtpe match {
+                      case mtpe: m.Type.Select => success(mtpe.name, p.tpe.typeSymbol)
+                      case _ => tryFindType(mtpe, p.tpe)
+                    }
+                  case _ =>
+                }
+              case _ =>
+            }
+            t.self.tpt match {
+              case tpt: g.TypeTree if tpt.original != null && tpt.original.pos.isDefined =>
+                // the tree of `_` in `this: List[_] =>` defines it, not the type below
+                traverse(t.self)
+                // scalac types `this: T =>` in class C as `C with T`
+                val gtpe = tpt.tpe match {
+                  case g.RefinedType(gcls :: gtpe :: Nil, _) if gcls.typeSymbol == t.symbol.owner =>
+                    gtpe
+                  case gtpe => gtpe
+                }
+                mselfTypeAt(tpt.original.pos.start) match {
+                  case mtpe: m.Type => tryFindType(mtpe, gtpe)
+                  case _ =>
+                }
+              case _ =>
+            }
+            tryFindMtree(t)
+          }
       }
 
       MyTreeIndexerTraverser(msource)
