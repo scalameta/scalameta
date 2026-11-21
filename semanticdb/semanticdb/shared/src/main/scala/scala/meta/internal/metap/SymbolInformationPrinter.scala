@@ -35,6 +35,7 @@ object SymbolInformationPrinter {
     Modifier(Property.SYNTHETIC, "synthetic ", ""),
     Modifier(Property.ABSTRACT, "abstract ", defnOK = _.isClass),
     Modifier(Property.FINAL, "final ", defnOK = !_.isObject),
+    Modifier(Property.OVERRIDE, "override "),
     Modifier(Property.SEALED, "sealed "),
     Modifier(Property.IMPLICIT, "implicit "),
     Modifier(Property.LAZY, "lazy "),
