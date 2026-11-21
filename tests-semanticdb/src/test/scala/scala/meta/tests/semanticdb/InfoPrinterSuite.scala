@@ -68,6 +68,24 @@ class InfoPrinterSuite extends FunSuite {
   private def assertSignature(sig: s.Signature, expected: String): Unit =
     assertEquals(Print.signature(Format.Compact, sig, emptyPrinterSymtab), expected)
 
+  private val returnType = ref("_empty_/R#")
+
+  private def implicitParam(name: String, tpe: String, props: s.SymbolInformation.Property*) =
+    param(s"_empty_/f().($name)", name, ref(tpe)).withProperties(properties(props: _*))
+
+  /** `(x: B)(o: C, p: D): R`, where `o` and `p` have `props` */
+  private def methodWithClause(props: s.SymbolInformation.Property*): s.Signature = s
+    .MethodSignature(
+      parameterLists = List(
+        scope(param("_empty_/f().(x)", "x", ref("_empty_/B#"))),
+        scope(
+          implicitParam("o", "_empty_/C#", props: _*),
+          implicitParam("p", "_empty_/D#", props: _*),
+        ),
+      ),
+      returnType = returnType,
+    )
+
   // `extension [T](t: A) def map[U](f: B)`
   private val mapGroups = List(
     s.ParamClauseGroup(
@@ -421,6 +439,113 @@ class InfoPrinterSuite extends FunSuite {
       Print.info(Format.Compact, info, emptyPrinterSymtab),
       "_empty_/Functor#map(). => extension method map[T](t: A)[U](f: B): C",
     )
+  }
+
+  test("parameter clauses: one implicit parameter") {
+    val a = implicitParam("a", "_empty_/A#", s.SymbolInformation.Property.IMPLICIT)
+    assertSignature(
+      s.MethodSignature(parameterLists = List(scope(a)), returnType = returnType),
+      "(implicit a: A): R",
+    )
+  }
+
+  test("parameter clauses: two implicit parameters after a normal clause") {
+    val sig = methodWithClause(s.SymbolInformation.Property.IMPLICIT)
+    assertSignature(sig, "(x: B)(implicit o: C, implicit p: D): R")
+  }
+
+  test("parameter clauses: two using parameters after a normal clause") {
+    val sig =
+      methodWithClause(s.SymbolInformation.Property.GIVEN, s.SymbolInformation.Property.IMPLICIT)
+    assertSignature(sig, "(x: B)(implicit o: C, implicit p: D): R")
+  }
+
+  test("parameter clauses: annotated implicit parameter") {
+    val ann = s.AnnotationTree(ref("_empty_/ann#"))
+    val a = implicitParam("a", "_empty_/A#", s.SymbolInformation.Property.IMPLICIT)
+      .withAnnotations(List(ann))
+    assertSignature(
+      s.MethodSignature(parameterLists = List(scope(a)), returnType = returnType),
+      "(@ann implicit a: A): R",
+    )
+  }
+
+  test("parameter clauses: implicit val parameters of a constructor") {
+    val p = s.SymbolInformation.Property
+    val a = implicitParam("a", "_empty_/A#", p.IMPLICIT, p.VAL)
+    val b = implicitParam("b", "_empty_/B#", p.IMPLICIT, p.VAL)
+    assertSignature(
+      s.MethodSignature(parameterLists = List(scope(a, b))),
+      "(implicit val a: A, implicit val b: B)",
+    )
+  }
+
+  test("parameter clauses: extension method with using clauses") {
+    val p = s.SymbolInformation.Property
+    val groups = List(
+      s.ParamClauseGroup(
+        None,
+        List(
+          scope(param("_empty_/f().(t)", "t", ref("_empty_/A#"))),
+          scope(implicitParam("o", "_empty_/C#", p.GIVEN, p.IMPLICIT)),
+        ),
+      ),
+      s.ParamClauseGroup(
+        None,
+        List(
+          scope(param("_empty_/f().(x)", "x", ref("_empty_/B#"))),
+          scope(implicitParam("p", "_empty_/D#", p.GIVEN, p.IMPLICIT)),
+        ),
+      ),
+    )
+    val sig = s.ExtendedMethodSignature(groups, returnType)
+    assertSignature(sig, "(t: A)(implicit o: C)(x: B)(implicit p: D): R")
+  }
+
+  test("parameter clauses: using parameters by symlinks") {
+    val p = s.SymbolInformation.Property
+    val params = List(
+      implicitParam("o", "_empty_/C#", p.GIVEN, p.IMPLICIT),
+      implicitParam("p", "_empty_/D#", p.GIVEN, p.IMPLICIT),
+    )
+    val symtab = PrinterSymtab.fromTextDocument(s.TextDocument(symbols = params))
+    val sig = s.MethodSignature(
+      parameterLists = List(s.Scope(symlinks = params.map(_.symbol))),
+      returnType = returnType,
+    )
+    assertEquals(Print.signature(Format.Compact, sig, symtab), "(implicit o: C, implicit p: D): R")
+  }
+
+  test("parameter clauses: symlinks without infos") {
+    val sig = s.MethodSignature(
+      parameterLists = List(s.Scope(symlinks = List("_empty_/f().(o)", "_empty_/f().(p)"))),
+      returnType = returnType,
+    )
+    assertSignature(sig, "(unknown o, unknown p): R")
+  }
+
+  test("parameter clauses: info of an implicit and of a using parameter") {
+    val p = s.SymbolInformation.Property
+    val infos = List(
+      implicitParam("a", "_empty_/A#", p.IMPLICIT),
+      implicitParam("o", "_empty_/C#", p.GIVEN, p.IMPLICIT),
+    )
+    assertNoDiff(
+      infos.map(Print.info(Format.Compact, _, emptyPrinterSymtab)).mkString("\n"),
+      """|_empty_/f().(a) => implicit param a: A
+         |_empty_/f().(o) => implicit given param o: C""".stripMargin,
+    )
+  }
+
+  test("parameter clauses: implicit method of a structural type") {
+    val f = s.SymbolInformation(
+      symbol = "_empty_/S#f().",
+      kind = s.SymbolInformation.Kind.METHOD,
+      properties = s.SymbolInformation.Property.IMPLICIT.value,
+      displayName = "f",
+      signature = s.MethodSignature(returnType = ref("_empty_/A#")),
+    )
+    assertType(s.StructuralType(declarations = Some(scope(f))), "{ implicit def f: A }")
   }
 
 }
