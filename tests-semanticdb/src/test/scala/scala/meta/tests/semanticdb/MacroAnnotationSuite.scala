@@ -1337,6 +1337,713 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  private val ma49Code =
+    """|package ma49
+       |object O { @example.RenameDef def f(x: Int) = { val y = x + 1; y } }
+       |object U { def g = { val z = O.f(1); z } }
+       |""".stripMargin
+
+  occurrences(
+    "a method that a macro annotation renames",
+    ma49Code,
+    """|[0:8..0:12): ma49 <= ma49/
+       |[1:7..1:8): O <= ma49/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:29): RenameDef => example/RenameDef#
+       |[1:34..1:35): f <= ma49/O.f().
+       |[1:36..1:37): x <= ma49/O.f().(x)
+       |[1:39..1:42): Int => scala/Int#
+       |[1:52..1:53): y <= local0
+       |[1:56..1:57): x => ma49/O.f$impl().(x)
+       |[1:58..1:59): + => scala/Int#`+`(+4).
+       |[1:63..1:64): y => local0
+       |[2:7..2:8): U <= ma49/U.
+       |[2:15..2:16): g <= ma49/U.g().
+       |[2:25..2:26): z <= local1
+       |[2:29..2:30): O => ma49/O.
+       |[2:31..2:32): f => ma49/O.f().
+       |[2:37..2:38): z => local1
+       |""".stripMargin,
+  )
+
+  checkSection(
+    "a method that a macro annotation renames: symbols",
+    ma49Code,
+    """|local0 => val local y: Int
+       |  Int => scala/Int#
+       |local1 => val local z: Int
+       |  Int => scala/Int#
+       |ma49/O. => final object O extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma49/O.f$impl(). => method f$impl(x: Int): Int
+       |  x => ma49/O.f$impl().(x)
+       |  Int => scala/Int#
+       |ma49/O.f$impl().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma49/O.f(). => method f(x: Int): Int
+       |  x => ma49/O.f().(x)
+       |  Int => scala/Int#
+       |ma49/O.f().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma49/U. => final object U extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma49/U.g(). => method g: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+    "Symbols",
+  )
+
+  private val ma50Code =
+    """|package ma50
+       |@example.RenameDefs class C { def f(x: Int) = { val y = x + 1; y } }
+       |object U { def g = { val z = new C().f(1); z } }
+       |""".stripMargin
+
+  occurrences(
+    "a method of a class that a macro annotation renames",
+    ma50Code,
+    """|[0:8..0:12): ma50 <= ma50/
+       |[1:1..1:8): example => example/
+       |[1:9..1:19): RenameDefs => example/RenameDefs#
+       |[1:26..1:27): C <= ma50/C#
+       |[1:28..1:28):  <= ma50/C#`<init>`().
+       |[1:34..1:35): f <= ma50/C#f().
+       |[1:36..1:37): x <= ma50/C#f().(x)
+       |[1:39..1:42): Int => scala/Int#
+       |[1:52..1:53): y <= local0
+       |[1:56..1:57): x => ma50/C#f$impl().(x)
+       |[1:58..1:59): + => scala/Int#`+`(+4).
+       |[1:63..1:64): y => local0
+       |[2:7..2:8): U <= ma50/U.
+       |[2:15..2:16): g <= ma50/U.g().
+       |[2:25..2:26): z <= local1
+       |[2:33..2:34): C => ma50/C#
+       |[2:34..2:34):  => ma50/C#`<init>`().
+       |[2:37..2:38): f => ma50/C#f().
+       |[2:43..2:44): z => local1
+       |""".stripMargin,
+  )
+
+  checkSection(
+    "a method of a class that a macro annotation renames: symbols",
+    ma50Code,
+    """|local0 => val local y: Int
+       |  Int => scala/Int#
+       |local1 => val local z: Int
+       |  Int => scala/Int#
+       |ma50/C# => class C extends AnyRef { +3 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma50/C#`<init>`(). => primary ctor <init>()
+       |ma50/C#f$impl(). => method f$impl(x: Int): Int
+       |  x => ma50/C#f$impl().(x)
+       |  Int => scala/Int#
+       |ma50/C#f$impl().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma50/C#f(). => method f(x: Int): Int
+       |  x => ma50/C#f().(x)
+       |  Int => scala/Int#
+       |ma50/C#f().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma50/U. => final object U extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma50/U.g(). => method g: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+    "Symbols",
+  )
+
+  private val ma51Code =
+    """|package ma51
+       |@example.RenameDefs class C { def f(x: Int) = { val y = x + 1; y } }
+       |object C
+       |object U { def g = { val z = new C().f(1); z } }
+       |""".stripMargin
+
+  occurrences(
+    "a method of a class with a companion that a macro annotation renames",
+    ma51Code,
+    """|[0:8..0:12): ma51 <= ma51/
+       |[1:1..1:8): example => example/
+       |[1:9..1:19): RenameDefs => example/RenameDefs#
+       |[1:26..1:27): C <= ma51/C#
+       |[1:28..1:28):  <= ma51/C#`<init>`().
+       |[1:34..1:35): f <= ma51/C#f().
+       |[1:36..1:37): x <= ma51/C#f().(x)
+       |[1:39..1:42): Int => scala/Int#
+       |[1:52..1:53): y <= local0
+       |[1:56..1:57): x => ma51/C#f$impl().(x)
+       |[1:58..1:59): + => scala/Int#`+`(+4).
+       |[1:63..1:64): y => local0
+       |[2:7..2:8): C <= ma51/C.
+       |[3:7..3:8): U <= ma51/U.
+       |[3:15..3:16): g <= ma51/U.g().
+       |[3:25..3:26): z <= local1
+       |[3:33..3:34): C => ma51/C#
+       |[3:34..3:34):  => ma51/C#`<init>`().
+       |[3:37..3:38): f => ma51/C#f().
+       |[3:43..3:44): z => local1
+       |""".stripMargin,
+  )
+
+  checkSection(
+    "a method of a class with a companion that a macro annotation renames: symbols",
+    ma51Code,
+    """|local0 => val local y: Int
+       |  Int => scala/Int#
+       |local1 => val local z: Int
+       |  Int => scala/Int#
+       |ma51/C# => class C extends AnyRef { +3 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma51/C#`<init>`(). => primary ctor <init>()
+       |ma51/C#f$impl(). => method f$impl(x: Int): Int
+       |  x => ma51/C#f$impl().(x)
+       |  Int => scala/Int#
+       |ma51/C#f$impl().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma51/C#f(). => method f(x: Int): Int
+       |  x => ma51/C#f().(x)
+       |  Int => scala/Int#
+       |ma51/C#f().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma51/C. => final object C extends AnyRef
+       |  AnyRef => scala/AnyRef#
+       |ma51/U. => final object U extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma51/U.g(). => method g: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+    "Symbols",
+  )
+
+  private val ma52Code =
+    """|package ma52
+       |object O { @example.RenameDef def f(x: Int) = { val y = x + 1; y } }
+       |object U { def g = O.f(x = 1) }
+       |""".stripMargin
+
+  occurrences(
+    "a named argument of a method that a macro annotation renames",
+    ma52Code,
+    """|[0:8..0:12): ma52 <= ma52/
+       |[1:7..1:8): O <= ma52/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:29): RenameDef => example/RenameDef#
+       |[1:34..1:35): f <= ma52/O.f().
+       |[1:36..1:37): x <= ma52/O.f().(x)
+       |[1:39..1:42): Int => scala/Int#
+       |[1:52..1:53): y <= local0
+       |[1:56..1:57): x => ma52/O.f$impl().(x)
+       |[1:58..1:59): + => scala/Int#`+`(+4).
+       |[1:63..1:64): y => local0
+       |[2:7..2:8): U <= ma52/U.
+       |[2:15..2:16): g <= ma52/U.g().
+       |[2:19..2:20): O => ma52/O.
+       |[2:21..2:22): f => ma52/O.f().
+       |[2:23..2:24): x => ma52/O.f().(x)
+       |""".stripMargin,
+  )
+
+  checkSection(
+    "a named argument of a method that a macro annotation renames: symbols",
+    ma52Code,
+    """|local0 => val local y: Int
+       |  Int => scala/Int#
+       |ma52/O. => final object O extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma52/O.f$impl(). => method f$impl(x: Int): Int
+       |  x => ma52/O.f$impl().(x)
+       |  Int => scala/Int#
+       |ma52/O.f$impl().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma52/O.f(). => method f(x: Int): Int
+       |  x => ma52/O.f().(x)
+       |  Int => scala/Int#
+       |ma52/O.f().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma52/U. => final object U extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma52/U.g(). => method g: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+    "Symbols",
+  )
+
+  private val ma53Code =
+    """|package ma53
+       |object O { @example.RenameDefCopyFirst def f(x: Int) = { val y = x + 1; y } }
+       |object U { def g = O.f(x = 1) }
+       |""".stripMargin
+
+  occurrences(
+    "a method that a macro annotation renames, the renamed copy first",
+    ma53Code,
+    """|[0:8..0:12): ma53 <= ma53/
+       |[1:7..1:8): O <= ma53/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:38): RenameDefCopyFirst => example/RenameDefCopyFirst#
+       |[1:43..1:44): f <= ma53/O.f().
+       |[1:45..1:46): x <= ma53/O.f$impl().(x)
+       |[1:48..1:51): Int => scala/Int#
+       |[1:61..1:62): y <= local0
+       |[1:65..1:66): x => ma53/O.f$impl().(x)
+       |[1:67..1:68): + => scala/Int#`+`(+4).
+       |[1:72..1:73): y => local0
+       |[2:7..2:8): U <= ma53/U.
+       |[2:15..2:16): g <= ma53/U.g().
+       |[2:19..2:20): O => ma53/O.
+       |[2:21..2:22): f => ma53/O.f().
+       |[2:23..2:24): x => ma53/O.f().(x)
+       |""".stripMargin,
+  )
+
+  checkSection(
+    "a method that a macro annotation renames, the renamed copy first: symbols",
+    ma53Code,
+    """|local0 => val local y: Int
+       |  Int => scala/Int#
+       |ma53/O. => final object O extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma53/O.f$impl(). => method f$impl(x: Int): Int
+       |  x => ma53/O.f$impl().(x)
+       |  Int => scala/Int#
+       |ma53/O.f$impl().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma53/O.f(). => method f(x: Int): Int
+       |  x => ma53/O.f().(x)
+       |  Int => scala/Int#
+       |ma53/O.f().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma53/U. => final object U extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma53/U.g(). => method g: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+    "Symbols",
+  )
+
+  private val ma54Code =
+    """|package ma54
+       |object O { @example.PrependForwarder def f(x: Int) = { val y = x + 1; y } }
+       |object U { def g = O.f(x = 1) }
+       |""".stripMargin
+
+  occurrences(
+    "a method that a macro annotation forwards to, the forwarder first",
+    ma54Code,
+    """|[0:8..0:12): ma54 <= ma54/
+       |[1:7..1:8): O <= ma54/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:36): PrependForwarder => example/PrependForwarder#
+       |[1:41..1:42): f <= ma54/O.f().
+       |[1:43..1:44): x <= ma54/O.f$fwd().(x)
+       |[1:46..1:49): Int => scala/Int#
+       |[1:59..1:60): y <= local0
+       |[1:63..1:64): x => ma54/O.f().(x)
+       |[1:65..1:66): + => scala/Int#`+`(+4).
+       |[1:70..1:71): y => local0
+       |[2:7..2:8): U <= ma54/U.
+       |[2:15..2:16): g <= ma54/U.g().
+       |[2:19..2:20): O => ma54/O.
+       |[2:21..2:22): f => ma54/O.f().
+       |[2:23..2:24): x => ma54/O.f().(x)
+       |""".stripMargin,
+  )
+
+  checkSection(
+    "a method that a macro annotation forwards to, the forwarder first: symbols",
+    ma54Code,
+    """|local0 => val local y: Int
+       |  Int => scala/Int#
+       |ma54/O. => final object O extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma54/O.f$fwd(). => method f$fwd(x: Int): Int
+       |  x => ma54/O.f$fwd().(x)
+       |  Int => scala/Int#
+       |ma54/O.f$fwd().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma54/O.f(). => method f(x: Int): Int
+       |  x => ma54/O.f().(x)
+       |  Int => scala/Int#
+       |ma54/O.f().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma54/U. => final object U extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma54/U.g(). => method g: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+    "Symbols",
+  )
+
+  private val ma55Code =
+    """|package ma55
+       |object O { @example.AppendForwarder def f(x: Int) = { val y = x + 1; y } }
+       |object U { def g = O.f(x = 1) }
+       |""".stripMargin
+
+  occurrences(
+    "a method that a macro annotation forwards to, the forwarder after it",
+    ma55Code,
+    """|[0:8..0:12): ma55 <= ma55/
+       |[1:7..1:8): O <= ma55/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:35): AppendForwarder => example/AppendForwarder#
+       |[1:40..1:41): f <= ma55/O.f().
+       |[1:42..1:43): x <= ma55/O.f().(x)
+       |[1:45..1:48): Int => scala/Int#
+       |[1:58..1:59): y <= local0
+       |[1:62..1:63): x => ma55/O.f().(x)
+       |[1:64..1:65): + => scala/Int#`+`(+4).
+       |[1:69..1:70): y => local0
+       |[2:7..2:8): U <= ma55/U.
+       |[2:15..2:16): g <= ma55/U.g().
+       |[2:19..2:20): O => ma55/O.
+       |[2:21..2:22): f => ma55/O.f().
+       |[2:23..2:24): x => ma55/O.f().(x)
+       |""".stripMargin,
+  )
+
+  checkSection(
+    "a method that a macro annotation forwards to, the forwarder after it: symbols",
+    ma55Code,
+    """|local0 => val local y: Int
+       |  Int => scala/Int#
+       |ma55/O. => final object O extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma55/O.f$fwd(). => method f$fwd(x: Int): Int
+       |  x => ma55/O.f$fwd().(x)
+       |  Int => scala/Int#
+       |ma55/O.f$fwd().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma55/O.f(). => method f(x: Int): Int
+       |  x => ma55/O.f().(x)
+       |  Int => scala/Int#
+       |ma55/O.f().(x) => param x: Int
+       |  Int => scala/Int#
+       |ma55/U. => final object U extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |ma55/U.g(). => method g: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
+    "Symbols",
+  )
+
+  occurrences(
+    "a local method that a macro annotation renames",
+    """|package ma56
+       |object U { def g = { @example.RenameDef def f(x: Int) = x + 1; f(x = 2) } }
+       |""".stripMargin,
+    """|[0:8..0:12): ma56 <= ma56/
+       |[1:7..1:8): U <= ma56/U.
+       |[1:15..1:16): g <= ma56/U.g().
+       |[1:22..1:29): example => example/
+       |[1:30..1:39): RenameDef => example/RenameDef#
+       |[1:44..1:45): f <= local0
+       |[1:46..1:47): x <= local1
+       |[1:49..1:52): Int => scala/Int#
+       |[1:56..1:57): x => local3
+       |[1:58..1:59): + => scala/Int#`+`(+4).
+       |[1:63..1:64): f => local0
+       |[1:65..1:66): x => local1
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a method with a local method and a lambda that a macro annotation renames",
+    """|package ma57
+       |object O {
+       |  @example.RenameDef def f(x: Int) = { def g(y: Int) = y + x; Option(1).map(z => g(z)).get }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:12): ma57 <= ma57/
+       |[1:7..1:8): O <= ma57/O.
+       |[2:3..2:10): example => example/
+       |[2:11..2:20): RenameDef => example/RenameDef#
+       |[2:25..2:26): f <= ma57/O.f().
+       |[2:27..2:28): x <= ma57/O.f().(x)
+       |[2:30..2:33): Int => scala/Int#
+       |[2:43..2:44): g <= local0
+       |[2:45..2:46): y <= local1
+       |[2:48..2:51): Int => scala/Int#
+       |[2:55..2:56): y => local1
+       |[2:57..2:58): + => scala/Int#`+`(+4).
+       |[2:59..2:60): x => ma57/O.f$impl().(x)
+       |[2:62..2:68): Option => scala/Option.
+       |[2:72..2:75): map => scala/Option#map().
+       |[2:76..2:77): z <= local2
+       |[2:81..2:82): g => local0
+       |[2:83..2:84): z => local2
+       |[2:87..2:90): get => scala/Option#get().
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a method with a type parameter that a macro annotation renames",
+    """|package ma58
+       |object O { @example.RenameGenericDef def f[T](x: T): Option[T] = Option[T](x) }
+       |object U { def g = O.f[Int](x = 1) }
+       |""".stripMargin,
+    """|[0:8..0:12): ma58 <= ma58/
+       |[1:7..1:8): O <= ma58/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:36): RenameGenericDef => example/RenameGenericDef#
+       |[1:41..1:42): f <= ma58/O.f().
+       |[1:43..1:44): T <= ma58/O.f().[T]
+       |[1:46..1:47): x <= ma58/O.f().(x)
+       |[1:49..1:50): T => ma58/O.f().[T]
+       |[1:53..1:59): Option => scala/Option#
+       |[1:60..1:61): T => ma58/O.f$impl().[T]
+       |[1:65..1:71): Option => scala/Option.
+       |[1:72..1:73): T => ma58/O.f$impl().[T]
+       |[1:75..1:76): x => ma58/O.f$impl().(x)
+       |[2:7..2:8): U <= ma58/U.
+       |[2:15..2:16): g <= ma58/U.g().
+       |[2:19..2:20): O => ma58/O.
+       |[2:21..2:22): f => ma58/O.f().
+       |[2:23..2:26): Int => scala/Int#
+       |[2:28..2:29): x => ma58/O.f().(x)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a named argument of a forwarder that a macro annotation adds first",
+    """|package ma59
+       |object O { @example.PrependForwarder def f(x: Int) = { val y = x + 1; y } }
+       |object U { def g = O.f$fwd(x = 1) }
+       |""".stripMargin,
+    """|[0:8..0:12): ma59 <= ma59/
+       |[1:7..1:8): O <= ma59/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:36): PrependForwarder => example/PrependForwarder#
+       |[1:41..1:42): f <= ma59/O.f().
+       |[1:43..1:44): x <= ma59/O.f$fwd().(x)
+       |[1:46..1:49): Int => scala/Int#
+       |[1:59..1:60): y <= local0
+       |[1:63..1:64): x => ma59/O.f().(x)
+       |[1:65..1:66): + => scala/Int#`+`(+4).
+       |[1:70..1:71): y => local0
+       |[2:7..2:8): U <= ma59/U.
+       |[2:15..2:16): g <= ma59/U.g().
+       |[2:19..2:20): O => ma59/O.
+       |[2:21..2:26): f$fwd => ma59/O.f$fwd().
+       |[2:27..2:28): x => ma59/O.f$fwd().(x)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a named argument of a forwarder that a macro annotation adds after the method",
+    """|package ma60
+       |object O { @example.AppendForwarder def f(x: Int) = { val y = x + 1; y } }
+       |object U { def g = O.f$fwd(x = 1) }
+       |""".stripMargin,
+    """|[0:8..0:12): ma60 <= ma60/
+       |[1:7..1:8): O <= ma60/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:35): AppendForwarder => example/AppendForwarder#
+       |[1:40..1:41): f <= ma60/O.f().
+       |[1:42..1:43): x <= ma60/O.f().(x)
+       |[1:45..1:48): Int => scala/Int#
+       |[1:58..1:59): y <= local0
+       |[1:62..1:63): x => ma60/O.f().(x)
+       |[1:64..1:65): + => scala/Int#`+`(+4).
+       |[1:69..1:70): y => local0
+       |[2:7..2:8): U <= ma60/U.
+       |[2:15..2:16): g <= ma60/U.g().
+       |[2:19..2:20): O => ma60/O.
+       |[2:21..2:26): f$fwd => ma60/O.f$fwd().
+       |[2:27..2:28): x => ma60/O.f$fwd().(x)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a rebuilt method with an implicit parameter that has a default",
+    """|package ma61
+       |object O { @example.RebuildDef def f(x: Int)(implicit y: Int = 0) = x + y }
+       |object U { def g = O.f(1) }
+       |""".stripMargin,
+    """|[0:8..0:12): ma61 <= ma61/
+       |[1:7..1:8): O <= ma61/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:30): RebuildDef => example/RebuildDef#
+       |[1:35..1:36): f <= ma61/O.f().
+       |[1:37..1:38): x <= ma61/O.f().(x)
+       |[1:40..1:43): Int => scala/Int#
+       |[1:54..1:55): y <= ma61/O.f().(y)
+       |[1:57..1:60): Int => scala/Int#
+       |[1:68..1:69): x => ma61/O.f().(x)
+       |[1:70..1:71): + => scala/Int#`+`(+4).
+       |[1:72..1:73): y => ma61/O.f().(y)
+       |[2:7..2:8): U <= ma61/U.
+       |[2:15..2:16): g <= ma61/U.g().
+       |[2:19..2:20): O => ma61/O.
+       |[2:21..2:22): f => ma61/O.f().
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a method that a macro annotation renames, its body wrapped",
+    """|package ma62
+       |object O { @example.RenameDefWrapped def f(x: Int) = x + 1 }
+       |object U { def g = O.f(x = 1) }
+       |""".stripMargin,
+    """|[0:8..0:12): ma62 <= ma62/
+       |[1:7..1:8): O <= ma62/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:36): RenameDefWrapped => example/RenameDefWrapped#
+       |[1:41..1:42): f <= ma62/O.f().
+       |[1:43..1:44): x <= ma62/O.f().(x)
+       |[1:46..1:49): Int => scala/Int#
+       |[1:53..1:54): x => ma62/O.f$impl().(x)
+       |[1:55..1:56): + => scala/Int#`+`(+4).
+       |[2:7..2:8): U <= ma62/U.
+       |[2:15..2:16): g <= ma62/U.g().
+       |[2:19..2:20): O => ma62/O.
+       |[2:21..2:22): f => ma62/O.f().
+       |[2:23..2:24): x => ma62/O.f().(x)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "constructor parameters that a macro annotation copies to a companion method",
+    """|package ma63
+       |@example.CompanionApply class B[T](t: T)
+       |object U { def g = B(t = 1) }
+       |""".stripMargin,
+    """|[0:8..0:12): ma63 <= ma63/
+       |[1:1..1:8): example => example/
+       |[1:9..1:23): CompanionApply => example/CompanionApply#
+       |[1:30..1:31): B <= ma63/B#
+       |[1:32..1:33): T <= ma63/B#[T]
+       |[1:34..1:34):  <= ma63/B#`<init>`().
+       |[1:35..1:36): t <= ma63/B#`<init>`().(t)
+       |[1:35..1:36): t <= ma63/B#t.
+       |[1:38..1:39): T => ma63/B#[T]
+       |[2:7..2:8): U <= ma63/U.
+       |[2:15..2:16): g <= ma63/U.g().
+       |[2:19..2:20): B => ma63/B.
+       |[2:21..2:22): t => ma63/B.apply().(t)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a case class whose methods a macro annotation renames",
+    """|package ma64
+       |@example.RenameDefs case class C(a: Int) { def f(x: Int) = x + a }
+       |object U { def g = C(a = 1).copy(a = 2).f(x = 3) }
+       |""".stripMargin,
+    """|[0:8..0:12): ma64 <= ma64/
+       |[1:1..1:8): example => example/
+       |[1:9..1:19): RenameDefs => example/RenameDefs#
+       |[1:31..1:32): C <= ma64/C#
+       |[1:32..1:32):  <= ma64/C#`<init>`().
+       |[1:33..1:34): a <= ma64/C#`<init>`().(a)
+       |[1:33..1:34): a <= ma64/C#a.
+       |[1:36..1:39): Int => scala/Int#
+       |[1:47..1:48): f <= ma64/C#f().
+       |[1:49..1:50): x <= ma64/C#f().(x)
+       |[1:52..1:55): Int => scala/Int#
+       |[1:59..1:60): x => ma64/C#f$impl().(x)
+       |[1:61..1:62): + => scala/Int#`+`(+4).
+       |[1:63..1:64): a => ma64/C#a.
+       |[2:7..2:8): U <= ma64/U.
+       |[2:15..2:16): g <= ma64/U.g().
+       |[2:19..2:20): C => ma64/C.
+       |[2:21..2:22): a => ma64/C.apply().(a)
+       |[2:28..2:32): copy => ma64/C#copy().
+       |[2:33..2:34): a => ma64/C#copy().(a)
+       |[2:40..2:41): f => ma64/C#f().
+       |[2:42..2:43): x => ma64/C#f().(x)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a method with a context bound that a macro annotation renames",
+    """|package ma65
+       |object O { @example.RenameGenericDef def f[T: Ordering](x: T) = x }
+       |""".stripMargin,
+    """|[0:8..0:12): ma65 <= ma65/
+       |[1:7..1:8): O <= ma65/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:36): RenameGenericDef => example/RenameGenericDef#
+       |[1:41..1:42): f <= ma65/O.f().
+       |[1:43..1:44): T <= ma65/O.f().[T]
+       |[1:46..1:54): Ordering => scala/package.Ordering#
+       |[1:56..1:57): x <= ma65/O.f().(x)
+       |[1:59..1:60): T => ma65/O.f().[T]
+       |[1:64..1:65): x => ma65/O.f$impl().(x)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a method with a for that a macro annotation renames",
+    """|package ma66
+       |object O { @example.RenameDef def f(xs: List[Int]) = for (a <- xs if a > 0) yield a }
+       |""".stripMargin,
+    """|[0:8..0:12): ma66 <= ma66/
+       |[1:7..1:8): O <= ma66/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:29): RenameDef => example/RenameDef#
+       |[1:34..1:35): f <= ma66/O.f().
+       |[1:36..1:38): xs <= ma66/O.f().(xs)
+       |[1:40..1:44): List => scala/package.List#
+       |[1:45..1:48): Int => scala/Int#
+       |[1:58..1:59): a <= local0
+       |[1:63..1:65): xs => ma66/O.f$impl().(xs)
+       |[1:69..1:70): a => local0
+       |[1:71..1:72): > => scala/Int#`>`(+3).
+       |[1:82..1:83): a => local0
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a rebuilt method with a default that refers to a parameter",
+    """|package ma67
+       |object O { @example.RebuildDef def f(x: Int)(y: Int = x) = x + y }
+       |object U { def g = O.f(1)() }
+       |""".stripMargin,
+    """|[0:8..0:12): ma67 <= ma67/
+       |[1:7..1:8): O <= ma67/O.
+       |[1:12..1:19): example => example/
+       |[1:20..1:30): RebuildDef => example/RebuildDef#
+       |[1:35..1:36): f <= ma67/O.f().
+       |[1:37..1:38): x <= ma67/O.f().(x)
+       |[1:40..1:43): Int => scala/Int#
+       |[1:45..1:46): y <= ma67/O.f().(y)
+       |[1:48..1:51): Int => scala/Int#
+       |[1:54..1:55): x => ma67/O.f().(x)
+       |[1:59..1:60): x => ma67/O.f().(x)
+       |[1:61..1:62): + => scala/Int#`+`(+4).
+       |[1:63..1:64): y => ma67/O.f().(y)
+       |[2:7..2:8): U <= ma67/U.
+       |[2:15..2:16): g <= ma67/U.g().
+       |[2:19..2:20): O => ma67/O.
+       |[2:21..2:22): f => ma67/O.f().
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "a method with a default that refers to a parameter",
+    """|package ma68
+       |object O { def f(x: Int)(y: Int = x) = x + y }
+       |object U { def g = O.f(1)() }
+       |""".stripMargin,
+    """|[0:8..0:12): ma68 <= ma68/
+       |[1:7..1:8): O <= ma68/O.
+       |[1:15..1:16): f <= ma68/O.f().
+       |[1:17..1:18): x <= ma68/O.f().(x)
+       |[1:20..1:23): Int => scala/Int#
+       |[1:25..1:26): y <= ma68/O.f().(y)
+       |[1:28..1:31): Int => scala/Int#
+       |[1:34..1:35): x => ma68/O.f().(x)
+       |[1:39..1:40): x => ma68/O.f().(x)
+       |[1:41..1:42): + => scala/Int#`+`(+4).
+       |[1:43..1:44): y => ma68/O.f().(y)
+       |[2:7..2:8): U <= ma68/U.
+       |[2:15..2:16): g <= ma68/U.g().
+       |[2:19..2:20): O => ma68/O.
+       |[2:21..2:22): f => ma68/O.f().
+       |""".stripMargin,
+  )
+
   occurrences(
     """|package ma31
        |@deprecated(since = "1") class N
