@@ -464,6 +464,20 @@ trait TextDocumentOps {
           false
         }
 
+        /**
+         * whether the name `mname` of a parameter also defines `gsym`, a parameter of a method. The
+         * name does not define `gsym` if scalac added `gsym` or its method, such as a default
+         * getter. scalac marks such a parameter or method as synthetic.
+         */
+        private def isDerivedParam(mname: m.Name, gsym: g.Symbol): Boolean = gsym
+          .hasAllFlags(gf.PARAM, gf.SYNTHETIC) &&
+          (mname.parent match {
+            case Some(p: m.Member.Param) if p.name eq mname =>
+              val gowner = gsym.owner
+              gowner.isMethod && !gowner.isSynthetic
+            case _ => false
+          })
+
         private def isExpansion(gpos: g.Position): Boolean = !gpos.isRange &&
           (mexpansions.getOrNull(gpos.point) ne null)
         private def trySymbolDefinition(gsym: g.Symbol): Unit = {
@@ -548,10 +562,12 @@ trait TextDocumentOps {
           if (prev ne null) {
             val ssym = prev.symbol
             // record the getter once: a multi-symbol already has it
-            if (!ssym.isMulti && isReadOfSetter(gtree, ssym)) {
-              val sgetter = gsym0.toSemantic
-              if (sgetter != Symbols.None)
-                occurrences(pos) = prev.copy(symbol = Symbols.Multi(ssym, sgetter))
+            if (!ssym.isMulti && isReadOfSetter(gtree, ssym) ||
+              // a written parameter also defines the parameters that a macro copies from it (#1327)
+              prev.role == Role.DEFINITION && isDerivedParam(mtree, gsym0)) {
+              val sother = gsym0.toSemantic
+              if (sother != Symbols.None && !ssym.containsSymbol(sother))
+                occurrences(pos) = prev.copy(symbol = Symbols.Multi(ssym, sother))
             }
             return
           }
