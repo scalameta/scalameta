@@ -72,6 +72,18 @@ object MetacpOps {
         x.typeArguments.foreach(visitType)
       case s.NoType =>
     }
+    def visitResult(returnType: s.Type, throws: Seq[s.Type]): Unit = {
+      visitType(returnType)
+      throws.foreach(visitType)
+    }
+    def visitGroups(groups: Seq[s.ParamClauseGroup], sig: s.ExtendedMethodSignature): Unit =
+      groups match {
+        case group +: rest => visitScopeOpt(group.typeParamClause) {
+            visitScopes(group.paramClauses)
+            visitGroups(rest, sig)
+          }
+        case _ => visitResult(sig.returnType, sig.throws)
+      }
     def visitSignature(signature: s.Signature): Unit = signature match {
       case x: s.ClassSignature => visitScopeOpt(x.typeParameters)(visitScopeOpt(x.declarations) {
           x.parents.foreach(visitType)
@@ -79,7 +91,8 @@ object MetacpOps {
         })
       case sig: s.MethodSignature =>
         visitScopes(sig.parameterLists)
-        visitScopeOpt(sig.typeParameters)(visitType(sig.returnType))
+        visitScopeOpt(sig.typeParameters)(visitResult(sig.returnType, sig.throws))
+      case x: s.ExtendedMethodSignature => visitGroups(x.paramClauseGroups, x)
       case x: s.TypeSignature => visitScopeOpt(x.typeParameters) {
           visitType(x.lowerBound)
           visitType(x.upperBound)
