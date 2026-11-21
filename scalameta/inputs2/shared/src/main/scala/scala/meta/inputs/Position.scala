@@ -35,7 +35,7 @@ sealed trait Position extends InputRange {
 
   final def isEmpty: Boolean = start >= end
   final def len: Int = end - start
-  final def isMultiLine: Boolean = startLine < endLine
+  final def hasNewlines: Boolean = startLine < endLine
 }
 
 object Position {

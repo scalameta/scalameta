@@ -64,7 +64,7 @@ private[meta] final class ScannerTokens(
   @tailrec
   private def isFollowedByNL(index: Int): Boolean = tokens.getOrNull(index + 1) match {
     case _: AtEOLorF => true
-    case t: CommentValue if t.pos.isMultiLine => true
+    case t: CommentValue if t.pos.hasNewlines => true
     case _: HTrivia => isFollowedByNL(index + 1)
     case _ => false
   }
@@ -772,7 +772,7 @@ private[meta] final class ScannerTokens(
       @tailrec
       def findFirstCommentEOL(pos: Int): Int = {
         val tok = tokens(pos)
-        if (tok.isInstanceOf[CommentValue] && tok.pos.isMultiLine) pos
+        if (tok.isInstanceOf[CommentValue] && tok.pos.hasNewlines) pos
         else if (pos < indentPos) findFirstCommentEOL(pos + 1)
         else -1
       }
