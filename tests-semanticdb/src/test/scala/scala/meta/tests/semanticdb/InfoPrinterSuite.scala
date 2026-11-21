@@ -451,13 +451,13 @@ class InfoPrinterSuite extends FunSuite {
 
   test("parameter clauses: two implicit parameters after a normal clause") {
     val sig = methodWithClause(s.SymbolInformation.Property.IMPLICIT)
-    assertSignature(sig, "(x: B)(implicit o: C, implicit p: D): R")
+    assertSignature(sig, "(x: B)(implicit o: C, p: D): R")
   }
 
   test("parameter clauses: two using parameters after a normal clause") {
     val sig =
       methodWithClause(s.SymbolInformation.Property.GIVEN, s.SymbolInformation.Property.IMPLICIT)
-    assertSignature(sig, "(x: B)(implicit o: C, implicit p: D): R")
+    assertSignature(sig, "(x: B)(using o: C, p: D): R")
   }
 
   test("parameter clauses: annotated implicit parameter") {
@@ -466,7 +466,7 @@ class InfoPrinterSuite extends FunSuite {
       .withAnnotations(List(ann))
     assertSignature(
       s.MethodSignature(parameterLists = List(scope(a)), returnType = returnType),
-      "(@ann implicit a: A): R",
+      "(implicit @ann a: A): R",
     )
   }
 
@@ -476,7 +476,7 @@ class InfoPrinterSuite extends FunSuite {
     val b = implicitParam("b", "_empty_/B#", p.IMPLICIT, p.VAL)
     assertSignature(
       s.MethodSignature(parameterLists = List(scope(a, b))),
-      "(implicit val a: A, implicit val b: B)",
+      "(implicit val a: A, val b: B)",
     )
   }
 
@@ -499,7 +499,7 @@ class InfoPrinterSuite extends FunSuite {
       ),
     )
     val sig = s.ExtendedMethodSignature(groups, returnType)
-    assertSignature(sig, "(t: A)(implicit o: C)(x: B)(implicit p: D): R")
+    assertSignature(sig, "(t: A)(using o: C)(x: B)(using p: D): R")
   }
 
   test("parameter clauses: using parameters by symlinks") {
@@ -513,7 +513,7 @@ class InfoPrinterSuite extends FunSuite {
       parameterLists = List(s.Scope(symlinks = params.map(_.symbol))),
       returnType = returnType,
     )
-    assertEquals(Print.signature(Format.Compact, sig, symtab), "(implicit o: C, implicit p: D): R")
+    assertEquals(Print.signature(Format.Compact, sig, symtab), "(using o: C, p: D): R")
   }
 
   test("parameter clauses: symlinks without infos") {

@@ -33,7 +33,7 @@ object SymbolInformationPrinter {
     Modifier(Property.FINAL, "final ", defnOK = !_.isObject),
     Modifier(Property.OVERRIDE, "override "),
     Modifier(Property.SEALED, "sealed "),
-    Modifier(Property.IMPLICIT, "implicit "),
+    Modifier(Property.IMPLICIT, "implicit ", defnOK = !_.isParameter),
     Modifier(Property.LAZY, "lazy "),
     Modifier(Property.CASE, "case "),
     Modifier(Property.COVARIANT, "covariant ", "+"),
@@ -246,7 +246,18 @@ trait SymbolInformationPrinter extends BasePrinter {
 
     private def pprintClauses(typeParameters: Option[Scope], parameterLists: Seq[Scope]): Unit = {
       rep("[", typeParameters.infosOrStubs, ", ", "]")(pprintDefn)
-      rep("(", parameterLists, ")(", ")")(params => rep(params.infosOrStubs, ", ")(pprintDefn))
+      rep("(", parameterLists, ")(", ")")(params =>
+        params.infosOrStubs match {
+          case first +: rest =>
+            notes.discover(first)
+            val info = notes.visit(first.symbol)
+            // print the keyword of the clause once, before its first parameter
+            if (info.isGiven) str("using ") else if (info.isImplicit) str("implicit ")
+            printInfo(info, Definition)
+            rep(", ", rest, ", ")(pprintDefn)
+          case _ =>
+        },
+      )
     }
 
     protected sealed trait SymbolStyle

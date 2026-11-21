@@ -1018,7 +1018,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |local9 => synthetic implicit param evidence$4: Numeric[T]
        |  Numeric => scala/package.Numeric#
        |  T => local11
-       |local10 => primary ctor <init>(val t: T)(implicit evidence$3: Ordering[T], implicit evidence$4: Numeric[T])
+       |local10 => primary ctor <init>(val t: T)(implicit evidence$3: Ordering[T], evidence$4: Numeric[T])
        |  t => local7
        |  T => local11
        |  evidence$3 => local8

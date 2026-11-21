@@ -2953,7 +2953,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|_empty_/e56. => final object e56 extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
-       |_empty_/e56.a. => val method a: Class[Option[x.type] forSome { type x.type <: AnyRef { def f[A](b: A)(implicit evidence$1: Ordering[A], implicit c: Int): A; def g[B](d: B)(implicit evidence$2: Function1[B, Int]): B } with Singleton {} }]
+       |_empty_/e56.a. => val method a: Class[Option[x.type] forSome { type x.type <: AnyRef { def f[A](b: A)(implicit evidence$1: Ordering[A], c: Int): A; def g[B](d: B)(implicit evidence$2: Function1[B, Int]): B } with Singleton {} }]
        |  Class => java/lang/Class#
        |  Option => scala/Option#
        |  x.type => local10
@@ -2971,7 +2971,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |  evidence$2 => local9
        |  Function1 => scala/Function1#
        |  Singleton => scala/Singleton#
-       |local0 => val local x: AnyRef { def f[A](b: A)(implicit evidence$1: Ordering[A], implicit c: Int): A; def g[B](d: B)(implicit evidence$2: Function1[B, Int]): B }
+       |local0 => val local x: AnyRef { def f[A](b: A)(implicit evidence$1: Ordering[A], c: Int): A; def g[B](d: B)(implicit evidence$2: Function1[B, Int]): B }
        |  AnyRef => scala/AnyRef#
        |  f => local1
        |  A => local3
@@ -2985,7 +2985,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |  d => local7
        |  evidence$2 => local9
        |  Function1 => scala/Function1#
-       |local1 => abstract method f[A](b: A)(implicit evidence$1: Ordering[A], implicit c: Int): A
+       |local1 => abstract method f[A](b: A)(implicit evidence$1: Ordering[A], c: Int): A
        |  A => local3
        |  b => local2
        |  evidence$1 => local4
@@ -3056,7 +3056,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|_empty_/e57. => final object e57 extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
-       |_empty_/e57.a. => val method a: Class[Option[x.type] forSome { type x.type <: AnyRef { def f[A](b: A)(implicit evidence$1: Ordering[A]): A; def g[B](implicit evidence$2: Ordering[B]): B; def h[C](c: C)(d: Int)(implicit evidence$3: Function1[C, Int], implicit evidence$4: Ordering[C]): C } with Singleton {} }]
+       |_empty_/e57.a. => val method a: Class[Option[x.type] forSome { type x.type <: AnyRef { def f[A](b: A)(implicit evidence$1: Ordering[A]): A; def g[B](implicit evidence$2: Ordering[B]): B; def h[C](c: C)(d: Int)(implicit evidence$3: Function1[C, Int], evidence$4: Ordering[C]): C } with Singleton {} }]
        |  Class => java/lang/Class#
        |  Option => scala/Option#
        |  x.type => local14
@@ -3078,7 +3078,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |  Function1 => scala/Function1#
        |  evidence$4 => local13
        |  Singleton => scala/Singleton#
-       |local0 => val local x: AnyRef { def f[A](b: A)(implicit evidence$1: Ordering[A]): A; def g[B](implicit evidence$2: Ordering[B]): B; def h[C](c: C)(d: Int)(implicit evidence$3: Function1[C, Int], implicit evidence$4: Ordering[C]): C }
+       |local0 => val local x: AnyRef { def f[A](b: A)(implicit evidence$1: Ordering[A]): A; def g[B](implicit evidence$2: Ordering[B]): B; def h[C](c: C)(d: Int)(implicit evidence$3: Function1[C, Int], evidence$4: Ordering[C]): C }
        |  AnyRef => scala/AnyRef#
        |  f => local1
        |  A => local3
@@ -3115,7 +3115,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |  Ordering => scala/package.Ordering#
        |  B => local7
        |local7 => typeparam B
-       |local8 => abstract method h[C](c: C)(d: Int)(implicit evidence$3: Function1[C, Int], implicit evidence$4: Ordering[C]): C
+       |local8 => abstract method h[C](c: C)(d: Int)(implicit evidence$3: Function1[C, Int], evidence$4: Ordering[C]): C
        |  C => local10
        |  c => local9
        |  d => local11
