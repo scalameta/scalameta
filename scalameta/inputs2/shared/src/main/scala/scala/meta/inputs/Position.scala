@@ -26,6 +26,7 @@ trait InputRange {
 }
 
 sealed trait Position extends InputRange {
+
   def startLine: Int
   def startColumn: Int
   def endLine: Int // exclusive
@@ -36,6 +37,8 @@ sealed trait Position extends InputRange {
   final def isEmpty: Boolean = start >= end
   final def len: Int = end - start
   final def hasNewlines: Boolean = startLine < endLine
+  final def hasNewlinesBeforeEnd: Boolean = startLine < lastLine
+
 }
 
 object Position {
