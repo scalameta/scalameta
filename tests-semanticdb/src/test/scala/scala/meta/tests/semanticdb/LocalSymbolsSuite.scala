@@ -142,13 +142,13 @@ class LocalSymbolsSuite extends FunSuite {
   // a compiler with the plugin and `options`
   private class Compiler(val options: String, classpath: String*) {
 
-    private val reporter = new StoreReporter()
     private val settings = new Settings(msg => fail(msg))
     settings.classpath.value = (sys.props("sbt.paths.tests.test.classes") +: classpath)
       .mkString(File.pathSeparator)
     private val plugin = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
     settings
       .processArgumentString(s"-Yrangepos -Xplugin:$plugin -Xplugin-require:semanticdb $options")
+    private val reporter = new StoreReporter(settings)
     private val g = new Global(settings, reporter)
 
     // the errors of a run that compiles `sources` into `out`, its sourceroot and targetroot
@@ -4753,7 +4753,7 @@ class LocalSymbolsSuite extends FunSuite {
     val settings = new Settings(msg => fail(msg))
     settings.classpath.value = sys.props("sbt.paths.tests.test.classes")
     settings.processArgumentString("-Ystop-after:typer")
-    val pc = new Global(settings, new StoreReporter())
+    val pc = new Global(settings, new StoreReporter(settings))
     val run = new pc.Run()
     run.compile(List(file.toString))
     // Metals asks for the symbol of a tree without a document

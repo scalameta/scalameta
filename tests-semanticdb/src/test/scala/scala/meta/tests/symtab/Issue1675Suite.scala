@@ -28,7 +28,7 @@ class Issue1675Suite extends FunSuite {
     val settings = new Settings(msg => fail(msg))
     settings.classpath.value = sys.props("sbt.paths.tests.test.classes")
     settings.outputDirs.setSingleOutput(out.toString)
-    val reporter = new StoreReporter()
+    val reporter = new StoreReporter(settings)
     val g = new Global(settings, reporter)
     val code =
       """|package p {

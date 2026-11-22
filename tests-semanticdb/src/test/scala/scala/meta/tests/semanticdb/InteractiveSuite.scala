@@ -549,12 +549,12 @@ class InteractiveSuite extends FunSuite {
 
   test("a compiler with -Xmaxwarns 0") {
     val obtained = diagnostics("-Xmaxwarns", "0")
-    assertEquals(obtained, List("Unused import"))
+    assertEquals(obtained, Nil)
   }
 
   test("a compiler with -nowarn") {
     val obtained = diagnostics("-nowarn")
-    assertEquals(obtained, if (ScalaVersion.is213) Nil else List("Unused import"))
+    assertEquals(obtained, Nil)
   }
 
 }

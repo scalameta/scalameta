@@ -22,7 +22,7 @@ class Issue1548Suite extends FunSuite {
     val settings = new Settings(msg => fail(msg))
     settings.classpath.value = Library.scalaLibrary.classpath().syntax
     settings.outputDirs.setSingleOutput(out.toString)
-    val reporter = new StoreReporter()
+    val reporter = new StoreReporter(settings)
     val g = new Global(settings, reporter)
     val code =
       """|package p1 {

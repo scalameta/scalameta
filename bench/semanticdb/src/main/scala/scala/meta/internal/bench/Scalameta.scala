@@ -22,7 +22,7 @@ object Scalameta {
 trait Scalameta {
   def runImpl(bs: BenchmarkState): Unit = {
     val settings = mkSettings(bs)
-    val reporter = new StoreReporter
+    val reporter = new StoreReporter(settings)
     val global = Global(settings, reporter)
     val run = new global.Run
     run.compile(bs.scalapFiles.map(_.toString))

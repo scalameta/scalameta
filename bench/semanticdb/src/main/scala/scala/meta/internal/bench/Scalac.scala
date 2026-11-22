@@ -19,7 +19,7 @@ object Scalac {
 trait Scalac {
   def runImpl(bs: BenchmarkState): Unit = {
     val settings = mkSettings()
-    val reporter = new StoreReporter
+    val reporter = new StoreReporter(settings)
     val global = Global(settings, reporter)
     val run = new global.Run
     run.compile(bs.scalapFiles.map(_.toString))

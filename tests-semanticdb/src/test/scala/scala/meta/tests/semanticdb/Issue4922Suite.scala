@@ -28,7 +28,7 @@ class Issue4922Suite extends FunSuite {
       s"-Yrangepos -Xplugin:$plugin -Xplugin-require:semanticdb -P:semanticdb:failures:error " +
         s"-P:semanticdb:sourceroot:$out -P:semanticdb:targetroot:$out",
     )
-    val reporter = new StoreReporter()
+    val reporter = new StoreReporter(settings)
     val g = new Global(settings, reporter)
     val code =
       """|package p
