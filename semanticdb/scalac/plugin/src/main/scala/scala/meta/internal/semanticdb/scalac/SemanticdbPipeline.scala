@@ -6,6 +6,7 @@ import scala.meta.internal.{semanticdb => s}
 import java.io._
 import java.net.URI
 
+import scala.collection.mutable
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
 import scala.util.control.NonFatal
@@ -54,6 +55,9 @@ trait SemanticdbPipeline extends SemanticdbOps {
     val supportedExtensions = Set("scala", "java", "sc", "mill")
   }
 
+  /** the `storedMessages` at each unit's typer document, for the units of one run */
+  private val typerStoredMessages = mutable.Map.empty[g.CompilationUnit, Int]
+
   object SemanticdbTyperComponent extends PluginComponent {
     val global: SemanticdbPipeline.this.global.type = SemanticdbPipeline.this.global
     val runsAfter = List("typer")
@@ -67,6 +71,7 @@ trait SemanticdbPipeline extends SemanticdbOps {
         try {
           if (unit.isIgnored || !unit.source.isInSourceroot()) return
           val sdoc = unit.toTextDocument
+          if (config.diagnostics.isOn) typerStoredMessages(unit) = storedMessages
           sdoc.save(config.targetroot)
         } catch handleCrash(Some(unit))
 
@@ -78,6 +83,7 @@ trait SemanticdbPipeline extends SemanticdbOps {
       override def run(): Unit =
         try {
           timestampComputeStarted = System.nanoTime()
+          typerStoredMessages.clear()
           super.run()
           synchronizeSourcesAndSemanticdbFiles()
           timestampComputeFinished = System.nanoTime()
@@ -99,7 +105,7 @@ trait SemanticdbPipeline extends SemanticdbOps {
       override def apply(unit: g.CompilationUnit): Unit = {
         if (unit.isIgnored) return
         try if (config.diagnostics.isOn) {
-            val gdiagnostics = unit.hijackedDiagnostics
+            val gdiagnostics = unit.hijackedDiagnostics(typerStoredMessages.remove(unit).getOrElse(0))
             if (gdiagnostics.hasNext && unit.source.isInSourceroot()) {
               // the index from typer is gone, so index the source again
               val mtrees = unit.toMtrees

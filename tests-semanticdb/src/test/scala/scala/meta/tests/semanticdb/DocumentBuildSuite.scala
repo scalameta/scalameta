@@ -35,7 +35,7 @@ class DocumentBuildSuite extends SemanticdbSuite {
   test("two builds on one typed unit with a warning") {
     val unit = typedUnit(unusedImport)
     val first = documentOf(unit)
-    assertEquals((first.diagnostics.length, documentOf(unit).diagnostics.length), (1, 0))
+    assertEquals((first.diagnostics.length, documentOf(unit).diagnostics.length), (1, 1))
   }
 
   test("two builds on one typed unit, a message between them") {
@@ -44,7 +44,7 @@ class DocumentBuildSuite extends SemanticdbSuite {
     g.reporter.warning(unit.body.pos.focus, "by hand")
     assertEquals(
       (first.diagnostics.map(_.message), documentOf(unit).diagnostics.map(_.message)),
-      (List("Unused import"), List("by hand")),
+      (List("Unused import"), List("by hand", "Unused import")),
     )
   }
 
@@ -57,7 +57,7 @@ class DocumentBuildSuite extends SemanticdbSuite {
     val first = documentOf(unit)
     assertEquals(
       (first.diagnostics.map(_.range), documentOf(unit).diagnostics.map(_.range)),
-      (List(Some(s.Range(0, 24, 0, 31))), Nil),
+      (List(Some(s.Range(0, 24, 0, 31))), List(Some(s.Range(0, 24, 0, 31)))),
     )
   }
 
