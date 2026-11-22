@@ -1095,12 +1095,12 @@ private[meta] final class ScannerTokens(
               case Nil if prev.is[BOF] => Left(RegionLine(nextIndent) :: Nil)
               case (r: RegionLine) :: rs if r.indent >= nextIndent => iter(rs)
               case (r: RegionControl) :: rs
-                  if !r.isControlKeyword(prev) && r.isNotTerminatingTokenIfOptional(next) &&
+                  if !next.is[Dot] && !r.isControlKeyword(prev) &&
+                    r.isNotTerminatingTokenIfOptional(next) &&
                     !continuesAfterEol(prevPos, next, nextIndent, rs) =>
                 r match {
                   case r: RegionControlMaybeCond if prev.is[RightParen] =>
-                    if (next.is[Dot]) null
-                    else r.asBody() match {
+                    r.asBody() match {
                       case x: RegionControl =>
                         val lf = getIfCanProduceLF(x :: rs, nextIndent)
                         if (null ne lf) lf else onlyWithoutLF()
