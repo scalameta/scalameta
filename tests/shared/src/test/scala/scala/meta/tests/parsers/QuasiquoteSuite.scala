@@ -115,5 +115,247 @@ class QuasiquoteSuite extends ParseSuite {
       val guard = tapply(Term.Quasi(0, tname("p")), blk(tname("z")))
       assertTree(term(code))(tmatch(tname("x"), Case(patvar("y"), Some(guard), int(1))))
     }
+
+    test("case guard, name, colon at line end, case arrow on the argument's line, unquote before the colon") {
+      val code =
+        """|def f = x match
+           |  case y if $p:
+           |    Boolean => 1
+           |""".stripMargin
+      val error =
+        """|<input>:3: error: `=>` expected but `outdent` found
+           |    Boolean => 1
+           |                ^""".stripMargin
+      interceptMessage[ParseException](error.lf2nl)(stat(code))
+    }
+
+    test("case guard, name, colon at line end, case arrow on the argument's line, unquote in the argument") {
+      val code =
+        """|def f = x match
+           |  case y if p:
+           |    $b => 1
+           |""".stripMargin
+      val error =
+        """|<input>:3: error: `=>` expected but `outdent` found
+           |    $b => 1
+           |           ^""".stripMargin
+      interceptMessage[ParseException](error.lf2nl)(stat(code))
+    }
+
+    test("case guard after a typed pattern, colon at line end, case arrow at a smaller indent, unquote before the colon") {
+      val code =
+        """|def f(x: Any) = x match
+           |  case s: String if $g:
+           |    s.length > 4
+           |  => s
+           |  case x => x.toString
+           |""".stripMargin
+      assertTree(stat(code))(Defn.Def(
+        Nil,
+        tname("f"),
+        List(pcg(tpc(tparam("x", pname("Any"))))),
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            Pat.Typed(patvar("s"), pname("String")),
+            Some(tapply(Term.Quasi(0, tname("g")), blk(tinfix(tselect("s", "length"), ">", int(4))))),
+            tname("s"),
+          ),
+          Case(patvar("x"), None, tselect("x", "toString")),
+        ),
+      ))
+    }
+
+    test("case guard after a typed pattern, colon at line end, case arrow at a smaller indent, unquote in the argument") {
+      val code =
+        """|def f(x: Any) = x match
+           |  case s: String if g:
+           |    $s.length > 4
+           |  => s
+           |  case x => x.toString
+           |""".stripMargin
+      assertTree(stat(code))(Defn.Def(
+        Nil,
+        tname("f"),
+        List(pcg(tpc(tparam("x", pname("Any"))))),
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            Pat.Typed(patvar("s"), pname("String")),
+            Some(
+              tapply(tname("g"), blk(tinfix(tselect(Term.Quasi(0, tname("s")), "length"), ">", int(4)))),
+            ),
+            tname("s"),
+          ),
+          Case(patvar("x"), None, tselect("x", "toString")),
+        ),
+      ))
+    }
+
+    test("case guard, no indents in match, colon lambda, case arrow on a line of its own, unquote before the colon") {
+      val code =
+        """|a match
+           |case n
+           |if $foo: b =>
+           |  true
+           |=>
+           |  2
+           |""".stripMargin
+      assertTree(stat(code))(tmatch(
+        tname("a"),
+        Case(
+          patvar("n"),
+          Some(tapply(Term.Quasi(0, tname("foo")), blk(tfunc(tparam("b"))(bool(true))))),
+          int(2),
+        ),
+      ))
+    }
+
+    test("case guard, no indents in match, colon lambda, case arrow on a line of its own, unquote in the argument") {
+      val code =
+        """|a match
+           |case n
+           |if foo: b =>
+           |  $t
+           |=>
+           |  2
+           |""".stripMargin
+      assertTree(stat(code))(tmatch(
+        tname("a"),
+        Case(
+          patvar("n"),
+          Some(tapply(tname("foo"), blk(tfunc(tparam("b"))(blk(Stat.Quasi(0, tname("t"))))))),
+          int(2),
+        ),
+      ))
+    }
+
+    test("case guard, infix operand, colon lambda, case arrow on the body's line, unquote before the colon") {
+      val code =
+        """|def f = x match
+           |  case y if a && xs.$m: x =>
+           |    x => 1
+           |""".stripMargin
+      val error =
+        """|<input>:3: error: `=>` expected but `outdent` found
+           |    x => 1
+           |          ^""".stripMargin
+      interceptMessage[ParseException](error.lf2nl)(stat(code))
+    }
+
+    test("case guard, infix operand, colon lambda, case arrow on the body's line, unquote in the argument") {
+      val code =
+        """|def f = x match
+           |  case y if a && xs.map: x =>
+           |    $b => 1
+           |""".stripMargin
+      val error =
+        """|<input>:3: error: `=>` expected but `outdent` found
+           |    $b => 1
+           |           ^""".stripMargin
+      interceptMessage[ParseException](error.lf2nl)(stat(code))
+    }
+
+    test("case guard, colon lambda, case arrow at a smaller indent, unquote before the colon") {
+      val code =
+        """|def f = x match
+           |  case y if xs.$m: z =>
+           |    z
+           |  => 1
+           |""".stripMargin
+      assertTree(stat(code))(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tapply(
+              Term.Select(tname("xs"), Term.Name.Quasi(0, tname("m"))),
+              blk(tfunc(tparam("z"))(tname("z"))),
+            )),
+            int(1),
+          ),
+        ),
+      ))
+    }
+
+    test("case guard, colon lambda, case arrow at a smaller indent, unquote in the argument") {
+      val code =
+        """|def f = x match
+           |  case y if xs.exists: z =>
+           |    $b
+           |  => 1
+           |""".stripMargin
+      assertTree(stat(code))(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(blk(Stat.Quasi(0, tname("b"))))))),
+            int(1),
+          ),
+        ),
+      ))
+    }
+
+    test("case guard after if at line end, colon lambda, case arrow at the case's indent, unquote before the colon") {
+      val code =
+        """|def f = x match
+           |  case y if
+           |      xs.$m: z =>
+           |        z
+           |  => 1
+           |""".stripMargin
+      assertTree(stat(code))(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tapply(
+              Term.Select(tname("xs"), Term.Name.Quasi(0, tname("m"))),
+              blk(tfunc(tparam("z"))(tname("z"))),
+            )),
+            int(1),
+          ),
+        ),
+      ))
+    }
+
+    test("case guard after if at line end, colon lambda, case arrow at the case's indent, unquote in the argument") {
+      val code =
+        """|def f = x match
+           |  case y if
+           |      xs.exists: z =>
+           |        $b
+           |  => 1
+           |""".stripMargin
+      assertTree(stat(code))(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(blk(Stat.Quasi(0, tname("b"))))))),
+            int(1),
+          ),
+        ),
+      ))
+    }
   }
 }

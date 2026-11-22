@@ -6749,4 +6749,7800 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("case guard, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda and case arrow on the guard line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z => z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `outdent` found
+         |  case y if xs.exists: z => z => 1
+         |                                  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    z => z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.contains:
+         |    y
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    y
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(patvar("y"), Some(tapply(tselect("xs", "contains"), blk(tname("y")))), int(1)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, two lines, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.contains:
+         |    val w = y
+         |    w
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    val w = y
+         |    w
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "contains"),
+            blk(Defn.Val(Nil, List(patvar("w")), None, tname("y")), tname("w")),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, case clause, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b => true
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b => true
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(patvar("b"), None, bool(true)))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, val of a lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    val g = (a: Int) => a
+         |    g(z)
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists { z =>
+         |    val g = (a: Int) => a
+         |    g(z)
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(blk(
+              Defn.Val(Nil, List(patvar("g")), None, tfunc(tparam("a", pname("Int")))(tname("a"))),
+              tapply(tname("g"), tname("z")),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, lambda in braces, case arrow after the braces") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists { z => z } => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, case arrow between the body's and the case's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |      z
+         |    => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, case arrow after an infix line at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z
+         |  && b => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } && b => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+            "&&",
+            tname("b"),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, case arrow after an infix line at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.contains:
+         |    y
+         |  && b => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    y
+         |  } && b => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(tapply(tselect("xs", "contains"), blk(tname("y"))), "&&", tname("b"))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, curried colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z => w =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("for guard, colon lambda, yield at a smaller indent") {
+    val code =
+      """|def f = for
+         |  x <- xs
+         |  if ys.exists: z =>
+         |    z
+         |yield x
+         |""".stripMargin
+    val layout =
+      """|def f = for (x <- xs; if ys.exists {
+         |  z => z
+         |}) yield x
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.ForYield(
+        Term.EnumeratorsBlock(List(
+          Enumerator.Generator(patvar("x"), tname("xs")),
+          Enumerator.Guard(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+        )),
+        tname("x"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, case clause with its body on the next line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b =>
+         |      b => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      b => 1
+         |            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, nested colon at line end, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    ys.exists:
+         |      w => w
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    ys.exists {
+         |      w => w
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tapply(tselect("ys", "exists"), blk(tfunc(tparam("w"))(tname("w"))))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, leading infix line, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if a
+         |    && xs.exists: z =>
+         |      z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("if condition, colon lambda, then at a smaller indent") {
+    val code =
+      """|def f =
+         |  if xs.exists: z =>
+         |    z
+         |  then 1 else 2
+         |""".stripMargin
+    val layout =
+      """|def f = if (xs.exists {
+         |  z => z
+         |}) 1 else 2
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.If(
+        tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+        int(1),
+        int(2),
+        Nil,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, try with a case on the catch line, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    try z > 0
+         |    catch case _: Exception => false
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => try z > 0 catch {
+         |      case _: Exception => false
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val body = Term.Try(
+      tinfix(tname("z"), tname(">"), int(0)),
+      List(Case(Pat.Typed(patwildcard, Type.Name("Exception")), None, bool(false))),
+      None,
+    )
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(body)))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, comment at the end of the body, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z // c
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z // c
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tname("z")).toBuilder.endComment(Seq("// c")).result()),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, lambda, comment line left of the lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |      z =>
+         |        z > 1
+         |     // c
+         |    => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z > 1
+         |    // c
+         |  } => 1
+         |}
+         |""".stripMargin
+    val body = tinfix(tname("z"), ">", int(1))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(body).toBuilder.endComment(Seq("// c")).result()),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, lambda, case arrow after a block comment whose last line is deeper") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |      z =>
+         |        z > 1
+         |    /* c
+         |     d */ => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z > 1
+         |    /* c
+         |     d */
+         |  } => 1
+         |}
+         |""".stripMargin
+    val lambda = tfunc(tparam("z"))(tinfix(tname("z"), ">", int(1)))
+    val arg = blk(lambda.toBuilder.endComment(Seq("/* c\n     d */")).result())
+    val guard = tapply(tselect("xs", "exists"), arg)
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tmatch(tname("x"), Case(patvar("y"), Some(guard), int(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, lambda, case arrow after a block comment whose last line is shallower") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |      z =>
+         |        z > 1
+         |       /* c
+         |     d */ => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z > 1
+         |    /* c
+         |     d */
+         |  } => 1
+         |}
+         |""".stripMargin
+    val lambda = tfunc(tparam("z"))(tinfix(tname("z"), ">", int(1)))
+    val arg = blk(lambda.toBuilder.endComment(Seq("/* c\n     d */")).result())
+    val guard = tapply(tselect("xs", "exists"), arg)
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tmatch(tname("x"), Case(patvar("y"), Some(guard), int(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, lambda, case arrow after a block comment on its line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |      z =>
+         |        z > 1
+         |     /* c */ => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z > 1
+         |    /* c */
+         |  } => 1
+         |}
+         |""".stripMargin
+    val lambda = tfunc(tparam("z"))(tinfix(tname("z"), ">", int(1)))
+    val arg = blk(lambda.toBuilder.endComment(Seq("/* c */")).result())
+    val guard = tapply(tselect("xs", "exists"), arg)
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tmatch(tname("x"), Case(patvar("y"), Some(guard), int(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, lambda, case arrow after a block comment with a deeper middle line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |      z =>
+         |        z > 1
+         |     /* c
+         |       e
+         |     d */ => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z > 1
+         |    /* c
+         |       e
+         |     d */
+         |  } => 1
+         |}
+         |""".stripMargin
+    val lambda = tfunc(tparam("z"))(tinfix(tname("z"), ">", int(1)))
+    val arg = blk(lambda.toBuilder.endComment(Seq("/* c\n       e\n     d */")).result())
+    val guard = tapply(tselect("xs", "exists"), arg)
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tmatch(tname("x"), Case(patvar("y"), Some(guard), int(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, lambda, case arrow after a block comment with a line break right after its opener") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |      z =>
+         |        z > 1
+         |       /*
+         |     d */ => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z > 1
+         |    /*
+         |     d */
+         |  } => 1
+         |}
+         |""".stripMargin
+    val lambda = tfunc(tparam("z"))(tinfix(tname("z"), ">", int(1)))
+    val arg = blk(lambda.toBuilder.endComment(Seq("/*\n     d */")).result())
+    val guard = tapply(tselect("xs", "exists"), arg)
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tmatch(tname("x"), Case(patvar("y"), Some(guard), int(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, match, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z match
+         |      case 1 => true
+         |      case _ => false
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z match {
+         |      case 1 => true
+         |      case _ => false
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(
+              tmatch(tname("z"), Case(int(1), None, bool(true)), Case(patwildcard, None, bool(false))),
+            )),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, nested colon at line end, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z.ys.exists:
+         |      w => w
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z.ys.exists {
+         |      w => w
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(
+              tapply(tselect(tselect("z", "ys"), "exists"), blk(tfunc(tparam("w"))(tname("w")))),
+            )),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, nested colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z.ys.exists: w =>
+         |      w
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z.ys.exists {
+         |      w => w
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(
+              tapply(tselect(tselect("z", "ys"), "exists"), blk(tfunc(tparam("w"))(tname("w")))),
+            )),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, val with a function type, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    val g: Int => Int = identity
+         |    g(z)
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists { z =>
+         |    val g: Int => Int = identity
+         |    g(z)
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(blk(
+              Defn.Val(
+                Nil,
+                List(patvar("g")),
+                Some(pfunc(pname("Int"))(pname("Int"))),
+                tname("identity"),
+              ),
+              tapply(tname("g"), tname("z")),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match with braces, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match {
+         |  case y if xs.exists: z =>
+         |    z
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in partial function, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = xs.collect {
+         |  case y if ys.exists: z =>
+         |    z
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = xs.collect {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "collect"),
+        Term.PartialFunction(List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in catch, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = try g catch
+         |  case y if ys.exists: z =>
+         |    z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = try g catch {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(
+        tname("g"),
+        List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        )),
+        None,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in colon argument of cases, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = xs.collect:
+         |  case y if ys.exists: z =>
+         |    z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = xs.collect {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "collect"),
+        Term.PartialFunction(List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in the second case, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case 0 => 0
+         |  case y if xs.exists: z =>
+         |    z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 0 => 0
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(int(0), None, int(0)),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in the second case of a match with braces, colon at line end, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match {
+         |  case 0 => 0
+         |  case y if xs.contains:
+         |    y
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 0 => 0
+         |  case y if xs.contains {
+         |    y
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(int(0), None, int(0)),
+        Case(patvar("y"), Some(tapply(tselect("xs", "contains"), blk(tname("y")))), int(1)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match in a case body, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y =>
+         |    y match
+         |      case w if ws.exists: z =>
+         |        z
+         |      => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y =>
+         |    y match {
+         |      case w if ws.exists {
+         |        z => z
+         |      } => 1
+         |    }
+         |  case _ =>
+         |    2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          None,
+          tmatch(
+            tname("y"),
+            Case(
+              patvar("w"),
+              Some(tapply(tselect("ws", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+              int(1),
+            ),
+          ),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the catch line, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = try g catch case y if ys.exists: z =>
+         |  z
+         |=> 1
+         |""".stripMargin
+    val layout =
+      """|def f = try g catch {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(
+        tname("g"),
+        List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        )),
+        None,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the line after the pattern, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y
+         |    if xs.exists: z =>
+         |      z
+         |    => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match with braces, colon lambda, body is a lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match {
+         |  case y if xs.exists: z =>
+         |    z => w
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z => w
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tfunc(tparam("z"))(tname("w")))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "case guard in a match with braces, colon at line end, lambda, case arrow at a smaller indent",
+  ) {
+    val code =
+      """|def f = x match {
+         |  case y if xs.contains:
+         |    y => w
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    y => w
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "contains"), blk(tfunc(tparam("y"))(tname("w"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end, colon lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = x match
+         |  case y if
+         |      xs.exists: z =>
+         |        z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end, colon lambda, case arrow at the guard's indent") {
+    val code =
+      """|def f = x match
+         |  case y if
+         |      xs.exists: z =>
+         |        z
+         |      => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end, lambda in parentheses, case arrow on the guard's line") {
+    val code =
+      """|def f = x match
+         |  case y if
+         |      xs.exists(z => z) => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists(z => z) => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), tfunc(tparam("z"))(tname("z")))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, trailing infix operator, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if a &&
+         |      xs.exists: z =>
+         |        z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, case arrow after a select line at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.map: z =>
+         |    z + 1
+         |  .contains(3) => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.map {
+         |    z => z + 1
+         |  }.contains(3) => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect(
+              tapply(tselect("xs", "map"), blk(tfunc(tparam("z"))(tinfix(tname("z"), "+", int(1))))),
+              "contains",
+            ),
+            int(3),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, case arrow after a select line at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.filter:
+         |    _ > 0
+         |  .nonEmpty => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.filter {
+         |    _ > 0
+         |  }.nonEmpty => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tselect(
+            tapply(
+              tselect("xs", "filter"),
+              blk(Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", int(0)))),
+            ),
+            "nonEmpty",
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, if-then-else, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    if z > 0 then z < 9 else false
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => if (z > 0) z < 9 else false
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(Term.If(
+              tinfix(tname("z"), ">", int(0)),
+              tinfix(tname("z"), "<", int(9)),
+              bool(false),
+              Nil,
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the brace line, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = xs.collect { case y if ys.exists: z =>
+         |    z
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = xs.collect {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "collect"),
+        Term.PartialFunction(List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match before a statement, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f =
+         |  x match
+         |    case y if xs.exists: z =>
+         |      z
+         |    => 1
+         |  g
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  x match {
+         |    case y if xs.exists {
+         |      z => z
+         |    } => 1
+         |  }
+         |  g
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+            int(1),
+          ),
+        ),
+        tname("g"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon at line end, nested colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    ys.exists: w =>
+         |      w
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    ys.exists {
+         |      w => w
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tapply(tselect("ys", "exists"), blk(tfunc(tparam("w"))(tname("w"))))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end, colon at line end, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if
+         |      p:
+         |        Boolean
+         |    => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if p {
+         |    Boolean
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(tname("x"), Case(patvar("y"), Some(tapply(tname("p"), blk(tname("Boolean")))), int(1))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end, colon at line end, arrow on the argument's line, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if
+         |      p:
+         |        Boolean => 1
+         |    => 2
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if p {
+         |    Boolean => 1
+         |  } => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(patvar("y"), Some(tapply(tname("p"), blk(tfunc(tparam("Boolean"))(int(1))))), int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end, colon at line end, lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if
+         |      xs.exists:
+         |        z => z > 0
+         |    => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z > 0
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", int(0)))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after a typed pattern, colon at line end, case arrow at a smaller indent") {
+    val code =
+      """|def f(x: Any) = x match
+         |  case s: String if g:
+         |    s.length > 4
+         |  => s
+         |  case x => x.toString
+         |""".stripMargin
+    val layout =
+      """|def f(x: Any) = x match {
+         |  case s: String if g {
+         |    s.length > 4
+         |  } =>
+         |    s
+         |  case x =>
+         |    x.toString
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Any"))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Typed(patvar("s"), pname("String")),
+          Some(tapply(tname("g"), blk(tinfix(tselect("s", "length"), ">", int(4))))),
+          tname("s"),
+        ),
+        Case(patvar("x"), None, tselect("x", "toString")),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after a typed pattern, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case s: String if xs.exists: z =>
+         |    z == s
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case s: String if xs.exists {
+         |    z => z == s
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Typed(patvar("s"), pname("String")),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tinfix(tname("z"), "==", tname("s")))),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after a typed pattern, no indents in match, colon at line end, case arrow at a smaller indent") {
+    val code =
+      """|def f(x: Any) =
+         |  x match
+         |  case s: String if g:
+         |    s.length > 4
+         |  => s
+         |  case x => x.toString
+         |""".stripMargin
+    val layout =
+      """|def f(x: Any) = x match {
+         |  case s: String if g {
+         |    s.length > 4
+         |  } =>
+         |    s
+         |  case x =>
+         |    x.toString
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Any"))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Typed(patvar("s"), pname("String")),
+          Some(tapply(tname("g"), blk(tinfix(tselect("s", "length"), ">", int(4))))),
+          tname("s"),
+        ),
+        Case(patvar("x"), None, tselect("x", "toString")),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, no indents in a nested match, colon lambda, case arrow on a line of its own") {
+    val code =
+      """|def test =
+         |  list.map:
+         |    case i: Int =>
+         |      n match
+         |      case j: Int
+         |      if list.exists: k =>
+         |        list.exists(_ == j && j == k)
+         |      =>
+         |        1
+         |      case _ => 2
+         |    case _ => 3
+         |""".stripMargin
+    val layout =
+      """|def test = list.map {
+         |  case i: Int =>
+         |    n match {
+         |      case j: Int if list.exists {
+         |        k => list.exists(_ == j && j == k)
+         |      } => 1
+         |      case _ => 2
+         |    }
+         |  case _ => 3
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("test"),
+      Nil,
+      None,
+      tapply(
+        tselect("list", "map"),
+        Term.PartialFunction(List(
+          Case(
+            Pat.Typed(patvar("i"), pname("Int")),
+            None,
+            tmatch(
+              tname("n"),
+              Case(
+                Pat.Typed(patvar("j"), pname("Int")),
+                Some(tapply(
+                  tselect("list", "exists"),
+                  blk(tfunc(tparam("k"))(tapply(
+                    tselect("list", "exists"),
+                    Term.AnonymousFunction(tinfix(
+                      tinfix(Term.Placeholder(), "==", tname("j")),
+                      "&&",
+                      tinfix(tname("j"), "==", tname("k")),
+                    )),
+                  ))),
+                )),
+                int(1),
+              ),
+              Case(patwildcard, None, int(2)),
+            ),
+          ),
+          Case(patwildcard, None, int(3)),
+        )),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match with an end marker, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f =
+         |  x match
+         |    case y if xs.exists: z =>
+         |      z
+         |    => 1
+         |  end match
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  x match {
+         |    case y if xs.exists {
+         |      z => z
+         |    } => 1
+         |  }
+         |  end match
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+            int(1),
+          ),
+        ),
+        Term.EndMarker(tname("match")),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, leading-dot line, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs
+         |      .exists: z =>
+         |        z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in catch with braces, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = try g catch {
+         |  case y if ys.exists: z =>
+         |    z
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = try g catch {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(
+        tname("g"),
+        List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        )),
+        None,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in catch with finally, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = try g catch
+         |  case y if ys.exists: z =>
+         |    z
+         |  => 1
+         |finally h
+         |""".stripMargin
+    val layout =
+      """|def f = try g catch {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |} finally h
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(
+        tname("g"),
+        List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        )),
+        Some(tname("h")),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, inner guard colon lambda, inner case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z match
+         |      case w if ws.exists: v =>
+         |        v
+         |      => true
+         |      case _ => false
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z match {
+         |      case w if ws.exists {
+         |        v => v
+         |      } => true
+         |      case _ => false
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tmatch(
+              tname("z"),
+              Case(
+                patvar("w"),
+                Some(tapply(tselect("ws", "exists"), blk(tfunc(tparam("v"))(tname("v"))))),
+                bool(true),
+              ),
+              Case(patwildcard, None, bool(false)),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case clause with an inline then in a try, catch on the next line, next case") {
+    val code =
+      """|def f = x match
+         |  case 1 => try if p then a
+         |    catch case e => b
+         |  case 2 => c
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    try if (p) a catch {
+         |      case e => b
+         |    }
+         |  case 2 =>
+         |    c
+         |}
+         |""".stripMargin
+    val body = Term.Try(
+      Term.If(tname("p"), tname("a"), Lit.Unit(), Nil),
+      List(Case(patvar("e"), None, tname("b"))),
+      None,
+    )
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(tname("x"), Case(int(1), None, body), Case(int(2), None, tname("c"))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case clause with a try in an inline then, else on the next line, next case") {
+    val code =
+      """|def f = x match
+         |  case 1 => if p then try a
+         |    else b
+         |  case 2 => c
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    if (p) try a else b
+         |  case 2 =>
+         |    c
+         |}
+         |""".stripMargin
+    val body = Term.If(tname("p"), Term.Try(tname("a"), Nil, None), tname("b"), Nil)
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(tname("x"), Case(int(1), None, body), Case(int(2), None, tname("c"))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case on the catch line, try with an inline then in the handler, finally on the next line") {
+    val code =
+      """|def g =
+         |  try a catch case e => try if p then b
+         |  finally c
+         |""".stripMargin
+    val layout =
+      """|def g = try a catch {
+         |  case e =>
+         |    try if (p) b finally c
+         |}
+         |""".stripMargin
+    val handler = Term.Try(Term.If(tname("p"), tname("b"), Lit.Unit(), Nil), Nil, Some(tname("c")))
+    val tree = Defn.Def(
+      Nil,
+      tname("g"),
+      Nil,
+      None,
+      Term.Try(tname("a"), List(Case(patvar("e"), None, handler)), None),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case on the catch line, inline then with a try in the handler, else on the next line") {
+    val code =
+      """|def g =
+         |  try a catch case e => if p then try b
+         |  else c
+         |""".stripMargin
+    val layout =
+      """|def g = try a catch {
+         |  case e =>
+         |    if (p) try b else c
+         |}
+         |""".stripMargin
+    val handler = Term.If(tname("p"), Term.Try(tname("b"), Nil, None), tname("c"), Nil)
+    val tree = Defn.Def(
+      Nil,
+      tname("g"),
+      Nil,
+      None,
+      Term.Try(tname("a"), List(Case(patvar("e"), None, handler)), None),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "case clause with a try in a match in an inline then, comment line, else at the case's indent",
+  ) {
+    val code =
+      """|def f =
+         |  if q then x match
+         |  case 1 => try a
+         |  // c
+         |  else b
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwDef [0..3)
+         |Ident(f) [4..5)
+         |Equals [6..7)
+         |Indentation.Indent [7..7)
+         |KwIf [10..12)
+         |Ident(q) [13..14)
+         |KwThen [15..19)
+         |Ident(x) [20..21)
+         |KwMatch [22..27)
+         |Indentation.Indent [27..27)
+         |KwCase [30..34)
+         |Constant.Int(1) [35..36)
+         |RightArrow [37..39)
+         |KwTry [40..43)
+         |Ident(a) [44..45)
+         |Indentation.Outdent [52..52)
+         |KwElse [55..59)
+         |Ident(b) [60..61)
+         |Indentation.Outdent [61..61)
+         |EOF [62..62)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct, classOf[Stat])
+  }
+
+  test("case guard, colon lambda, comment line first, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    // c
+         |    z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z =>
+         |      // c
+         |      z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tname("z").toBuilder.begComment(detachedComments("// c")).result())),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, comment line at the body's indent before the case arrow") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z
+         |    // c
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => {
+         |      z
+         |      // c
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(blk(
+              tname("z").toBuilder.endComment(detachedComments("// c")).result(),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, comment line at the case's indent before the case arrow") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z
+         |  // c
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |    // c
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tname("z")).toBuilder.endComment(detachedComments("// c")).result()),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end in a match with braces, colon lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = x match {
+         |  case y if
+         |      xs.exists: z =>
+         |        z
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end in catch, colon lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = try g catch
+         |  case y if
+         |      xs.exists: z =>
+         |        z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = try g catch {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(
+        tname("g"),
+        List(Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        )),
+        None,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "case guard after if at line end, infix operand, colon lambda, case arrow at the case's indent",
+  ) {
+    val code =
+      """|def f = x match
+         |  case y if
+         |      a && xs.exists: z =>
+         |        z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end, colon lambda with two parameters, case arrow at the case's indent") {
+    val code =
+      """|def f = x match
+         |  case y if
+         |      m.exists: (k, v) =>
+         |        v
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if m.exists {
+         |    (k, v) => v
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("m", "exists"), blk(tfunc(tparam("k"), tparam("v"))(tname("v"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end in the second case, colon lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = x match
+         |  case 0 => 0
+         |  case y if
+         |      xs.exists: z =>
+         |        z
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 0 => 0
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(int(0), None, int(0)),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match in a case body, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y =>
+         |    y match
+         |      case w if ws.exists: z =>
+         |        z => 1
+         |  case _ => 2
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `=>` expected but `outdent` found
+         |        z => 1
+         |              ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after an extractor pattern, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case Some(s) if xs.exists: z =>
+         |    z == s
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case Some(s) if xs.exists {
+         |    z => z == s
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patextract(tname("Some"), patvar("s")),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tinfix(tname("z"), "==", tname("s")))),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, leading infix line, colon at line end, lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = x match
+         |  case y if a
+         |    && xs.exists:
+         |      z => z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, trailing infix operator, colon at line end, lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = x match
+         |  case y if a &&
+         |      xs.exists:
+         |        z => z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, leading-dot line, colon at line end, lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs
+         |      .exists:
+         |        z => z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the line after the pattern, colon at line end, lambda, case arrow at the guard's indent") {
+    val code =
+      """|def f = x match
+         |  case y
+         |    if xs.exists:
+         |      z => z
+         |    => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the line after the pattern, colon at line end, lambda, blank line, infix line at the guard's indent") {
+    val code =
+      """|def f = x match
+         |  case y
+         |    if xs.exists:
+         |      z => z > 0
+         |
+         |    && b => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z > 0
+         |  } && b => 1
+         |}
+         |""".stripMargin
+    val arg =
+      tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tinfix(tname("z"), tname(">"), int(0)))))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(tname("x"), Case(patvar("y"), Some(tinfix(arg, tname("&&"), tname("b"))), int(1))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, no indents in match, colon at line end, lambda, case arrow on a line of its own") {
+    val code =
+      """|a match
+         |case n
+         |if foo:
+         |  b => true
+         |=>
+         |  2
+         |""".stripMargin
+    val layout =
+      """|a match {
+         |  case n if foo {
+         |    b => true
+         |  } => 2
+         |}
+         |""".stripMargin
+    val tree = tmatch(
+      tname("a"),
+      Case(patvar("n"), Some(tapply(tname("foo"), blk(tfunc(tparam("b"))(bool(true))))), int(2)),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, leading infix line, colon at line end, case arrow at the case's indent") {
+    val code =
+      """|def f = x match
+         |  case y if a
+         |    && p:
+         |      Boolean
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if a && p {
+         |    Boolean
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(tname("a"), "&&", tapply(tname("p"), blk(tname("Boolean"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end in partial function, colon lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = xs.collect {
+         |  case y if
+         |      ys.exists: z =>
+         |        z
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = xs.collect {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "collect"),
+        Term.PartialFunction(List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end in a match with braces, infix operand, colon lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = x match {
+         |  case y if
+         |      a && xs.exists: z =>
+         |        z
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end in a match with braces, colon lambda, case arrow at the guard's indent") {
+    val code =
+      """|def f = x match {
+         |  case y if
+         |      xs.exists: z =>
+         |        z
+         |      => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match with braces, leading infix line, colon at line end, lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = x match {
+         |  case y if a
+         |    && xs.exists:
+         |      z => z
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the line after the pattern in a match with braces, colon at line end, lambda, case arrow at the guard's indent") {
+    val code =
+      """|def f = x match {
+         |  case y
+         |    if xs.exists:
+         |      z => z
+         |    => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the line after the pattern, colon at line end, lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = x match
+         |  case y
+         |    if xs.exists:
+         |      z => z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end in colon argument of cases, colon lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = xs.collect:
+         |  case y if
+         |      ys.exists: z =>
+         |        z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = xs.collect {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "collect"),
+        Term.PartialFunction(List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end in catch with braces, colon lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = try g catch {
+         |  case y if
+         |      xs.exists: z =>
+         |        z
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = try g catch {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(
+        tname("g"),
+        List(Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        )),
+        None,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end on the brace line, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = xs.collect { case y if
+         |      ys.exists: z =>
+         |        z
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = xs.collect {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "collect"),
+        Term.PartialFunction(List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match with braces, trailing infix operator, colon at line end, lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = x match {
+         |  case y if a &&
+         |      xs.exists:
+         |        z => z
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match with braces, leading-dot line, colon at line end, lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = x match {
+         |  case y if xs
+         |      .exists:
+         |        z => z
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the line after the pattern in colon argument of cases, colon at line end, lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = xs.collect:
+         |  case y
+         |    if ys.exists:
+         |      z => z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = xs.collect {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "collect"),
+        Term.PartialFunction(List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in colon argument of cases, colon at line end, lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = xs.collect:
+         |  case y if ys.exists:
+         |    z => z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = xs.collect {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "collect"),
+        Term.PartialFunction(List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in colon argument of cases, colon lambda, body is a lambda, case arrow at the case's indent") {
+    val code =
+      """|def f = xs.collect:
+         |  case y if ys.exists: z =>
+         |    z => w
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = xs.collect {
+         |  case y if ys.exists {
+         |    z => z => w
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "collect"),
+        Term.PartialFunction(List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tfunc(tparam("z"))(tname("w")))))),
+          int(1),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "case guard, colon lambda, argument in braces over three lines, case arrow at a smaller indent",
+  ) {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    ys.exists { w =>
+         |      w == z
+         |    }
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => ys.exists {
+         |      w => w == z
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tapply(
+              tselect("ys", "exists"),
+              blk(tfunc(tparam("w"))(tinfix(tname("w"), "==", tname("z")))),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match in parentheses, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = g(x match
+         |  case y if xs.exists: z =>
+         |    z
+         |  => 1
+         |)
+         |""".stripMargin
+    val layout =
+      """|def f = g(x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tname("g"),
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+            int(1),
+          ),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, infix operand, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if a && xs.map: x =>
+         |    x => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    x => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, two lines, case arrow on the last line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    val w = z
+         |    w => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    w => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, name, colon at line end, case arrow on the argument's line") {
+    val code =
+      """|def f = x match
+         |  case y if p:
+         |    Boolean => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    Boolean => 1
+         |                ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, lambda, case arrow on the lambda's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    z => z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => z => 1
+         |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, apply, colon at line end, case arrow on the argument's line") {
+    val code =
+      """|def f = x match
+         |  case y if f(a):
+         |    b => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    b => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, infix operand, colon at line end, lambda, case arrow on the lambda's line") {
+    val code =
+      """|def f = x match
+         |  case y if a && xs.exists:
+         |    z => z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => z => 1
+         |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in a match with braces, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match {
+         |  case y if xs.exists: z =>
+         |    z => 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `}` found
+         |}
+         |^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test(
+    "case guard in a match with braces, colon at line end, lambda, case arrow on the lambda's line",
+  ) {
+    val code =
+      """|def f = x match {
+         |  case y if xs.exists:
+         |    z => z => 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `}` found
+         |}
+         |^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in partial function, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = xs.collect {
+         |  case y if ys.exists: z =>
+         |    z => 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `}` found
+         |}
+         |^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in catch, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = try g catch
+         |  case y if ys.exists: z =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in colon argument of cases, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = xs.collect:
+         |  case y if ys.exists: z =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, case arrow at the end of the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z =>
+         |    1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    1
+         |     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, lambda, case arrow at the end of the lambda's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    z => z =>
+         |      1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      1
+         |       ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, case arrow on the body's line, another case") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z => 1
+         |  case _ => 2
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `case` found
+         |  case _ => 2
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda with a typed parameter, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: (z: Int) =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case clause, case arrow on the clause's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b => b => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    case b => b => 1
+         |                    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case clause with a try and a catch in braces, case arrow on the clause's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b => try g(b) catch { case _: Exception => false } => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    case b => try g(b) catch { case _: Exception => false } => 1
+         |                                                            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case clause with a try and a catch in braces, case arrow on its own line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b => try g(b) catch { case _: Exception => false }
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `=>` found
+         |    => 1
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, val of a lambda, case arrow on the last line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    val g = (a: Int) => a
+         |    g(z) => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, val of a lambda, case arrow on the last line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    val g = (a: Int) => a
+         |    g => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    g => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, lambda in parentheses, case arrow on the argument's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    ys.map(a => a).contains => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    ys.map(a => a).contains => 1
+         |                            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, lambda in parentheses, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    ys.map(a => a).contains(z) => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, case arrow on the body's line, another body line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z => 1
+         |    2
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    2
+         |     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case arrow on the argument's line, another body line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.contains:
+         |    y => 1
+         |    2
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    2
+         |     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda with a using parameter, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: (using z: Int) =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda with a placeholder parameter, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: _ =>
+         |    true => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: _ =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard on the catch line, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = try g catch case y if ys.exists: z =>
+         |  z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `outdent` found
+         |  z => 1
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case arrow on its own line at the argument's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.contains:
+         |    y
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    => 1
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, backquoted name, colon at line end, case arrow on the argument's line") {
+    val code =
+      """|def f = x match
+         |  case y if `p`:
+         |    Boolean => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    Boolean => 1
+         |                ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, val with an indented lambda, case arrow on the last line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    val g =
+         |      (a: Int) => a
+         |    g => 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `=>` expected but `outdent` found
+         |    g => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, type apply, colon at line end, case arrow on the argument's line") {
+    val code =
+      """|def f = x match
+         |  case y if p[Int]:
+         |    Boolean => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    Boolean => 1
+         |                ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, leading infix line, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if a
+         |    && xs.exists: z =>
+         |      z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      z => 1
+         |            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard on the line after the pattern, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y
+         |    if xs.exists: z =>
+         |      z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      z => 1
+         |            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, case arrow on its own line at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    => 1
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, try with a case on the catch line, case arrow on its own line at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    try z > 0
+         |    catch case _: Exception => false
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, try with a case on the line after catch, case arrow on its own line at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    try z > 0
+         |    catch
+         |      case _: Exception => false
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, try with a catch in braces, case arrow after the closing brace") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    try z > 0
+         |    catch { case _: Exception => false } => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, try with a case on the catch line, case arrow on its own line at the argument's indent") {
+    val code =
+      """|def f = x match
+         |  case y if p:
+         |    try q
+         |    catch case _: Exception => false
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `outdent` expected but `=>` found
+         |    => 1
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, case arrow on its own line deeper than the body") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z
+         |      => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, case arrow and a comment at the end of the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z => // c
+         |    1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    1
+         |     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, lambda in braces, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    ys.map { a => a }.contains(z) => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda with two parameters, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if m.exists: (k, v) =>
+         |    v => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    v => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, prefix operator, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if !xs.exists: z =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in the second case of a match with braces, colon at line end, lambda, case arrow on the lambda's line") {
+    val code =
+      """|def f = x match {
+         |  case 0 => 0
+         |  case y if xs.exists:
+         |    z => z => 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `=>` expected but `}` found
+         |}
+         |^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in the second case, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case 0 => 0
+         |  case y if xs.exists: z =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in catch with braces, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = try g catch {
+         |  case y if ys.exists: z =>
+         |    z => 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `}` found
+         |}
+         |^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, no indents in match, colon lambda, case arrow on the body's line") {
+    val code =
+      """|a match
+         |case n
+         |if foo: b =>
+         |  b => 2
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |  b => 2
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, no indents in match, colon at line end, case arrow on the argument's line") {
+    val code =
+      """|a match
+         |case n
+         |if foo:
+         |  b => 2
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |  b => 2
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, two lines, case arrow on the last line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.contains:
+         |    val w = y
+         |    w => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    w => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, val of a match, case arrow on the last line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    val b = z match
+         |      case 1 => true
+         |      case _ => false
+         |    b => 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `=>` expected but `outdent` found
+         |    b => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, infix line, case arrow on the infix line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z
+         |    && b => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, block comment before the case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z /* c */ => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z /* c */ => 1
+         |                  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test(
+    "case guard, colon at line end, infix line with a colon lambda, case arrow on the body's line",
+  ) {
+    val code =
+      """|def f = x match
+         |  case y if xs.contains:
+         |    y
+         |  && ys.exists: z =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, apply, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if f(a): z =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, val with a context function type, case arrow on the last line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    val g: Int ?=> Int = 1
+         |    g => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    g => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, match, case arrow on its own line at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z match
+         |      case 1 => true
+         |      case _ => false
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test(
+    "case guard, colon lambda, case arrow on the body's line, val of a lambda in the case body",
+  ) {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z => 1
+         |    val h = (a: Int) => a
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    val h = (a: Int) => a
+         |                         ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, two lambda lines") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    z => z
+         |    w => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    w => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after if at line end, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if
+         |      xs.exists: z =>
+         |        z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |        z => 1
+         |              ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case clause with a try and a case on the catch line, case arrow on its own line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b => try g(b) catch case _: Exception => false
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `=>` found
+         |    => 1
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, trailing infix operator, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if a &&
+         |      xs.exists: z =>
+         |        z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |        z => 1
+         |              ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, if-then-else, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    if z > 0 then z < 9 else false => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, if-then-else, case arrow on the argument's line") {
+    val code =
+      """|def f = x match
+         |  case y if p:
+         |    if a then b else c => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    if a then b else c => 1
+         |                           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, if-then-else over three lines, case arrow on the else line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    if z > 0 then
+         |      z < 9
+         |    else false => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard on the brace line, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = xs.collect { case y if ys.exists: z =>
+         |    z => 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `}` found
+         |}
+         |^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in catch with finally, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = try g catch
+         |  case y if ys.exists: z =>
+         |    z => 1
+         |finally h
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in a match before a statement, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f =
+         |  x match
+         |    case y if xs.exists: z =>
+         |      z => 1
+         |  g
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      z => 1
+         |            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, argument in parentheses over three lines, case arrow after the closing parenthesis") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    g(
+         |      z
+         |    ) => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, nested colon lambda, case arrow on the nested body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z.ys.exists: w =>
+         |      w => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      w => 1
+         |            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after if at line end, colon at line end, case arrow on the argument's line") {
+    val code =
+      """|def f = x match
+         |  case y if
+         |      p:
+         |        Boolean => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |        Boolean => 1
+         |                    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after a typed pattern, colon at line end, case arrow on the argument's line") {
+    val code =
+      """|def f(x: Any) = x match
+         |  case s: String if g:
+         |    s.length > 4 => s
+         |  case x => x.toString
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    s.length > 4 => s
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after a typed pattern, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case s: String if xs.exists: z =>
+         |    z == s => 1
+         |  case _ => 2
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case s: String if xs.exists: z =>
+         |                             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after a typed pattern, no indents in match, colon at line end, case arrow on the argument's line") {
+    val code =
+      """|def f(x: Any) =
+         |  x match
+         |  case s: String if g:
+         |    s.length > 4 => s
+         |  case x => x.toString
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `=>` found
+         |    s.length > 4 => s
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after an extractor pattern, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case Some(s) if xs.exists: z =>
+         |    z == s => 1
+         |  case _ => 2
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case Some(s) if xs.exists: z =>
+         |                           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, no indents in a nested match, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def test =
+         |  list.map:
+         |    case i: Int =>
+         |      n match
+         |      case j: Int
+         |      if list.exists: k =>
+         |        list.exists(_ == j && j == k) =>
+         |        1
+         |      case _ => 2
+         |    case _ => 3
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `=>` expected but `:` found
+         |      if list.exists: k =>
+         |                    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in a match with an end marker, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f =
+         |  x match
+         |    case y if xs.exists: z =>
+         |      z => 1
+         |  end match
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      z => 1
+         |            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, leading-dot line, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs
+         |      .exists: z =>
+         |        z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |        z => 1
+         |              ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, case arrow at the end of the body's line, deeper case body") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z =>
+         |      1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      1
+         |       ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test(
+    "case guard, colon at line end, case arrow at the end of the argument's line, deeper case body",
+  ) {
+    val code =
+      """|def f(x: Any) = x match
+         |  case s: String if g:
+         |    s.length > 4 =>
+         |      s
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    s.length > 4 =>
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, comment on the guard line, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z => // c
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, comment on the guard line, case arrow on the argument's line") {
+    val code =
+      """|def f(x: Any) = x match
+         |  case s: String if g: // c
+         |    s.length > 4 => s
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    s.length > 4 => s
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test(
+    "case guard, colon lambda, inner guard colon lambda, inner case arrow on the inner body's line",
+  ) {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z match
+         |      case w if ws.exists: v =>
+         |        v => true
+         |      case _ => false
+         |  => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case clause with a guard colon lambda, inner case arrow on the inner body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b if bs.exists: c =>
+         |      c => true
+         |    case _ => false
+         |  => 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `=>` expected but `case` found
+         |    case _ => false
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test(
+    "case guard, colon lambda, inner guard colon lambda, outer case arrow at the body's indent",
+  ) {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z match
+         |      case w if ws.exists: v =>
+         |        v => true
+         |      case _ => false
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, last case clause with a guard colon lambda, inner case arrow on the inner body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b if bs.exists: c =>
+         |      c => true
+         |  => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      c => true
+         |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, last case clause with a guard colon lambda, inner case arrow on the inner body's line, outer case arrow at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b if bs.exists: c =>
+         |      c => true
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `=>` expected but `outdent` found
+         |    => 1
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case clause, then a case clause with a guard colon lambda, inner case arrow on the inner body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case 0 => false
+         |    case b if bs.exists: c =>
+         |      c => true
+         |  => 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `=>` expected but `outdent` found
+         |      c => true
+         |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, last case clause with a guard colon at line end, inner case arrow on the inner body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b if bs.contains:
+         |      b => true
+         |  => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      b => true
+         |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, last case clause with a guard colon lambda, try and catch lines, inner case arrow on its own line, outer case arrow at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b if b.ws.exists: w =>
+         |      try w > 0
+         |      catch case _: Exception => false
+         |      => true
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `:` found
+         |    case b if b.ws.exists: w =>
+         |                         ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, last case clause with a guard colon lambda, inner case arrow on the inner body's line before a try, outer case arrow at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b if b.ws.exists: w =>
+         |      w > 0 => try g(b) catch case _: Exception => false
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `:` found
+         |    case b if b.ws.exists: w =>
+         |                         ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, inner guard colon lambda in the last case, inner case arrow on the inner body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z match
+         |      case w if ws.exists: v =>
+         |        v => true
+         |  => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, inner guard colon lambda in the last case, inner case arrow on the inner body's line, outer case arrow at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z match
+         |      case w if ws.exists: v =>
+         |        v => true
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in a match with braces, colon lambda, inner guard colon lambda in the last case, inner case arrow on the inner body's line") {
+    val code =
+      """|def f = x match {
+         |  case y if xs.exists: z =>
+         |    z match
+         |      case w if ws.exists: v =>
+         |        v => true
+         |  => 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, last case clause whose body matches, with a guard colon lambda in its last case, inner case arrow on the inner body's line, outer case arrow at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b => b match
+         |      case c if cs.exists: d =>
+         |        d => true
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `=>` expected but `outdent` found
+         |        d => true
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, last case clause whose body on the next line matches, with a guard colon lambda in its last case, inner case arrow on the inner body's line, outer case arrow at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b =>
+         |      b match
+         |        case c if cs.exists: d =>
+         |          d => true
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `=>` expected but `outdent` found
+         |          d => true
+         |                   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in a match with braces, colon at line end, last case clause whose body matches, with a guard colon lambda in its last case, inner case arrow on the inner body's line, outer case arrow at the body's indent") {
+    val code =
+      """|def f = x match {
+         |  case y if xs.exists:
+         |    case b => b match
+         |      case c if cs.exists: d =>
+         |        d => true
+         |    => 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `=>` expected but `outdent` found
+         |        d => true
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, try with a case on the catch line, inline then with a match in the handler, case arrow on its own line at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    try g(z) catch case e => if p then e match
+         |      case X => true
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, try with a case on the catch line, try with catch at the line end in the handler, case arrow on its own line at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    try g(z) catch case e => try h(z) catch
+         |      case X => true
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, try with a case on the catch line, try without catch in the handler, case arrow on its own line at the body's indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    try g(z) catch case e => try h(z)
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case clause with a try and a case on the catch line, inline then with a match in the handler, case arrow on its own line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b => try g(b) catch case e => if p then e match
+         |        case X => true
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `outdent` expected but `=>` found
+         |    => 1
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case clause with a try and a case on the catch line, try with catch at the line end in the handler, case arrow on its own line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists:
+         |    case b => try g(b) catch case e => try h(b) catch
+         |        case X => true
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `outdent` expected but `=>` found
+         |    => 1
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, comment line first, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    // c
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, comment line first, case arrow on the argument's line") {
+    val code =
+      """|def f = x match
+         |  case y if p:
+         |    // c
+         |    Boolean => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    Boolean => 1
+         |                ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, leading infix line, colon at line end, case arrow on the argument's line") {
+    val code =
+      """|def f = x match
+         |  case y if a
+         |    && p:
+         |      Boolean => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      Boolean => 1
+         |                  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, argument in braces over three lines, case arrow after the closing brace") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    ys.exists { w =>
+         |      w == z
+         |    } => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in a match in parentheses, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = g(x match
+         |  case y if xs.exists: z =>
+         |    z => 1
+         |)
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case arrow at the end of the argument's line, case body at the same indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.contains:
+         |    y =>
+         |    1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    1
+         |     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after an alternative pattern, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case A | B if xs.exists: z =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, case arrow at the end of the body's line, shallower case body") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |      z =>
+         |    1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `integer constant` found
+         |    1
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after a binder pattern, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case s @ Some(_) if xs.exists: z =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test(
+    "case guard in a match with braces, colon lambda, case arrow on the body's line, another case",
+  ) {
+    val code =
+      """|def f = x match {
+         |  case y if xs.exists: z =>
+         |    z => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `case` found
+         |  case _ => 2
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after a pattern over two lines, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case Some(
+         |         y) if xs.exists: z =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after an alternative pattern over two lines, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case A
+         |     | B if xs.exists: z =>
+         |         z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |         z => 1
+         |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test(
+    "case guard, colon lambda, case arrow on the body's line, deeper select line in the case body",
+  ) {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z => g
+         |      .h
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      .h
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, case arrow on the body's line, deeper infix line in the case body") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z => a +
+         |      b
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      b
+         |       ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test(
+    "case guard, colon lambda, case arrow on the body's line, deeper argument line in the case body",
+  ) {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z => g(
+         |      1)
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      1)
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, case arrow on the body's line, colon lambda in the case body") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z => ys.foreach: w =>
+         |      w
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      w
+         |       ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case arrow on the argument's line, deeper select line in the case body") {
+    val code =
+      """|def f(x: Any) = x match
+         |  case s: String if g:
+         |    s.length > 4 => s
+         |      .trim
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    s.length > 4 => s
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in a match with braces, colon lambda, case arrow on the body's line, deeper select line in the case body") {
+    val code =
+      """|def f = x match {
+         |  case y if xs.exists: z =>
+         |    z => g
+         |      .h
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `=>` expected but `case` found
+         |  case _ => 2
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in a sub-case, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case Some(v) if v match
+         |    case w if ws.exists: z =>
+         |      z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |      z => 1
+         |            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after a case with a sub-match, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case Some(v) if v match
+         |    case 1 => 1
+         |  case y if xs.exists: z =>
+         |    z => 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `=>` expected but `outdent` found
+         |    z => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, if with parentheses, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    if (z > 0) z < 9 else false => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, blank line, case arrow on the last line") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    val w = z
+         |
+         |    w => 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `=>` expected but `outdent` found
+         |    w => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, function type in brackets, case arrow on the body's line") {
+    val code =
+      """|def f = x match
+         |  case y if fs.exists: f =>
+         |    f.isInstanceOf[Int => Int] => 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if fs.exists: f =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, case arrow at the end of the body's line, empty case body, another case") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z > y =>
+         |  case _ => g()
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, case arrow at the end of the argument's line, empty case body, another case") {
+    val code =
+      """|def f = x match
+         |  case y if xs.contains:
+         |    y =>
+         |  case _ => g()
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `case` found
+         |  case _ => g()
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in catch with braces, colon lambda, case arrow at the end of the body's line, empty case body") {
+    val code =
+      """|def f = try g() catch {
+         |  case e if ignored.exists: c =>
+         |    c == e =>
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case e if ignored.exists: c =>
+         |                          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test(
+    "case guard, colon lambda, case arrow at the end of the body's line, empty case body at the end",
+  ) {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z > y =>
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in a match in a colon lambda, colon lambda, case arrow on the body's line") {
+    val code =
+      """|def f = xs.foreach: x =>
+         |  x match
+         |    case y if ys.exists: z =>
+         |      z > y => g(y)
+         |    case _ => g(0)
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `if` found
+         |    case y if ys.exists: z =>
+         |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in the last case of a match in a colon lambda, colon lambda, case arrow on the body's line, select line after the lambda") {
+    val code =
+      """|def f = xs.map: x =>
+         |    x match
+         |      case 0 => 0
+         |      case y if ys.exists: z =>
+         |        z > y => 1
+         |  .sum
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `if` found
+         |      case y if ys.exists: z =>
+         |             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in the last case of a match in a colon lambda, colon at line end, case arrow on the argument's line, select line after the lambda") {
+    val code =
+      """|def f = xs.map: x =>
+         |    x match
+         |      case 0 => 0
+         |      case y if ys.exists:
+         |        _ > y => 1
+         |  .sum
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `if` found
+         |      case y if ys.exists:
+         |             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard in the last case of a match in a colon argument, colon lambda, case arrow on the body's line, select line after the argument") {
+    val code =
+      """|def f = Option:
+         |    x match
+         |      case 0 => 0
+         |      case y if ys.exists: z =>
+         |        z > y => 1
+         |  .get
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `:` found
+         |      case y if ys.exists: z =>
+         |                         ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test(
+    "case guard after a case with a colon lambda body, colon lambda, case arrow on the body's line",
+  ) {
+    val code =
+      """|def f = x match
+         |  case 0 => xs.foreach: z =>
+         |      g(z)
+         |  case y if ys.exists: z =>
+         |    z > y => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `:` found
+         |  case y if ys.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon at line end, placeholder function, case arrow on the argument's line") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if xs.exists:
+         |    _ > y => 1
+         |  case _ => 2
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    _ > y => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon lambda, placeholder functions in the body, case arrow on the body's line") {
+    val code =
+      """|def f(x: Int, xs: List[List[Int]]) = x match
+         |  case y if xs.exists: z =>
+         |    z.exists(_ > y) && z.forall(_ < 9) => 1
+         |  case _ => 2
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if xs.exists: z =>
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard, colon context lambda, case arrow on the body's line") {
+    val code =
+      """|def f(x: Int, g: (Int ?=> Boolean) => Boolean) = x match
+         |  case y if g: (z: Int) ?=>
+         |    z > y => 1
+         |  case _ => 2
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case y if g: (z: Int) ?=>
+         |             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: case guard, infix operand, colon lambda, case arrow on the body's line") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f = x match
+         |  case y if a && xs.map: x =>
+         |    x => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    x => 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: case guard, colon lambda, case arrow at the end of the body's line") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z =>
+         |    1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    1
+         |     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: case guard, colon lambda, case arrow on its own line at the body's indent") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    => 1
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: case guard, name, colon at line end, case arrow on the argument's line") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f = x match
+         |  case y if p:
+         |    Boolean => 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |    Boolean => 1
+         |                ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: case guard, colon at line end, case arrow at the end of the argument's line, deeper case body") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f(x: Any) = x match
+         |  case s: String if g:
+         |    s.length > 4 =>
+         |      s
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    s.length > 4 =>
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: case guard, colon at line end, case arrow on its own line at the argument's indent") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f = x match
+         |  case y if xs.contains:
+         |    y
+         |    => 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |    => 1
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after an alternative pattern over two lines, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case A
+         |     | B if xs.exists: z =>
+         |         z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case A | B if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Alternative(tname("A"), tname("B")),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after a pattern over two lines, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case Some(
+         |         y) if xs.exists: z =>
+         |    z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case Some(y) if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patextract(tname("Some"), patvar("y")),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "case guard, leading infix lines at two indents, colon lambda, case arrow at a smaller indent",
+  ) {
+    val code =
+      """|def f = x match
+         |  case y if a
+         |        && b
+         |    && xs.exists: z =>
+         |      z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if a && b && xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tinfix(tname("a"), "&&", tname("b")),
+            "&&",
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after a binder pattern, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case s @ Some(_) if xs.exists: z =>
+         |    z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case s @ Some(_) if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Bind(patvar("s"), patextract(tname("Some"), patwildcard)),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, sub-match after the guard") {
+    val code =
+      """|def f = x match
+         |  case Some(v) if xs.exists: z =>
+         |      z == v
+         |    if v match
+         |      case 1 => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case Some(v) if xs.exists {
+         |    z => z == v
+         |  } if v match {
+         |    case 1 => 1
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patextract(tname("Some"), patvar("v")),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tinfix(tname("z"), "==", tname("v")))),
+          )),
+          tsubmatch(tname("v"), Case(int(1), None, int(1))),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, blank line, case arrow at a smaller indent") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z
+         |
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, lambda in braces over three lines, case arrow after the closing brace") {
+    val code =
+      """|def f = x match {
+         |  case y if xs.exists { z =>
+         |    z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end, colon lambda, case arrow between the case's and the guard's indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if
+         |      xs.exists: z =>
+         |        z > y
+         |    => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.exists {
+         |    z => z > y
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+          ),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the line after the pattern at the case's indent, colon lambda, case arrow at the case's indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y
+         |  if xs.exists: z =>
+         |    z > y
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.exists {
+         |    z => z > y
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+          ),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the line after the pattern at the case's indent, colon lambda, nested colon lambda, case arrow at the case's indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y
+         |  if xs.forall: w =>
+         |    xs.exists: z =>
+         |      z > w
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.forall {
+         |    w => xs.exists {
+         |      z => z > w
+         |    }
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "forall"),
+            blk(tfunc(tparam("w"))(tapply(
+              tselect("xs", "exists"),
+              blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("w")))),
+            ))),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the line after the pattern, colon lambda, case arrow at the guard's indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y
+         |    if xs.exists: z =>
+         |      z > y
+         |    => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.exists {
+         |    z => z > y
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+          ),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the line after the pattern, colon lambda, nested colon lambda, case arrow at the guard's indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y
+         |    if xs.forall: w =>
+         |      xs.exists: z =>
+         |        z > w
+         |    => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.forall {
+         |    w => xs.exists {
+         |      z => z > w
+         |    }
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "forall"),
+            blk(tfunc(tparam("w"))(tapply(
+              tselect("xs", "exists"),
+              blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("w")))),
+            ))),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, deeper nested colon lambda, case arrow at a smaller indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if xs.forall: w =>
+         |      xs.exists: z =>
+         |        z > w
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.forall {
+         |    w => xs.exists {
+         |      z => z > w
+         |    }
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "forall"),
+            blk(tfunc(tparam("w"))(tapply(
+              tselect("xs", "exists"),
+              blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("w")))),
+            ))),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "case guard, colon lambda, deeper val of a lambda, case arrow at a smaller indent, another case",
+  ) {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if xs.forall: w =>
+         |      val g = (z: Int) => z > w
+         |      xs.exists(g)
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.forall { w =>
+         |    val g = (z: Int) => z > w
+         |    xs.exists(g)
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "forall"),
+            blk(tfunc(tparam("w"))(blk(
+              Defn.Val(
+                Nil,
+                List(patvar("g")),
+                None,
+                tfunc(tparam("z", pname("Int")))(tinfix(tname("z"), ">", tname("w"))),
+              ),
+              tapply(tselect("xs", "exists"), tname("g")),
+            ))),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, leading infix line, colon lambda, val with a function type, case arrow at the case's indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match
+         |  case y if a
+         |    && xs.forall: w =>
+         |      val p: Int => Boolean = _ > w
+         |      xs.exists(p)
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match {
+         |  case y if a && xs.forall { w =>
+         |    val p: Int => Boolean = _ > w
+         |    xs.exists(p)
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(
+        tparam("x", pname("Int")),
+        tparam("xs", papply(pname("List"), pname("Int"))),
+        tparam("a", pname("Boolean")),
+      ))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(
+              tselect("xs", "forall"),
+              blk(tfunc(tparam("w"))(blk(
+                Defn.Val(
+                  Nil,
+                  List(patvar("p")),
+                  Some(pfunc(pname("Int"))(pname("Boolean"))),
+                  Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", tname("w"))),
+                ),
+                tapply(tselect("xs", "exists"), tname("p")),
+              ))),
+            ),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, leading infix line, colon lambda, nested colon lambda, case arrow at the case's indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match
+         |  case y if a
+         |    && xs.forall: w =>
+         |      xs.exists: z =>
+         |        z > w
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match {
+         |  case y if a && xs.forall {
+         |    w => xs.exists {
+         |      z => z > w
+         |    }
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(
+        tparam("x", pname("Int")),
+        tparam("xs", papply(pname("List"), pname("Int"))),
+        tparam("a", pname("Boolean")),
+      ))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(
+              tselect("xs", "forall"),
+              blk(tfunc(tparam("w"))(tapply(
+                tselect("xs", "exists"),
+                blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("w")))),
+              ))),
+            ),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, leading infix line, colon lambda, val of a lambda, case arrow at the case's indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match
+         |  case y if a
+         |    && xs.forall: w =>
+         |      val g = (z: Int) => z > w
+         |      xs.exists(g)
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match {
+         |  case y if a && xs.forall { w =>
+         |    val g = (z: Int) => z > w
+         |    xs.exists(g)
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(
+        tparam("x", pname("Int")),
+        tparam("xs", papply(pname("List"), pname("Int"))),
+        tparam("a", pname("Boolean")),
+      ))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(
+              tselect("xs", "forall"),
+              blk(tfunc(tparam("w"))(blk(
+                Defn.Val(
+                  Nil,
+                  List(patvar("g")),
+                  None,
+                  tfunc(tparam("z", pname("Int")))(tinfix(tname("z"), ">", tname("w"))),
+                ),
+                tapply(tselect("xs", "exists"), tname("g")),
+              ))),
+            ),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, leading infix line, colon lambda, lambda in parentheses, case arrow at the case's indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match
+         |  case y if a
+         |    && xs.forall: w =>
+         |      xs.exists(z => z > w)
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match {
+         |  case y if a && xs.forall {
+         |    w => xs.exists(z => z > w)
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(
+        tparam("x", pname("Int")),
+        tparam("xs", papply(pname("List"), pname("Int"))),
+        tparam("a", pname("Boolean")),
+      ))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(
+              tselect("xs", "forall"),
+              blk(tfunc(tparam("w"))(
+                tapply(tselect("xs", "exists"), tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("w")))),
+              )),
+            ),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the line after the pattern, colon at line end, placeholder function, case arrow on a line of its own, colon lambda in the case body") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y
+         |    if xs.exists:
+         |      _ > y
+         |    =>
+         |      xs.count: z =>
+         |        z > y
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.exists {
+         |    _ > y
+         |  } =>
+         |    xs.count {
+         |      z => z > y
+         |    }
+         |  case _ =>
+         |    2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", tname("y")))),
+          )),
+          tapply(tselect("xs", "count"), blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end without a colon, case arrow on a line of its own, val of a lambda in the case body") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if
+         |      xs.exists(_ > y)
+         |  =>
+         |    val g = (z: Int) => z > y
+         |    xs.count(g)
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.exists(_ > y) =>
+         |    val g = (z: Int) => z > y
+         |    xs.count(g)
+         |  case _ =>
+         |    2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", tname("y"))),
+          )),
+          blk(
+            Defn.Val(
+              Nil,
+              List(patvar("g")),
+              None,
+              tfunc(tparam("z", pname("Int")))(tinfix(tname("z"), ">", tname("y"))),
+            ),
+            tapply(tselect("xs", "count"), tname("g")),
+          ),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, deeper body, case arrow at a smaller indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if xs.exists: z =>
+         |      z > y
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.exists {
+         |    z => z > y
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+          ),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, case arrow at a smaller indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if xs.exists: z =>
+         |    z > y
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.exists {
+         |    z => z > y
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+          ),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end without a colon, leading infix line left of the guard, case arrow at the case's indent") {
+    val code =
+      """|def f(x: Int, a: Boolean, b: Boolean) = x match
+         |  case y if
+         |      a
+         |    && b
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, a: Boolean, b: Boolean) = x match {
+         |  case y if a && b => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(
+        tpc(tparam("x", pname("Int")), tparam("a", pname("Boolean")), tparam("b", pname("Boolean"))),
+      )),
+      None,
+      tmatch(
+        tname("x"),
+        Case(patvar("y"), Some(tinfix(tname("a"), "&&", tname("b"))), int(1)),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end without a colon, trailing infix operator, next line left of the guard, case arrow at the case's indent") {
+    val code =
+      """|def f(x: Int, a: Boolean, b: Boolean) = x match
+         |  case y if
+         |      a &&
+         |    b
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, a: Boolean, b: Boolean) = x match {
+         |  case y if a && b => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(
+        tpc(tparam("x", pname("Int")), tparam("a", pname("Boolean")), tparam("b", pname("Boolean"))),
+      )),
+      None,
+      tmatch(
+        tname("x"),
+        Case(patvar("y"), Some(tinfix(tname("a"), "&&", tname("b"))), int(1)),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end without a colon, val with a function type, case arrow at the case's indent") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if
+         |      val p: Int => Boolean = _ > y
+         |      xs.exists(p)
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: illegal start of simple expression
+         |      val p: Int => Boolean = _ > y
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after if at line end without a colon, val of a lambda, case arrow at the case's indent") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if
+         |      val g = (z: Int) => z > y
+         |      xs.exists(g)
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: illegal start of simple expression
+         |      val g = (z: Int) => z > y
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("case guard after if at line end without a colon, match, case arrow at the case's indent") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if
+         |      y match
+         |        case 0 => true
+         |        case _ => false
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if (y match {
+         |    case 0 => true
+         |    case _ => false
+         |  }) => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tmatch(tname("y"), Case(int(0), None, bool(true)), Case(patwildcard, None, bool(false)))),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard after if at line end without a colon, lambda in parentheses, case arrow at the case's indent") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if
+         |      xs.exists(z => z > y)
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.exists(z => z > y) => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard with a match at line end, lambda in parentheses in an inner case, case arrow at the case's indent") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if y match
+         |    case 0 => xs.exists(z => z > y)
+         |    case _ => false
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if (y match {
+         |    case 0 =>
+         |      xs.exists(z => z > y)
+         |    case _ =>
+         |      false
+         |  }) => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tmatch(
+            tname("y"),
+            Case(
+              int(0),
+              None,
+              tapply(tselect("xs", "exists"), tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y")))),
+            ),
+            Case(patwildcard, None, bool(false)),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard with a match at line end, val with a function type in an inner case, case arrow left of the inner cases") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if y match
+         |      case 0 =>
+         |        val p: Int => Boolean = _ > y
+         |        xs.exists(p)
+         |      case _ => false
+         |    => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if (y match {
+         |    case 0 =>
+         |      val p: Int => Boolean = _ > y
+         |      xs.exists(p)
+         |    case _ =>
+         |      false
+         |  }) => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tmatch(
+            tname("y"),
+            Case(
+              int(0),
+              None,
+              blk(
+                Defn.Val(
+                  Nil,
+                  List(patvar("p")),
+                  Some(pfunc(pname("Int"))(pname("Boolean"))),
+                  Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", tname("y"))),
+                ),
+                tapply(tselect("xs", "exists"), tname("p")),
+              ),
+            ),
+            Case(patwildcard, None, bool(false)),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard with a match at line end, colon lambda in an inner case, case arrow left of the inner cases") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if y match
+         |      case 0 => xs.exists: z =>
+         |        z > y
+         |      case _ => false
+         |    => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if (y match {
+         |    case 0 =>
+         |      xs.exists {
+         |        z => z > y
+         |      }
+         |    case _ =>
+         |      false
+         |  }) => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tmatch(
+            tname("y"),
+            Case(
+              int(0),
+              None,
+              tapply(
+                tselect("xs", "exists"),
+                blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y")))),
+              ),
+            ),
+            Case(patwildcard, None, bool(false)),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard with a match at line end, lambda in parentheses in an inner case, case arrow left of the inner cases") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if y match
+         |      case 0 => xs.exists(z => z > y)
+         |      case _ => false
+         |    => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if (y match {
+         |    case 0 =>
+         |      xs.exists(z => z > y)
+         |    case _ =>
+         |      false
+         |  }) => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tmatch(
+            tname("y"),
+            Case(
+              int(0),
+              None,
+              tapply(tselect("xs", "exists"), tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y")))),
+            ),
+            Case(patwildcard, None, bool(false)),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, leading infix line, colon lambda, val with a context function type, case arrow at the case's indent, another case") {
+    val code =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match
+         |  case y if a
+         |    && xs.forall: w =>
+         |      val p: Int ?=> Boolean = summon[Int] > w
+         |      xs.exists(z => p(using z))
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match {
+         |  case y if a && xs.forall { w =>
+         |    val p: Int ?=> Boolean = summon[Int] > w
+         |    xs.exists(z => p(using z))
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(
+        tparam("x", pname("Int")),
+        tparam("xs", papply(pname("List"), pname("Int"))),
+        tparam("a", pname("Boolean")),
+      ))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(
+              tselect("xs", "forall"),
+              blk(tfunc(tparam("w"))(blk(
+                Defn.Val(
+                  Nil,
+                  List(patvar("p")),
+                  Some(pctxfunc(pname("Int"))(pname("Boolean"))),
+                  tinfix(tapplytype(tname("summon"), pname("Int")), ">", tname("w")),
+                ),
+                tapply(tselect("xs", "exists"), tfunc(tparam("z"))(tapplyUsing(tname("p"), tname("z")))),
+              ))),
+            ),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard, colon lambda, case arrow on a line of its own at a smaller indent, empty case body, another case") {
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z > y
+         |  =>
+         |  case _ => g()
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z > y
+         |  } =>
+         |  case _ =>
+         |    g()
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+          ),
+          blk(),
+        ),
+        Case(patwildcard, None, tapply(tname("g"))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "case guard in catch with braces, colon lambda, case arrow at a smaller indent, empty case body",
+  ) {
+    val code =
+      """|def f = try g() catch {
+         |  case e if ignored.exists: c =>
+         |    c == e
+         |  =>
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = try g() catch {
+         |  case e if ignored.exists {
+         |    c => c == e
+         |  } =>
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(
+        tapply(tname("g")),
+        List(Case(
+          patvar("e"),
+          Some(tapply(
+            tselect("ignored", "exists"),
+            blk(tfunc(tparam("c"))(tinfix(tname("c"), "==", tname("e")))),
+          )),
+          blk(),
+        )),
+        None,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match in a colon lambda, colon lambda, case arrow at a smaller indent") {
+    val code =
+      """|def f = xs.foreach: x =>
+         |  x match
+         |    case y if ys.exists: z =>
+         |      z > y
+         |    => g(y)
+         |    case _ => g(0)
+         |""".stripMargin
+    val layout =
+      """|def f = xs.foreach {
+         |  x => x match {
+         |    case y if ys.exists {
+         |      z => z > y
+         |    } =>
+         |      g(y)
+         |    case _ =>
+         |      g(0)
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "foreach"),
+        blk(tfunc(tparam("x"))(tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tapply(
+              tselect("ys", "exists"),
+              blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y")))),
+            )),
+            tapply(tname("g"), tname("y")),
+          ),
+          Case(patwildcard, None, tapply(tname("g"), int(0))),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "case guard after a case with a colon lambda body, colon lambda, case arrow at a smaller indent",
+  ) {
+    val code =
+      """|def f = x match
+         |  case 0 => xs.foreach: z =>
+         |      g(z)
+         |  case y if ys.exists: z =>
+         |    z > y
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 0 =>
+         |    xs.foreach {
+         |      z => g(z)
+         |    }
+         |  case y if ys.exists {
+         |    z => z > y
+         |  } =>
+         |    1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          int(0),
+          None,
+          tapply(tselect("xs", "foreach"), blk(tfunc(tparam("z"))(tapply(tname("g"), tname("z"))))),
+        ),
+        Case(
+          patvar("y"),
+          Some(
+            tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+          ),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match with braces, leading infix line, colon at line end, val with a function type, case arrow at the case's indent") {
+    val code =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match {
+         |  case y if a
+         |    && xs.exists:
+         |      val p: Int => Boolean = _ > y
+         |      p(y)
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match {
+         |  case y if a && xs.exists {
+         |    val p: Int => Boolean = _ > y
+         |    p(y)
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(
+        tparam("x", pname("Int")),
+        tparam("xs", papply(pname("List"), pname("Int"))),
+        tparam("a", pname("Boolean")),
+      ))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(
+              tselect("xs", "exists"),
+              blk(
+                Defn.Val(
+                  Nil,
+                  List(patvar("p")),
+                  Some(pfunc(pname("Int"))(pname("Boolean"))),
+                  Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", tname("y"))),
+                ),
+                tapply(tname("p"), tname("y")),
+              ),
+            ),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match with braces, leading infix line, colon lambda, val with a function type, case arrow at the case's indent") {
+    val code =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match {
+         |  case y if a
+         |    && xs.forall: w =>
+         |      val p: Int => Boolean = _ > w
+         |      xs.exists(p)
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match {
+         |  case y if a && xs.forall { w =>
+         |    val p: Int => Boolean = _ > w
+         |    xs.exists(p)
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(
+        tparam("x", pname("Int")),
+        tparam("xs", papply(pname("List"), pname("Int"))),
+        tparam("a", pname("Boolean")),
+      ))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(
+              tselect("xs", "forall"),
+              blk(tfunc(tparam("w"))(blk(
+                Defn.Val(
+                  Nil,
+                  List(patvar("p")),
+                  Some(pfunc(pname("Int"))(pname("Boolean"))),
+                  Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", tname("w"))),
+                ),
+                tapply(tselect("xs", "exists"), tname("p")),
+              ))),
+            ),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard in a match with braces, leading infix line, colon lambda, nested colon lambda, case arrow at the case's indent") {
+    val code =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match {
+         |  case y if a
+         |    && xs.forall: w =>
+         |      xs.exists: z =>
+         |        z > w
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int], a: Boolean) = x match {
+         |  case y if a && xs.forall {
+         |    w => xs.exists {
+         |      z => z > w
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(
+        tparam("x", pname("Int")),
+        tparam("xs", papply(pname("List"), pname("Int"))),
+        tparam("a", pname("Boolean")),
+      ))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(
+              tselect("xs", "forall"),
+              blk(tfunc(tparam("w"))(tapply(
+                tselect("xs", "exists"),
+                blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("w")))),
+              ))),
+            ),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case guard on the line after the pattern at the case's indent in a match with braces, colon lambda, nested colon lambda, case arrow at the case's indent") {
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y
+         |  if xs.forall: w =>
+         |    xs.exists: z =>
+         |      z > w
+         |  => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.forall {
+         |    w => xs.exists {
+         |      z => z > w
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "forall"),
+            blk(tfunc(tparam("w"))(tapply(
+              tselect("xs", "exists"),
+              blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("w")))),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: case guard, colon lambda, case arrow at a smaller indent") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: case guard, colon lambda, case arrow after an infix line at a smaller indent") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f = x match
+         |  case y if xs.exists: z =>
+         |    z
+         |  && b => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } && b => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+            "&&",
+            tname("b"),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: case guard, colon lambda, case arrow after a select line at a smaller indent") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f = x match
+         |  case y if xs.map: z =>
+         |    z + 1
+         |  .contains(3) => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.map {
+         |    z => z + 1
+         |  }.contains(3) => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect(
+              tapply(tselect("xs", "map"), blk(tfunc(tparam("z"))(tinfix(tname("z"), "+", int(1))))),
+              "contains",
+            ),
+            int(3),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: case guard, colon at line end, case arrow at a smaller indent") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f = x match
+         |  case y if xs.contains:
+         |    y
+         |  => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    y
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(patvar("y"), Some(tapply(tselect("xs", "contains"), blk(tname("y")))), int(1)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: case guard, colon at line end, case arrow after an infix line at a smaller indent") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f = x match
+         |  case y if xs.contains:
+         |    y
+         |  && b => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    y
+         |  } && b => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(tapply(tselect("xs", "contains"), blk(tname("y"))), "&&", tname("b"))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: case guard, colon at line end, case arrow after a select line at a smaller indent") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f = x match
+         |  case y if xs.filter:
+         |    _ > 0
+         |  .nonEmpty => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.filter {
+         |    _ > 0
+         |  }.nonEmpty => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tselect(
+            tapply(
+              tselect("xs", "filter"),
+              blk(Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", int(0)))),
+            ),
+            "nonEmpty",
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: case guard, lambda in braces, case arrow after the braces") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f = x match
+         |  case y if xs.exists { z => z } => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: if condition, colon lambda, then at a smaller indent") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f =
+         |  if xs.exists: z =>
+         |    z
+         |  then 1 else 2
+         |""".stripMargin
+    val layout = "def f = if (xs.exists: (z => z)) 1 else 2"
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.If(
+        Term.Ascribe(tselect("xs", "exists"), pfunc(pname("z"))(pname("z"))),
+        int(1),
+        int(2),
+        Nil,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: parens: case guard, infix operand, typed name, function type arrow at end of line") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f = x match
+         |  case y if a && (g: A =>
+         |    B) => g => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if a && (g: (A => B)) =>
+         |    g => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(tname("a"), "&&", Term.Ascribe(tname("g"), pfunc(pname("A"))(pname("B"))))),
+          tfunc(tparam("g"))(int(1)),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: parens: case guard, select colon, lambda arrow at end of line") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f = x match
+         |  case y if (ys.exists: z =>
+         |      z.ok) => 1
+         |  case _ => 0
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if (ys.exists: (z => z.ok)) => 1
+         |  case _ => 0
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(Term.Ascribe(tselect("ys", "exists"), pfunc(pname("z"))(pselect("z", "ok")))),
+          int(1),
+        ),
+        Case(patwildcard, None, int(0)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: case guard after if at line end, lambda in parentheses, case arrow on the guard's line") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f = x match
+         |  case y if
+         |      xs.exists(z => z) => 1
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists(z => z) => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), tfunc(tparam("z"))(tname("z")))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: case guard, lambda in braces over three lines, case arrow after the closing brace") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f = x match {
+         |  case y if xs.exists { z =>
+         |    z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: case guard after if at line end without a colon, case arrow on a line of its own, val of a lambda in the case body") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if
+         |      xs.exists(_ > y)
+         |  =>
+         |    val g = (z: Int) => z > y
+         |    xs.count(g)
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.exists(_ > y) =>
+         |    val g = (z: Int) => z > y
+         |    xs.count(g)
+         |  case _ =>
+         |    2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", tname("y"))),
+          )),
+          blk(
+            Defn.Val(
+              Nil,
+              List(patvar("g")),
+              None,
+              tfunc(tparam("z", pname("Int")))(tinfix(tname("z"), ">", tname("y"))),
+            ),
+            tapply(tselect("xs", "count"), tname("g")),
+          ),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: case guard after if at line end without a colon, leading infix line left of the guard, case arrow at the case's indent") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f(x: Int, a: Boolean, b: Boolean) = x match
+         |  case y if
+         |      a
+         |    && b
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, a: Boolean, b: Boolean) = x match {
+         |  case y if a && b => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(
+        tpc(tparam("x", pname("Int")), tparam("a", pname("Boolean")), tparam("b", pname("Boolean"))),
+      )),
+      None,
+      tmatch(
+        tname("x"),
+        Case(patvar("y"), Some(tinfix(tname("a"), "&&", tname("b"))), int(1)),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: case guard after if at line end without a colon, trailing infix operator, next line left of the guard, case arrow at the case's indent") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f(x: Int, a: Boolean, b: Boolean) = x match
+         |  case y if
+         |      a &&
+         |    b
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, a: Boolean, b: Boolean) = x match {
+         |  case y if a && b => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(
+        tpc(tparam("x", pname("Int")), tparam("a", pname("Boolean")), tparam("b", pname("Boolean"))),
+      )),
+      None,
+      tmatch(
+        tname("x"),
+        Case(patvar("y"), Some(tinfix(tname("a"), "&&", tname("b"))), int(1)),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: case guard after if at line end without a colon, match, case arrow at the case's indent") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if
+         |      y match
+         |        case 0 => true
+         |        case _ => false
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if (y match {
+         |    case 0 => true
+         |    case _ => false
+         |  }) => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tmatch(tname("y"), Case(int(0), None, bool(true)), Case(patwildcard, None, bool(false)))),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: case guard after if at line end without a colon, lambda in parentheses, case arrow at the case's indent") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if
+         |      xs.exists(z => z > y)
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.exists(z => z > y) => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: case guard with a match at line end, lambda in parentheses in an inner case, case arrow at the case's indent") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if y match
+         |    case 0 => xs.exists(z => z > y)
+         |    case _ => false
+         |  => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if (y match {
+         |    case 0 =>
+         |      xs.exists(z => z > y)
+         |    case _ =>
+         |      false
+         |  }) => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tmatch(
+            tname("y"),
+            Case(
+              int(0),
+              None,
+              tapply(tselect("xs", "exists"), tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y")))),
+            ),
+            Case(patwildcard, None, bool(false)),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: case guard with a match at line end, val with a function type in an inner case, case arrow left of the inner cases") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if y match
+         |      case 0 =>
+         |        val p: Int => Boolean = _ > y
+         |        xs.exists(p)
+         |      case _ => false
+         |    => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if (y match {
+         |    case 0 =>
+         |      val p: Int => Boolean = _ > y
+         |      xs.exists(p)
+         |    case _ =>
+         |      false
+         |  }) => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tmatch(
+            tname("y"),
+            Case(
+              int(0),
+              None,
+              blk(
+                Defn.Val(
+                  Nil,
+                  List(patvar("p")),
+                  Some(pfunc(pname("Int"))(pname("Boolean"))),
+                  Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", tname("y"))),
+                ),
+                tapply(tselect("xs", "exists"), tname("p")),
+              ),
+            ),
+            Case(patwildcard, None, bool(false)),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: case guard with a match at line end, lambda in parentheses in an inner case, case arrow left of the inner cases") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f(x: Int, xs: List[Int]) = x match
+         |  case y if y match
+         |      case 0 => xs.exists(z => z > y)
+         |      case _ => false
+         |    => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if (y match {
+         |    case 0 =>
+         |      xs.exists(z => z > y)
+         |    case _ =>
+         |      false
+         |  }) => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tmatch(
+            tname("y"),
+            Case(
+              int(0),
+              None,
+              tapply(tselect("xs", "exists"), tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y")))),
+            ),
+            Case(patwildcard, None, bool(false)),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala213: case guard, lambda in braces over three lines, case arrow after the closing brace") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|def f = x match {
+         |  case y if xs.exists { z =>
+         |    z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }

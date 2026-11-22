@@ -498,3 +498,1331 @@ r10_M_then_match Scala3: def f = {\n  x match {\n    case 1 =>\n      if (p) e m
 r10_M_then_match Scala32: def f = {\n  x match {\n    case 1 =>\n      if (p) e match {\n        case X =>\n          g()\n      }\n  }\n  h()\n}
 r10_end_try_case_body_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n    }\n    end try\n  case 2 =>\n    c\n}
 r10_end_try_case_body_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n    }\n    end try\n  case 2 =>\n    c\n}
+pm2 Scala3: error 3:11: `=>` expected but `outdent` found
+pm2 Scala32: error 2:24: `=>` expected but `:` found
+lam_sl_bodynext_arrownext Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+lam_sl_bodynext_arrownext Scala32: error 2:22: `=>` expected but `:` found
+lam_sl_bodynext2 Scala3: error 4:11: `=>` expected but `outdent` found
+lam_sl_bodynext2 Scala32: error 2:22: `=>` expected but `:` found
+lam_sl_samearrow Scala3: error 2:35: `=>` expected but `outdent` found
+lam_sl_samearrow Scala32: error 2:22: `=>` expected but `:` found
+eol_name Scala3: error 3:17: `=>` expected but `outdent` found
+eol_name Scala32: error 2:14: `=>` expected but `:` found
+eol_select_lambda Scala3: error 3:16: `=>` expected but `outdent` found
+eol_select_lambda Scala32: error 2:22: `=>` expected but `:` found
+eol_select_lambda_arrownext Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+eol_select_lambda_arrownext Scala32: error 2:22: `=>` expected but `:` found
+eol_select_arg_arrownext Scala3: def f = x match {\n  case y if xs.contains {\n    y\n  } => 1\n}
+eol_select_arg_arrownext Scala32: error 2:24: `=>` expected but `:` found
+eol_select_twolines_arrownext Scala3: def f = x match {\n  case y if xs.contains {\n    val w = y\n    w\n  } => 1\n}
+eol_select_twolines_arrownext Scala32: error 2:24: `=>` expected but `:` found
+eol_apply Scala3: error 3:11: `=>` expected but `outdent` found
+eol_apply Scala32: error 2:17: `=>` expected but `:` found
+eol_infix Scala3: error 3:16: `=>` expected but `outdent` found
+eol_infix Scala32: error 2:27: `=>` expected but `:` found
+brace_match_lam Scala3: error 4:1: `=>` expected but `}` found
+brace_match_lam Scala32: error 2:22: `=>` expected but `:` found
+brace_match_eol Scala3: error 4:1: `=>` expected but `}` found
+brace_match_eol Scala32: error 2:22: `=>` expected but `:` found
+pf_lam Scala3: error 4:1: `=>` expected but `}` found
+pf_lam Scala32: error 2:22: `=>` expected but `:` found
+catch_lam Scala3: error 3:11: `=>` expected but `outdent` found
+catch_lam Scala32: error 2:22: `=>` expected but `:` found
+colon_cases_lam Scala3: error 3:11: `=>` expected but `outdent` found
+colon_cases_lam Scala32: error 2:3: `identifier` expected but `case` found
+lam_sl_arrow_eol Scala3: error 4:6: `=>` expected but `outdent` found
+lam_sl_arrow_eol Scala32: error 2:22: `=>` expected but `:` found
+eol_lambda_arrow_eol Scala3: error 4:8: `=>` expected but `outdent` found
+eol_lambda_arrow_eol Scala32: error 2:22: `=>` expected but `:` found
+two_cases Scala3: error 4:3: `=>` expected but `case` found
+two_cases Scala32: error 2:22: `=>` expected but `:` found
+lam_paren_typed Scala3: error 3:11: `=>` expected but `outdent` found
+lam_paren_typed Scala32: error 2:22: `=>` expected but `:` found
+m4518_lam Scala3: a match {\n  case n if foo {\n    b => true\n  } => 2\n}
+m4518_lam Scala32: error 3:7: `=>` expected but `:` found
+m4518_case Scala3: a match {\n  case n if foo {\n    case b => true\n  } => 2\n}
+m4518_case Scala32: error 3:7: `=>` expected but `:` found
+m4518_lam_oneliner Scala3: a match {\n  case n if foo {\n    b => true\n  } => 2\n}
+m4518_lam_oneliner Scala32: error 3:7: `=>` expected but `:` found
+m4518_case_oneliner Scala3: error 3:7: `=>` expected but `:` found
+m4518_case_oneliner Scala32: error 3:7: `=>` expected but `:` found
+eol_case_arg Scala3: def f = x match {\n  case y if xs.exists {\n    case b => true\n  } => 1\n}
+eol_case_arg Scala32: error 2:22: `=>` expected but `:` found
+eol_case_arg_arrowin Scala3: error 3:21: `=>` expected but `outdent` found
+eol_case_arg_arrowin Scala32: error 2:22: `=>` expected but `:` found
+lam_inner_val_paren Scala3: error 2:22: `=>` expected but `:` found
+lam_inner_val_paren Scala32: error 2:22: `=>` expected but `:` found
+lam_inner_val_bare Scala3: def f = x match {\n  case y if xs.exists { z =>\n    val g = (a: Int) => a\n    g(z)\n  } => 1\n}
+lam_inner_val_bare Scala32: error 2:22: `=>` expected but `:` found
+eol_inner_val_paren Scala3: error 4:11: `=>` expected but `outdent` found
+eol_inner_val_paren Scala32: error 2:22: `=>` expected but `:` found
+eol_nested_parens Scala3: error 3:29: `outdent` expected but `=>` found
+eol_nested_parens Scala32: error 2:22: `=>` expected but `:` found
+lam_nested_parens Scala3: error 2:22: `=>` expected but `:` found
+lam_nested_parens Scala32: error 2:22: `=>` expected but `:` found
+brace_guard_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+brace_guard_ctrl Scala32: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+lam_arrow_mid_indent Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+lam_arrow_mid_indent Scala32: error 2:22: `=>` expected but `:` found
+lam_infix_after Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } && b => 1\n}
+lam_infix_after Scala32: error 2:22: `=>` expected but `:` found
+eol_infix_after Scala3: def f = x match {\n  case y if xs.contains {\n    y\n  } && b => 1\n}
+eol_infix_after Scala32: error 2:24: `=>` expected but `:` found
+lam_curried Scala3: error 3:11: `=>` expected but `outdent` found
+lam_curried Scala32: error 2:22: `=>` expected but `:` found
+lam_body_arrow_then_more Scala3: error 4:6: `=>` expected but `outdent` found
+lam_body_arrow_then_more Scala32: error 2:22: `=>` expected but `:` found
+eol_body_arrow_then_more Scala3: error 4:6: `=>` expected but `outdent` found
+eol_body_arrow_then_more Scala32: error 2:24: `=>` expected but `:` found
+for_guard_ctrl Scala3: def f = for (x <- xs; if ys.exists {\n  z => z\n}) yield x
+for_guard_ctrl Scala32: error 3:15: `outdent` expected but `:` found
+lam_using Scala3: error 3:11: `=>` expected but `outdent` found
+lam_using Scala32: error 2:22: `=>` expected but `:` found
+lam_placeholder Scala3: error 2:22: `=>` expected but `:` found
+lam_placeholder Scala32: error 2:22: `=>` expected but `:` found
+catch_oneline_lam Scala3: error 2:9: `=>` expected but `outdent` found
+catch_oneline_lam Scala32: error 1:40: `=>` expected but `:` found
+eol_arrow_body_indent Scala3: error 4:9: `=>` expected but `outdent` found
+eol_arrow_body_indent Scala32: error 2:24: `=>` expected but `:` found
+eol_backquoted Scala3: error 3:17: `=>` expected but `outdent` found
+eol_backquoted Scala32: error 2:16: `=>` expected but `:` found
+eol_case_arg_body_next Scala3: error 4:13: `=>` expected but `outdent` found
+eol_case_arg_body_next Scala32: error 2:22: `=>` expected but `:` found
+eol_nested_colon_eol Scala3: def f = x match {\n  case y if xs.exists {\n    ys.exists {\n      w => w\n    }\n  } => 1\n}
+eol_nested_colon_eol Scala32: error 2:22: `=>` expected but `:` found
+eol_nested_indent_val Scala3: error 5:11: `=>` expected but `outdent` found
+eol_nested_indent_val Scala32: error 2:22: `=>` expected but `:` found
+eol_typeapply Scala3: error 3:17: `=>` expected but `outdent` found
+eol_typeapply Scala32: error 2:19: `=>` expected but `:` found
+guard_leading_infix Scala3: def f = x match {\n  case y if a && xs.exists {\n    z => z\n  } => 1\n}
+guard_leading_infix Scala32: error 3:17: `=>` expected but `:` found
+guard_leading_infix_arrowin Scala3: error 4:13: `=>` expected but `outdent` found
+guard_leading_infix_arrowin Scala32: error 3:17: `=>` expected but `:` found
+guard_next_line_indented Scala3: error 4:13: `=>` expected but `outdent` found
+guard_next_line_indented Scala32: error 3:17: `=>` expected but `:` found
+if_cond_ctrl Scala3: def f = if (xs.exists {\n  z => z\n}) 1 else 2
+if_cond_ctrl Scala32: def f = if (xs.exists: (z => z)) 1 else 2
+lam_arrow_body_indent Scala3: error 4:9: `=>` expected but `outdent` found
+lam_arrow_body_indent Scala32: error 2:22: `=>` expected but `:` found
+lam_arrow_deeper Scala3: error 4:11: `=>` expected but `outdent` found
+lam_arrow_deeper Scala32: error 2:22: `=>` expected but `:` found
+lam_comment_after_arrow Scala3: error 4:6: `=>` expected but `outdent` found
+lam_comment_after_arrow Scala32: error 2:22: `=>` expected but `:` found
+lam_comment_before_arrow Scala3: def f = x match {\n  case y if xs.exists {\n    z => z // c\n  } => 1\n}
+lam_comment_before_arrow Scala32: error 2:22: `=>` expected but `:` found
+lam_inner_brace_lambda Scala3: error 2:22: `=>` expected but `:` found
+lam_inner_brace_lambda Scala32: error 2:22: `=>` expected but `:` found
+lam_inner_match Scala3: def f = x match {\n  case y if xs.exists {\n    z => z match {\n      case 1 => true\n      case _ => false\n    }\n  } => 1\n}
+lam_inner_match Scala32: error 2:22: `=>` expected but `:` found
+lam_multi_param Scala3: error 3:11: `=>` expected but `outdent` found
+lam_multi_param Scala32: error 2:21: `=>` expected but `:` found
+lam_nested_colon_eol Scala3: def f = x match {\n  case y if xs.exists {\n    z => z.ys.exists {\n      w => w\n    }\n  } => 1\n}
+lam_nested_colon_eol Scala32: error 2:22: `=>` expected but `:` found
+lam_nested_colon_lam Scala3: def f = x match {\n  case y if xs.exists {\n    z => z.ys.exists {\n      w => w\n    }\n  } => 1\n}
+lam_nested_colon_lam Scala32: error 2:22: `=>` expected but `:` found
+lam_not_prefix Scala3: error 3:11: `=>` expected but `outdent` found
+lam_not_prefix Scala32: error 2:23: `=>` expected but `:` found
+lam_type_arrow_stat Scala3: def f = x match {\n  case y if xs.exists { z =>\n    val g: Int => Int = identity\n    g(z)\n  } => 1\n}
+lam_type_arrow_stat Scala32: error 2:22: `=>` expected but `:` found
+nested_case_body_guard Scala3: error 5:15: `=>` expected but `outdent` found
+nested_case_body_guard Scala32: error 4:26: `=>` expected but `:` found
+parens_ctrl_infix_typed Scala3: def f = x match {\n  case y if a && (g: (A => B)) =>\n    g => 1\n}
+parens_ctrl_infix_typed Scala32: def f = x match {\n  case y if a && (g: (A => B)) =>\n    g => 1\n}
+parens_ctrl_select Scala3: def f = x match {\n  case y if (ys.exists: (z => z.ok)) => 1\n  case _ => 0\n}
+parens_ctrl_select Scala32: def f = x match {\n  case y if (ys.exists: (z => z.ok)) => 1\n  case _ => 0\n}
+second_case_brace_eol Scala3: error 5:1: `=>` expected but `}` found
+second_case_brace_eol Scala32: error 3:22: `=>` expected but `:` found
+second_case_lam Scala3: error 4:11: `=>` expected but `outdent` found
+second_case_lam Scala32: error 3:22: `=>` expected but `:` found
+brace_match_lam_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+brace_match_lam_ctrl Scala32: error 2:22: `=>` expected but `:` found
+pf_lam_ctrl Scala3: def f = xs.collect {\n  case y if ys.exists {\n    z => z\n  } => 1\n}
+pf_lam_ctrl Scala32: error 2:22: `=>` expected but `:` found
+catch_lam_ctrl Scala3: def f = try g catch {\n  case y if ys.exists {\n    z => z\n  } => 1\n}
+catch_lam_ctrl Scala32: error 2:22: `=>` expected but `:` found
+catch_brace_lam Scala3: error 4:1: `=>` expected but `}` found
+catch_brace_lam Scala32: error 2:22: `=>` expected but `:` found
+colon_cases_lam_ctrl Scala3: def f = xs.collect {\n  case y if ys.exists {\n    z => z\n  } => 1\n}
+colon_cases_lam_ctrl Scala32: error 2:3: `identifier` expected but `case` found
+second_case_lam_ctrl Scala3: def f = x match {\n  case 0 => 0\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+second_case_lam_ctrl Scala32: error 3:22: `=>` expected but `:` found
+second_case_brace_eol_ctrl Scala3: def f = x match {\n  case 0 => 0\n  case y if xs.contains {\n    y\n  } => 1\n}
+second_case_brace_eol_ctrl Scala32: error 3:24: `=>` expected but `:` found
+nested_case_body_guard_ctrl Scala3: def f = x match {\n  case y =>\n    y match {\n      case w if ws.exists {\n        z => z\n      } => 1\n    }\n  case _ =>\n    2\n}
+nested_case_body_guard_ctrl Scala32: error 4:26: `=>` expected but `:` found
+catch_oneline_lam_ctrl Scala3: def f = try g catch {\n  case y if ys.exists {\n    z => z\n  } => 1\n}
+catch_oneline_lam_ctrl Scala32: error 1:40: `=>` expected but `:` found
+guard_next_line_indented_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+guard_next_line_indented_ctrl Scala32: error 3:17: `=>` expected but `:` found
+m4518_lam_arrowin Scala3: error 4:9: `=>` expected but `outdent` found
+m4518_lam_arrowin Scala32: error 3:7: `=>` expected but `:` found
+m4518_eol_arrowin Scala3: error 4:9: `=>` expected but `outdent` found
+m4518_eol_arrowin Scala32: error 3:7: `=>` expected but `:` found
+eol_select_twolines Scala3: error 4:11: `=>` expected but `outdent` found
+eol_select_twolines Scala32: error 2:24: `=>` expected but `:` found
+lam_val_match_then_arrow Scala3: error 6:11: `=>` expected but `outdent` found
+lam_val_match_then_arrow Scala32: error 2:22: `=>` expected but `:` found
+lam_infix_inside_arrowin Scala3: error 2:22: `=>` expected but `:` found
+lam_infix_inside_arrowin Scala32: error 2:22: `=>` expected but `:` found
+lam_block_comment_before_arrow Scala3: error 3:19: `=>` expected but `outdent` found
+lam_block_comment_before_arrow Scala32: error 2:22: `=>` expected but `:` found
+two_colons_infix Scala3: error 5:11: `=>` expected but `outdent` found
+two_colons_infix Scala32: error 2:24: `=>` expected but `:` found
+conflict_brace_lam Scala3: def f = x match {\n  case y if xs.exists {\n    z => z => w\n  } => 1\n}
+conflict_brace_lam Scala32: error 2:22: `=>` expected but `:` found
+conflict_brace_eol Scala3: def f = x match {\n  case y if xs.contains {\n    y => w\n  } => 1\n}
+conflict_brace_eol Scala32: error 2:24: `=>` expected but `:` found
+lam_apply_prefix Scala3: error 3:11: `=>` expected but `outdent` found
+lam_apply_prefix Scala32: error 2:17: `=>` expected but `:` found
+lam_ctx_arrow_stat Scala3: error 4:11: `=>` expected but `outdent` found
+lam_ctx_arrow_stat Scala32: error 2:22: `=>` expected but `:` found
+guard_match_colon Scala3: error 2:22: `=>` expected but `:` found
+guard_match_colon Scala32: error 2:22: `=>` expected but `:` found
+lam_body_val_lambda Scala3: error 4:26: `=>` expected but `outdent` found
+lam_body_val_lambda Scala32: error 2:22: `=>` expected but `:` found
+eol_lambda_then_lambda Scala3: error 4:11: `=>` expected but `outdent` found
+eol_lambda_then_lambda Scala32: error 2:22: `=>` expected but `:` found
+r3_if_eol_lam_arrowin Scala3: error 4:15: `=>` expected but `outdent` found
+r3_if_eol_lam_arrowin Scala32: error 3:16: `=>` expected but `:` found
+r3_if_eol_lam_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r3_if_eol_lam_ctrl Scala32: error 3:16: `=>` expected but `:` found
+r3_if_eol_lam_arrow_at_cond Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r3_if_eol_lam_arrow_at_cond Scala32: error 3:16: `=>` expected but `:` found
+r3_if_eol_plain Scala3: def f = x match {\n  case y if xs.exists(z => z) => 1\n}
+r3_if_eol_plain Scala32: def f = x match {\n  case y if xs.exists(z => z) => 1\n}
+r3_trailing_infix_lam_arrowin Scala3: error 4:15: `=>` expected but `outdent` found
+r3_trailing_infix_lam_arrowin Scala32: error 3:16: `=>` expected but `:` found
+r3_trailing_infix_lam_ctrl Scala3: def f = x match {\n  case y if a && xs.exists {\n    z => z\n  } => 1\n}
+r3_trailing_infix_lam_ctrl Scala32: error 3:16: `=>` expected but `:` found
+r3_lam_select_after Scala3: def f = x match {\n  case y if xs.map {\n    z => z + 1\n  }.contains(3) => 1\n}
+r3_lam_select_after Scala32: error 2:19: `=>` expected but `:` found
+r3_eol_select_after Scala3: def f = x match {\n  case y if xs.filter {\n    _ > 0\n  }.nonEmpty => 1\n}
+r3_eol_select_after Scala32: error 2:22: `=>` expected but `:` found
+r3_lam_if_then_else_arrowin Scala3: error 2:22: `=>` expected but `:` found
+r3_lam_if_then_else_arrowin Scala32: error 2:22: `=>` expected but `:` found
+r3_lam_if_then_else_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => if (z > 0) z < 9 else false\n  } => 1\n}
+r3_lam_if_then_else_ctrl Scala32: error 2:22: `=>` expected but `:` found
+r3_eol_if_then_else_arrowin Scala3: error 3:28: `=>` expected but `outdent` found
+r3_eol_if_then_else_arrowin Scala32: error 2:14: `=>` expected but `:` found
+r3_lam_if_multiline_arrowin Scala3: error 2:22: `=>` expected but `:` found
+r3_lam_if_multiline_arrowin Scala32: error 2:22: `=>` expected but `:` found
+r3_brace_line_case_lam Scala3: error 3:1: `=>` expected but `}` found
+r3_brace_line_case_lam Scala32: error 1:41: `=>` expected but `:` found
+r3_brace_line_case_lam_ctrl Scala3: def f = xs.collect {\n  case y if ys.exists {\n    z => z\n  } => 1\n}
+r3_brace_line_case_lam_ctrl Scala32: error 1:41: `=>` expected but `:` found
+r3_catch_finally_lam Scala3: error 3:11: `=>` expected but `outdent` found
+r3_catch_finally_lam Scala32: error 2:22: `=>` expected but `:` found
+r3_stat_after_match Scala3: error 4:13: `=>` expected but `outdent` found
+r3_stat_after_match Scala32: error 3:24: `=>` expected but `:` found
+r3_stat_after_match_ctrl Scala3: def f = {\n  x match {\n    case y if xs.exists {\n      z => z\n    } => 1\n  }\n  g\n}
+r3_stat_after_match_ctrl Scala32: error 3:24: `=>` expected but `:` found
+r3_lam_paren_close_arrow Scala3: error 2:22: `=>` expected but `:` found
+r3_lam_paren_close_arrow Scala32: error 2:22: `=>` expected but `:` found
+r3_lam_nested_colon_lam_arrowin Scala3: error 4:13: `=>` expected but `outdent` found
+r3_lam_nested_colon_lam_arrowin Scala32: error 2:22: `=>` expected but `:` found
+r3_eol_nested_colon_lam Scala3: def f = x match {\n  case y if xs.exists {\n    ys.exists {\n      w => w\n    }\n  } => 1\n}
+r3_eol_nested_colon_lam Scala32: error 2:22: `=>` expected but `:` found
+r3_if_eol_eol Scala3: def f = x match {\n  case y if p {\n    Boolean\n  } => 1\n}
+r3_if_eol_eol Scala32: error 3:8: `=>` expected but `:` found
+r3_if_eol_eol_arrowin Scala3: def f = x match {\n  case y if p {\n    Boolean => 1\n  } => 2\n}
+r3_if_eol_eol_arrowin Scala32: error 3:8: `=>` expected but `:` found
+r3_if_eol_eol_arrowin_only Scala3: error 4:21: `=>` expected but `outdent` found
+r3_if_eol_eol_arrowin_only Scala32: error 3:8: `=>` expected but `:` found
+r3_if_eol_eol_lambda Scala3: def f = x match {\n  case y if xs.exists {\n    z => z > 0\n  } => 1\n}
+r3_if_eol_eol_lambda Scala32: error 3:16: `=>` expected but `:` found
+r4_typed_pat_eol_ctrl Scala3: def f(x: Any) = x match {\n  case s: String if g {\n    s.length > 4\n  } =>\n    s\n  case x =>\n    x.toString\n}
+r4_typed_pat_eol_ctrl Scala32: error 2:22: `=>` expected but `:` found
+r4_typed_pat_eol_arrowin Scala3: error 3:18: `outdent` expected but `=>` found
+r4_typed_pat_eol_arrowin Scala32: error 2:22: `=>` expected but `:` found
+r4_typed_pat_lam Scala3: error 2:30: `=>` expected but `:` found
+r4_typed_pat_lam Scala32: error 2:30: `=>` expected but `:` found
+r4_typed_pat_lam_ctrl Scala3: def f = x match {\n  case s: String if xs.exists {\n    z => z == s\n  } => 1\n  case _ => 2\n}
+r4_typed_pat_lam_ctrl Scala32: error 2:30: `=>` expected but `:` found
+r4_typed_pat_flat Scala3: def f(x: Any) = x match {\n  case s: String if g {\n    s.length > 4\n  } =>\n    s\n  case x =>\n    x.toString\n}
+r4_typed_pat_flat Scala32: error 3:22: `=>` expected but `:` found
+r4_typed_pat_flat_arrowin Scala3: error 4:18: `outdent` expected but `=>` found
+r4_typed_pat_flat_arrowin Scala32: error 3:22: `=>` expected but `:` found
+r4_extractor_pat_lam Scala3: error 2:28: `=>` expected but `:` found
+r4_extractor_pat_lam Scala32: error 2:28: `=>` expected but `:` found
+r4_dotty_i25002_nested Scala3: def test = list.map {\n  case i: Int =>\n    n match {\n      case j: Int if list.exists {\n        k => list.exists(_ == j && j == k)\n      } => 1\n      case _ => 2\n    }\n  case _ => 3\n}
+r4_dotty_i25002_nested Scala32: error 3:5: `identifier` expected but `case` found
+r4_dotty_i25002_nested_arrowin Scala3: error 6:21: `=>` expected but `:` found
+r4_dotty_i25002_nested_arrowin Scala32: error 3:5: `identifier` expected but `case` found
+r4_end_marker Scala3: error 4:13: `=>` expected but `outdent` found
+r4_end_marker Scala32: error 3:24: `=>` expected but `:` found
+r4_end_marker_ctrl Scala3: def f = {\n  x match {\n    case y if xs.exists {\n      z => z\n    } => 1\n  }\n  end match\n}
+r4_end_marker_ctrl Scala32: error 3:24: `=>` expected but `:` found
+r4_leading_dot_lam Scala3: error 4:15: `=>` expected but `outdent` found
+r4_leading_dot_lam Scala32: error 3:14: `=>` expected but `:` found
+r4_leading_dot_lam_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r4_leading_dot_lam_ctrl Scala32: error 3:14: `=>` expected but `:` found
+r4_lam_arrow_eol_deeper_body Scala3: error 4:8: `=>` expected but `outdent` found
+r4_lam_arrow_eol_deeper_body Scala32: error 2:22: `=>` expected but `:` found
+r4_eol_arrow_eol_deeper_body Scala3: error 3:18: `outdent` expected but `=>` found
+r4_eol_arrow_eol_deeper_body Scala32: error 2:22: `=>` expected but `:` found
+r4_lam_comment_guard_line Scala3: error 3:11: `=>` expected but `outdent` found
+r4_lam_comment_guard_line Scala32: error 2:22: `=>` expected but `:` found
+r4_eol_comment_guard_line Scala3: error 3:18: `outdent` expected but `=>` found
+r4_eol_comment_guard_line Scala32: error 2:22: `=>` expected but `:` found
+r4_catch_brace_lam_ctrl Scala3: def f = try g catch {\n  case y if ys.exists {\n    z => z\n  } => 1\n}
+r4_catch_brace_lam_ctrl Scala32: error 2:22: `=>` expected but `:` found
+r4_catch_finally_lam_ctrl Scala3: def f = try g catch {\n  case y if ys.exists {\n    z => z\n  } => 1\n} finally h
+r4_catch_finally_lam_ctrl Scala32: error 2:22: `=>` expected but `:` found
+r5_nested_guard_lam_arrowin Scala3: error 2:22: `=>` expected but `:` found
+r5_nested_guard_lam_arrowin Scala32: error 2:22: `=>` expected but `:` found
+r5_nested_guard_lam_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => z match {\n      case w if ws.exists {\n        v => v\n      } => true\n      case _ => false\n    }\n  } => 1\n}
+r5_nested_guard_lam_ctrl Scala32: error 2:22: `=>` expected but `:` found
+r5_nested_guard_pf_arrowin Scala3: error 5:5: `=>` expected but `case` found
+r5_nested_guard_pf_arrowin Scala32: error 2:22: `=>` expected but `:` found
+r5_nested_guard_outer_arrowin Scala3: error 2:22: `=>` expected but `:` found
+r5_nested_guard_outer_arrowin Scala32: error 2:22: `=>` expected but `:` found
+r5_comment_first_line_arrowin Scala3: error 4:11: `=>` expected but `outdent` found
+r5_comment_first_line_arrowin Scala32: error 2:22: `=>` expected but `:` found
+r5_comment_first_line_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z =>\n      // c\n      z\n  } => 1\n}
+r5_comment_first_line_ctrl Scala32: error 2:22: `=>` expected but `:` found
+r5_comment_line_before_arrow Scala3: def f = x match {\n  case y if xs.exists {\n    z => {\n      z\n      // c\n    }\n  } => 1\n}
+r5_comment_line_before_arrow Scala32: error 2:22: `=>` expected but `:` found
+r5_comment_line_outdented Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n    // c\n  } => 1\n}
+r5_comment_line_outdented Scala32: error 2:22: `=>` expected but `:` found
+r5_eol_comment_first_line Scala3: error 4:17: `=>` expected but `outdent` found
+r5_eol_comment_first_line Scala32: error 2:14: `=>` expected but `:` found
+r5_g3_brace Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r5_g3_brace Scala32: error 3:16: `=>` expected but `:` found
+r5_g3_catch Scala3: def f = try g catch {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r5_g3_catch Scala32: error 3:16: `=>` expected but `:` found
+r5_g3_infix Scala3: def f = x match {\n  case y if a && xs.exists {\n    z => z\n  } => 1\n}
+r5_g3_infix Scala32: error 3:21: `=>` expected but `:` found
+r5_g3_multi_param Scala3: def f = x match {\n  case y if m.exists {\n    (k, v) => v\n  } => 1\n}
+r5_g3_multi_param Scala32: error 3:15: `=>` expected but `:` found
+r5_g3_second_case Scala3: def f = x match {\n  case 0 => 0\n  case y if xs.exists {\n    z => z\n  } => 1\n  case _ => 2\n}
+r5_g3_second_case Scala32: error 4:16: `=>` expected but `:` found
+r5_extractor_pat_lam_ctrl Scala3: def f = x match {\n  case Some(s) if xs.exists {\n    z => z == s\n  } => 1\n  case _ => 2\n}
+r5_extractor_pat_lam_ctrl Scala32: error 2:28: `=>` expected but `:` found
+r5_leading_infix_eol_lambda Scala3: def f = x match {\n  case y if a && xs.exists {\n    z => z\n  } => 1\n}
+r5_leading_infix_eol_lambda Scala32: error 3:17: `=>` expected but `:` found
+r5_trailing_infix_eol_lambda Scala3: def f = x match {\n  case y if a && xs.exists {\n    z => z\n  } => 1\n}
+r5_trailing_infix_eol_lambda Scala32: error 3:16: `=>` expected but `:` found
+r5_leading_dot_eol_lambda Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r5_leading_dot_eol_lambda Scala32: error 3:14: `=>` expected but `:` found
+r5_next_line_guard_eol_lambda Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r5_next_line_guard_eol_lambda Scala32: error 3:17: `=>` expected but `:` found
+r5_flat_eol_lambda Scala3: a match {\n  case n if foo {\n    b => true\n  } => 2\n}
+r5_flat_eol_lambda Scala32: error 3:7: `=>` expected but `:` found
+r5_leading_infix_eol Scala3: def f = x match {\n  case y if a && p {\n    Boolean\n  } => 1\n}
+r5_leading_infix_eol Scala32: error 3:9: `=>` expected but `:` found
+r5_leading_infix_eol_arrowin Scala3: error 4:19: `=>` expected but `outdent` found
+r5_leading_infix_eol_arrowin Scala32: error 3:9: `=>` expected but `:` found
+r5_g3_pf_brace Scala3: def f = xs.collect {\n  case y if ys.exists {\n    z => z\n  } => 1\n}
+r5_g3_pf_brace Scala32: error 3:16: `=>` expected but `:` found
+r5_g3_brace_infix Scala3: def f = x match {\n  case y if a && xs.exists {\n    z => z\n  } => 1\n}
+r5_g3_brace_infix Scala32: error 3:21: `=>` expected but `:` found
+r5_g3_brace_arrow_at_cond Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r5_g3_brace_arrow_at_cond Scala32: error 3:16: `=>` expected but `:` found
+r5_brace_leading_infix_eol_lambda Scala3: def f = x match {\n  case y if a && xs.exists {\n    z => z\n  } => 1\n}
+r5_brace_leading_infix_eol_lambda Scala32: error 3:17: `=>` expected but `:` found
+r5_next_line_guard_eol_lambda_brace Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r5_next_line_guard_eol_lambda_brace Scala32: error 3:17: `=>` expected but `:` found
+r5_next_line_guard_eol_lambda_arrow_at_case Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r5_next_line_guard_eol_lambda_arrow_at_case Scala32: error 3:17: `=>` expected but `:` found
+r6_g4_colon_cases Scala3: def f = xs.collect {\n  case y if ys.exists {\n    z => z\n  } => 1\n}
+r6_g4_colon_cases Scala32: error 2:3: `identifier` expected but `case` found
+r6_g4_catch_brace Scala3: def f = try g catch {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r6_g4_catch_brace Scala32: error 3:16: `=>` expected but `:` found
+r6_g4_brace_line_case Scala3: def f = xs.collect {\n  case y if ys.exists {\n    z => z\n  } => 1\n}
+r6_g4_brace_line_case Scala32: error 2:16: `=>` expected but `:` found
+r6_g4_brace_trailing_infix_eol_lambda Scala3: def f = x match {\n  case y if a && xs.exists {\n    z => z\n  } => 1\n}
+r6_g4_brace_trailing_infix_eol_lambda Scala32: error 3:16: `=>` expected but `:` found
+r6_g4_brace_leading_dot_eol_lambda Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r6_g4_brace_leading_dot_eol_lambda Scala32: error 3:14: `=>` expected but `:` found
+r6_g4_colon_cases_next_line_guard Scala3: def f = xs.collect {\n  case y if ys.exists {\n    z => z\n  } => 1\n}
+r6_g4_colon_cases_next_line_guard Scala32: error 2:3: `identifier` expected but `case` found
+r6_conflict_colon_cases_eol Scala3: def f = xs.collect {\n  case y if ys.exists {\n    z => z\n  } => 1\n}
+r6_conflict_colon_cases_eol Scala32: error 2:3: `identifier` expected but `case` found
+r6_conflict_colon_cases_lam Scala3: def f = xs.collect {\n  case y if ys.exists {\n    z => z => w\n  } => 1\n}
+r6_conflict_colon_cases_lam Scala32: error 2:3: `identifier` expected but `case` found
+r6_lam_brace_close_arrow Scala3: error 2:22: `=>` expected but `:` found
+r6_lam_brace_close_arrow Scala32: error 2:22: `=>` expected but `:` found
+r6_lam_brace_close_arrow_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => ys.exists {\n      w => w == z\n    }\n  } => 1\n}
+r6_lam_brace_close_arrow_ctrl Scala32: error 2:22: `=>` expected but `:` found
+r6_match_in_parens Scala3: error 3:11: `=>` expected but `outdent` found
+r6_match_in_parens Scala32: error 2:22: `=>` expected but `:` found
+r6_match_in_parens_ctrl Scala3: def f = g(x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n})
+r6_match_in_parens_ctrl Scala32: error 2:22: `=>` expected but `:` found
+r6_eol_arrow_eol_same_indent Scala3: error 4:6: `=>` expected but `outdent` found
+r6_eol_arrow_eol_same_indent Scala32: error 2:24: `=>` expected but `:` found
+r6_alt_pat_lam Scala3: error 3:11: `=>` expected but `outdent` found
+r6_alt_pat_lam Scala32: error 2:26: `=>` expected but `:` found
+r6_alt_pat_next_line_lam Scala3: def f = x match {\n  case A | B if xs.exists {\n    z => z\n  } => 1\n}
+r6_alt_pat_next_line_lam Scala32: error 3:22: `=>` expected but `:` found
+r6_multiline_pat_lam_ctrl Scala3: def f = x match {\n  case Some(y) if xs.exists {\n    z => z\n  } => 1\n}
+r6_multiline_pat_lam_ctrl Scala32: error 3:25: `=>` expected but `:` found
+r6_leading_infix_out_ctrl Scala3: def f = x match {\n  case y if a && b && xs.exists {\n    z => z\n  } => 1\n}
+r6_leading_infix_out_ctrl Scala32: error 4:17: `=>` expected but `:` found
+r6_lam_arrow_eol_body_shallower Scala3: error 4:5: `=>` expected but `integer constant` found
+r6_lam_arrow_eol_body_shallower Scala32: error 2:22: `=>` expected but `:` found
+r6_binder_pat_lam Scala3: error 3:11: `=>` expected but `outdent` found
+r6_binder_pat_lam Scala32: error 2:32: `=>` expected but `:` found
+r6_lam_then_more_cases_brace Scala3: error 4:3: `=>` expected but `case` found
+r6_lam_then_more_cases_brace Scala32: error 2:22: `=>` expected but `:` found
+r7_multiline_pat_lam_arrowin Scala3: error 4:11: `=>` expected but `outdent` found
+r7_multiline_pat_lam_arrowin Scala32: error 3:25: `=>` expected but `:` found
+r7_alt_pat_next_line_lam_arrowin Scala3: error 4:16: `=>` expected but `outdent` found
+r7_alt_pat_next_line_lam_arrowin Scala32: error 3:22: `=>` expected but `:` found
+r7_body_dot_deeper Scala3: error 4:9: `=>` expected but `outdent` found
+r7_body_dot_deeper Scala32: error 2:22: `=>` expected but `:` found
+r7_body_infix_deeper Scala3: error 4:8: `=>` expected but `outdent` found
+r7_body_infix_deeper Scala32: error 2:22: `=>` expected but `:` found
+r7_body_paren_deeper Scala3: error 4:9: `=>` expected but `outdent` found
+r7_body_paren_deeper Scala32: error 2:22: `=>` expected but `:` found
+r7_body_colon_lambda Scala3: error 4:8: `=>` expected but `outdent` found
+r7_body_colon_lambda Scala32: error 2:22: `=>` expected but `:` found
+r7_eol_body_dot_deeper Scala3: error 3:18: `outdent` expected but `=>` found
+r7_eol_body_dot_deeper Scala32: error 2:22: `=>` expected but `:` found
+r7_body_dot_deeper_brace Scala3: error 5:3: `=>` expected but `case` found
+r7_body_dot_deeper_brace Scala32: error 2:22: `=>` expected but `:` found
+r7_subcase_inner_guard Scala3: error 4:13: `=>` expected but `outdent` found
+r7_subcase_inner_guard Scala32: error 3:24: `=>` expected but `:` found
+r7_subcase_after_guard_colon Scala3: def f = x match {\n  case Some(v) if xs.exists {\n    z => z == v\n  } if v match {\n    case 1 => 1\n  }\n}
+r7_subcase_after_guard_colon Scala32: error 2:28: `=>` expected but `:` found
+r7_subcase_then_guard_case Scala3: error 5:11: `=>` expected but `outdent` found
+r7_subcase_then_guard_case Scala32: error 4:22: `=>` expected but `:` found
+r7_lam_if_parens_arrowin Scala3: error 2:22: `=>` expected but `:` found
+r7_lam_if_parens_arrowin Scala32: error 2:22: `=>` expected but `:` found
+r7_lam_blank_line_arrowin Scala3: error 5:11: `=>` expected but `outdent` found
+r7_lam_blank_line_arrowin Scala32: error 2:22: `=>` expected but `:` found
+r7_lam_blank_line_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r7_lam_blank_line_ctrl Scala32: error 2:22: `=>` expected but `:` found
+r7_lam_bracket_arrow Scala3: error 2:22: `=>` expected but `:` found
+r7_lam_bracket_arrow Scala32: error 2:22: `=>` expected but `:` found
+r7_scala2_brace_lambda_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r7_scala2_brace_lambda_ctrl Scala32: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+r9_n_ex1_arrow4 Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.exists {\n    z => z > y\n  } => 1\n  case _ => 2\n}
+r9_n_ex1_arrow4 Scala32: error 3:16: `=>` expected but `:` found
+r9_n_ifline_lam Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.exists {\n    z => z > y\n  } => 1\n  case _ => 2\n}
+r9_n_ifline_lam Scala32: error 3:15: `=>` expected but `:` found
+r9_n_ifline_lamlam Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.forall {\n    w => xs.exists {\n      z => z > w\n    }\n  } => 1\n  case _ => 2\n}
+r9_n_ifline_lamlam Scala32: error 3:15: `=>` expected but `:` found
+r9_n_ifline4_lam Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.exists {\n    z => z > y\n  } => 1\n  case _ => 2\n}
+r9_n_ifline4_lam Scala32: error 3:17: `=>` expected but `:` found
+r9_n_ifline4_lamlam Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.forall {\n    w => xs.exists {\n      z => z > w\n    }\n  } => 1\n  case _ => 2\n}
+r9_n_ifline4_lamlam Scala32: error 3:17: `=>` expected but `:` found
+r9_n_lam_lam Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.forall {\n    w => xs.exists {\n      z => z > w\n    }\n  } => 1\n  case _ => 2\n}
+r9_n_lam_lam Scala32: error 2:22: `=>` expected but `:` found
+r9_n_lam_plain Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.forall { w =>\n    val g = (z: Int) => z > w\n    xs.exists(g)\n  } => 1\n  case _ => 2\n}
+r9_n_lam_plain Scala32: error 2:22: `=>` expected but `:` found
+r9_n_ok1_fntype Scala3: def f(x: Int, xs: List[Int], a: Boolean) = x match {\n  case y if a && xs.forall { w =>\n    val p: Int => Boolean = _ > w\n    xs.exists(p)\n  } => 1\n  case _ => 2\n}
+r9_n_ok1_fntype Scala32: error 3:17: `=>` expected but `:` found
+r9_n_ok1_lamlam Scala3: def f(x: Int, xs: List[Int], a: Boolean) = x match {\n  case y if a && xs.forall {\n    w => xs.exists {\n      z => z > w\n    }\n  } => 1\n  case _ => 2\n}
+r9_n_ok1_lamlam Scala32: error 3:17: `=>` expected but `:` found
+r9_n_ok1_lamplain Scala3: def f(x: Int, xs: List[Int], a: Boolean) = x match {\n  case y if a && xs.forall { w =>\n    val g = (z: Int) => z > w\n    xs.exists(g)\n  } => 1\n  case _ => 2\n}
+r9_n_ok1_lamplain Scala32: error 3:17: `=>` expected but `:` found
+r9_n_ok1_paren Scala3: def f(x: Int, xs: List[Int], a: Boolean) = x match {\n  case y if a && xs.forall {\n    w => xs.exists(z => z > w)\n  } => 1\n  case _ => 2\n}
+r9_n_ok1_paren Scala32: error 3:17: `=>` expected but `:` found
+r9_q_body_colon_lam Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.exists {\n    _ > y\n  } =>\n    xs.count {\n      z => z > y\n    }\n  case _ =>\n    2\n}
+r9_q_body_colon_lam Scala32: error 3:17: `=>` expected but `:` found
+r9_q_body_lam Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.exists(_ > y) =>\n    val g = (z: Int) => z > y\n    xs.count(g)\n  case _ =>\n    2\n}
+r9_q_body_lam Scala32: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.exists(_ > y) =>\n    val g = (z: Int) => z > y\n    xs.count(g)\n  case _ =>\n    2\n}
+r9_q_caseline_lam Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.exists {\n    z => z > y\n  } => 1\n  case _ => 2\n}
+r9_q_caseline_lam Scala32: error 2:22: `=>` expected but `:` found
+r9_q_caseline_lam4 Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.exists {\n    z => z > y\n  } => 1\n  case _ => 2\n}
+r9_q_caseline_lam4 Scala32: error 2:22: `=>` expected but `:` found
+r9_q_dedent_infix Scala3: def f(x: Int, a: Boolean, b: Boolean) = x match {\n  case y if a && b => 1\n  case _ => 2\n}
+r9_q_dedent_infix Scala32: def f(x: Int, a: Boolean, b: Boolean) = x match {\n  case y if a && b => 1\n  case _ => 2\n}
+r9_q_dedent_trailing Scala3: def f(x: Int, a: Boolean, b: Boolean) = x match {\n  case y if a && b => 1\n  case _ => 2\n}
+r9_q_dedent_trailing Scala32: def f(x: Int, a: Boolean, b: Boolean) = x match {\n  case y if a && b => 1\n  case _ => 2\n}
+r9_q_if_block_fntype Scala3: error 3:7: illegal start of simple expression
+r9_q_if_block_fntype Scala32: error 3:7: illegal start of simple expression
+r9_q_if_block_lam Scala3: error 3:7: illegal start of simple expression
+r9_q_if_block_lam Scala32: error 3:7: illegal start of simple expression
+r9_q_if_inner_match Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if (y match {\n    case 0 => true\n    case _ => false\n  }) => 1\n  case _ => 2\n}
+r9_q_if_inner_match Scala32: def f(x: Int, xs: List[Int]) = x match {\n  case y if (y match {\n    case 0 => true\n    case _ => false\n  }) => 1\n  case _ => 2\n}
+r9_q_if_paren_lam Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.exists(z => z > y) => 1\n  case _ => 2\n}
+r9_q_if_paren_lam Scala32: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.exists(z => z > y) => 1\n  case _ => 2\n}
+r9_q_match_eol_col4 Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if (y match {\n    case 0 =>\n      xs.exists(z => z > y)\n    case _ =>\n      false\n  }) => 1\n  case _ => 2\n}
+r9_q_match_eol_col4 Scala32: def f(x: Int, xs: List[Int]) = x match {\n  case y if (y match {\n    case 0 =>\n      xs.exists(z => z > y)\n    case _ =>\n      false\n  }) => 1\n  case _ => 2\n}
+r9_q_match_eol_fntype Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if (y match {\n    case 0 =>\n      val p: Int => Boolean = _ > y\n      xs.exists(p)\n    case _ =>\n      false\n  }) => 1\n  case _ => 2\n}
+r9_q_match_eol_fntype Scala32: def f(x: Int, xs: List[Int]) = x match {\n  case y if (y match {\n    case 0 =>\n      val p: Int => Boolean = _ > y\n      xs.exists(p)\n    case _ =>\n      false\n  }) => 1\n  case _ => 2\n}
+r9_v_match Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if (y match {\n    case 0 =>\n      xs.exists {\n        z => z > y\n      }\n    case _ =>\n      false\n  }) => 1\n  case _ => 2\n}
+r9_v_match Scala32: error 3:30: `outdent` expected but `=>` found
+r9_v_match_ctl Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if (y match {\n    case 0 =>\n      xs.exists(z => z > y)\n    case _ =>\n      false\n  }) => 1\n  case _ => 2\n}
+r9_v_match_ctl Scala32: def f(x: Int, xs: List[Int]) = x match {\n  case y if (y match {\n    case 0 =>\n      xs.exists(z => z > y)\n    case _ =>\n      false\n  }) => 1\n  case _ => 2\n}
+r9_ctx_fntype Scala3: def f(x: Int, xs: List[Int], a: Boolean) = x match {\n  case y if a && xs.forall { w =>\n    val p: Int ?=> Boolean = summon[Int] > w\n    xs.exists(z => p(using z))\n  } => 1\n  case _ => 2\n}
+r9_ctx_fntype Scala32: error 3:17: `=>` expected but `:` found
+r10_empty_body_lam Scala3: error 2:22: `=>` expected but `:` found
+r10_empty_body_lam Scala32: error 2:22: `=>` expected but `:` found
+r10_empty_body_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => z > y\n  } =>\n  case _ =>\n    g()\n}
+r10_empty_body_ctrl Scala32: error 2:22: `=>` expected but `:` found
+r10_empty_body_eol Scala3: error 4:3: `=>` expected but `case` found
+r10_empty_body_eol Scala32: error 2:24: `=>` expected but `:` found
+r10_empty_body_catch Scala3: error 2:27: `=>` expected but `:` found
+r10_empty_body_catch Scala32: error 2:27: `=>` expected but `:` found
+r10_empty_body_catch_ctrl Scala3: def f = try g() catch {\n  case e if ignored.exists {\n    c => c == e\n  } =>\n}
+r10_empty_body_catch_ctrl Scala32: error 2:27: `=>` expected but `:` found
+r10_empty_body_last Scala3: error 2:22: `=>` expected but `:` found
+r10_empty_body_last Scala32: error 2:22: `=>` expected but `:` found
+r10_in_colon_lam Scala3: error 3:12: `=>` expected but `if` found
+r10_in_colon_lam Scala32: error 3:12: `=>` expected but `if` found
+r10_in_colon_lam_ctrl Scala3: def f = xs.foreach {\n  x => x match {\n    case y if ys.exists {\n      z => z > y\n    } =>\n      g(y)\n    case _ =>\n      g(0)\n  }\n}
+r10_in_colon_lam_ctrl Scala32: error 3:12: `=>` expected but `if` found
+r10_after_colon_body Scala3: error 4:22: `=>` expected but `:` found
+r10_after_colon_body Scala32: error 2:27: `outdent` expected but `=>` found
+r10_after_colon_body_ctrl Scala3: def f = x match {\n  case 0 =>\n    xs.foreach {\n      z => g(z)\n    }\n  case y if ys.exists {\n    z => z > y\n  } =>\n    1\n}
+r10_after_colon_body_ctrl Scala32: error 2:27: `outdent` expected but `=>` found
+r10_brace_infix_fntype Scala3: def f(x: Int, xs: List[Int], a: Boolean) = x match {\n  case y if a && xs.exists {\n    val p: Int => Boolean = _ > y\n    p(y)\n  } => 1\n}
+r10_brace_infix_fntype Scala32: error 3:17: `=>` expected but `:` found
+r10_brace_ok1_fntype Scala3: def f(x: Int, xs: List[Int], a: Boolean) = x match {\n  case y if a && xs.forall { w =>\n    val p: Int => Boolean = _ > w\n    xs.exists(p)\n  } => 1\n}
+r10_brace_ok1_fntype Scala32: error 3:17: `=>` expected but `:` found
+r10_brace_ok1_lamlam Scala3: def f(x: Int, xs: List[Int], a: Boolean) = x match {\n  case y if a && xs.forall {\n    w => xs.exists {\n      z => z > w\n    }\n  } => 1\n}
+r10_brace_ok1_lamlam Scala32: error 3:17: `=>` expected but `:` found
+r10_brace_ifline_lamlam Scala3: def f(x: Int, xs: List[Int]) = x match {\n  case y if xs.forall {\n    w => xs.exists {\n      z => z > w\n    }\n  } => 1\n}
+r10_brace_ifline_lamlam Scala32: error 3:15: `=>` expected but `:` found
+r10_eol_placeholder Scala3: error 3:11: `outdent` expected but `=>` found
+r10_eol_placeholder Scala32: error 2:22: `=>` expected but `:` found
+r10_lam_placeholder_body Scala3: error 2:22: `=>` expected but `:` found
+r10_lam_placeholder_body Scala32: error 2:22: `=>` expected but `:` found
+r10_ctx_lam Scala3: error 2:14: `=>` expected but `:` found
+r10_ctx_lam Scala32: error 2:14: `=>` expected but `:` found
+x_infix_after_region Scala3: error 5:10: `outdent` expected but `=>` found
+x_infix_after_region Scala32: error 3:17: `=>` expected but `:` found
+x_dot_after_region Scala3: def f = x match {\n  case y if xs.filter {\n    z => z > 0\n  }.nonEmpty => 1\n}
+x_dot_after_region Scala32: error 3:17: `=>` expected but `:` found
+x_infix_after_region_caseline Scala3: def f = x match {\n  case y if xs.exists {\n    z => z > 0\n  } && b => 1\n}
+x_infix_after_region_caseline Scala32: error 2:22: `=>` expected but `:` found
+x_ctx_oneline Scala3: def f(x: Int, g: (Int ?=> Boolean) => Boolean) = x match {\n  case y if g {\n    (z: Int) ?=> z > y\n  } => 1\n  case _ => 2\n}
+x_ctx_oneline Scala32: error 2:14: `=>` expected but `:` found
+x_ctx_eol_direct Scala3: error 3:24: `outdent` expected but `=>` found
+x_ctx_eol_direct Scala32: error 2:14: `=>` expected but `:` found
+x_ctx_eol_body Scala3: def f(x: Int, g: (Int ?=> Boolean) => Boolean) = x match {\n  case y if g {\n    (z: Int) ?=> z > y\n  } => 1\n  case _ => 2\n}
+x_ctx_eol_body Scala32: error 2:14: `=>` expected but `:` found
+x_ctx_lam_ctrl Scala3: def f(x: Int, g: (Int ?=> Boolean) => Boolean) = x match {\n  case y if g {\n    (z: Int) ?=> z > y\n  } => 1\n  case _ => 2\n}
+x_ctx_lam_ctrl Scala32: error 2:14: `=>` expected but `:` found
+x_subcase_plain Scala3: def f = x match {\n  case Some(v) if v match {\n    case 1 => 1\n  }\n  case y if a =>\n    2\n}
+x_subcase_plain Scala32: def f = x match {\n  case Some(v) if v match {\n    case 1 => 1\n  }\n  case y if a =>\n    2\n}
+x_two_direct_then_smaller Scala3: def f = x match {\n  case y if xs.exists {\n    val g = (z: Int) => z > 0\n    g(1)\n  } => 1\n}
+x_two_direct_then_smaller Scala32: error 3:17: `=>` expected but `:` found
+x_comment_line_then_smaller Scala3: def f = x match {\n  case y if xs.exists {\n    z => z > 0\n    // c\n  } => 1\n}
+x_comment_line_then_smaller Scala32: error 3:17: `=>` expected but `:` found
+x_inner_case_next_line_body Scala3: def f = x match {\n  case y if xs.exists {\n    case b => b\n  } => 1\n}
+x_inner_case_next_line_body Scala32: error 2:22: `=>` expected but `:` found
+x_inner_case_then_case_arrowin Scala3: error 4:21: `=>` expected but `outdent` found
+x_inner_case_then_case_arrowin Scala32: error 2:22: `=>` expected but `:` found
+x_paren_arg_lines Scala3: error 4:6: `outdent` expected but `=>` found
+x_paren_arg_lines Scala32: error 2:22: `=>` expected but `:` found
+x_infix_after_region_at_case Scala3: def f = x match {\n  case y if a && xs.exists {\n    z => z > 0\n  } && b => 1\n}
+x_infix_after_region_at_case Scala32: error 3:17: `=>` expected but `:` found
+x_dot_after_region_caseline Scala3: def f = x match {\n  case y if xs.filter {\n    z => z > 0\n  }.nonEmpty => 1\n}
+x_dot_after_region_caseline Scala32: error 2:22: `=>` expected but `:` found
+x_dot_after_region_lam Scala3: def f = x match {\n  case y if xs.filter {\n    z => z > 0\n  }.nonEmpty => 1\n}
+x_dot_after_region_lam Scala32: error 3:17: `=>` expected but `:` found
+x_nonguard_infix_after_region Scala3: def f = xs.exists {\n  z => z > 0 && b\n}
+x_nonguard_infix_after_region Scala32: def f = xs.exists: (z => z > 0 && b)
+x_cond_infix_after_region Scala3: def f = if (xs.exists {\n  z => z > 0 && b\n}) 1 else 2
+x_cond_infix_after_region Scala32: def f = if (xs.exists: (z => z > 0 && b)) 1 else 2
+x_infix_after_region_lam Scala3: error 3:17: `=>` expected but `:` found
+x_infix_after_region_lam Scala32: error 3:17: `=>` expected but `:` found
+x_subcase_lambda_body Scala3: def f = x match {\n  case Some(v) if v match {\n    case 1 =>\n      (a: Int) => a\n  }\n  case _ =>\n    g\n}
+x_subcase_lambda_body Scala32: def f = x match {\n  case Some(v) if v match {\n    case 1 =>\n      (a: Int) => a\n  }\n  case _ =>\n    g\n}
+x_subcase_lambda_body_last Scala3: def f = x match {\n  case Some(v) if v match {\n    case 1 =>\n      (a: Int) => a\n  }\n}
+x_subcase_lambda_body_last Scala32: def f = x match {\n  case Some(v) if v match {\n    case 1 =>\n      (a: Int) => a\n  }\n}
+x_guard_match_lambda_body Scala3: def f = x match {\n  case y if (y match {\n    case 0 =>\n      (a: Int) => a > 0\n    case _ =>\n      false\n  }) => 1\n}
+x_guard_match_lambda_body Scala32: def f = x match {\n  case y if (y match {\n    case 0 =>\n      (a: Int) => a > 0\n    case _ =>\n      false\n  }) => 1\n}
+r1_body_lines_then_dot Scala3: error 4:24: `=>` expected but `:` found
+r1_body_lines_then_dot Scala32: error 4:24: `=>` expected but `:` found
+r1_comment_then_dot Scala3: error 4:24: `=>` expected but `:` found
+r1_comment_then_dot Scala32: error 4:24: `=>` expected but `:` found
+r1_dot_after_colon_arg Scala3: error 4:26: `=>` expected but `:` found
+r1_dot_after_colon_arg Scala32: error 4:14: `=>` expected but `if` found
+r1_dot_after_colon_lam Scala3: error 4:14: `=>` expected but `if` found
+r1_dot_after_colon_lam Scala32: error 4:14: `=>` expected but `if` found
+r1_dot_after_colon_lam_ctrl Scala3: def f(xs: List[Int], ys: List[Int]) = xs.map {\n  x => x match {\n    case 0 => 0\n    case y if ys.exists {\n      z => z > y\n    } => 1\n  }\n}.sum
+r1_dot_after_colon_lam_ctrl Scala32: error 4:14: `=>` expected but `if` found
+r1_dot_after_colon_lam_eol Scala3: error 4:14: `=>` expected but `if` found
+r1_dot_after_colon_lam_eol Scala32: error 4:14: `=>` expected but `if` found
+r1_dot_after_colon_lam_twocases Scala3: error 3:14: `=>` expected but `if` found
+r1_dot_after_colon_lam_twocases Scala32: error 3:14: `=>` expected but `if` found
+r1_dot_after_match_ctrl Scala3: error 7:3: `outdent` expected but `.` found
+r1_dot_after_match_ctrl Scala32: error 4:24: `=>` expected but `:` found
+r1_dot_after_match_eol Scala3: error 5:13: `outdent` expected but `=>` found
+r1_dot_after_match_eol Scala32: error 4:24: `=>` expected but `:` found
+r1_dot_after_match_lam Scala3: error 4:24: `=>` expected but `:` found
+r1_dot_after_match_lam Scala32: error 4:24: `=>` expected but `:` found
+r1_dot_after_match_plain Scala3: error 5:3: `outdent` expected but `.` found
+r1_dot_after_match_plain Scala32: error 5:3: `outdent` expected but `.` found
+r1_end_match Scala3: error 4:24: `=>` expected but `:` found
+r1_end_match Scala32: error 4:24: `=>` expected but `:` found
+r1_infix_after_colon_lam Scala3: error 4:14: `=>` expected but `if` found
+r1_infix_after_colon_lam Scala32: error 4:14: `=>` expected but `if` found
+r1_infix_after_match Scala3: error 4:24: `=>` expected but `:` found
+r1_infix_after_match Scala32: error 4:24: `=>` expected but `:` found
+r1_inner_match_then_dot Scala3: error 5:26: `=>` expected but `:` found
+r1_inner_match_then_dot Scala32: error 5:26: `=>` expected but `:` found
+y_g9_arg_at_if Scala3: def f = x match {\n  case y if xs.exists {\n    z => z > 0\n  } => 1\n}
+y_g9_arg_at_if Scala32: error 3:17: `=>` expected but `:` found
+y_g9_subcase_oneline_body_next Scala3: def f = x match {\n  case Some(v) if v match {\n    case 1 => true\n  }\n  case _ =>\n    false\n}
+y_g9_subcase_oneline_body_next Scala32: def f = x match {\n  case Some(v) if v match {\n    case 1 => true\n  }\n  case _ =>\n    false\n}
+y_g9_infix_at_if_paren Scala3: def f = x match {\n  case y if xs.exists(z => z > 0) && b => 1\n}
+y_g9_infix_at_if_paren Scala32: def f = x match {\n  case y if xs.exists(z => z > 0) && b => 1\n}
+y_g9_infix_deeper Scala3: error 5:12: `outdent` expected but `=>` found
+y_g9_infix_deeper Scala32: error 3:17: `=>` expected but `:` found
+y_g9_infix_at_if_two_args Scala3: def f = x match {\n  case y if xs.exists {\n    z => z > 0 && ys.exists {\n      w => w > 0\n    }\n  } => 1\n}
+y_g9_infix_at_if_two_args Scala32: error 3:17: `=>` expected but `:` found
+y_g9_infix_at_if_two_args_arrowin Scala3: error 3:17: `=>` expected but `:` found
+y_g9_infix_at_if_two_args_arrowin Scala32: error 3:17: `=>` expected but `:` found
+y_g9_infix_at_if_braces Scala3: error 5:10: `outdent` expected but `=>` found
+y_g9_infix_at_if_braces Scala32: error 3:17: `=>` expected but `:` found
+y_b2_infix_at_case_lam Scala3: def f = x match {\n  case y if a && xs.exists {\n    z => z > 0\n  } && b => 1\n}
+y_b2_infix_at_case_lam Scala32: error 3:17: `=>` expected but `:` found
+y_b2_dot_at_case_after_infix Scala3: def f = x match {\n  case y if a && xs.filter {\n    z => z > 0\n  }.nonEmpty => 1\n}
+y_b2_dot_at_case_after_infix Scala32: error 3:17: `=>` expected but `:` found
+y_g8_inner_case_infix_next Scala3: error 4:12: `outdent` expected but `=>` found
+y_g8_inner_case_infix_next Scala32: error 2:22: `=>` expected but `:` found
+y_g8_inner_case_next_line_guard Scala3: def f = x match {\n  case y if xs.exists {\n    case b => b\n  } => 1\n}
+y_g8_inner_case_next_line_guard Scala32: error 3:17: `=>` expected but `:` found
+y_g8_inner_case_next_line_guard_arrowin Scala3: error 4:23: `=>` expected but `outdent` found
+y_g8_inner_case_next_line_guard_arrowin Scala32: error 3:17: `=>` expected but `:` found
+y_g8_inner_case_guard Scala3: error 3:26: `=>` expected but `outdent` found
+y_g8_inner_case_guard Scala32: error 2:22: `=>` expected but `:` found
+y_g8_else_eol Scala3: error 2:13: illegal start of simple expression
+y_g8_else_eol Scala32: error 2:13: illegal start of simple expression
+y_g8_match_in_arg Scala3: def f = x match {\n  case y if xs.exists {\n    z => z match {\n      case 1 => true\n      case _ => false\n    }\n  } => 1\n}
+y_g8_match_in_arg Scala32: error 2:22: `=>` expected but `:` found
+y_g8_match_in_arg_lam Scala3: error 2:22: `=>` expected but `:` found
+y_g8_match_in_arg_lam Scala32: error 2:22: `=>` expected but `:` found
+z_b2_comment_dot Scala3: error 4:14: `=>` expected but `if` found
+z_b2_comment_dot Scala32: error 4:14: `=>` expected but `if` found
+z_blank_then_arrow Scala3: def f = x match {\n  case y if xs.exists {\n    z => z > 0\n  } => 1\n}
+z_blank_then_arrow Scala32: error 3:17: `=>` expected but `:` found
+z_blank_then_infix Scala3: def f = x match {\n  case y if xs.exists {\n    z => z > 0\n  } && b => 1\n}
+z_blank_then_infix Scala32: error 3:17: `=>` expected but `:` found
+z_blank_then_infix_deeper Scala3: def f = x match {\n  case y if xs.exists {\n    z => z > 0\n  } && b => 1\n}
+z_blank_then_infix_deeper Scala32: error 3:17: `=>` expected but `:` found
+z_brace_case_brace_line_if_next Scala3: error 2:15: `=>` expected but `:` found
+z_brace_case_brace_line_if_next Scala32: error 2:15: `=>` expected but `:` found
+z_brace_if_line_eol_infix_at_case Scala3: def f = x match {\n  case y if xs.exists {\n    z => z > 0\n  } && b => 1\n}
+z_brace_if_line_eol_infix_at_case Scala32: error 3:17: `=>` expected but `:` found
+z_brace_if_line_lam_arrowin Scala3: error 3:17: `=>` expected but `:` found
+z_brace_if_line_lam_arrowin Scala32: error 3:17: `=>` expected but `:` found
+z_brace_lam_inner_guard_colon Scala3: error 6:7: `=>` expected but `case` found
+z_brace_lam_inner_guard_colon Scala32: error 4:26: `=>` expected but `:` found
+z_comment_after_case_body Scala3: error 2:22: `=>` expected but `:` found
+z_comment_after_case_body Scala32: error 2:22: `=>` expected but `:` found
+z_comment_then_dot_at_case Scala3: def f = x match {\n  case y if a && xs.filter {\n    z => z > 0\n  }\n  // nonEmpty\n  .nonEmpty => 1\n}
+z_comment_then_dot_at_case Scala32: error 2:27: `=>` expected but `:` found
+z_comment_then_infix_at_if Scala3: error 6:10: `outdent` expected but `=>` found
+z_comment_then_infix_at_if Scala32: error 3:17: `=>` expected but `:` found
+z_end_def Scala3: error 4:13: `=>` expected but `outdent` found
+z_end_def Scala32: error 3:24: `=>` expected but `:` found
+z_eol_match_bodyline Scala3: error 6:5: `outdent` expected but `=>` found
+z_eol_match_bodyline Scala32: error 2:14: `=>` expected but `:` found
+z_eol_try_catch_bodyline Scala3: error 5:5: `outdent` expected but `=>` found
+z_eol_try_catch_bodyline Scala32: error 2:14: `=>` expected but `:` found
+z_g9_brace_if_line_paren_colon_lam Scala3: def f = x match {\n  case y if xs.exists(z => z.ws.exists {\n    w => w > z\n  }) => 1\n}
+z_g9_brace_if_line_paren_colon_lam Scala32: def f = x match {\n  case y if xs.exists(z => z.ws.exists: (w => w > z)) => 1\n}
+z_g9_if_line_body_next Scala3: def f = x match {\n  case y if a => 1\n  case _ => 2\n}
+z_g9_if_line_body_next Scala32: def f = x match {\n  case y if a => 1\n  case _ => 2\n}
+z_g9_if_line_brace_body_next Scala3: def f = x match {\n  case y if a => 1\n  case _ => 2\n}
+z_g9_if_line_brace_body_next Scala32: def f = x match {\n  case y if a => 1\n  case _ => 2\n}
+z_g9_if_line_eol_arrow_at_if Scala3: def f = x match {\n  case y if xs.exists {\n    z => z > 0\n  } => 1\n  case _ => 2\n}
+z_g9_if_line_eol_arrow_at_if Scala32: error 3:17: `=>` expected but `:` found
+z_g9_if_line_infix_at_if_body_next Scala3: error 5:10: `outdent` expected but `=>` found
+z_g9_if_line_infix_at_if_body_next Scala32: error 3:17: `=>` expected but `:` found
+z_g9_if_line_lam_arrowin_next_case Scala3: error 3:17: `=>` expected but `:` found
+z_g9_if_line_lam_arrowin_next_case Scala32: error 3:17: `=>` expected but `:` found
+z_g9_lam_if_then_else Scala3: def f = x match {\n  case y if xs.exists {\n    z => if (z > 0) true else false\n  } => 1\n}
+z_g9_lam_if_then_else Scala32: error 3:17: `=>` expected but `:` found
+z_g9_match_in_guard_line Scala3: def f = x match {\n  case y if (y match {\n    case 0 => false\n    case _ => true\n  }) => 1\n  case _ => 2\n}
+z_g9_match_in_guard_line Scala32: def f = x match {\n  case y if (y match {\n    case 0 => false\n    case _ => true\n  }) => 1\n  case _ => 2\n}
+z_g9_plain_leading_infix Scala3: def f = x match {\n  case y if a && b => 1\n  case _ => 2\n}
+z_g9_plain_leading_infix Scala32: def f = x match {\n  case y if a && b => 1\n  case _ => 2\n}
+z_g9_plain_leading_infix_brace Scala3: def f = x match {\n  case y if a && b => 1\n  case _ => 2\n}
+z_g9_plain_leading_infix_brace Scala32: def f = x match {\n  case y if a && b => 1\n  case _ => 2\n}
+z_g9_plain_leading_infix_deeper Scala3: def f = x match {\n  case y if a && b => 1\n  case _ => 2\n}
+z_g9_plain_leading_infix_deeper Scala32: def f = x match {\n  case y if a && b => 1\n  case _ => 2\n}
+z_g9_plain_trailing_infix Scala3: def f = x match {\n  case y if a && b => 1\n  case _ => 2\n}
+z_g9_plain_trailing_infix Scala32: def f = x match {\n  case y if a && b => 1\n  case _ => 2\n}
+z_guard_match_inner_guard_colon Scala3: error 3:26: `=>` expected but `:` found
+z_guard_match_inner_guard_colon Scala32: error 3:26: `=>` expected but `:` found
+z_lam_colon_lam_bodyline Scala3: error 2:22: `=>` expected but `:` found
+z_lam_colon_lam_bodyline Scala32: error 2:22: `=>` expected but `:` found
+z_lam_if_else_lines_bodyline Scala3: error 2:22: `=>` expected but `:` found
+z_lam_if_else_lines_bodyline Scala32: error 2:22: `=>` expected but `:` found
+z_lam_match_brace_arrowin Scala3: error 2:22: `=>` expected but `:` found
+z_lam_match_brace_arrowin Scala32: error 2:22: `=>` expected but `:` found
+z_lam_match_end_bodyline Scala3: error 2:22: `=>` expected but `:` found
+z_lam_match_end_bodyline Scala32: error 2:22: `=>` expected but `:` found
+z_lam_new_bodyline Scala3: error 2:22: `=>` expected but `:` found
+z_lam_new_bodyline Scala32: error 2:22: `=>` expected but `:` found
+z_lam_try_catch_bodyline Scala3: error 2:22: `=>` expected but `:` found
+z_lam_try_catch_bodyline Scala32: error 2:22: `=>` expected but `:` found
+z_lam_try_catch_brace_arrowin Scala3: error 2:22: `=>` expected but `:` found
+z_lam_try_catch_brace_arrowin Scala32: error 2:22: `=>` expected but `:` found
+z_lam_try_catch_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => try z > 0 catch {\n      case _: Exception => false\n    }\n  } => 1\n}
+z_lam_try_catch_ctrl Scala32: error 2:22: `=>` expected but `:` found
+z_lam_try_catch_lines_bodyline Scala3: error 2:22: `=>` expected but `:` found
+z_lam_try_catch_lines_bodyline Scala32: error 2:22: `=>` expected but `:` found
+z_lam_try_finally_bodyline Scala3: error 2:22: `=>` expected but `:` found
+z_lam_try_finally_bodyline Scala32: error 2:22: `=>` expected but `:` found
+z_match_in_then_else Scala3: error 4:26: `=>` expected but `:` found
+z_match_in_then_else Scala32: error 4:26: `=>` expected but `:` found
+z_nested_guard_eol_cases_last Scala3: error 3:24: `=>` expected but `:` found
+z_nested_guard_eol_cases_last Scala32: error 2:22: `=>` expected but `:` found
+z_two_guards_blank_comment Scala3: error 2:22: `=>` expected but `:` found
+z_two_guards_blank_comment Scala32: error 2:22: `=>` expected but `:` found
+t_brace_case_after_try_catch_brace Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+t_brace_case_after_try_catch_brace Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+t_brace_guard_case_after_try_catch Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 if c =>\n    d\n}
+t_brace_guard_case_after_try_catch Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 if c =>\n    d\n}
+t_dot_after_try_catch_lines Scala3: error 4:3: `outdent` expected but `.` found
+t_dot_after_try_catch_lines Scala32: error 4:3: `outdent` expected but `.` found
+t_finally_after_cases Scala3: val r = try a catch {\n  case _: Exception => b\n} finally c
+t_finally_after_cases Scala32: val r = try a catch {\n  case _: Exception => b\n} finally c
+t_finally_next_line_brace Scala3: val r = try a catch {\n  case _: Exception => b\n} finally c
+t_finally_next_line_brace Scala32: val r = try a catch {\n  case _: Exception => b\n} finally c
+t_finally_next_line_case Scala3: val r = try a catch {\n  case _: Exception => b\n} finally c
+t_finally_next_line_case Scala32: val r = try a catch {\n  case _: Exception => b\n} finally c
+t_finally_same_line Scala3: val r = try a catch {\n  case _: Exception => b\n} finally c
+t_finally_same_line Scala32: val r = try a catch {\n  case _: Exception => b\n} finally c
+t_finally_same_line_case Scala3: val r = try a catch {\n  case _: Exception => b\n} finally c
+t_finally_same_line_case Scala32: val r = try a catch {\n  case _: Exception => b\n} finally c
+t_for_guard_after_try_catch Scala3: def f = for (x <- try a catch {\n  case _: Exception => b\n}; if x > 0) yield x
+t_for_guard_after_try_catch Scala32: def f = for (x <- try a catch {\n  case _: Exception => b\n}; if x > 0) yield x
+t_ind_case_after_try_catch_brace Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+t_ind_case_after_try_catch_brace Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+t_ind_case_after_try_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+t_ind_case_after_try_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+t_infix_after_try_catch_lines Scala3: val r = {\n  try a catch {\n    case _: Exception => b\n  }\n  +c\n}
+t_infix_after_try_catch_lines Scala32: val r = {\n  try a catch {\n    case _: Exception => b\n  }\n  +c\n}
+t_lam_body_try_catch_dot Scala3: val r = xs.map {\n  x => try f(x) catch {\n    case _: Exception => 0\n  }\n}.sum
+t_lam_body_try_catch_dot Scala32: error 2:5: `identifier` expected but `try` found
+t_pf_case_after_try_catch Scala3: val g: PartialFunction[Int, Int] = {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 => c\n}
+t_pf_case_after_try_catch Scala32: val g: PartialFunction[Int, Int] = {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 => c\n}
+u_brace_lam_try_catch_bodyline Scala3: error 2:22: `=>` expected but `:` found
+u_brace_lam_try_catch_bodyline Scala32: error 2:22: `=>` expected but `:` found
+u_catch_lam_try_catch_bodyline Scala3: error 2:22: `=>` expected but `:` found
+u_catch_lam_try_catch_bodyline Scala32: error 2:22: `=>` expected but `:` found
+u_eol_if_then_bodyline Scala3: error 4:9: `=>` expected but `outdent` found
+u_eol_if_then_bodyline Scala32: error 2:14: `=>` expected but `:` found
+u_eol_try_catch_lines_bodyline Scala3: error 6:5: `outdent` expected but `=>` found
+u_eol_try_catch_lines_bodyline Scala32: error 2:14: `=>` expected but `:` found
+u_lam_try_catch_body_lines Scala3: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_body_lines Scala32: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_brace_arrow_eol Scala3: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_brace_arrow_eol Scala32: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_brace_oneline_bodyline Scala3: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_brace_oneline_bodyline Scala32: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_case_arrow_sameline Scala3: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_case_arrow_sameline Scala32: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_dot_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => try z > 0 catch {\n      case _: Exception => false\n    }\n  }.nonEmpty => 1\n}
+u_lam_try_catch_dot_ctrl Scala32: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_expr_bodyline Scala3: error 5:9: `=>` expected but `outdent` found
+u_lam_try_catch_expr_bodyline Scala32: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_finally_bodyline Scala3: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_finally_bodyline Scala32: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_infix_after Scala3: error 3:17: `=>` expected but `:` found
+u_lam_try_catch_infix_after Scala32: error 3:17: `=>` expected but `:` found
+u_lam_try_catch_next_case Scala3: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_next_case Scala32: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_oneline_bodyline Scala3: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_oneline_bodyline Scala32: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_two_cases_bodyline Scala3: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_two_cases_bodyline Scala32: error 2:22: `=>` expected but `:` found
+u_lam_try_lines_catch_bodyline Scala3: error 2:22: `=>` expected but `:` found
+u_lam_try_lines_catch_bodyline Scala32: error 2:22: `=>` expected but `:` found
+u_lam_try_oneline_bodyline Scala3: error 4:9: `=>` expected but `outdent` found
+u_lam_try_oneline_bodyline Scala32: error 2:22: `=>` expected but `:` found
+u_lam_try_catch_oneline_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => try z > 0 catch {\n      case _: Exception => false\n    }\n  } => 1\n}
+u_lam_try_catch_oneline_ctrl Scala32: error 2:22: `=>` expected but `:` found
+w3_catch_case_paren_lam_arrow_eol Scala3: error 2:22: `=>` expected but `:` found
+w3_catch_case_paren_lam_arrow_eol Scala32: error 2:22: `=>` expected but `:` found
+w3_catch_lines_case_body_colon_lam Scala3: error 2:22: `=>` expected but `:` found
+w3_catch_lines_case_body_colon_lam Scala32: error 2:22: `=>` expected but `:` found
+w3_else_colon_lam_bodyline Scala3: error 2:22: `=>` expected but `:` found
+w3_else_colon_lam_bodyline Scala32: error 2:22: `=>` expected but `:` found
+w3_else_line_arrowin Scala3: error 2:22: `=>` expected but `:` found
+w3_else_line_arrowin Scala32: error 2:22: `=>` expected but `:` found
+w3_g4_brace_try_catch Scala3: def f = x match {\n  case y if xs.exists {\n    z => try z > 0 catch {\n      case _: Exception => false\n    }\n  } => 1\n}
+w3_g4_brace_try_catch Scala32: error 3:17: `=>` expected but `:` found
+w3_g4_catch_paren_lam Scala3: def f = x match {\n  case y if xs.exists {\n    z => try z > 0 catch {\n      case e: Exception =>\n        ys.exists(w => w > z)\n    }\n  } => 1\n}
+w3_g4_catch_paren_lam Scala32: error 3:17: `=>` expected but `:` found
+w3_g4_if_eol_try_catch Scala3: def f = x match {\n  case y if xs.exists {\n    z => try z > 0 catch {\n      case _: Exception => false\n    }\n  } => 1\n}
+w3_g4_if_eol_try_catch Scala32: error 3:16: `=>` expected but `:` found
+w3_g4_then_colon_lam Scala3: def f = x match {\n  case y if xs.exists {\n    z => if (z > 0) ys.exists {\n      w => w > z\n    } else false\n  } => 1\n}
+w3_g4_then_colon_lam Scala32: error 3:17: `=>` expected but `:` found
+w3_g4_then_else_lines Scala3: def f = x match {\n  case y if xs.exists {\n    z => if (z > 0) true else false\n  } => 1\n}
+w3_g4_then_else_lines Scala32: error 3:17: `=>` expected but `:` found
+w3_g4_try_catch_dot Scala3: def f = x match {\n  case y if xs.filter {\n    z => try z > 0 catch {\n      case _: Exception => false\n    }\n  }.nonEmpty => 1\n}
+w3_g4_try_catch_dot Scala32: error 3:17: `=>` expected but `:` found
+w3_g4_try_catch_finally Scala3: def f = x match {\n  case y if xs.exists {\n    z => try z > 0 catch {\n      case _: Exception => false\n    } finally g()\n  } => 1\n}
+w3_g4_try_catch_finally Scala32: error 3:17: `=>` expected but `:` found
+w3_g4_try_colon_lam Scala3: def f = x match {\n  case y if xs.exists {\n    z => try ys.exists {\n      w => w > z\n    } catch {\n      case _: Exception => false\n    }\n  } => 1\n}
+w3_g4_try_colon_lam Scala32: error 3:17: `=>` expected but `:` found
+w3_g8_case_if_else_arrowin Scala3: error 3:38: `=>` expected but `outdent` found
+w3_g8_case_if_else_arrowin Scala32: error 2:22: `=>` expected but `:` found
+w3_g8_case_if_else_next_line Scala3: error 4:9: `=>` expected but `outdent` found
+w3_g8_case_if_else_next_line Scala32: error 2:22: `=>` expected but `:` found
+w3_g8_case_plain_next_line Scala3: error 4:9: `=>` expected but `outdent` found
+w3_g8_case_plain_next_line Scala32: error 2:22: `=>` expected but `:` found
+w3_g8_case_try_brace_arrowin Scala3: error 3:61: `outdent` expected but `=>` found
+w3_g8_case_try_brace_arrowin Scala32: error 2:22: `=>` expected but `:` found
+w3_g8_case_try_brace_next_line Scala3: error 4:5: `outdent` expected but `=>` found
+w3_g8_case_try_brace_next_line Scala32: error 2:22: `=>` expected but `:` found
+w3_g8_case_try_case_next_line Scala3: error 4:5: `outdent` expected but `=>` found
+w3_g8_case_try_case_next_line Scala32: error 2:22: `=>` expected but `:` found
+w3_g8_case_try_finally_arrowin Scala3: error 3:36: `outdent` expected but `=>` found
+w3_g8_case_try_finally_arrowin Scala32: error 2:22: `=>` expected but `:` found
+w3_g8_case_try_lines Scala3: error 6:5: `outdent` expected but `=>` found
+w3_g8_case_try_lines Scala32: error 2:22: `=>` expected but `:` found
+w3_if_paren_else_lines Scala3: error 2:22: `=>` expected but `:` found
+w3_if_paren_else_lines Scala32: error 2:22: `=>` expected but `:` found
+w3_if_then_else_three_lines Scala3: error 2:22: `=>` expected but `:` found
+w3_if_then_else_three_lines Scala32: error 2:22: `=>` expected but `:` found
+w3_lam_match_case_try_brace_arrowin Scala3: error 2:22: `=>` expected but `:` found
+w3_lam_match_case_try_brace_arrowin Scala32: error 2:22: `=>` expected but `:` found
+w3_nested_guard_try_inner Scala3: error 2:22: `=>` expected but `:` found
+w3_nested_guard_try_inner Scala32: error 2:22: `=>` expected but `:` found
+w3_t_case_body_if_then_case_guard Scala3: error 3:22: `=>` expected but `:` found
+w3_t_case_body_if_then_case_guard Scala32: error 3:22: `=>` expected but `:` found
+w3_t_case_body_try_then_case_guard Scala3: error 5:22: `=>` expected but `:` found
+w3_t_case_body_try_then_case_guard Scala32: error 5:22: `=>` expected but `:` found
+w3_then_colon_lam_else_lines Scala3: error 2:22: `=>` expected but `:` found
+w3_then_colon_lam_else_lines Scala32: error 2:22: `=>` expected but `:` found
+w3_then_eol_else_eol_bodyline Scala3: error 2:22: `=>` expected but `:` found
+w3_then_eol_else_eol_bodyline Scala32: error 2:22: `=>` expected but `:` found
+w3_then_nested_guard_arrowin Scala3: error 2:22: `=>` expected but `:` found
+w3_then_nested_guard_arrowin Scala32: error 2:22: `=>` expected but `:` found
+w3_then_paren_lam_else_arrowin Scala3: error 2:22: `=>` expected but `:` found
+w3_then_paren_lam_else_arrowin Scala32: error 2:22: `=>` expected but `:` found
+w3_then_paren_lam_else_bodyline Scala3: error 2:22: `=>` expected but `:` found
+w3_then_paren_lam_else_bodyline Scala32: error 2:22: `=>` expected but `:` found
+w3_try_body_colon_lam_bodyline Scala3: error 2:22: `=>` expected but `:` found
+w3_try_body_colon_lam_bodyline Scala32: error 2:22: `=>` expected but `:` found
+w3_try_catch_finally_lines Scala3: error 2:22: `=>` expected but `:` found
+w3_try_catch_finally_lines Scala32: error 2:22: `=>` expected but `:` found
+w3_try_catch_next_case_body Scala3: error 2:22: `=>` expected but `:` found
+w3_try_catch_next_case_body Scala32: error 2:22: `=>` expected but `:` found
+w3_try_finally_colon_lam Scala3: error 2:22: `=>` expected but `:` found
+w3_try_finally_colon_lam Scala32: error 2:22: `=>` expected but `:` found
+w3_try_lines_colon_lam_bodyline Scala3: error 2:22: `=>` expected but `:` found
+w3_try_lines_colon_lam_bodyline Scala32: error 2:22: `=>` expected but `:` found
+w3_try_nested_guard_arrowin Scala3: error 2:22: `=>` expected but `:` found
+w3_try_nested_guard_arrowin Scala32: error 2:22: `=>` expected but `:` found
+w3_try_nested_guard_at_case Scala3: error 2:22: `=>` expected but `:` found
+w3_try_nested_guard_at_case Scala32: error 2:22: `=>` expected but `:` found
+w3_try_paren_lam_bodyline Scala3: error 2:22: `=>` expected but `:` found
+w3_try_paren_lam_bodyline Scala32: error 2:22: `=>` expected but `:` found
+v4_g8_case_try_catch_lines_after Scala3: error 5:5: `outdent` expected but `=>` found
+v4_g8_case_try_catch_lines_after Scala32: error 2:22: `=>` expected but `:` found
+v4_g8_case_try_brace_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case _: Exception => false\n      }\n  } => 1\n}
+v4_g8_case_try_brace_ctrl Scala32: error 2:22: `=>` expected but `:` found
+v4_g8_case_try_brace_braces Scala3: error 4:5: `outdent` expected but `=>` found
+v4_g8_case_try_brace_braces Scala32: error 2:22: `=>` expected but `:` found
+v4_g8_case_try_brace_in_catch Scala3: error 4:5: `outdent` expected but `=>` found
+v4_g8_case_try_brace_in_catch Scala32: error 2:22: `=>` expected but `:` found
+v4_g8_case_try_then_case Scala3: error 5:9: `=>` expected but `outdent` found
+v4_g8_case_try_then_case Scala32: error 2:22: `=>` expected but `:` found
+v4_g8_first_case_then_case_try Scala3: error 5:5: `outdent` expected but `=>` found
+v4_g8_first_case_then_case_try Scala32: error 2:22: `=>` expected but `:` found
+v4_g8_case_try_catch_finally_next_line Scala3: error 4:5: `outdent` expected but `=>` found
+v4_g8_case_try_catch_finally_next_line Scala32: error 2:22: `=>` expected but `:` found
+v4_g8_case_try_brace_body_lines Scala3: error 4:5: `outdent` expected but `=>` found
+v4_g8_case_try_brace_body_lines Scala32: error 2:22: `=>` expected but `:` found
+v4_g8_case_if_then_next_line Scala3: error 4:9: `=>` expected but `outdent` found
+v4_g8_case_if_then_next_line Scala32: error 2:14: `=>` expected but `:` found
+v4_lam_match_case_try_next_line Scala3: error 2:22: `=>` expected but `:` found
+v4_lam_match_case_try_next_line Scala32: error 2:22: `=>` expected but `:` found
+v4_g8_case_try_brace_next_case Scala3: error 4:5: `outdent` expected but `=>` found
+v4_g8_case_try_brace_next_case Scala32: error 2:22: `=>` expected but `:` found
+s4_case_colon_cases_try Scala3: error 5:5: `outdent` expected but `=>` found
+s4_case_colon_cases_try Scala32: error 2:22: `=>` expected but `:` found
+s4_case_colon_cases_try_inner_arrow Scala3: error 5:7: `outdent` expected but `=>` found
+s4_case_colon_cases_try_inner_arrow Scala32: error 2:22: `=>` expected but `:` found
+s4_case_match_lines Scala3: error 6:5: `outdent` expected but `=>` found
+s4_case_match_lines Scala32: error 2:22: `=>` expected but `:` found
+s4_case_one_line_match Scala3: error 4:5: `outdent` expected but `=>` found
+s4_case_one_line_match Scala32: error 2:22: `=>` expected but `:` found
+s4_case_then_colon_lam_else Scala3: error 6:5: `outdent` expected but `=>` found
+s4_case_then_colon_lam_else Scala32: error 2:22: `=>` expected but `:` found
+s4_case_then_else_line_next_case Scala3: error 6:9: `=>` expected but `outdent` found
+s4_case_then_else_line_next_case Scala32: error 2:22: `=>` expected but `:` found
+s4_case_then_match_else Scala3: error 7:5: `outdent` expected but `=>` found
+s4_case_then_match_else Scala32: error 2:22: `=>` expected but `:` found
+s4_case_then_no_else_next_case Scala3: error 5:9: `=>` expected but `outdent` found
+s4_case_then_no_else_next_case Scala32: error 2:22: `=>` expected but `:` found
+s4_case_then_try_else Scala3: error 4:5: `outdent` expected but `=>` found
+s4_case_then_try_else Scala32: error 2:22: `=>` expected but `:` found
+s4_case_then_try_no_else Scala3: error 4:5: `outdent` expected but `=>` found
+s4_case_then_try_no_else Scala32: error 2:22: `=>` expected but `:` found
+s4_case_trailing_infix Scala3: error 5:5: `outdent` expected but `=>` found
+s4_case_trailing_infix Scala32: error 2:22: `=>` expected but `:` found
+s4_case_try_catch_brace_lines Scala3: error 6:5: `outdent` expected but `=>` found
+s4_case_try_catch_brace_lines Scala32: error 2:22: `=>` expected but `:` found
+s4_case_try_catch_next_line Scala3: error 5:5: `outdent` expected but `=>` found
+s4_case_try_catch_next_line Scala32: error 2:22: `=>` expected but `:` found
+s4_case_try_colon_lam Scala3: error 6:5: `outdent` expected but `=>` found
+s4_case_try_colon_lam Scala32: error 2:22: `=>` expected but `:` found
+s4_case_try_finally_line_next_case Scala3: error 6:9: `=>` expected but `outdent` found
+s4_case_try_finally_line_next_case Scala32: error 2:22: `=>` expected but `:` found
+s4_case_try_finally_next_line Scala3: error 5:5: `outdent` expected but `=>` found
+s4_case_try_finally_next_line Scala32: error 2:22: `=>` expected but `:` found
+s4_case_try_lines Scala3: error 6:5: `outdent` expected but `=>` found
+s4_case_try_lines Scala32: error 2:22: `=>` expected but `:` found
+s4_case_try_match_inner_guard_arrowin Scala3: error 4:30: `=>` expected but `:` found
+s4_case_try_match_inner_guard_arrowin Scala32: error 2:22: `=>` expected but `:` found
+s4_case_try_match_inner_guard_ctrl Scala3: error 9:5: `outdent` expected but `=>` found
+s4_case_try_match_inner_guard_ctrl Scala32: error 2:22: `=>` expected but `:` found
+s4_case_try_match_lines Scala3: error 7:5: `outdent` expected but `=>` found
+s4_case_try_match_lines Scala32: error 2:22: `=>` expected but `:` found
+s4_case_try_paren_lam Scala3: error 4:5: `outdent` expected but `=>` found
+s4_case_try_paren_lam Scala32: error 2:22: `=>` expected but `:` found
+s4_case_try_then_case_next Scala3: error 5:5: `outdent` expected but `=>` found
+s4_case_try_then_case_next Scala32: error 2:22: `=>` expected but `:` found
+s4_case_try_then_else Scala3: error 4:5: `outdent` expected but `=>` found
+s4_case_try_then_else Scala32: error 2:22: `=>` expected but `:` found
+s4_g4_case_try_brace Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case _: Exception => false\n      }\n  } => 1\n}
+s4_g4_case_try_brace Scala32: error 3:16: `=>` expected but `:` found
+s4_g4_case_try_case_next_line Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case _: Exception => false\n      }\n  } => 1\n}
+s4_g4_case_try_case_next_line Scala32: error 3:17: `=>` expected but `:` found
+s4_inner_guard_arrowin_try_body Scala3: error 3:26: `=>` expected but `:` found
+s4_inner_guard_arrowin_try_body Scala32: error 2:22: `=>` expected but `:` found
+s4_inner_guard_lam_try_ctrl Scala3: error 6:5: `outdent` expected but `=>` found
+s4_inner_guard_lam_try_ctrl Scala32: error 2:22: `=>` expected but `:` found
+s4_inner_guard_lam_try_lines Scala3: error 3:26: `=>` expected but `:` found
+s4_inner_guard_lam_try_lines Scala32: error 2:22: `=>` expected but `:` found
+s4_lam_match_inner_guard_try_bodyline Scala3: error 2:22: `=>` expected but `:` found
+s4_lam_match_inner_guard_try_bodyline Scala32: error 2:22: `=>` expected but `:` found
+s4_lam_match_inner_guard_try_ctrl Scala3: error 2:22: `=>` expected but `:` found
+s4_lam_match_inner_guard_try_ctrl Scala32: error 2:22: `=>` expected but `:` found
+s4_lam_then_no_else_match Scala3: error 2:22: `=>` expected but `:` found
+s4_lam_then_no_else_match Scala32: error 2:22: `=>` expected but `:` found
+s4_lam_then_try_else Scala3: error 2:22: `=>` expected but `:` found
+s4_lam_then_try_else Scala32: error 2:22: `=>` expected but `:` found
+s4_lam_try_colon_lam Scala3: error 2:22: `=>` expected but `:` found
+s4_lam_try_colon_lam Scala32: error 2:22: `=>` expected but `:` found
+s4_lam_try_match_lines Scala3: error 2:22: `=>` expected but `:` found
+s4_lam_try_match_lines Scala32: error 2:22: `=>` expected but `:` found
+s4_nested_lam_inner_ctrl_last_case Scala3: def f = x match {\n  case y if xs.exists {\n    z => z match {\n      case w if ws.exists {\n        v => v > w\n      } => true\n    }\n  } => 1\n}
+s4_nested_lam_inner_ctrl_last_case Scala32: error 2:22: `=>` expected but `:` found
+s4_nested_lam_last_case_bodyline Scala3: error 2:22: `=>` expected but `:` found
+s4_nested_lam_last_case_bodyline Scala32: error 2:22: `=>` expected but `:` found
+s4_nested_lam_last_case_brace Scala3: error 2:22: `=>` expected but `:` found
+s4_nested_lam_last_case_brace Scala32: error 2:22: `=>` expected but `:` found
+s4_nested_lam_last_case_ctrl Scala3: error 2:22: `=>` expected but `:` found
+s4_nested_lam_last_case_ctrl Scala32: error 2:22: `=>` expected but `:` found
+s4_nested_pf_default_first Scala3: error 5:16: `=>` expected but `outdent` found
+s4_nested_pf_default_first Scala32: error 2:22: `=>` expected but `:` found
+s4_nested_pf_eol_last_case Scala3: error 4:16: `=>` expected but `outdent` found
+s4_nested_pf_eol_last_case Scala32: error 2:22: `=>` expected but `:` found
+s4_nested_pf_last_case_bodyline Scala3: error 5:9: `=>` expected but `outdent` found
+s4_nested_pf_last_case_bodyline Scala32: error 2:22: `=>` expected but `:` found
+s4_nested_pf_last_case_ctrl Scala3: error 4:16: `=>` expected but `outdent` found
+s4_nested_pf_last_case_ctrl Scala32: error 2:22: `=>` expected but `:` found
+a1_nested_after_pat_case_indent Scala3: def f = x match {\n  case y if xs.exists {\n    case b if bs.exists {\n      c => c\n    } => true\n  } => 1\n}
+a1_nested_after_pat_case_indent Scala32: error 3:17: `=>` expected but `:` found
+a2_nested_after_pat_if_indent Scala3: def f = x match {\n  case y if xs.exists {\n    case b if bs.exists {\n      c => c\n    } => true\n  } => 1\n}
+a2_nested_after_pat_if_indent Scala32: error 3:17: `=>` expected but `:` found
+a3_brace_arrow_left_of_case Scala3: def f = x match {\n  case y if xs.exists {\n    z => z\n  } => 1\n}
+a3_brace_arrow_left_of_case Scala32: error 3:18: `=>` expected but `:` found
+a4_nested_outer_after_pat_inner_lam Scala3: error 6:11: `=>` expected but `outdent` found
+a4_nested_outer_after_pat_inner_lam Scala32: error 3:17: `=>` expected but `:` found
+a5_nested_outer_if_eol_inner_lam Scala3: error 5:20: `=>` expected but `outdent` found
+a5_nested_outer_if_eol_inner_lam Scala32: error 3:16: `=>` expected but `:` found
+a7_nested_brace_bodyline Scala3: error 6:1: `=>` expected but `}` found
+a7_nested_brace_bodyline Scala32: error 2:22: `=>` expected but `:` found
+a8_nested_inner_arrow_own_line Scala3: error 5:14: `=>` expected but `outdent` found
+a8_nested_inner_arrow_own_line Scala32: error 2:22: `=>` expected but `:` found
+a9_nested_after_pat_case_indent_infix Scala3: def f = x match {\n  case y if xs.exists {\n    case b if bs.exists {\n      c => c\n    } => true\n  } && p => 1\n}
+a9_nested_after_pat_case_indent_infix Scala32: error 3:17: `=>` expected but `:` found
+c14_try_catch_case_finally_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    } finally c\n  case 2 =>\n    d\n}
+c14_try_catch_case_finally_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    } finally c\n  case 2 =>\n    d\n}
+c2_def_try_catch_case_next Scala3: object A {\n  def f = try a catch {\n    case e => b\n    case g => c\n  }\n}
+c2_def_try_catch_case_next Scala32: object A {\n  def f = try a catch {\n    case e => b\n    case g => c\n  }\n}
+c3_flat_catch_eol_in_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case g => c\n    }\n}
+c3_flat_catch_eol_in_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case g => c\n    }\n}
+c5_lam_try_catch_case_next Scala3: def f = x match {\n  case 1 =>\n    xs.map {\n      y => try a catch {\n        case e => b\n        case 2 => 3\n      }\n    }\n}
+c5_lam_try_catch_case_next Scala32: error 2:23: `outdent` expected but `=>` found
+c8_try_catch_case_arrow_eol_case_next Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n      case 2 => c\n    }\n}
+c8_try_catch_case_arrow_eol_case_next Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n      case 2 => c\n    }\n}
+k5_body_next_line_try Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_body_next_line_try Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_case_after_finally_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    } finally c\n  case 2 =>\n    d\n}
+k5_case_after_finally_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    } finally c\n  case 2 =>\n    d\n}
+k5_def_deeper_case Scala3: object A {\n  def f = try a catch {\n    case e => b\n    case g => c\n  }\n}
+k5_def_deeper_case Scala32: object A {\n  def f = try a catch {\n    case e => b\n    case g => c\n  }\n}
+k5_finally_sameline Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    } finally c\n  case 2 =>\n    d\n}
+k5_finally_sameline Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    } finally c\n  case 2 =>\n    d\n}
+k5_paren_try Scala3: def f = x match {\n  case 1 =>\n    g(try a catch {\n      case e => b\n    })\n  case 2 =>\n    c\n}
+k5_paren_try Scala32: def f = x match {\n  case 1 =>\n    g(try a catch {\n      case e => b\n    })\n  case 2 =>\n    c\n}
+k5_try_eol_catch_case_aligned Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
+k5_try_eol_catch_case_aligned Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
+q5_after_pat_inner_if_eol Scala3: def f = x match {\n  case y if xs.exists {\n    case b if bs.exists {\n      c => c\n    } => true\n  } => 1\n}
+q5_after_pat_inner_if_eol Scala32: error 3:17: `=>` expected but `:` found
+q5_if_eol_inner_after_pat Scala3: def f = x match {\n  case y if xs.exists {\n    case b if bs.exists {\n      c => c\n    } => true\n  } => 1\n}
+q5_if_eol_inner_after_pat Scala32: error 3:16: `=>` expected but `:` found
+q5_mid_body_lam_bodyline Scala3: error 2:22: `=>` expected but `:` found
+q5_mid_body_lam_bodyline Scala32: error 2:22: `=>` expected but `:` found
+q5_mid_body_match_bodyline Scala3: error 5:18: `=>` expected but `outdent` found
+q5_mid_body_match_bodyline Scala32: error 2:22: `=>` expected but `:` found
+q5_mid_body_match_brace_bodyline Scala3: error 5:18: `=>` expected but `outdent` found
+q5_mid_body_match_brace_bodyline Scala32: error 2:22: `=>` expected but `:` found
+q5_mid_body_match_ctrl Scala3: error 5:18: `=>` expected but `outdent` found
+q5_mid_body_match_ctrl Scala32: error 2:22: `=>` expected but `:` found
+q5_mid_body_next_line_bodyline Scala3: error 6:20: `=>` expected but `outdent` found
+q5_mid_body_next_line_bodyline Scala32: error 2:22: `=>` expected but `:` found
+q5_mid_body_next_line_ctrl Scala3: error 6:20: `=>` expected but `outdent` found
+q5_mid_body_next_line_ctrl Scala32: error 2:22: `=>` expected but `:` found
+q5_nested_arrow_eol_body_next Scala3: error 5:13: `=>` expected but `outdent` found
+q5_nested_arrow_eol_body_next Scala32: error 2:22: `=>` expected but `:` found
+q5_nested_body_two_lines Scala3: error 5:13: `=>` expected but `outdent` found
+q5_nested_body_two_lines Scala32: error 2:22: `=>` expected but `:` found
+q5_nested_brace_left Scala3: error 4:16: `=>` expected but `outdent` found
+q5_nested_brace_left Scala32: error 2:22: `=>` expected but `:` found
+q5_nested_catch_ctx Scala3: error 4:16: `=>` expected but `outdent` found
+q5_nested_catch_ctx Scala32: error 2:22: `=>` expected but `:` found
+q5_nested_comment_line Scala3: error 5:14: `=>` expected but `outdent` found
+q5_nested_comment_line Scala32: error 2:22: `=>` expected but `:` found
+q5_nested_dot_at_case Scala3: error 5:19: `=>` expected but `outdent` found
+q5_nested_dot_at_case Scala32: error 2:23: `=>` expected but `:` found
+q5_nested_dot_left Scala3: error 4:13: `=>` expected but `outdent` found
+q5_nested_dot_left Scala32: error 2:23: `=>` expected but `:` found
+q5_nested_infix_left Scala3: error 4:16: `=>` expected but `outdent` found
+q5_nested_infix_left Scala32: error 2:22: `=>` expected but `:` found
+q5_nested_lam_mid_if Scala3: error 2:22: `=>` expected but `:` found
+q5_nested_lam_mid_if Scala32: error 2:22: `=>` expected but `:` found
+q5_nested_lam_mid_try Scala3: error 2:22: `=>` expected but `:` found
+q5_nested_lam_mid_try Scala32: error 2:22: `=>` expected but `:` found
+q5_nested_two_outer_cases Scala3: error 4:16: `=>` expected but `outdent` found
+q5_nested_two_outer_cases Scala32: error 2:22: `=>` expected but `:` found
+q5_three_after_pat Scala3: def f = x match {\n  case y if xs.exists {\n    case b if bs.exists {\n      case c if cs.exists {\n        d => d\n      } => true\n    } => false\n  } => 1\n}
+q5_three_after_pat Scala32: error 3:17: `=>` expected but `:` found
+q5_three_after_pat_inner_eol Scala3: def f = x match {\n  case y if xs.exists {\n    case b if bs.exists {\n      case c if cs.exists {\n        d => d\n      } => true\n    } => false\n  } => 1\n}
+q5_three_after_pat_inner_eol Scala32: error 3:17: `=>` expected but `:` found
+q5_three_bodyline_bodyline Scala3: error 7:9: `=>` expected but `outdent` found
+q5_three_bodyline_bodyline Scala32: error 2:22: `=>` expected but `:` found
+q5_three_bodyline_left Scala3: error 6:15: `=>` expected but `outdent` found
+q5_three_bodyline_left Scala32: error 2:22: `=>` expected but `:` found
+q5_three_lam_bodyline Scala3: error 2:22: `=>` expected but `:` found
+q5_three_lam_bodyline Scala32: error 2:22: `=>` expected but `:` found
+q5_three_lam_left Scala3: error 2:22: `=>` expected but `:` found
+q5_three_lam_left Scala32: error 2:22: `=>` expected but `:` found
+q5_three_left_bodyline Scala3: error 5:18: `=>` expected but `outdent` found
+q5_three_left_bodyline Scala32: error 2:22: `=>` expected but `:` found
+q5_three_left_left Scala3: error 5:18: `=>` expected but `outdent` found
+q5_three_left_left Scala32: error 2:22: `=>` expected but `:` found
+e10_mid_body_in_catch Scala3: error 5:18: `=>` expected but `outdent` found
+e10_mid_body_in_catch Scala32: error 2:22: `=>` expected but `:` found
+e6_mid_body_then_match Scala3: error 5:18: `=>` expected but `outdent` found
+e6_mid_body_then_match Scala32: error 2:22: `=>` expected but `:` found
+e7_two_mid_bodies Scala3: error 6:20: `=>` expected but `outdent` found
+e7_two_mid_bodies Scala32: error 2:22: `=>` expected but `:` found
+e8_handler_colon_in_guard_arg Scala3: error 6:5: `outdent` expected but `=>` found
+e8_handler_colon_in_guard_arg Scala32: error 2:22: `=>` expected but `:` found
+e9_mid_body_brace_cases Scala3: error 6:5: `=>` expected but `}` found
+e9_mid_body_brace_cases Scala32: error 2:22: `=>` expected but `:` found
+f6_end_match_at_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X => b\n          case _ => c\n        }\n    }\n    end match\n  case 2 =>\n    d\n}
+f6_end_match_at_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X => b\n          case _ => c\n        }\n    }\n    end match\n  case 2 =>\n    d\n}
+f6_finally_after_colon_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    } finally c\n  case 2 =>\n    d\n}
+f6_finally_after_colon_cases Scala32: error 3:7: `identifier` expected but `case` found
+f6_handler_guard_colon Scala3: error 4:3: `=>` expected but `case` found
+f6_handler_guard_colon Scala32: error 2:44: `=>` expected but `:` found
+f6_indent_body_colon_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+f6_indent_body_colon_cases Scala32: error 4:9: `identifier` expected but `case` found
+m6_mid_after_pat Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      b match {\n        case c if cs.exists {\n          d => d\n        } => true\n      }\n  } => 1\n}
+m6_mid_after_pat Scala32: error 3:17: `=>` expected but `:` found
+m6_mid_arrow_eol Scala3: error 5:18: `=>` expected but `outdent` found
+m6_mid_arrow_eol Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_catch_eol_match Scala3: error 6:20: `=>` expected but `outdent` found
+m6_mid_catch_eol_match Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_catch_handler_colon Scala3: error 5:18: `=>` expected but `outdent` found
+m6_mid_catch_handler_colon Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_catch_handler_match Scala3: error 5:18: `=>` expected but `outdent` found
+m6_mid_catch_handler_match Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_catch_handler_match_ctrl Scala3: error 5:18: `=>` expected but `outdent` found
+m6_mid_catch_handler_match_ctrl Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_comment_line Scala3: error 5:18: `=>` expected but `outdent` found
+m6_mid_comment_line Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_else_match Scala3: error 5:18: `=>` expected but `outdent` found
+m6_mid_else_match Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_flat_match Scala3: error 6:9: `=>` expected but `outdent` found
+m6_mid_flat_match Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_inner_eol_arrow_at_case Scala3: error 7:5: `outdent` expected but `=>` found
+m6_mid_inner_eol_arrow_at_case Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_inner_eol_bodyline Scala3: error 5:23: `=>` expected but `outdent` found
+m6_mid_inner_eol_bodyline Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_lam_inline Scala3: error 3:30: `outdent` expected but `=>` found
+m6_mid_lam_inline Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_lam_outer_try Scala3: error 2:22: `=>` expected but `:` found
+m6_mid_lam_outer_try Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_lam_sameline_match Scala3: error 5:18: `=>` expected but `outdent` found
+m6_mid_lam_sameline_match Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_match_case_sameline Scala3: error 5:9: `=>` expected but `outdent` found
+m6_mid_match_case_sameline Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_then_eol_body Scala3: error 6:22: `=>` expected but `outdent` found
+m6_mid_then_eol_body Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_try_eol_body Scala3: error 6:22: `=>` expected but `outdent` found
+m6_mid_try_eol_body Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_try_nocatch_bodyline Scala3: error 5:18: `=>` expected but `outdent` found
+m6_mid_try_nocatch_bodyline Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_two_inner_cases Scala3: error 6:7: `=>` expected but `case` found
+m6_mid_two_inner_cases Scala32: error 2:22: `=>` expected but `:` found
+m6_mid_val_then_match Scala3: error 7:20: `=>` expected but `outdent` found
+m6_mid_val_then_match Scala32: error 2:22: `=>` expected but `:` found
+m6_three_mid_bodies Scala3: error 7:22: `=>` expected but `outdent` found
+m6_three_mid_bodies Scala32: error 2:22: `=>` expected but `:` found
+m6_three_mid_bodies_brace Scala3: error 7:22: `=>` expected but `outdent` found
+m6_three_mid_bodies_brace Scala32: error 2:22: `=>` expected but `:` found
+m6_three_mid_bodies_ctrl Scala3: error 7:22: `=>` expected but `outdent` found
+m6_three_mid_bodies_ctrl Scala32: error 2:22: `=>` expected but `:` found
+m6_three_mid_inner_left Scala3: error 7:22: `=>` expected but `outdent` found
+m6_three_mid_inner_left Scala32: error 2:22: `=>` expected but `:` found
+e7_semi_def_body Scala3: def f = try a catch {\n  case e => b\n  case 2 => c\n}
+e7_semi_def_body Scala32: def f = try a catch {\n  case e => b\n  case 2 => c\n}
+e7_semi_catch_eol_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case g => c\n    }\n}
+e7_semi_catch_eol_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case g => c\n    }\n}
+e7_semi_finally_next Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    } finally d\n}
+e7_semi_finally_next Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    } finally d\n}
+e7_flat_ctrl Scala3: error 5:16: `=>` expected but `outdent` found
+e7_flat_ctrl Scala32: error 2:22: `=>` expected but `:` found
+e7_flat_inner_arrow_at_cases Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      b match {\n        case c if cs.exists {\n          d => d\n        } => true\n      }\n  } => 1\n}
+e7_flat_inner_arrow_at_cases Scala32: error 2:22: `=>` expected but `:` found
+e7_flat_two_inner_cases Scala3: error 6:5: `=>` expected but `case` found
+e7_flat_two_inner_cases Scala32: error 2:22: `=>` expected but `:` found
+e7_flat_brace_outer Scala3: error 7:1: `=>` expected but `}` found
+e7_flat_brace_outer Scala32: error 2:22: `=>` expected but `:` found
+e7_handler_match_brace_outer Scala3: error 5:18: `=>` expected but `outdent` found
+e7_handler_match_brace_outer Scala32: error 2:22: `=>` expected but `:` found
+e7_handler_match_two_cases Scala3: error 6:7: `=>` expected but `case` found
+e7_handler_match_two_cases Scala32: error 2:22: `=>` expected but `:` found
+e7_handler_match_in_catch Scala3: error 5:18: `=>` expected but `outdent` found
+e7_handler_match_in_catch Scala32: error 2:22: `=>` expected but `:` found
+e7_flat_after_pat_3_3 Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      b match {\n        case c if cs.exists {\n          d => d\n        } => true\n      }\n  } => 1\n}
+e7_flat_after_pat_3_3 Scala32: error 3:17: `=>` expected but `:` found
+e7_flat_lam_line Scala3: error 6:9: `=>` expected but `outdent` found
+e7_flat_lam_line Scala32: error 2:22: `=>` expected but `:` found
+e7_flat_def_body_arrow_at_cases Scala3: error 7:9: `=>` expected but `outdent` found
+e7_flat_def_body_arrow_at_cases Scala32: error 3:22: `=>` expected but `:` found
+n7_flat_after_pat_curried Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      b match {\n        case c if cs.exists {\n          d => d => true\n        } => false\n      }\n  } => 1\n}
+n7_flat_after_pat_curried Scala32: error 3:17: `=>` expected but `:` found
+n7_flat_arrow_eol_body Scala3: error 7:9: `=>` expected but `outdent` found
+n7_flat_arrow_eol_body Scala32: error 2:22: `=>` expected but `:` found
+n7_flat_arrow_eol_empty Scala3: error 6:9: `=>` expected but `outdent` found
+n7_flat_arrow_eol_empty Scala32: error 2:22: `=>` expected but `:` found
+n7_flat_catch_eol Scala3: error 6:9: `=>` expected but `outdent` found
+n7_flat_catch_eol Scala32: error 2:22: `=>` expected but `:` found
+n7_flat_handler_arrow_eol_empty Scala3: error 5:13: `=>` expected but `outdent` found
+n7_flat_handler_arrow_eol_empty Scala32: error 2:22: `=>` expected but `:` found
+n7_flat_inner_brace Scala3: error 6:5: `=>` expected but `}` found
+n7_flat_inner_brace Scala32: error 2:22: `=>` expected but `:` found
+n7_flat_outer_flat_inner Scala3: error 7:9: `=>` expected but `outdent` found
+n7_flat_outer_flat_inner Scala32: error 3:22: `=>` expected but `:` found
+n7_flat_then_outer_case Scala3: error 7:3: `=>` expected but `case` found
+n7_flat_then_outer_case Scala32: error 2:22: `=>` expected but `:` found
+n7_flat_two_outer_args Scala3: error 7:3: `=>` expected but `case` found
+n7_flat_two_outer_args Scala32: error 2:22: `=>` expected but `:` found
+n7_handler_empty_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case _ =>\n      case 2 => c\n    }\n}
+n7_handler_empty_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case _ =>\n      case 2 => c\n    }\n}
+n7_handler_flat_inner_match Scala3: error 6:9: `=>` expected but `outdent` found
+n7_handler_flat_inner_match Scala32: error 2:22: `=>` expected but `:` found
+n7_mid_arrow_eol_empty Scala3: error 5:13: `=>` expected but `outdent` found
+n7_mid_arrow_eol_empty Scala32: error 2:22: `=>` expected but `:` found
+n7_semi_body_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_body_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_deeper_body_case Scala3: error 4:7: `outdent` expected but `case` found
+n7_semi_deeper_body_case Scala32: error 4:7: `outdent` expected but `case` found
+n7_semi_finally_sameline Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    } finally d\n  case 2 =>\n    c\n}
+n7_semi_finally_sameline Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    } finally d\n  case 2 =>\n    c\n}
+n7_semi_lambda_body Scala3: def f = x match {\n  case 1 =>\n    xs.foreach {\n      y => try y catch {\n        case e => b\n      }\n    }\n  case 2 =>\n    c\n}
+n7_semi_lambda_body Scala32: error 2:27: `outdent` expected but `=>` found
+n7_two_flat Scala3: error 7:9: `=>` expected but `outdent` found
+n7_two_flat Scala32: error 2:22: `=>` expected but `:` found
+e8_empty_last_finally Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    } finally h()\n  case 2 =>\n    c\n}
+e8_empty_last_finally Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    } finally h()\n  case 2 =>\n    c\n}
+e8_empty_last_stat_after Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n    d\n  case 2 =>\n    c\n}
+e8_empty_last_stat_after Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n    d\n  case 2 =>\n    c\n}
+e8_empty_last_guard_lam Scala3: def f = x match {\n  case y if xs.exists {\n    z => try g(z) catch {\n      case e =>\n        e match {\n          case X => true\n          case _ =>\n        }\n      case c =>\n        false\n    }\n  } => 1\n}
+e8_empty_last_guard_lam Scala32: error 2:22: `=>` expected but `:` found
+e8_empty_last_inner_flat Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n          case 2 =>\n            c\n        }\n    }\n}
+e8_empty_last_inner_flat Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n          case 2 =>\n            c\n        }\n    }\n}
+p8_close_brace_lambda Scala3: def f = xs.map {\n  y => try a catch {\n    case e =>\n      e match {\n        case X =>\n          g()\n        case _ =>\n      }\n  }\n}
+p8_close_brace_lambda Scala32: def f = xs.map {\n  y => try a catch {\n    case e =>\n      e match {\n        case X =>\n          g()\n        case _ =>\n      }\n  }\n}
+p8_close_brace_next_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n}
+p8_close_brace_next_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n}
+p8_end_marker_inner_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n        end match\n      case 2 =>\n        c\n    }\n}
+p8_end_marker_inner_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n        end match\n      case 2 =>\n        c\n    }\n}
+p8_handler_in_colon_arg Scala3: def f = x match {\n  case 1 =>\n    g {\n      try a catch {\n        case e =>\n          e match {\n            case X => 1\n            case _ =>\n          }\n      }\n    }\n  case 2 =>\n    c\n}
+p8_handler_in_colon_arg Scala32: error 3:5: `identifier` expected but `try` found
+p8_inner_match_then_dot Scala3: error 5:5: `outdent` expected but `.` found
+p8_inner_match_then_dot Scala32: error 5:5: `outdent` expected but `.` found
+p8_inner_try_catch_eol_body_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_body_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+e9_try_catch_eol_then_dot Scala3: error 4:5: `outdent` expected but `.` found
+e9_try_catch_eol_then_dot Scala32: error 4:5: `outdent` expected but `.` found
+q9_catch_eol_cases_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n      case f =>\n        2\n    }\n  case 2 =>\n    c\n}
+q9_catch_eol_cases_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n      case f =>\n        2\n    }\n  case 2 =>\n    c\n}
+q9_def_nested_handlers_case Scala3: def g = try a catch {\n  case e =>\n    try b catch {\n      case f =>\n        if (p) f match {\n          case X => 1\n          case Y => 2\n        }\n    }\n}
+q9_def_nested_handlers_case Scala32: def g = try a catch {\n  case e =>\n    try b catch {\n      case f =>\n        if (p) f match {\n          case X => 1\n          case Y => 2\n        }\n    }\n}
+q9_guard_eol_handler_then_match_bodyline Scala3: error 5:5: `outdent` expected but `=>` found
+q9_guard_eol_handler_then_match_bodyline Scala32: error 2:22: `=>` expected but `:` found
+q9_guard_lam_handler_then_match Scala3: error 2:22: `=>` expected but `:` found
+q9_guard_lam_handler_then_match Scala32: error 2:22: `=>` expected but `:` found
+q9_guard_lam_handler_try_catch_eol Scala3: error 2:22: `=>` expected but `:` found
+q9_guard_lam_handler_try_catch_eol Scala32: error 2:22: `=>` expected but `:` found
+q9_guard_lam_handler_try_lambda Scala3: error 2:22: `=>` expected but `:` found
+q9_guard_lam_handler_try_lambda Scala32: error 2:22: `=>` expected but `:` found
+q9_guard_lam_match_handler_then_match Scala3: error 2:22: `=>` expected but `:` found
+q9_guard_lam_match_handler_then_match Scala32: error 2:22: `=>` expected but `:` found
+q9b_guard_eol_case_handler_then_inline Scala3: error 4:5: `outdent` expected but `=>` found
+q9b_guard_eol_case_handler_then_inline Scala32: error 2:22: `=>` expected but `:` found
+q9b_guard_eol_case_handler_try_catch_eol Scala3: error 5:5: `outdent` expected but `=>` found
+q9b_guard_eol_case_handler_try_catch_eol Scala32: error 2:22: `=>` expected but `:` found
+q9b_guard_lam_handler_match Scala3: error 2:22: `=>` expected but `:` found
+q9b_guard_lam_handler_match Scala32: error 2:22: `=>` expected but `:` found
+q9b_guard_lam_handler_then_else Scala3: error 2:22: `=>` expected but `:` found
+q9b_guard_lam_handler_then_else Scala32: error 2:22: `=>` expected but `:` found
+q9b_guard_lam_handler_then_inline Scala3: error 2:22: `=>` expected but `:` found
+q9b_guard_lam_handler_then_inline Scala32: error 2:22: `=>` expected but `:` found
+q9b_guard_lam_handler_then_match_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => try g(z) catch {\n      case e =>\n        if (p) e match {\n          case X => true\n        }\n    }\n  } => 1\n}
+q9b_guard_lam_handler_then_match_ctrl Scala32: error 2:22: `=>` expected but `:` found
+q9b_guard_lam_handler_then_match_next_case Scala3: error 2:22: `=>` expected but `:` found
+q9b_guard_lam_handler_then_match_next_case Scala32: error 2:22: `=>` expected but `:` found
+q9b_guard_lam_handler_try_nocatch Scala3: error 2:22: `=>` expected but `:` found
+q9b_guard_lam_handler_try_nocatch Scala32: error 2:22: `=>` expected but `:` found
+q9c_handler_arrow_eol_empty Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n      case 2 => c\n    }\n}
+q9c_handler_arrow_eol_empty Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n      case 2 => c\n    }\n}
+e10_guard_lam_then_colon_cases Scala3: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_colon_cases Scala32: error 2:22: `=>` expected but `:` found
+e10_guard_lam_try_lam_body Scala3: error 2:22: `=>` expected but `:` found
+e10_guard_lam_try_lam_body Scala32: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_else_next Scala3: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_else_next Scala32: error 2:22: `=>` expected but `:` found
+e10_guard_lam_try_finally_next Scala3: error 2:22: `=>` expected but `:` found
+e10_guard_lam_try_finally_next Scala32: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_try_catch_eol Scala3: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_try_catch_eol Scala32: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_match_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    z => try g(z) catch {\n      case e =>\n        if (p) e match {\n          case X => true\n        }\n    }\n  } => 1\n}
+e10_guard_lam_then_match_ctrl Scala32: error 2:22: `=>` expected but `:` found
+e10_guard_eol_try_nocatch Scala3: error 4:5: `outdent` expected but `=>` found
+e10_guard_eol_try_nocatch Scala32: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_match_brace Scala3: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_match_brace Scala32: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_match_stat Scala3: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_match_stat Scala32: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_inline_stat Scala3: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_inline_stat Scala32: error 2:22: `=>` expected but `:` found
+e10_def_try_nocatch_stat Scala3: def g = {\n  try a catch {\n    case e =>\n      try b\n  }\n  h()\n}
+e10_def_try_nocatch_stat Scala32: def g = {\n  try a catch {\n    case e =>\n      try b\n  }\n  h()\n}
+e10_def_then_inline_stat Scala3: def g = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n}
+e10_def_then_inline_stat Scala32: def g = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n}
+e10_def_then_else_next Scala3: def g = {\n  try a catch {\n    case e =>\n      if (p) b else c\n  }\n  h()\n}
+e10_def_then_else_next Scala32: def g = {\n  try a catch {\n    case e =>\n      if (p) b else c\n  }\n  h()\n}
+e10_def_try_finally_next Scala3: def g = {\n  try a catch {\n    case e =>\n      try b finally c\n  }\n  h()\n}
+e10_def_try_finally_next Scala32: def g = {\n  try a catch {\n    case e =>\n      try b finally c\n  }\n  h()\n}
+e10_def_while_match_stat Scala3: def g = {\n  try a catch {\n    case e =>\n      while (p) e match {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_def_while_match_stat Scala32: def g = {\n  try a catch {\n    case e =>\n      while (p) e match {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_def_then_match_deeper_stat Scala3: def g = try a catch {\n  case e =>\n    if (p) e match {\n      case X => 1\n    }\n    h()\n}
+e10_def_then_match_deeper_stat Scala32: def g = try a catch {\n  case e =>\n    if (p) e match {\n      case X => 1\n    }\n    h()\n}
+e10_def_then_match_infix Scala3: def g = try a catch {\n  case e =>\n    if (p) (e match {\n      case X => 1\n    }) + 2\n}
+e10_def_then_match_infix Scala32: def g = try a catch {\n  case e =>\n    if (p) (e match {\n      case X => 1\n    }) + 2\n}
+e10_def_then_match_dot Scala3: error 4:3: `outdent` expected but `.` found
+e10_def_then_match_dot Scala32: error 4:3: `outdent` expected but `.` found
+e10_def_then_match_else_next Scala3: def g = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      } else c\n  }\n  h()\n}
+e10_def_then_match_else_next Scala32: def g = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      } else c\n  }\n  h()\n}
+e10_def_try_catch_eol_finally_next Scala3: def g = {\n  try a catch {\n    case e =>\n      try b catch {\n        case X => 1\n      } finally c\n  }\n  h()\n}
+e10_def_try_catch_eol_finally_next Scala32: def g = {\n  try a catch {\n    case e =>\n      try b catch {\n        case X => 1\n      } finally c\n  }\n  h()\n}
+e10_cont_then_inline_infix Scala3: def g = try a catch {\n  case e =>\n    if (p) b + c\n}
+e10_cont_then_inline_infix Scala32: def g = try a catch {\n  case e =>\n    if (p) b + c\n}
+e10_cont_try_nocatch_infix Scala3: def g = try a catch {\n  case e =>\n    try b + c\n}
+e10_cont_try_nocatch_infix Scala32: def g = try a catch {\n  case e =>\n    try b + c\n}
+e10_cont_then_inline_dot Scala3: def g = try a catch {\n  case e =>\n    if (p) b.h\n}
+e10_cont_then_inline_dot Scala32: def g = try a catch {\n  case e =>\n    if (p) b.h\n}
+e10_cont_try_nocatch_dot Scala3: def g = try a catch {\n  case e =>\n    try b.h\n}
+e10_cont_try_nocatch_dot Scala32: def g = try a catch {\n  case e =>\n    try b.h\n}
+e10_cont_plain_infix Scala3: def g = {\n  try a catch {\n    case e => b\n  }\n  +c\n}
+e10_cont_plain_infix Scala32: def g = {\n  try a catch {\n    case e => b\n  }\n  +c\n}
+e10_cont_plain_dot Scala3: error 3:3: `outdent` expected but `.` found
+e10_cont_plain_dot Scala32: error 3:3: `outdent` expected but `.` found
+e10_cont_flat_then_infix Scala3: def g = x match {\n  case 1 =>\n    if (p) b + c\n}
+e10_cont_flat_then_infix Scala32: def g = x match {\n  case 1 =>\n    if (p) b + c\n}
+e10_cont_flat_then_dot Scala3: def g = x match {\n  case 1 =>\n    if (p) b.h\n}
+e10_cont_flat_then_dot Scala32: def g = x match {\n  case 1 =>\n    if (p) b.h\n}
+e10_cont_guard_then_infix Scala3: error 2:22: `=>` expected but `:` found
+e10_cont_guard_then_infix Scala32: error 2:22: `=>` expected but `:` found
+e10_cont_guard_then_dot Scala3: error 2:22: `=>` expected but `:` found
+e10_cont_guard_then_dot Scala32: error 2:22: `=>` expected but `:` found
+e10_cont_then_match_infix_deeper Scala3: def g = try a catch {\n  case e =>\n    if (p) (e match {\n      case X => 1\n    }) + c\n}
+e10_cont_then_match_infix_deeper Scala32: def g = try a catch {\n  case e =>\n    if (p) (e match {\n      case X => 1\n    }) + c\n}
+e10_cont_then_trailing_infix Scala3: def g = try a catch {\n  case e =>\n    if (p) b + c\n}
+e10_cont_then_trailing_infix Scala32: def g = try a catch {\n  case e =>\n    if (p) b + c\n}
+e10_guard_lam_then_match_empty_last Scala3: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_match_empty_last Scala32: error 2:22: `=>` expected but `:` found
+e10_guard_lam_try_nocatch_semi Scala3: error 2:22: `=>` expected but `:` found
+e10_guard_lam_try_nocatch_semi Scala32: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_match_comment Scala3: error 2:22: `=>` expected but `:` found
+e10_guard_lam_then_match_comment Scala32: error 2:22: `=>` expected but `:` found
+r10_C_flat_plain Scala3: def f = {\n  try a catch {\n    case e => b\n  }\n  h()\n}
+r10_C_flat_plain Scala32: def f = {\n  try a catch {\n    case e => b\n  }\n  h()\n}
+r10_C_flat_then Scala3: def f = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n}
+r10_C_flat_then Scala32: def f = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n}
+r10_C_flat_then_finally Scala3: def f = try a catch {\n  case e =>\n    if (p) b\n} finally h()
+r10_C_flat_then_finally Scala32: def f = try a catch {\n  case e =>\n    if (p) b\n} finally h()
+r10_C_flat_try Scala3: def f = {\n  try a catch {\n    case e =>\n      try b\n  }\n  h()\n}
+r10_C_flat_try Scala32: def f = {\n  try a catch {\n    case e =>\n      try b\n  }\n  h()\n}
+r10_F_closed_then_lam_paren Scala3: def f = {\n  x match {\n    case 1 =>\n      if (p) xs.foreach {\n        y => g(y)\n      }\n  }\n  c\n}
+r10_F_closed_then_lam_paren Scala32: error 4:8: `outdent` expected but `(` found
+r10_F_plain_end_match Scala3: def f = {\n  x match {\n    case 1 => b\n  }\n  end match\n  h()\n}
+r10_F_plain_end_match Scala32: def f = {\n  x match {\n    case 1 => b\n  }\n  end match\n  h()\n}
+r10_F_scala2_if_stat Scala3: def f = {\n  x match {\n    case 1 =>\n      if (p) b\n  }\n  h()\n}
+r10_F_scala2_if_stat Scala32: def f = {\n  x match {\n    case 1 =>\n      if (p) b\n  }\n  h()\n}
+r10_F_then_end_match Scala3: def f = {\n  x match {\n    case 1 =>\n      if (p) b\n  }\n  end match\n}
+r10_F_then_end_match Scala32: def f = {\n  x match {\n    case 1 =>\n      if (p) b\n  }\n  end match\n}
+r10_F_then_match_line Scala3: def f = (x match {\n  case 1 =>\n    if (p) b\n}) match {\n  case _ => c\n}
+r10_F_then_match_line Scala32: def f = (x match {\n  case 1 =>\n    if (p) b\n}) match {\n  case _ => c\n}
+r10_F_then_paren Scala3: def f = {\n  x match {\n    case 1 =>\n      if (p) b\n  }\n  c\n}
+r10_F_then_paren Scala32: def f = {\n  x match {\n    case 1 =>\n      if (p) b\n  }\n  c\n}
+r10_F_try_end_match Scala3: def f = {\n  x match {\n    case 1 =>\n      try b\n  }\n  end match\n  h()\n}
+r10_F_try_end_match Scala32: def f = {\n  x match {\n    case 1 =>\n      try b\n  }\n  end match\n  h()\n}
+r10_H_closed_try_lam_dot Scala3: def f = try a catch {\n  case e =>\n    try xs.map {\n      y => g(y)\n    }.sum\n}
+r10_H_closed_try_lam_dot Scala32: error 3:6: `outdent` expected but `(` found
+r10_H_scala2_if_stat Scala3: def f = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n}
+r10_H_scala2_if_stat Scala32: def f = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n}
+r10_H_then_end_if Scala3: def f = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  end if\n  h()\n}
+r10_H_then_end_if Scala32: def f = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  end if\n  h()\n}
+r10_H_then_paren Scala3: def f = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  c\n}
+r10_H_then_paren Scala32: def f = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  c\n}
+r10_H_then_trailing_alpha_op Scala3: def f = try a catch {\n  case e =>\n    if (p) b max c\n}
+r10_H_then_trailing_alpha_op Scala32: def f = try a catch {\n  case e =>\n    if (p) b max c\n}
+r10_H_trailing_op_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b max\n      case 2 =>\n        c\n    }\n}
+r10_H_trailing_op_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b max\n      case 2 =>\n        c\n    }\n}
+r10_M_plain Scala3: def f = {\n  x match {\n    case 1 => a\n  }\n  h()\n}
+r10_M_plain Scala32: def f = {\n  x match {\n    case 1 => a\n  }\n  h()\n}
+r10_M_then Scala3: def f = {\n  x match {\n    case 1 =>\n      if (p) a\n  }\n  h()\n}
+r10_M_then Scala32: def f = {\n  x match {\n    case 1 =>\n      if (p) a\n  }\n  h()\n}
+r10_M_then_in_handler_case Scala3: def f = y match {\n  case 0 =>\n    try a catch {\n      case e =>\n        e match {\n          case 1 =>\n            if (p) b\n          case 2 =>\n            c\n        }\n    }\n}
+r10_M_then_in_handler_case Scala32: def f = y match {\n  case 0 =>\n    try a catch {\n      case e =>\n        e match {\n          case 1 =>\n            if (p) b\n          case 2 =>\n            c\n        }\n    }\n}
+r10_M_try Scala3: def f = {\n  x match {\n    case 1 =>\n      try a\n  }\n  h()\n}
+r10_M_try Scala32: def f = {\n  x match {\n    case 1 =>\n      try a\n  }\n  h()\n}
+r10_block_handler_then Scala3: def f = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n}
+r10_block_handler_then Scala32: def f = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n}
+r10_brace_lambda_handler_then Scala3: def f = xs.foreach { x =>\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n}
+r10_brace_lambda_handler_then Scala32: def f = xs.foreach { x =>\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n}
+r10_case_body_handler_then Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n    }\n    h()\n  case 2 =>\n    c\n}
+r10_case_body_handler_then Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n    }\n    h()\n  case 2 =>\n    c\n}
+r10_colon_lambda_handler_then Scala3: def f = xs.foreach { x =>\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n}
+r10_colon_lambda_handler_then Scala32: error 2:3: `identifier` expected but `try` found
+r10_end_try_after_handler_then Scala3: def f = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  end try\n  h()\n}
+r10_end_try_after_handler_then Scala32: def f = {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  end try\n  h()\n}
+r10_end_try_case_body_then Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n    }\n    end try\n  case 2 =>\n    c\n}
+r10_end_try_case_body_then Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n    }\n    end try\n  case 2 =>\n    c\n}
+r10_flat_in_block_try_stat Scala3: def f = {\n  x match {\n    case 1 =>\n      try b\n  }\n  h()\n}
+r10_flat_in_block_try_stat Scala32: def f = {\n  x match {\n    case 1 =>\n      try b\n  }\n  h()\n}
+r10_flat_in_lambda_then_stat Scala3: def f = xs.foreach { x =>\n  x match {\n    case 1 =>\n      if (p) b\n  }\n  h()\n}
+r10_flat_in_lambda_then_stat Scala32: error 3:13: `identifier` expected but `if` found
+r10_for_enum_handler_plain Scala3: def f = for (y <- ys; z = try a catch {\n  case e => b\n}; w <- ws) yield z
+r10_for_enum_handler_plain Scala32: def f = for (y <- ys; z = try a catch {\n  case e => b\n}; w <- ws) yield z
+r10_for_enum_handler_then Scala3: def f = for (y <- ys; z = try a catch {\n  case e =>\n    if (p) b\n}; w <- ws) yield z
+r10_for_enum_handler_then Scala32: def f = for (y <- ys; z = try a catch {\n  case e =>\n    if (p) b\n}; w <- ws) yield z
+r10_if_body_handler_then Scala3: def f = if (c) {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n} else d
+r10_if_body_handler_then Scala32: def f = if (c) {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  h()\n} else d
+r10_template_handler_then Scala3: object A {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  val c = 1\n}
+r10_template_handler_then Scala32: object A {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  val c = 1\n}
+r10_val_flat_then_stat Scala3: object A {\n  val r = x match {\n    case 1 =>\n      if (p) b\n  }\n  val c = 1\n}
+r10_val_flat_then_stat Scala32: object A {\n  val r = x match {\n    case 1 =>\n      if (p) b\n  }\n  val c = 1\n}
