@@ -21,10 +21,10 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("rank-1 liftables") {
-    @nowarn("msg=never used|unused") // the quasiquote lifts with it
+    @nowarn("msg=never used|unused") // scalac 2.12 does not detect that the quasiquote uses it
     implicit def custom: Lift[List[Int], Term.ArgClause] =
-      Lift(lst => lst.map(x => q"$x".asInstanceOf[Term]))
-    assertTree(q"foo(..${List(1, 2, 3)})")(tapply(tname("foo"), int(1), int(2), int(3)))
+      Lift(lst => lst.map(x => q"${x * 2}".asInstanceOf[Term]))
+    assertTree(q"foo(..${List(1, 2, 3)})")(tapply(tname("foo"), int(2), int(4), int(6)))
   }
 
   test("1 Type.Var or Type.Name") {
