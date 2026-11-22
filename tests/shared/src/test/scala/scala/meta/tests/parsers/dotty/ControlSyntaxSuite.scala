@@ -30995,11 +30995,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|foo(x =>
          |  try a catch { case _ => b }, c)
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `outdent` expected but `,` found
-         |  try a catch { case _ => b }, c)
-         |                             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|foo(x => try a catch {
+         |  case _ => b
+         |}, c)
+         |""".stripMargin
+    val body = Term.Try(tname("a"), List(Case(Pat.Wildcard(), None, tname("b"))), None)
+    runTestAssert[Stat](code, layout)(tapply(tname("foo"), tfunc(tparam("x"))(body), tname("c")))
   }
 
   test("lambda argument with try and catch, a comma at the try line end") {
@@ -31024,11 +31026,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|foo(x =>
          |  try a, c)
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `outdent` expected but `,` found
-         |  try a, c)
-         |       ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "foo(x => try a, c)"
+    val body = Term.Try(tname("a"), Nil, None)
+    runTestAssert[Stat](code, layout)(tapply(tname("foo"), tfunc(tparam("x"))(body), tname("c")))
   }
 
   test("script: try and catch, a parenthesized line and a statement") {
@@ -31054,11 +31054,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
       """|foo(x =>
          |  try a catch h, c)
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `outdent` expected but `,` found
-         |  try a catch h, c)
-         |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "foo(x => try a catch h, c)"
+    val body = Term.TryWithHandler(tname("a"), tname("h"), None)
+    runTestAssert[Stat](code, layout)(tapply(tname("foo"), tfunc(tparam("x"))(body), tname("c")))
   }
 
   test("generator with try and catch, do on the next line") {
