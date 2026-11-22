@@ -238,6 +238,29 @@ private[meta] final class ScannerTokens(
   def countIndent(tokenPosition: Int, skipNonTrivia: Boolean = false): Int = Tokens
     .countOf(countIndentAndNewlineIndex(tokenPosition, skipNonTrivia = skipNonTrivia))
 
+  /** The opposite of `countIndentAndNewlineIndex`, starts search at EOL. */
+  def countIndentAndNonTriviaIndex(eolPosition: Int): Long = {
+    // after a comment, the line's indent is fixed: spaces after it do not count
+    @tailrec
+    def iter(pos: Int, acc: Int = 0, fixed: Boolean = false): Long =
+      if (pos >= tokens.length) Tokens.pack(acc, pos)
+      else {
+        val token = tokens(pos)
+        token match {
+          case _: AtEOL => iter(pos + 1)
+          case c: CommentValue =>
+            val indent = multilineCommentIndent(c)
+            iter(pos + 1, if (indent < 0) acc else indent, fixed = true)
+          case _: CommentLike => iter(pos + 1, acc, fixed = true)
+          case t: HSpace => iter(pos + 1, if (fixed) acc else acc + t.len, fixed)
+          case _ => Tokens.pack(acc, pos)
+        }
+      }
+
+    if (eolPosition < 0 || !tokens(eolPosition).is[AtEOL]) Tokens.pack(-1, -1)
+    else iter(eolPosition + 1)
+  }
+
   // the newlines at which an indentation region opened, and those at which one closed
   private val indentAt = new scala.collection.mutable.BitSet
   private val outdentAt = new scala.collection.mutable.BitSet
@@ -473,6 +496,18 @@ private[meta] final class ScannerTokens(
       }
     }
 
+    def regionsAfterArrow(sepRegions: List[SepRegion]) = sepRegions match {
+      case (_: RegionCaseExpr) :: rs =>
+        // add case region for `match {` to calculate proper indentation
+        val bodyIndent = rs match {
+          case (ri: SepRegionIndented) :: _ => ri.indent
+          case _ => nextIndent
+        }
+        new RegionCaseBody(bodyIndent, curr) :: rs
+      case RegionColonMaybeFewerBraces :: rs => rs
+      case _ => sepRegions
+    }
+
     def getTemplateInherit(sepRegions: List[SepRegion]): TokenRef = currRef(sepRegions match {
       case (_: RegionTemplateMark) :: rs => RegionTemplateInherit :: rs
       case _ => sepRegions
@@ -658,20 +693,7 @@ private[meta] final class ScannerTokens(
           case _ :: rs => OutdentInfo(null, rs)
           case _ => null
         }
-      case _: RightArrow => currRef(
-          sepRegions match {
-            case (_: RegionCaseExpr) :: rs =>
-              // add case region for `match {` to calculate proper indentation
-              // for statements in indentation dialects
-              val bodyIndent = rs match {
-                case (ri: SepRegionIndented) :: _ => ri.indent
-                case _ => nextIndent
-              }
-              new RegionCaseBody(bodyIndent, curr) :: rs
-            case RegionColonMaybeFewerBraces :: rs => rs
-            case _ => sepRegions
-          },
-        )
+      case _: RightArrow => currRef(regionsAfterArrow(sepRegions))
       case _: KwFor if !isPrevEndMarker() => currRef(RegionFor(next) :: sepRegions)
       case _: KwWhile if dialect.allowQuietSyntax && !isPrevEndMarker() =>
         currRef(RegionWhile(next, inCondIndent(sepRegions)) :: sepRegions)
@@ -1344,7 +1366,7 @@ private[meta] final class ScannerTokens(
     (regions match {
       // the body is the first token after the line end
       case (_: RegionParen) :: _ =>
-        isIndented(regions, countIndent(nextNonTriviaAt(nextAt(nextArrow, isHToken))))
+        isIndented(regions, Tokens.countOf(countIndentAndNonTriviaIndex(nextAt(nextArrow, isHToken))))
       case _ => true
     })
   }
