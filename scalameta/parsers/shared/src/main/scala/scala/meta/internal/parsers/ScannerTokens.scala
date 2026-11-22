@@ -465,8 +465,9 @@ private[meta] final class ScannerTokens(
             case _ => 0
           }
           val indent = findIndent(sepRegions) + getExtraIndent(sepRegions)
-          val nextRegions = RegionIndent(indent) :: regions
-          currAndNextRef(regions, mkIndent(currPos, nextPos, nextRegions))
+          val region =
+            if (curr.is[KwCatch]) new RegionCatchSameLine(indent) else new RegionIndent(indent)
+          currAndNextRef(regions, mkIndent(currPos, nextPos, region :: regions))
         case _: KwCase | _: LeftBrace => currRef(markRegions())
         case _ => currRef(sepRegions)
       }
@@ -874,6 +875,27 @@ private[meta] final class ScannerTokens(
             (r eq null) || r.indent <= nextIndent
           }
 
+          /* spec: dotty has no region for `try` or an inline `then`, and reads one case after
+           * `catch case`, so we close these regions at the end of the body */
+          def getOutdentAtBodyEnd(sepRegions: List[SepRegion]): OutdentInfo = {
+            // true if a statement ends before `next`, and `next` does not continue it
+            def isStatEnd =
+              ((sepRegions ne sepRegionsOrig) || prev.is[StatDelim] ||
+                canEndStat(prev) && !isInfixOp(prevPos)) && canBeLeadingInfix != LeadingInfix.Yes
+            if (next.is[KwCase]) dropDeferringRegions(sepRegions) match {
+              case (r: RegionCatchSameLine) :: rs if isStatEnd =>
+                val outer = enclosingCaseBody(rs, next)
+                if (outer eq null) null else OutdentInfo(r, outer)
+              case _ => null
+            }
+            else sepRegions match {
+              case (RegionTry | RegionThen) :: _ if !next.is[Dot] && isStatEnd =>
+                val body = enclosingCaseBody(sepRegions, next)
+                if (body eq null) null else getOutdentInfo(body)
+              case _ => null
+            }
+          }
+
           /**
            * Outdent is needed in following cases:
            *   - If indentation on next line is less than current and previous token can't continue
@@ -892,9 +914,10 @@ private[meta] final class ScannerTokens(
               rs: List[SepRegion],
               ctrlOnly: Boolean,
           ): OutdentInfo = dropRegionLine(nextIndent + 1, rs) match {
-            case (x: RegionTry.type) :: xs =>
+            case ts @ (x: RegionTry.type) :: xs =>
               if (nextIndent < r.indent || nextIndent == r.indent && x.isTerminatingToken(next)) {
-                val done = noOutdent(xs)
+                // spec: dotty has no region for `try`, so the enclosing region can end here
+                val done = noOutdent(xs) && (getOutdentAtBodyEnd(ts) eq null)
                 OutdentInfo(r, if (done) rs else xs, done)
               } else null
             case _ if nextIndent >= r.indent => null // we stop here
@@ -1062,7 +1085,9 @@ private[meta] final class ScannerTokens(
           def getOutdentInfoWith(lambda: List[SepRegion], sepRegions: List[SepRegion]) =
             lambda match {
               case (r: RegionColonLambda) :: rs => OutdentInfo(r, rs)
-              case _ => getOutdentInfo(sepRegions)
+              case _ =>
+                val bodyEnd = getOutdentAtBodyEnd(sepRegions)
+                if (bodyEnd ne null) bodyEnd else getOutdentInfo(sepRegions)
             }
 
           val regionsToRes: List[SepRegion] => Either[List[SepRegion], TokenRef] =
@@ -1449,6 +1474,28 @@ private[meta] object ScannerTokens {
   @tailrec
   private def dropRegionLine(indent: Int, regions: List[SepRegion]): List[SepRegion] = regions match {
     case (r: RegionLine) :: rs if r.indent >= indent => dropRegionLine(indent, rs)
+    case _ => regions
+  }
+
+  /**
+   * Returns the regions from the enclosing case body if every region inside it is deferring and
+   * `token` does not continue any of their constructs, or null
+   */
+  @tailrec
+  private def enclosingCaseBody(regions: List[SepRegion], token: Token): List[SepRegion] =
+    regions match {
+      case (_: RegionCaseBody) :: _ => regions
+      case (r: RegionDeferring) :: rs => r match {
+          case r: RegionControl if r.isTerminatingToken(token) => null
+          case _ => enclosingCaseBody(rs, token)
+        }
+      case _ => null
+    }
+
+  /** Returns `regions` without their innermost deferring regions. */
+  @tailrec
+  private def dropDeferringRegions(regions: List[SepRegion]): List[SepRegion] = regions match {
+    case (_: RegionDeferring) :: rs => dropDeferringRegions(rs)
     case _ => regions
   }
 
