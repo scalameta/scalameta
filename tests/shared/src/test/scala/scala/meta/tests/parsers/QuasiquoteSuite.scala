@@ -122,11 +122,16 @@ class QuasiquoteSuite extends ParseSuite {
            |  case y if $p:
            |    Boolean => 1
            |""".stripMargin
-      val error =
-        """|<input>:3: error: `=>` expected but `outdent` found
-           |    Boolean => 1
-           |                ^""".stripMargin
-      interceptMessage[ParseException](error.lf2nl)(stat(code))
+      assertTree(stat(code))(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(patvar("y"), Some(tapply(Term.Quasi(0, tname("p")), blk(tname("Boolean")))), int(1)),
+        ),
+      ))
     }
 
     test("case guard, name, colon at line end, case arrow on the argument's line, unquote in the argument") {
@@ -135,11 +140,16 @@ class QuasiquoteSuite extends ParseSuite {
            |  case y if p:
            |    $b => 1
            |""".stripMargin
-      val error =
-        """|<input>:3: error: `=>` expected but `outdent` found
-           |    $b => 1
-           |           ^""".stripMargin
-      interceptMessage[ParseException](error.lf2nl)(stat(code))
+      assertTree(stat(code))(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(patvar("y"), Some(tapply(tname("p"), blk(Stat.Quasi(0, tname("b"))))), int(1)),
+        ),
+      ))
     }
 
     test("case guard after a typed pattern, colon at line end, case arrow at a smaller indent, unquote before the colon") {
@@ -238,11 +248,27 @@ class QuasiquoteSuite extends ParseSuite {
            |  case y if a && xs.$m: x =>
            |    x => 1
            |""".stripMargin
-      val error =
-        """|<input>:3: error: `=>` expected but `outdent` found
-           |    x => 1
-           |          ^""".stripMargin
-      interceptMessage[ParseException](error.lf2nl)(stat(code))
+      assertTree(stat(code))(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tinfix(
+              tname("a"),
+              "&&",
+              tapply(
+                Term.Select(tname("xs"), Term.Name.Quasi(0, tname("m"))),
+                blk(tfunc(tparam("x"))(tname("x"))),
+              ),
+            )),
+            int(1),
+          ),
+        ),
+      ))
     }
 
     test("case guard, infix operand, colon lambda, case arrow on the body's line, unquote in the argument") {
@@ -251,11 +277,24 @@ class QuasiquoteSuite extends ParseSuite {
            |  case y if a && xs.map: x =>
            |    $b => 1
            |""".stripMargin
-      val error =
-        """|<input>:3: error: `=>` expected but `outdent` found
-           |    $b => 1
-           |           ^""".stripMargin
-      interceptMessage[ParseException](error.lf2nl)(stat(code))
+      assertTree(stat(code))(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tinfix(
+              tname("a"),
+              "&&",
+              tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(blk(Stat.Quasi(0, tname("b")))))),
+            )),
+            int(1),
+          ),
+        ),
+      ))
     }
 
     test("case guard, colon lambda, case arrow at a smaller indent, unquote before the colon") {
