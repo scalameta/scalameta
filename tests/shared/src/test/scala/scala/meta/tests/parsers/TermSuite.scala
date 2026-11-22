@@ -1783,4 +1783,22 @@ class TermSuite extends ParseSuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("script: try and catch, a parenthesized line and a statement") {
+    implicit val dialect: Dialect = dialects.Scala213.withAllowToplevelTerms(true)
+    val code =
+      """|try a catch { case _ => b }
+         |(c)
+         |d
+         |""".stripMargin
+    val layout =
+      """|try a catch {
+         |  case _ => b
+         |}
+         |c
+         |d
+         |""".stripMargin
+    val stat = Term.Try(tname("a"), List(Case(Pat.Wildcard(), None, tname("b"))), None)
+    runTestAssert[Source](code, layout)(Source(List(stat, tname("c"), tname("d"))))
+  }
+
 }

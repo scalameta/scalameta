@@ -6499,4 +6499,25 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("colon before a lambda in parens after an argument") {
+    val code = "foo(a, xs.map: x => x + 1)"
+    val layout = "foo(a, xs.map: (x => x + 1))"
+    val mapArg = Term.Ascribe(tselect("xs", "map"), pfunc("x")(pinfix("x", "+", lit(1))))
+    runTestAssert[Stat](code, layout)(tapply(tname("foo"), tname("a"), mapArg))
+  }
+
+  test("colon before a lambda in parens after a try with catch") {
+    val code = "foo(try a catch { case _ => b }, xs.map: x => x + 1)"
+    val layout =
+      """|foo(try a catch {
+         |  case _ => b
+         |}, xs.map {
+         |  x => x + 1
+         |})
+         |""".stripMargin
+    val arg = Term.Try(tname("a"), List(Case(Pat.Wildcard(), None, tname("b"))), None)
+    val mapArg = tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix("x", "+", lit(1)))))
+    runTestAssert[Stat](code, layout)(tapply(tname("foo"), arg, mapArg))
+  }
+
 }
