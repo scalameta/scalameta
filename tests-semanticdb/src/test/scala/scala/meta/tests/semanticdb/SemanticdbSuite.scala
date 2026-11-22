@@ -38,13 +38,14 @@ abstract class SemanticdbSuite extends FunSuite {
 
   def isScala213: Boolean = scala.util.Properties.versionNumberString.startsWith("2.13")
 
+  def warnUnusedImports: String = if (isScala213) "-Wunused:imports" else "-Ywarn-unused-import"
+
   lazy val g: Global = {
     def fail(msg: String) = sys.error(s"SemanticdbSuite initialization failed: $msg")
     val classpath = sys.props("sbt.paths.tests.test.classes")
     if (classpath == null) fail("classpath not set. broken build?")
     val pluginjar = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
     if (pluginjar == null) fail("pluginjar not set. broken build?")
-    val warnUnusedImports = if (isScala213) "-Wunused:imports" else "-Ywarn-unused-import"
     val options = s"-Yrangepos $warnUnusedImports -cp " + classpath + " -Xplugin:" + pluginjar +
       " -Xplugin-require:semanticdb " + yMacroAnnotations
     val args = CommandLineParser.tokenize(options)
@@ -90,7 +91,7 @@ abstract class SemanticdbSuite extends FunSuite {
   }
 
   /** @param before sources that the run compiles ahead of `code` */
-  protected def computeDatabaseFromSnippet(code: String, before: String*): s.TextDocument = {
+  protected def typedUnit(code: String, before: String*): g.CompilationUnit = {
     val run = new g.Run
     val unit = newUnit(code)
     val units = before.map(newUnit).toList :+ unit
@@ -124,8 +125,13 @@ abstract class SemanticdbSuite extends FunSuite {
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
 
-    unit.toTextDocument
+    unit
   }
+
+  protected def computeDatabaseFromSnippet(code: String, before: String*): s.TextDocument =
+    documentOf(typedUnit(code, before: _*))
+
+  protected def documentOf(unit: g.CompilationUnit): s.TextDocument = unit.toTextDocument
 
   protected def computePayloadFromSnippet(code: String, before: String*): String = {
     val document = computeDatabaseFromSnippet(code, before: _*)

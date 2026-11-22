@@ -42,12 +42,19 @@ class DiagnosticSuite extends SemanticdbSuite {
         |}
         |""".stripMargin
 
-  // `src` is the sourceroot
-  // scalac 2.13 compiles the literal `08`, but metac does not parse it
-  private val sources = Map(
-    "src/Parses.scala" -> lateWarning("Parses", "8"),
-    "other/Outside.scala" -> lateWarning("Outside", "8"),
-  ) ++ (if (isScala213) Map("src/NoParse.scala" -> lateWarning("NoParse", "08")) else Map.empty)
+  private val sources = {
+    // `src` is the sourceroot
+    val res = Map.newBuilder[String, String]
+    res += "src/Parses.scala" -> lateWarning("Parses", "8")
+    res += "other/Outside.scala" -> lateWarning("Outside", "8")
+    if (isScala213) { // scalac 2.13 compiles the literal `08`, but metac does not parse it
+      res += "src/NoParse.scala" -> lateWarning("NoParse", "08")
+      res += "src/Broken.scala" ->
+        s"""|import scala.collection.mutable
+            |${lateWarning("Broken", "08")}""".stripMargin
+    }
+    res.result()
+  }
 
   private val reporter = new StoreReporter()
 
@@ -66,7 +73,7 @@ class DiagnosticSuite extends SemanticdbSuite {
     val plugin = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
     settings.processArgumentString(
       s"-Yrangepos -Xplugin:$plugin -Xplugin-require:semanticdb -P:semanticdb:failures:warning " +
-        s"-P:semanticdb:sourceroot:${root.resolve("src")}",
+        s"-P:semanticdb:sourceroot:${root.resolve("src")} $warnUnusedImports",
     )
     val compiler = new Global(settings, reporter)
     new compiler.Run().compile(paths.toList.sorted)
@@ -97,13 +104,25 @@ class DiagnosticSuite extends SemanticdbSuite {
     assertEquals(documents.filter(_.contains("NoParse")), List(late))
   }
 
+  test("a typer warning and a late warning in a file that does not parse") {
+    assume(isScala213, "scalac 2.12 does not compile the literal `08`")
+    // scalac 2.13.15 puts the warning at the whole import
+    val start = if (ScalaVersion.atLeast213_16) "0:24" else "0:0"
+    val both =
+      s"""|Broken.scala
+          |[$start..0:31) [warning] Unused import
+          |[3:26..3:38) [warning] match may not be exhaustive.
+          |It would fail on the following input: None""".stripMargin
+    assertEquals(documents.filter(_.contains("Broken")), List(both))
+  }
+
   test("a late warning in a file outside the sourceroot") {
     assertEquals(documents.filter(_.contains("Outside")), Nil)
     // the file of each "failed to generate semanticdb for <path>:" of the run
     val failed = reporter.infos.toList.map(_.msg.linesIterator.next())
       .filter(_.startsWith("failed to generate semanticdb"))
       .map(msg => msg.substring(msg.lastIndexOf(File.separatorChar) + 1).stripSuffix(":"))
-    assertEquals(failed, if (isScala213) List("NoParse.scala") else Nil)
+    assertEquals(failed, if (isScala213) List("Broken.scala", "NoParse.scala") else Nil)
   }
 
   private class Wrapped extends StoreReporter() {
