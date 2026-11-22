@@ -81,6 +81,9 @@ trait InternalTree extends Product {
   def endComment: Option[Tree.Comments]
   final def hasComments: Boolean = begComment.nonEmpty || endComment.nonEmpty
 
+  private[meta] final def begCommentOrNull: Tree.Comments = InternalTree.getOrNull(begComment)
+  private[meta] final def endCommentOrNull: Tree.Comments = InternalTree.getOrNull(endComment)
+
   private[meta] def privateCopyOrigin(
       origin: Origin,
       begComment: Option[Tree.Comments] = this.begComment,
@@ -89,6 +92,11 @@ trait InternalTree extends Product {
 
   private[meta] def privateSetBegComment(begComment: Option[Tree.Comments]): Unit
   private[meta] def privateSetEndComment(endComment: Option[Tree.Comments]): Unit
+
+  private[meta] final def privateSetBegComment(begComment: Tree.Comments): Unit =
+    privateSetBegComment(Option(begComment))
+  private[meta] final def privateSetEndComment(endComment: Tree.Comments): Unit =
+    privateSetEndComment(Option(endComment))
 
   private[meta] def privateSetOrigin(
       origin: Origin,
@@ -158,6 +166,11 @@ trait InternalTree extends Product {
   private def textOpt: Option[String] = origin.textOpt.orElse(syntaxTextOpt)
   private lazy val syntaxTextOpt: Option[String] = origin.dialectOpt.map(reprintSyntax)
 
+}
+
+object InternalTree {
+  private[meta] def getOrNull[A >: Null](value: Option[A]): A =
+    if (value.isEmpty) null else value.get
 }
 
 trait InternalTreeXtensions {
