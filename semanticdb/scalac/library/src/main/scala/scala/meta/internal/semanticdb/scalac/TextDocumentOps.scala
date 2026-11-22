@@ -306,9 +306,7 @@ trait TextDocumentOps {
         }
       }
 
-      def addSamOccurrence(gt: g.Function, isFor: Boolean): Unit = {
-        val sam = gt.attachments.get[global.SAMFunction].orNull
-        if (sam eq null) return
+      def addSamOccurrence(gt: g.Function, sam: global.SAMFunction, isFor: Boolean): Unit = {
         // the source does not have the check that scalac adds for a pattern that can fail
         if (isRefutabilityCheck(gt)) return
         val samSym = sam.synthCls
@@ -487,9 +485,10 @@ trait TextDocumentOps {
           val symInfo = saveSymbolFromSemantic(gsym, symbol)
 
           if (gsym.isClass && !gsym.isTrait) {
-            if (gsym.isAnonymousClass && gsym.pos.isDefined && !isExpansion(gsym.pos)) {
+            val gpos = gsym.pos
+            if (gsym.isAnonymousClass && gpos.isDefined && !isExpansion(gpos)) {
               val mpos = partialFunctionLambdaPos(gsym)
-              val mdef = if (mpos ne null) mpos else gsym.pos.focus.toMeta
+              val mdef = if (mpos ne null) mpos else gpos.focus.toMeta
               addOccurrenceFromSemantic(mdef, symbol, Role.DEFINITION)
             }
             val gprim = gsym.primaryConstructor
@@ -2123,7 +2122,10 @@ trait TextDocumentOps {
             case _ :: (gapply: g.Apply) :: _ => forMethod(gapply.fun)
             case _ => null
           }
-          addSamOccurrence(t, gfor ne null)
+          t.attachments.get[global.SAMFunction] match {
+            case Some(sam) => addSamOccurrence(t, sam, gfor ne null)
+            case _ =>
+          }
           // the parameter of a guard repeats that of its generator, which defines the `_`
           val isGuard = (gfor ne null) && gfor.name == g.nme.withFilter
           // a for matches the parameter of its closure on the pattern
