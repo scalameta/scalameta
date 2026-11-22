@@ -568,6 +568,1759 @@ class CommentSuite extends ParseSuite {
     )(Defn.Def(Nil, tname("f"), Nil, None, blk(tinfix(a, tname("+"), tname("b")))))
   }
 
+  test("block: MLC with a blank line, leading operator on the next line, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = {
+         |    a
+         |    /* x
+         |
+         |       y */
+         |    + b
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = {
+         |    a
+         |      /* x
+         |
+         |       y */
+         |      + b
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("block: MLC without a blank line, leading operator on the next line, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = {
+         |    a
+         |    /* x
+         |       y */
+         |    + b
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = {
+         |    a
+         |      /* x
+         |       y */
+         |      + b
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.Name: /* x
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("block: MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    foo
+         |    /* x
+         |
+         |       y */
+         |    { z }
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = {
+         |    foo
+         |      /* x
+         |
+         |       y */
+         |      {
+         |        z
+         |      }
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ArgClause, Term.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("block: MLC without a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    foo
+         |    /* x
+         |       y */
+         |    { z }
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = {
+         |    foo
+         |      /* x
+         |       y */
+         |      {
+         |        z
+         |      }
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ArgClause, Term.Block: /* x
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("block: MLC with two lone CRs, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    foo
+         |    /* x~~       y */
+         |    { z }
+         |  }
+         |}
+         |""".stripMargin.replace("~", "\r")
+    checkComments(
+      code,
+      """|object A {
+         |  def f = {
+         |    foo
+         |      /* x
+         |
+         |       y */
+         |      {
+         |        z
+         |      }
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ArgClause, Term.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("block: MLC that opens with `//`, with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    foo
+         |    /*// x
+         |
+         |       y */
+         |    { z }
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = {
+         |    foo
+         |      /*// x
+         |
+         |       y */
+         |      {
+         |        z
+         |      }
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ArgClause, Term.Block: /*// x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("new: MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    new A
+         |    /* x
+         |
+         |       y */
+         |    { def g = 1 }
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = {
+         |    new A
+         |    /* x
+         |
+         |       y */
+         |    {
+         |      def g = 1
+         |    }
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Template.Body: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("new: MLC without a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    new A
+         |    /* x
+         |       y */
+         |    { def g = 1 }
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = {
+         |    new A
+         |    /* x
+         |       y */
+         |    {
+         |      def g = 1
+         |    }
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Template.Body: /* x
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("block: MLC with a blank line after the operand, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    foo /* x
+         |
+         |       y */
+         |    { z }
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = {
+         |    (foo /* x
+         |
+         |       y */
+         |    ) {
+         |      z
+         |    }
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|end Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("block: MLC with a blank line after the operand, leading operator, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = {
+         |    a /* x
+         |
+         |       y */
+         |    + b
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = {
+         |    a /* x
+         |
+         |       y */
+         |      + b
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|end Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("block: MLC with a blank line after the operand, leading operator on its last line, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = {
+         |    a /* x
+         |
+         |       y */ + b
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = {
+         |    a /* x
+         |
+         |       y */ + b
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|end Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("infix in parens: MLC with a blank line, leading operator on the next line, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = (
+         |    a
+         |    /* x
+         |
+         |       y */
+         |    + b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = a
+         |    /* x
+         |
+         |       y */
+         |    + b
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("template: MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  class B extends C
+         |  /* x
+         |
+         |     y */
+         |  { def g = 1 }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  class B extends C
+         |  /* x
+         |
+         |     y */
+         |  {
+         |    def g = 1
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Template.Body: /* x
+         |
+         |     y */""".stripMargin,
+    )
+  }
+
+  test("template: MLC without a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  class B extends C
+         |  /* x
+         |     y */
+         |  { def g = 1 }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  class B extends C
+         |  /* x
+         |     y */
+         |  {
+         |    def g = 1
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Template.Body: /* x
+         |     y */""".stripMargin,
+    )
+  }
+
+  test("infix in parens: MLC with a blank line after the operand, leading operator on the next line, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = (
+         |    a /* x
+         |
+         |       y */
+         |    + b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = a /* x
+         |
+         |       y */
+         |    + b
+         |}
+         |""".stripMargin,
+    )(
+      """|end Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("infix in parens: MLC with a blank line after a trailing operator") {
+    val code =
+      """|object A {
+         |  def f = (
+         |    a + /* x
+         |
+         |       y */
+         |    b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = a + /* x
+         |
+         |       y */
+         |    b
+         |}
+         |""".stripMargin,
+    )(
+      """|end Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("infix in parens: MLC with a blank line on the line after a trailing operator") {
+    val code =
+      """|object A {
+         |  def f = (
+         |    a +
+         |    /* x
+         |
+         |       y */
+         |    b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = a +
+         |    /* x
+         |
+         |       y */
+         |    b
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ArgClause, Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("lambda in parens: MLC with a blank line after a trailing operator") {
+    val code =
+      """|object A {
+         |  val g: Int => Int = (_ + /* x
+         |
+         |     y */
+         |    1)
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  val g: Int => Int = _ + /* x
+         |
+         |     y */
+         |    1
+         |}
+         |""".stripMargin,
+    )(
+      """|end Term.Name: /* x
+         |
+         |     y */""".stripMargin,
+    )
+  }
+
+  test("lambda chain in parens: MLC with a blank line after the first trailing operator") {
+    val code =
+      """|object A {
+         |  val g: Int => Int = (_ + /* x
+         |
+         |     y */
+         |    1 + 2)
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  val g: Int => Int = _ + /* x
+         |
+         |     y */
+         |    1 + 2
+         |}
+         |""".stripMargin,
+    )(
+      """|end Term.Name: /* x
+         |
+         |     y */""".stripMargin,
+    )
+  }
+
+  test("infix arg in parens: MLC with a blank line before the operand") {
+    val code =
+      """|object A {
+         |  def f = a + (
+         |    /* x
+         |
+         |       y */
+         |    b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = a +
+         |    /* x
+         |
+         |       y */
+         |    b
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ArgClause, Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+    )(
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("infix arg in parens: MLC with a blank line after the operand, leading operator after the parens, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f =
+         |    a + (b /* x
+         |
+         |       y */) + c
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = a + b /* x
+         |
+         |       y */ + c
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        """|end Term.ApplyInfix, Term.ArgClause, Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+    )(
+      """|end Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("infix arg in parens: MLC with a blank line after the operand, at the end") {
+    val code =
+      """|object A {
+         |  def f = a + (b /* x
+         |
+         |     y */)
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = a + b /* x
+         |
+         |     y */
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        """|end Defn.Def, Term.ApplyInfix, Term.ArgClause, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+    )(
+      """|end Term.Name: /* x
+         |
+         |     y */""".stripMargin,
+    )
+  }
+
+  test("type infix in parens: MLC with a blank line on the line after a trailing operator") {
+    val code =
+      """|object A {
+         |  type T = (
+         |    A |
+         |    /* x
+         |
+         |       y */
+         |    B
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  type T = A |
+         |    /* x
+         |
+         |       y */
+         |    B
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Type.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("apply in parens: MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = (
+         |    foo
+         |    /* x
+         |
+         |       y */
+         |    { z }
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = foo
+         |    /* x
+         |
+         |       y */
+         |    {
+         |      z
+         |    }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ArgClause, Term.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("apply in parens: MLC with a blank line, paren on the next line") {
+    val code =
+      """|object A {
+         |  def f = (
+         |    foo
+         |    /* x
+         |
+         |       y */
+         |    (z)
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = foo
+         |  /* x
+         |
+         |       y */
+         |    (z)
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f = foo
+           |  /* x
+           |
+           |       y */
+           |  z
+           |}
+           |""".stripMargin,
+    )(
+      """|beg Term.ArgClause: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("apply with a block in parens: MLC with a blank line before the brace") {
+    val code =
+      """|object A {
+         |  def f = foo(
+         |    /* x
+         |
+         |       y */
+         |    { z }
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = foo
+         |    /* x
+         |
+         |       y */
+         |    {
+         |      z
+         |    }
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ArgClause, Term.Block: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+    )(
+      """|beg Term.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("apply with a block in parens: MLC with a blank line after the brace, at the end") {
+    val code =
+      """|object A {
+         |  def f = foo({ z } /* x
+         |
+         |     y */)
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = foo {
+         |    z
+         |  } /* x
+         |
+         |     y */
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        """|end Defn.Def, Term.Apply, Term.ArgClause, Term.Block: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+    )(
+      """|end Term.Block: /* x
+         |
+         |     y */""".stripMargin,
+    )
+  }
+
+  test("for: MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  for (
+         |    x <- foo
+         |    /* x
+         |
+         |       y */
+         |    { z }
+         |  ) yield x
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  for {
+         |    x <- foo
+         |      /* x
+         |
+         |       y */
+         |      {
+         |        z
+         |      }
+         |  } yield x
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ArgClause, Term.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("new in parens: MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = (
+         |    new A
+         |    /* x
+         |
+         |       y */
+         |    { def g = 1 }
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = new A
+         |  /* x
+         |
+         |       y */
+         |  {
+         |    def g = 1
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Template.Body: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("new in parens: MLC with a blank line after the type, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = (
+         |    new A /* x
+         |
+         |       y */
+         |    { def g = 1 }
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = new A /* x
+         |
+         |       y */
+         |    { def g = 1 }
+         |}
+         |""".stripMargin,
+    )(
+      """|end Init, Type.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("refinement in parens: MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  type T = (
+         |    A
+         |    /* x
+         |
+         |       y */
+         |    { def g: Int }
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  type T = A
+         |    /* x
+         |
+         |       y */
+         |    {
+         |      def g: Int
+         |    }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Stat.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("refinement in parens: MLC with a blank line after the type, brace on the next line") {
+    val code =
+      """|object A {
+         |  type T = (
+         |    A /* x
+         |
+         |       y */
+         |    { def g: Int }
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  type T = A /* x
+         |
+         |       y */
+         |    {
+         |      def g: Int
+         |    }
+         |}
+         |""".stripMargin,
+    )(
+      """|end Type.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("pattern infix: MLC with a blank line, operator on the next line") {
+    val code =
+      """|object A {
+         |  def f = x match {
+         |    case a
+         |      /* x
+         |
+         |         y */
+         |      :: b =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = x match {
+         |    case (a
+         |      /* x
+         |
+         |         y */
+         |      :: b) =>
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.Name: /* x
+         |
+         |         y */""".stripMargin,
+    )
+  }
+
+  test("pattern infix: MLC with a blank line, operator on the next line, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = x match {
+         |    case a
+         |      /* x
+         |
+         |         y */
+         |      :: b =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(code)(
+      """|beg Term.Name: /* x
+         |
+         |         y */""".stripMargin,
+    )
+  }
+
+  test("infix in args: MLC with a blank line after a trailing operator") {
+    val code =
+      """|object A {
+         |  def f = foo(
+         |    a + /* x
+         |
+         |       y */
+         |    b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = foo(
+         |    a + /* x
+         |
+         |       y */
+         |      b
+         |  )
+         |}
+         |""".stripMargin,
+    )(
+      """|end Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("infix in args: MLC with a blank line, leading operator on the next line, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = foo(
+         |    a
+         |    /* x
+         |
+         |       y */
+         |    + b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = foo(
+         |    a
+         |      /* x
+         |
+         |       y */
+         |      + b
+         |  )
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("infix in parens: DSLC, operand, MLC with a blank line, leading operator on the next line, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = (
+         |    // c
+         |    a
+         |    /* x
+         |
+         |       y */
+         |    + b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f =
+         |    // c
+         |    a
+         |      /* x
+         |
+         |       y */
+         |      + b
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("infix in parens: DSLC, operand, DSLC, operator on the next line") {
+    val code =
+      """|object A {
+         |  def f = (
+         |    // c
+         |    a
+         |    // d
+         |    + b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f =
+         |    // c
+         |    (a
+         |      // d
+         |      + b)
+         |}
+         |""".stripMargin,
+      reprinted =
+        Seq("""|beg Term.ApplyInfix: // c""".stripMargin, """|beg Term.Name: // d""".stripMargin),
+    )(
+      """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
+      """|beg Term.Name: // d""".stripMargin,
+    )
+  }
+
+  test("apply in args: MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = foo(
+         |    bar
+         |    /* x
+         |
+         |       y */
+         |    { z }
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = foo(
+         |    bar
+         |      /* x
+         |
+         |       y */
+         |      {
+         |        z
+         |      }
+         |  )
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ArgClause, Term.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("apply in a condition: MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  if (
+         |    foo
+         |    /* x
+         |
+         |       y */
+         |    { z }
+         |  ) c
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  if (foo
+         |    /* x
+         |
+         |       y */
+         |    {
+         |      z
+         |    }) c
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ArgClause, Term.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("apply in parens: DSLC, MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = (
+         |    // c
+         |    foo
+         |    /* x
+         |
+         |       y */
+         |    { z }
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f =
+         |    // c
+         |    foo
+         |      /* x
+         |
+         |       y */
+         |      {
+         |        z
+         |      }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.Apply, Term.Name: // c""".stripMargin,
+      """|beg Term.ArgClause, Term.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("new in parens: DSLC, MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = (
+         |    // c
+         |    new A
+         |    /* x
+         |
+         |       y */
+         |    { def g = 1 }
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f =
+         |    // c
+         |    new A
+         |    /* x
+         |
+         |       y */
+         |    {
+         |      def g = 1
+         |    }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.NewAnonymous: // c""".stripMargin,
+      """|beg Template.Body: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("refinement in parens: DSLC, MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  type T = (
+         |    // c
+         |    A
+         |    /* x
+         |
+         |       y */
+         |    { def g: Int }
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  type T =
+         |    // c
+         |    A
+         |      /* x
+         |
+         |       y */
+         |      {
+         |        def g: Int
+         |      }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Type.Refine, Type.Name: // c""".stripMargin,
+      """|beg Stat.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("refinement in type args: MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  type T = F[
+         |    A
+         |    /* x
+         |
+         |       y */
+         |    { def g: Int }
+         |  ]
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  type T = F[
+         |    A
+         |      /* x
+         |
+         |       y */
+         |      {
+         |        def g: Int
+         |      }
+         |  ]
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Stat.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("infix in parens after else: DSLC, operand, MLC with a blank line, operator on the next line") {
+    val code =
+      """|object A {
+         |  def f = if (c) d else (
+         |    // e
+         |    a
+         |    /* x
+         |
+         |       y */
+         |    + b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = if (c) d else
+         |    // e
+         |    (a
+         |      /* x
+         |
+         |       y */
+         |      + b)
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ApplyInfix: // e""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+    )(
+      """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("infix in parens after else: DSLC, operand, MLC with a blank line, leading operator on the next line, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = if (c) d else (
+         |    // e
+         |    a
+         |    /* x
+         |
+         |       y */
+         |    + b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = if (c) d else
+         |    // e
+         |    a
+         |      /* x
+         |
+         |       y */
+         |      + b
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("infix in parens after else: DSLC, operand, DSLC, operator on the next line") {
+    val code =
+      """|object A {
+         |  def f = if (c) d else (
+         |    // e
+         |    a
+         |      // f
+         |      + b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = if (c) d else
+         |    // e
+         |    (a
+         |      // f
+         |      + b)
+         |}
+         |""".stripMargin,
+      reprinted =
+        Seq("""|beg Term.ApplyInfix: // e""".stripMargin, """|beg Term.Name: // f""".stripMargin),
+    )(
+      """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
+      """|beg Term.Name: // f""".stripMargin,
+    )
+  }
+
+  test(
+    "infix in parens after macro: DSLC, operand, MLC with a blank line, operator on the next line",
+  ) {
+    val code =
+      """|object A {
+         |  def f: Int = macro (
+         |    // e
+         |    a
+         |    /* x
+         |
+         |       y */
+         |    + b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f: Int = macro
+         |    // e
+         |    (a
+         |      /* x
+         |
+         |       y */
+         |      + b)
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ApplyInfix: // e""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+    )(
+      """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test(
+    "nested infix in parens: DSLC, operand, MLC with a blank line, operators on the next lines",
+  ) {
+    val code =
+      """|object A {
+         |  def f = (
+         |    // c
+         |    a
+         |    /* x
+         |
+         |       y */
+         |    + b
+         |    - c
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f =
+         |    // c
+         |    (a
+         |      /* x
+         |
+         |       y */
+         |      + b) - c
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ApplyInfix, Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+    )(
+      """|beg Term.ApplyInfix, Term.ApplyInfix, Term.Name: // c""".stripMargin,
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("nested infix in parens: DSLC, operand, MLC with a blank line, leading operators on the next lines, Scala213Source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = (
+         |    // c
+         |    a
+         |    /* x
+         |
+         |       y */
+         |    + b
+         |    - c
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f =
+         |    // c
+         |    a
+         |      /* x
+         |
+         |       y */
+         |      + b - c
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ApplyInfix, Term.ApplyInfix, Term.Name: // c""".stripMargin,
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("nested infix in parens: DSLC, operand, DSLCs, operators on the next lines") {
+    val code =
+      """|object A {
+         |  def f = (
+         |    // c
+         |    a
+         |      // d
+         |      + b
+         |      // e
+         |      - c
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f =
+         |    // c
+         |    ((a
+         |      // d
+         |      + b)
+         |      // e
+         |      - c)
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.Name: // d""".stripMargin,
+        """|beg Term.Name: // e""".stripMargin,
+      ),
+    )(
+      """|beg Term.ApplyInfix, Term.ApplyInfix, Term.Name: // c""".stripMargin,
+      """|beg Term.Name: // d""".stripMargin,
+      """|beg Term.Name: // e""".stripMargin,
+    )
+  }
+
+  test("select on an apply in parens: DSLC, MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = (
+         |    // c
+         |    foo
+         |    /* x
+         |
+         |       y */
+         |    { z }.g
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f =
+         |    // c
+         |    foo
+         |      /* x
+         |
+         |       y */
+         |      {
+         |        z
+         |      }.g
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.Select, Term.Apply, Term.Name: // c""".stripMargin,
+      """|beg Term.ArgClause, Term.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("function type: MLC with a blank line in its parameter, brace on the next line") {
+    val code =
+      """|object A {
+         |  type T = (
+         |    A
+         |    /* x
+         |
+         |       y */
+         |    { def g: Int }
+         |  ) => C
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  type T = A
+         |    /* x
+         |
+         |       y */
+         |    {
+         |      def g: Int
+         |    } => C
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Stat.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("pattern infix in parens in a val: MLC with a blank line, operator on the next line") {
+    val code =
+      """|object A {
+         |  val (a
+         |    /* x
+         |
+         |       y */
+         |    :: b) = x
+         |}
+         |""".stripMargin
+    checkComments(code)(
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test("infix in annotation args: MLC with a blank line, operator on the next line") {
+    val code =
+      """|object A {
+         |  @ann(
+         |    a
+         |    /* x
+         |
+         |       y */
+         |    + b
+         |  )
+         |  def f = 1
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  @ann(
+         |    (a
+         |      /* x
+         |
+         |       y */
+         |      + b)
+         |  ) def f = 1
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
+  test(
+    "infix in parens in a lambda body in braces: MLC with a blank line, operator on the next line",
+  ) {
+    val code =
+      """|object A {
+         |  def f = foo { x =>
+         |    (
+         |      a
+         |      /* x
+         |
+         |         y */
+         |      + b
+         |    )
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = foo {
+         |    x => (a
+         |      /* x
+         |
+         |         y */
+         |      + b)
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.Name: /* x
+         |
+         |         y */""".stripMargin,
+    )
+  }
+
   test("case: MLC between two semicolons, next case on the line") {
     val code =
       """|object A {
