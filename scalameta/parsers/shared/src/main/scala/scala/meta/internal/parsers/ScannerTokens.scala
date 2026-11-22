@@ -820,18 +820,27 @@ private[meta] final class ScannerTokens(
         else if (pos == indentPos) findFirstCommentEOL(prevPos + 1)
         else findFirstEOL(pos + 1)
       @tailrec
-      def hasBlank(pos: Int, hadEOL: Boolean = false): Boolean =
-        if (pos > indentPos) false
-        else tokens(pos) match {
+      def hasBlank(pos: Int, hadEOL: Boolean = false): Boolean = pos <= indentPos &&
+        (tokens(pos) match {
           case _: MultiNL => true
           case _: AtEOL => hadEOL || hasBlank(pos + 1, true)
           case _: Whitespace => hasBlank(pos + 1, hadEOL)
+          case c: CommentValue if commentHasBlank(c) => true
           case _ => hasBlank(pos + 1)
-        }
+        })
+      def commentHasBlank(c: CommentValue): Boolean =
+        // a single-line comment won't have a newline
+        c.input.chars(c.start + 1) != '/' && c.value.hasBlankLine
+      @tailrec
+      def hasCommentBlankBefore(pos: Int): Boolean = pos > prevPos &&
+        (tokens(pos) match {
+          case c: CommentValue if commentHasBlank(c) => true
+          case _ => hasCommentBlankBefore(pos - 1)
+        })
 
       val hasLF = indentPos > prevPos // includes indentPos = -1
       val eolPos = if (hasLF) findFirstEOL(prevPos + 1) else -1
-      val multiEOL = eolPos >= 0 && hasBlank(eolPos)
+      val multiEOL = eolPos >= 0 && (hasBlank(eolPos) || hasCommentBlankBefore(eolPos - 1))
 
       def lastWhitespaceToken(rs: List[SepRegion], lineIndent: Int) = {
         val addRegionLine = lineIndent >= 0 && isIndented(rs, lineIndent)

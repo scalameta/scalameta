@@ -586,15 +586,15 @@ class CommentSuite extends ParseSuite {
       """|object A {
          |  def f = {
          |    a
-         |      /* x
+         |    /* x
          |
          |       y */
-         |      + b
+         |    +b
          |  }
          |}
          |""".stripMargin,
     )(
-      """|beg Term.Name: /* x
+      """|beg Term.ApplyUnary, Term.Name: /* x
          |
          |       y */""".stripMargin,
     )
@@ -646,17 +646,18 @@ class CommentSuite extends ParseSuite {
       """|object A {
          |  def f = {
          |    foo
-         |      /* x
+         |
+         |    /* x
          |
          |       y */
-         |      {
-         |        z
-         |      }
+         |    {
+         |      z
+         |    }
          |  }
          |}
          |""".stripMargin,
     )(
-      """|beg Term.ArgClause, Term.Block: /* x
+      """|beg Term.Block: /* x
          |
          |       y */""".stripMargin,
     )
@@ -707,17 +708,18 @@ class CommentSuite extends ParseSuite {
       """|object A {
          |  def f = {
          |    foo
-         |      /* x
+         |
+         |    /* x
          |
          |       y */
-         |      {
-         |        z
-         |      }
+         |    {
+         |      z
+         |    }
          |  }
          |}
          |""".stripMargin,
     )(
-      """|beg Term.ArgClause, Term.Block: /* x
+      """|beg Term.Block: /* x
          |
          |       y */""".stripMargin,
     )
@@ -740,17 +742,18 @@ class CommentSuite extends ParseSuite {
       """|object A {
          |  def f = {
          |    foo
-         |      /*// x
+         |
+         |    /*// x
          |
          |       y */
-         |      {
-         |        z
-         |      }
+         |    {
+         |      z
+         |    }
          |  }
          |}
          |""".stripMargin,
     )(
-      """|beg Term.ArgClause, Term.Block: /*// x
+      """|beg Term.Block: /*// x
          |
          |       y */""".stripMargin,
     )
@@ -773,6 +776,7 @@ class CommentSuite extends ParseSuite {
       """|object A {
          |  def f = {
          |    new A
+         |
          |    /* x
          |
          |       y */
@@ -783,7 +787,7 @@ class CommentSuite extends ParseSuite {
          |}
          |""".stripMargin,
     )(
-      """|beg Template.Body: /* x
+      """|beg Term.Block: /* x
          |
          |       y */""".stripMargin,
     )
@@ -834,10 +838,11 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  def f = {
-         |    (foo /* x
+         |    foo /* x
          |
          |       y */
-         |    ) {
+         |
+         |    {
          |      z
          |    }
          |  }
@@ -869,7 +874,7 @@ class CommentSuite extends ParseSuite {
          |    a /* x
          |
          |       y */
-         |      + b
+         |    +b
          |  }
          |}
          |""".stripMargin,
@@ -897,7 +902,8 @@ class CommentSuite extends ParseSuite {
          |  def f = {
          |    a /* x
          |
-         |       y */ + b
+         |       y */
+         |    +b
          |  }
          |}
          |""".stripMargin,
@@ -931,6 +937,20 @@ class CommentSuite extends ParseSuite {
          |    + b
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ApplyUnary, Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f = a
+           |  /* x
+           |
+           |       y */
+           |  +b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.Name: /* x
          |
@@ -952,6 +972,7 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  class B extends C
+         |
          |  /* x
          |
          |     y */
@@ -961,7 +982,7 @@ class CommentSuite extends ParseSuite {
          |}
          |""".stripMargin,
     )(
-      """|beg Template.Body: /* x
+      """|beg Term.Block: /* x
          |
          |     y */""".stripMargin,
     )
@@ -1014,6 +1035,19 @@ class CommentSuite extends ParseSuite {
          |    + b
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|end Defn.Def, Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f = a /* x
+           |
+           |       y */
+           |  +b
+           |}
+           |""".stripMargin,
     )(
       """|end Term.Name: /* x
          |
@@ -1041,6 +1075,20 @@ class CommentSuite extends ParseSuite {
          |    b
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|end Defn.Def, Term.SelectPostfix, Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f = a + /* x
+           |
+           |       y */
+           |
+           |  b
+           |}
+           |""".stripMargin,
     )(
       """|end Term.Name: /* x
          |
@@ -1070,6 +1118,21 @@ class CommentSuite extends ParseSuite {
          |    b
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f = a +
+           |
+           |  /* x
+           |
+           |       y */
+           |  b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ArgClause, Term.Name: /* x
          |
@@ -1095,6 +1158,19 @@ class CommentSuite extends ParseSuite {
          |    1
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|end Defn.Val, Term.AnonymousFunction, Term.SelectPostfix, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  val g: Int => Int = _ + /* x
+           |
+           |     y */
+           |  1
+           |}
+           |""".stripMargin,
     )(
       """|end Term.Name: /* x
          |
@@ -1120,6 +1196,19 @@ class CommentSuite extends ParseSuite {
          |    1 + 2
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|end Defn.Val, Term.AnonymousFunction, Term.SelectPostfix, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  val g: Int => Int = _ + /* x
+           |
+           |     y */
+           |  1 + 2
+           |}
+           |""".stripMargin,
     )(
       """|end Term.Name: /* x
          |
@@ -1148,11 +1237,16 @@ class CommentSuite extends ParseSuite {
          |    b
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ArgClause, Term.Name: /* x
+      twice =
+        """|object A {
+           |  def f = a +
            |
-           |       y */""".stripMargin,
-      ),
+           |  /* x
+           |
+           |       y */
+           |  b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.Name: /* x
          |
@@ -1179,10 +1273,18 @@ class CommentSuite extends ParseSuite {
          |}
          |""".stripMargin,
       reprinted = Seq(
-        """|end Term.ApplyInfix, Term.ArgClause, Term.Name: /* x
+        """|end Defn.Def, Term.ApplyInfix, Term.ArgClause, Term.Name: /* x
            |
            |       y */""".stripMargin,
       ),
+      twice =
+        """|object A {
+           |  def f = a + b /* x
+           |
+           |       y */
+           |  +c
+           |}
+           |""".stripMargin,
     )(
       """|end Term.Name: /* x
          |
@@ -1240,6 +1342,7 @@ class CommentSuite extends ParseSuite {
          |    B
          |}
          |""".stripMargin,
+      reprintError = "`identifier` expected but `\\n\\n` found",
     )(
       """|beg Type.Name: /* x
          |
@@ -1271,6 +1374,23 @@ class CommentSuite extends ParseSuite {
          |    }
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Block: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f = foo
+           |
+           |  /* x
+           |
+           |       y */
+           |  {
+           |    z
+           |  }
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ArgClause, Term.Block: /* x
          |
@@ -1344,11 +1464,18 @@ class CommentSuite extends ParseSuite {
          |    }
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ArgClause, Term.Block: /* x
+      twice =
+        """|object A {
+           |  def f = foo
            |
-           |       y */""".stripMargin,
-      ),
+           |  /* x
+           |
+           |       y */
+           |  {
+           |    z
+           |  }
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.Block: /* x
          |
@@ -1412,6 +1539,7 @@ class CommentSuite extends ParseSuite {
          |  } yield x
          |}
          |""".stripMargin,
+      reprintError = "illegal start of simple pattern",
     )(
       """|beg Term.ArgClause, Term.Block: /* x
          |
@@ -1443,6 +1571,23 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Block: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f = new A
+           |
+           |  /* x
+           |
+           |       y */
+           |  {
+           |    def g = 1
+           |  }
+           |}
+           |""".stripMargin,
     )(
       """|beg Template.Body: /* x
          |
@@ -1470,6 +1615,22 @@ class CommentSuite extends ParseSuite {
          |    { def g = 1 }
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|end Defn.Def, Term.New, Init, Type.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f = new A /* x
+           |
+           |       y */
+           |
+           |  {
+           |    def g = 1
+           |  }
+           |}
+           |""".stripMargin,
     )(
       """|end Init, Type.Name: /* x
          |
@@ -1501,6 +1662,23 @@ class CommentSuite extends ParseSuite {
          |    }
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Block: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  type T = A
+           |
+           |  /* x
+           |
+           |       y */
+           |  {
+           |    def g: Int
+           |  }
+           |}
+           |""".stripMargin,
     )(
       """|beg Stat.Block: /* x
          |
@@ -1530,6 +1708,22 @@ class CommentSuite extends ParseSuite {
          |    }
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|end Defn.Type, Type.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  type T = A /* x
+           |
+           |       y */
+           |
+           |  {
+           |    def g: Int
+           |  }
+           |}
+           |""".stripMargin,
     )(
       """|end Type.Name: /* x
          |
@@ -1675,6 +1869,23 @@ class CommentSuite extends ParseSuite {
          |      + b
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // c""".stripMargin,
+        """|beg Term.ApplyUnary, Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f =
+           |    // c
+           |    a
+           |  /* x
+           |
+           |       y */
+           |  +b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -1803,6 +2014,26 @@ class CommentSuite extends ParseSuite {
          |      }
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // c""".stripMargin,
+        """|beg Term.Block: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f =
+           |    // c
+           |    foo
+           |
+           |  /* x
+           |
+           |       y */
+           |  {
+           |    z
+           |  }
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.Apply, Term.Name: // c""".stripMargin,
       """|beg Term.ArgClause, Term.Block: /* x
@@ -1838,6 +2069,26 @@ class CommentSuite extends ParseSuite {
          |    }
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.New: // c""".stripMargin,
+        """|beg Term.Block: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f =
+           |    // c
+           |    new A
+           |
+           |  /* x
+           |
+           |       y */
+           |  {
+           |    def g = 1
+           |  }
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.NewAnonymous: // c""".stripMargin,
       """|beg Template.Body: /* x
@@ -1873,6 +2124,26 @@ class CommentSuite extends ParseSuite {
          |      }
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Type.Name: // c""".stripMargin,
+        """|beg Term.Block: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  type T =
+           |    // c
+           |    A
+           |
+           |  /* x
+           |
+           |       y */
+           |  {
+           |    def g: Int
+           |  }
+           |}
+           |""".stripMargin,
     )(
       """|beg Type.Refine, Type.Name: // c""".stripMargin,
       """|beg Stat.Block: /* x
@@ -1979,6 +2250,23 @@ class CommentSuite extends ParseSuite {
          |      + b
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // e""".stripMargin,
+        """|beg Term.ApplyUnary, Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f = if (c) d else
+           |    // e
+           |    a
+           |  /* x
+           |
+           |       y */
+           |  +b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2126,6 +2414,23 @@ class CommentSuite extends ParseSuite {
          |      + b - c
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // c""".stripMargin,
+        """|beg Term.ApplyInfix, Term.ApplyUnary, Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f =
+           |    // c
+           |    a
+           |  /* x
+           |
+           |       y */
+           |  +b - c
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2198,6 +2503,26 @@ class CommentSuite extends ParseSuite {
          |      }.g
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // c""".stripMargin,
+        """|beg Term.Select, Term.Block: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+      twice =
+        """|object A {
+           |  def f =
+           |    // c
+           |    foo
+           |
+           |  /* x
+           |
+           |       y */
+           |  {
+           |    z
+           |  }.g
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.Select, Term.Apply, Term.Name: // c""".stripMargin,
       """|beg Term.ArgClause, Term.Block: /* x
@@ -2230,6 +2555,7 @@ class CommentSuite extends ParseSuite {
          |    } => C
          |}
          |""".stripMargin,
+      reprintError = "`;` expected but `=>` found",
     )(
       """|beg Stat.Block: /* x
          |

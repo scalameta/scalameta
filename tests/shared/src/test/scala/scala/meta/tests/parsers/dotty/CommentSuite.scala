@@ -350,14 +350,16 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a
+      """|def f = {
+         |  a
          |  /* x
          |
          |     y */
-         |  + b
+         |  +b
+         |}
          |""".stripMargin,
     )(
-      """|beg Term.Name: /* x
+      """|beg Term.ApplyUnary, Term.Name: /* x
          |
          |     y */""".stripMargin,
     )
@@ -395,14 +397,16 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin.replace("~", " ")
     checkComments(
       code,
-      """|def f = a
+      """|def f = {
+         |  a
          |  /* x
          |~~
          |     y */
-         |  + b
+         |  +b
+         |}
          |""".stripMargin.replace("~", " "),
     )(
-      """|beg Term.Name: /* x
+      """|beg Term.ApplyUnary, Term.Name: /* x
          |~~
          |     y */""".stripMargin.replace("~", " "),
     )
@@ -449,14 +453,16 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a
+      """|def f = {
+         |  a
          |  /*// x
          |
          |     y */
-         |  + b
+         |  +b
+         |}
          |""".stripMargin,
     )(
-      """|beg Term.Name: /*// x
+      """|beg Term.ApplyUnary, Term.Name: /*// x
          |
          |     y */""".stripMargin,
     )
@@ -472,10 +478,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a /* x
+      """|def f = {
+         |  a /* x
          |
          |     y */
-         |  + b
+         |  +b
+         |}
          |""".stripMargin,
     )(
       """|end Term.Name: /* x
@@ -494,13 +502,15 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a
+      """|def f = {
+         |  a
          |  /* x
          |
-         |     y */ + b
+         |     y */ +b
+         |}
          |""".stripMargin,
     )(
-      """|beg Term.Name: /* x
+      """|beg Term.ApplyUnary, Term.Name: /* x
          |
          |     y */""".stripMargin,
     )
@@ -515,9 +525,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a /* x
+      """|def f = {
+         |  a /* x
          |
-         |     y */ + b
+         |     y */
+         |  +b
+         |}
          |""".stripMargin,
     )(
       """|end Term.Name: /* x
@@ -544,6 +557,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  + b
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.Name: /* x
          |
@@ -567,6 +581,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  + 1
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.Name: /* x
          |
@@ -591,6 +606,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  + 1 + 2
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.Name: /* x
          |
@@ -706,11 +722,7 @@ class CommentSuite extends BaseDottySuite {
          |
          |   y */ + c
          |""".stripMargin,
-      reprinted = Seq(
-        """|end Term.Apply, Term.ArgClause, Term.Block: /* x
-           |
-           |   y */""".stripMargin,
-      ),
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|end Term.Block: /* x
          |
@@ -729,16 +741,18 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = new A
-         |/* x
+      """|def f = {
+         |  new A
+         |  /* x
          |
          |     y */
-         |{
-         |  def g = 1
+         |  {
+         |    def g = 1
+         |  }
          |}
          |""".stripMargin,
     )(
-      """|beg Template.Body: /* x
+      """|beg Term.Block: /* x
          |
          |     y */""".stripMargin,
     )
@@ -780,6 +794,7 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object A {
          |  class B extends C
+         |
          |  /* x
          |
          |     y */
@@ -789,7 +804,7 @@ class CommentSuite extends BaseDottySuite {
          |}
          |""".stripMargin,
     )(
-      """|beg Template.Body: /* x
+      """|beg Term.Block: /* x
          |
          |     y */""".stripMargin,
     )
@@ -915,6 +930,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  + b
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|end Term.Name: /* x
          |
@@ -938,6 +954,7 @@ class CommentSuite extends BaseDottySuite {
          |
          |     y */ + b
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.Name: /* x
          |
@@ -959,6 +976,7 @@ class CommentSuite extends BaseDottySuite {
          |
          |     y */ + b
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|end Term.Name: /* x
          |
@@ -982,6 +1000,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  b
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|end Term.Name: /* x
          |
@@ -1007,6 +1026,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  b
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.ArgClause, Term.Name: /* x
          |
@@ -1035,11 +1055,16 @@ class CommentSuite extends BaseDottySuite {
          |    b
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ArgClause, Term.Name: /* x
+      twice =
+        """|object A {
+           |  def f = a +
            |
-           |       y */""".stripMargin,
-      ),
+           |  /* x
+           |
+           |       y */
+           |  b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.Name: /* x
          |
@@ -1060,11 +1085,7 @@ class CommentSuite extends BaseDottySuite {
          |
          |     y */ + c
          |""".stripMargin,
-      reprinted = Seq(
-        """|end Term.ApplyInfix, Term.ArgClause, Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|end Term.Name: /* x
          |
@@ -1090,6 +1111,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  | B
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Type.Name: /* x
          |
@@ -1115,6 +1137,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  B
          |""".stripMargin,
+      reprintError = "`identifier` expected but `\\n\\n` found",
     )(
       """|beg Type.Name: /* x
          |
@@ -1168,6 +1191,7 @@ class CommentSuite extends BaseDottySuite {
          |    + b
          |} yield x
          |""".stripMargin,
+      reprintError = "illegal start of simple pattern",
     )(
       """|beg Term.Name: /* x
          |
@@ -1195,6 +1219,7 @@ class CommentSuite extends BaseDottySuite {
          |  def g = 1
          |}
          |""".stripMargin,
+      reprintError = "illegal start of definition `{`",
     )(
       """|beg Template.Body: /* x
          |
@@ -1245,6 +1270,7 @@ class CommentSuite extends BaseDottySuite {
          |    def g: Int
          |  }
          |""".stripMargin,
+      reprintError = "illegal start of definition `{`",
     )(
       """|beg Stat.Block: /* x
          |
@@ -1270,6 +1296,7 @@ class CommentSuite extends BaseDottySuite {
          |    def g: Int
          |  }
          |""".stripMargin,
+      reprintError = "illegal start of definition `{`",
     )(
       """|end Type.Name: /* x
          |
@@ -1288,14 +1315,16 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin.replace("~", "\r")
     checkComments(
       code,
-      """|def f = a
+      """|def f = {
+         |  a
          |  /* x
          |
          |     y */
-         |  + b
+         |  +b
+         |}
          |""".stripMargin,
     )(
-      """|beg Term.Name: /* x
+      """|beg Term.ApplyUnary, Term.Name: /* x
          |
          |     y */""".stripMargin,
     )
@@ -1310,14 +1339,16 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin.replace("~", "\r")
     checkComments(
       code,
-      """|def f = a
+      """|def f = {
+         |  a
          |  /* x
          |
          |     y */
-         |  + b
+         |  +b
+         |}
          |""".stripMargin,
     )(
-      """|beg Term.Name: /* x
+      """|beg Term.ApplyUnary, Term.Name: /* x
          |
          |     y */""".stripMargin,
     )
@@ -1353,14 +1384,16 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin.replace("~", "\r")
     checkComments(
       code,
-      """|def f = a
+      """|def f = {
+         |  a
          |  /* x
          |
          |     y */
-         |  + b
+         |  +b
+         |}
          |""".stripMargin,
     )(
-      """|beg Term.Name: /* x
+      """|beg Term.ApplyUnary, Term.Name: /* x
          |
          |     y */""".stripMargin,
     )
@@ -1382,6 +1415,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  + b
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.Name: /* x
          |
@@ -1399,14 +1433,16 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin.replace("~", "\r")
     checkComments(
       code,
-      """|def f = a
+      """|def f = {
+         |  a
          |  /* x
          |
          |     y */
-         |  + b
+         |  +b
+         |}
          |""".stripMargin,
     )(
-      """|beg Term.Name: /* x
+      """|beg Term.ApplyUnary, Term.Name: /* x
          |
          |     y */""".stripMargin,
     )
@@ -1433,6 +1469,22 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |    + b
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // c""".stripMargin,
+        """|beg Term.ApplyUnary, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+      twice =
+        """|def f = {
+           |  // c
+           |  a
+           |  /* x
+           |
+           |     y */
+           |  +b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -1458,6 +1510,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  + b
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.ApplyInfix, Term.Name: /* c */""".stripMargin,
       """|beg Term.Name: /* x
@@ -1793,6 +1846,7 @@ class CommentSuite extends BaseDottySuite {
          |    + b
          |} yield x
          |""".stripMargin,
+      reprintError = "illegal start of simple pattern",
     )(
       """|beg Term.Name: /* x
          |
@@ -1823,6 +1877,21 @@ class CommentSuite extends BaseDottySuite {
          |      + b
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ApplyUnary, Term.Name: /* x
+           |
+           |         y */""".stripMargin,
+      ),
+      twice =
+        """|def f = x match {
+           |  case y =>
+           |    a
+           |    /* x
+           |
+           |         y */
+           |    +b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.Name: /* x
          |
@@ -1848,6 +1917,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  :: c
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.Name: /* x
          |
@@ -1876,6 +1946,22 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |    + b
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // e""".stripMargin,
+        """|beg Term.ApplyUnary, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+      twice =
+        """|def f = if (c) d else {
+           |  // e
+           |  a
+           |  /* x
+           |
+           |     y */
+           |  +b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -1901,6 +1987,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  + b
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.ApplyInfix, Term.Name: /* e */""".stripMargin,
       """|beg Term.Name: /* x
@@ -1932,12 +2019,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  + b
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.ApplyInfix: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -1967,6 +2049,22 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |    + b
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // e""".stripMargin,
+        """|beg Term.ApplyUnary, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+      twice =
+        """|def f = for (x <- y) yield {
+           |  // e
+           |  a
+           |  /* x
+           |
+           |     y */
+           |  +b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -1996,6 +2094,22 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |    + b
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // e""".stripMargin,
+        """|beg Term.ApplyUnary, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+      twice =
+        """|def f = try g finally {
+           |  // e
+           |  a
+           |  /* x
+           |
+           |     y */
+           |  +b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2025,6 +2139,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |    + b
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2055,6 +2170,22 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |    + b - c
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // c""".stripMargin,
+        """|beg Term.ApplyInfix, Term.ApplyUnary, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+      twice =
+        """|def f = {
+           |  // c
+           |  a
+           |  /* x
+           |
+           |     y */
+           |  +b - c
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2092,6 +2223,29 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |    - c
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // c""".stripMargin,
+        """|beg Term.ApplyUnary, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+        """|beg Term.ApplyUnary, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+      twice =
+        """|def f = {
+           |  // c
+           |  a
+           |  /* x
+           |
+           |     y */
+           |  +b
+           |  /* x
+           |
+           |     y */
+           |  -c
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2125,6 +2279,22 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |    + b - c
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // e""".stripMargin,
+        """|beg Term.ApplyInfix, Term.ApplyUnary, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+      twice =
+        """|def f = if (c) d else {
+           |  // e
+           |  a
+           |  /* x
+           |
+           |     y */
+           |  +b - c
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2213,11 +2383,21 @@ class CommentSuite extends BaseDottySuite {
          |    + b: Int
          |""".stripMargin,
       reprinted = Seq(
-        """|beg Term.Ascribe, Term.ApplyInfix, Term.Name: // c""".stripMargin,
-        """|beg Term.Name: /* x
+        """|beg Term.Name: // c""".stripMargin,
+        """|beg Term.Ascribe, Term.ApplyUnary, Term.Name: /* x
            |
            |     y */""".stripMargin,
       ),
+      twice =
+        """|def f = {
+           |  // c
+           |  a
+           |  /* x
+           |
+           |     y */
+           |  +b: Int
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2340,6 +2520,22 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |    + b: Int
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Name: // c""".stripMargin,
+        """|beg Term.Ascribe, Term.ApplyUnary, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+      twice =
+        """|def f = {
+           |  // c
+           |  a
+           |  /* x
+           |
+           |     y */
+           |  +b: Int
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.Ascribe, Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2407,6 +2603,7 @@ class CommentSuite extends BaseDottySuite {
          |      + b
          |} yield x
          |""".stripMargin,
+      reprintError = "illegal start of simple pattern",
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2433,6 +2630,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  | B => C
          |""".stripMargin,
+      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Type.Name: /* x
          |
@@ -2460,6 +2658,7 @@ class CommentSuite extends BaseDottySuite {
          |    def g: Int
          |  } => C
          |""".stripMargin,
+      reprintError = "illegal start of definition `{`",
     )(
       """|beg Stat.Block: /* x
          |
@@ -2541,6 +2740,20 @@ class CommentSuite extends BaseDottySuite {
          |    + b
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ApplyUnary, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+      twice =
+        """|def f = foo { x =>
+           |  a
+           |  /* x
+           |
+           |     y */
+           |  +b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.Name: /* x
          |
@@ -2570,6 +2783,20 @@ class CommentSuite extends BaseDottySuite {
          |    + b
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ApplyUnary, Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+      twice =
+        """|def f = foo {
+           |  a
+           |  /* x
+           |
+           |     y */
+           |  +b
+           |}
+           |""".stripMargin,
     )(
       """|beg Term.Name: /* x
          |

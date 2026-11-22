@@ -23,6 +23,21 @@ package object trees {
 
   implicit class XtensionTreesString(private val value: String) extends AnyVal {
 
+    /** whether the text holds an empty or whitespace-only line between two line ends */
+    def hasBlankLine: Boolean = {
+      @tailrec
+      def loop(idx: Int, hadNL: Boolean): Boolean = idx < value.length && {
+        val nidx = idx + 1
+        value.charAt(idx) match {
+          case '\n' => hadNL || loop(nidx, hadNL = true)
+          case '\r' => hadNL || // LF after a CR is the same NL
+            nidx < value.length && loop(nidx, hadNL = value.charAt(nidx) != '\n')
+          case ch => loop(nidx, hadNL && ch <= ' ')
+        }
+      }
+      loop(0, hadNL = false)
+    }
+
     // some heuristic is needed to govern associativity and precedence of unquoted operators
     def isLeftAssoc: Boolean = value.last != ':'
 
