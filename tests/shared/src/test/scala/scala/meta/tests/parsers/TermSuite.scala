@@ -3,9 +3,7 @@ package parsers
 
 import scala.meta._
 import scala.meta.internal.trees.XtensionTreesName
-import scala.meta.tokenizers.TokenizerOptions
 
-import scala.annotation.nowarn
 import scala.language.implicitConversions
 
 class TermSuite extends ParseSuite {
@@ -1503,43 +1501,7 @@ class TermSuite extends ParseSuite {
     }
   }
 
-  test("#3979 w/ grouped whitespace") {
-    @nowarn("msg=never used|unused") // runTestAssert does not read it
-    implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = true)
-
-    val code =
-      """|for {
-         |  _ <-
-         |    if (a) {
-         |      b
-         |    } else {
-         |      c
-         |    }
-         |
-         |  _ <- d
-         |} yield e
-         |""".stripMargin
-    val layout =
-      """|for (_ <- if (a) {
-         |  b
-         |} else {
-         |  c
-         |}; _ <- d) yield e
-         |""".stripMargin
-    val tree = Term.ForYield(
-      Term.EnumeratorsBlock(List(
-        Enumerator.Generator(patwildcard, Term.If(tname("a"), blk(tname("b")), blk(tname("c")), Nil)),
-        Enumerator.Generator(patwildcard, tname("d")),
-      )),
-      tname("e"),
-    )
-    runTestAssert[Stat](code, layout)(tree)
-  }
-
   test("#3979 w/ granular whitespace") {
-    @nowarn("msg=never used|unused") // runTestAssert does not read it
-    implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = false)
-
     val code =
       """|for {
          |  _ <-
