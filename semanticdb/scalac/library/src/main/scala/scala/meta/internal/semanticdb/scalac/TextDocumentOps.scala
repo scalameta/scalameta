@@ -145,9 +145,9 @@ trait TextDocumentOps {
         mtrees
       } catch { case NonFatal(_) => TreeIndex.empty }
 
-    def toTextDocument: s.TextDocument = toTextDocument(None)
+    private[meta] def toTextDocument: s.TextDocument = toTextDocument(None)
 
-    def toTextDocument(explicitDialect: Option[m.Dialect]): s.TextDocument = {
+    private[meta] def toTextDocument(explicitDialect: Option[m.Dialect]): s.TextDocument = {
       startDocument(unit)
       try textDocument(explicitDialect)
       finally endDocument()
