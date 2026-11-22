@@ -519,6 +519,13 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             override private[meta] def lastChild: $TreeClass =
               $CommonTyperMacrosModule.lastChild[$iname, $TreeClass]
           """
+        stats1 +=
+          q"""
+            override private[meta] def findChild(
+              pred: $TreeClass => _root_.scala.Boolean
+            ): $TreeClass =
+              $CommonTyperMacrosModule.findChild[$iname, $TreeClass](pred)
+          """
 
         // step 9: generate boilerplate required by the @ast infrastructure
         ianns1 += q"new $AstMetadataModule.astClass"

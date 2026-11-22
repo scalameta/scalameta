@@ -802,12 +802,13 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
           // the first child that starts with the element shares its comments, as when parsed
           val old = next.begComment
           val group = Some(concatComments(tc, old))
+          val startsWithNext: Tree => Boolean = _.begTokenIdx == next.begTokenIdx
           var tree = next
-          while (tree ne null) {
+          while ({
             tree.privateSetBegComment(group)
-            val kids = tree.children.dropWhile(_.begTokenIdx != next.begTokenIdx)
-            tree = if (kids.nonEmpty && kids.head.begComment == old) kids.head else null
-          }
+            tree = tree.findChild(startsWithNext)
+            (null ne tree) && tree.begComment == old
+          }) {}
         case None =>
       }
       prev = next

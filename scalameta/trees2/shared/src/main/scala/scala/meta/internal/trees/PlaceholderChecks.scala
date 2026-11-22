@@ -116,7 +116,7 @@ object PlaceholderChecks {
       case t: Enumerator.Guard =>
         queue += t.cond
         iter
-      case t => t.children.exists(isPlaceholder) || queue.nonEmpty && iter
+      case t => t.hasChild(isPlaceholder) || queue.nonEmpty && iter
     }
     queue += tree
     iter
@@ -145,7 +145,7 @@ object PlaceholderChecks {
       case t: Type.Repeated =>
         queue += t.tpe
         iter
-      case t => t.children.exists(isAnonymousParam) || queue.nonEmpty && iter
+      case t => t.hasChild(isAnonymousParam) || queue.nonEmpty && iter
     }
     queue += tree
     iter
