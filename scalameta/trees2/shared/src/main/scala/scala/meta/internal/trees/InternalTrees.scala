@@ -46,8 +46,13 @@ trait InternalTree extends Product {
     foreachChild(buf += _)
     buf.result()
   }
-  // the last direct child tree, or null; implemented per `@ast` node
+
+  /** the last direct child tree, or null */
   private[meta] def lastChild: Tree
+
+  /** the first direct child tree which matches predicate, or null */
+  private[meta] def findChild(pred: Tree => Boolean): Tree
+  private[meta] final def hasChild(pred: Tree => Boolean): Boolean = null ne findChild(pred)
 
   /**
    * Number of direct child trees; implemented per `@ast` node, without the `children` builder.

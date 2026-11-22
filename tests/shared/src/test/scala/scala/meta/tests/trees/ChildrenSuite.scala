@@ -30,8 +30,8 @@ class ChildrenSuite extends ParseSuite {
          |class Foo derives A[T], B[T] {  }
          |""".stripMargin
     val tree = dialects.Scala3(source).parse[Stat].get
-    val containsBinaryCompatFields = tree.children.exists {
-      case t: Template => t.children.exists(c => c.is[Type.Apply] && c.toString == "A[T]")
+    val containsBinaryCompatFields = tree.hasChild {
+      case t: Template => t.hasChild(c => c.is[Type.Apply] && c.toString == "A[T]")
       case _ => false
     }
     assert(
@@ -50,6 +50,23 @@ class ChildrenSuite extends ParseSuite {
     )
     tree.collect { case t => t }
       .foreach(t => assertEquals(t.lastChild, t.children.lastOption.orNull, t.structure))
+  }
+
+  test("findChild: in each kind of field, and with no match") {
+    val tree = stat(
+      """|class A[T](x: Int = 1)(y: Int) extends B {
+         |  def f(z: Int): Unit = new D
+         |  x match { case 1 => 2 }
+         |}
+         |""".stripMargin,
+    )
+    def check(pred: Tree => Boolean) = tree.collect { case t => t }
+      .foreach(t => assertEquals(t.findChild(pred), t.children.find(pred).orNull, t.structure))
+    check(_ => true)
+    check(_ => false)
+    check(_.is[Term.Name])
+    check(_.is[Term.Param])
+    check(_.is[Stat])
   }
 
   test("allElems: the elements of each block, in order") {

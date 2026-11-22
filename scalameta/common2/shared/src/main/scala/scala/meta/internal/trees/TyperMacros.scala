@@ -22,6 +22,7 @@ object CommonTyperMacros {
   def childrenCount[T]: Int = macro CommonTyperMacrosBundle.childrenCount[T]
   def foreachChild[T, U](f: U => Unit): Unit = macro CommonTyperMacrosBundle.foreachChild[T]
   def lastChild[T, U]: U = macro CommonTyperMacrosBundle.lastChild[T]
+  def findChild[T, U](pred: U => Boolean): U = macro CommonTyperMacrosBundle.findChild[T]
 
 }
 
@@ -156,6 +157,27 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
           val xs = c.freshName(TermName("xs"))
           q"{ val $xs = this.${field.sym}; if ($xs.isEmpty) $earlier else $xs.last }"
         case _ => earlier
+      }
+    }
+
+  // the first child in field order that `pred` accepts, or null; allocation-free
+  def findChild[T](pred: c.Tree)(implicit T: c.WeakTypeTag[T]): c.Tree = T.tpe.typeSymbol.asLeaf
+    .fields.foldRight(q"null": Tree) { (field, later) =>
+      field.tpe match {
+        case TreeTpe() =>
+          val x = c.freshName(TermName("x"))
+          q"{ val $x = this.${field.sym}; if ($pred($x)) $x else $later }"
+        case OptionTreeTpe(_) =>
+          val x = c.freshName(TermName("x"))
+          q"this.${field.sym} match { case _root_.scala.Some($x) if $pred($x) => $x; case _ => $later }"
+        case ListTreeTpe(_) =>
+          val xs = c.freshName(TermName("xs"))
+          q"""{
+            var $xs = this.${field.sym}
+            while ($xs.nonEmpty && !$pred($xs.head)) $xs = $xs.tail
+            if ($xs.isEmpty) $later else $xs.head
+          }"""
+        case _ => later
       }
     }
 
