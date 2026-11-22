@@ -319,14 +319,15 @@ object TreeSyntax {
                 case (_: Lit.Unit) :: Nil => false
                 case (_: Lit | _: Term.Ref | _: Term.Function | _: Term.Apply |
                     _: Term.Placeholder | _: Term.MatchLike | _: Term.ApplyInfix |
-                    _: Term.MacroLike | _: Term.If) :: Nil => true
+                    _: Term.MacroLike | _: Term.If) :: Nil => !hasBlankComment(t.values.head)
                 case _ => false
               }) => p(new InfixExpr(ai), t.values.head)
           case _ if t.isEmpty => nosp(emptyBlock(t, comments, "(", ")"))
           case _ => delimited(t, "(", t.values, ")", o(t.mod, " "), nosplit = true)(showTree)
         }
       case t: Term.Apply =>
-        m(SimpleExpr1, s(pContinued(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
+        val res = s(pContinued(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " "))
+        m(SimpleExpr1, w("(", res, ")", hasBlankBegComment(t.argClause) && sameInParens(t)))
       case t: Term.ApplyUsing =>
         val args = s("(", kw("using"), " ", rsep(t.argClause.values), ")")
         m(SimpleExpr1, s(pContinued(SimpleExpr1, t.fun), nosp(withComments(t.argClause)(args))))
@@ -441,7 +442,9 @@ object TreeSyntax {
         if (useBraces) s("{", r(enums.map(i(_))), n("}")) else s("(", rsep(enums, ";"), ")")
       case t: Term.New => m(SimpleExpr, s(kw("new"), " ", t.init))
       case t: Term.EndMarker => s(kw("end"), " ", withComments(t.name)(t.name.value))
-      case t: Term.NewAnonymous => m(SimpleExpr, s(kw("new"), " ", alt(t.templ, "{}")))
+      case t: Term.NewAnonymous =>
+        val blank = hasBlankBegComment(t.templ.body) || hasBlankEndComment(t.templ.inits)
+        m(SimpleExpr, w("(", s(kw("new"), " ", alt(t.templ, "{}")), ")", blank))
       case _: Term.Placeholder => m(SimpleExpr1, kw("_"))
       case t: Term.Eta => m(PostfixExpr, s(pContinued(SimpleExpr1, t.expr), " ", kw("_")))
       case t: Term.Repeated =>
@@ -494,7 +497,9 @@ object TreeSyntax {
       case t: Type.And => s(Type.ApplyInfix(t.lhs, Type.Name("&"), t.rhs))
       case t: Type.Or => s(Type.ApplyInfix(t.lhs, Type.Name("|"), t.rhs))
       case t: Type.Refine =>
-        m(RefineTyp, s(t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), t.body))
+        val res = s(t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), t.body)
+        val blank = hasBlankBegComment(t.body) || t.tpe.isDefined && hasBlankEndComment(t.tpe.get)
+        m(RefineTyp, w("(", res, ")", blank))
       case t: Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " ", t.body))
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
       case t: Type.Lambda => m(Typ, s(t.tparamClause, " ", kw("=>>"), " ", p(Typ, t.tpe)))
@@ -970,7 +975,7 @@ object TreeSyntax {
     // Multiples and optionals
     private def printApplyArgs(args: Term.ArgClause, beforeBrace: String): Show.Result =
       args.values match {
-        case Seq(b @ (_: Term.Block | _: Term.PartialFunction)) =>
+        case Seq(b @ (_: Term.Block | _: Term.PartialFunction)) if !hasBlankComment(b) =>
           s(beforeBrace, withComments(args)(b))
         case Seq(f: Term.Function) if f.paramClause.mod.isDefined =>
           s(beforeBrace, withComments(args)(s("{ ", f, spn("}"))))
@@ -1137,17 +1142,22 @@ object TreeSyntax {
         sg: TreeSyntacticGroup,
         enclosed: TreeSyntacticGroup,
         rest: Show.Result,
-    ): Show.Result =
+    ): Show.Result = {
+      val opBeg = ownBegComments(t.op)
+      val opBlank = opBeg.nnHas(hasBlankLine) || hasBlankEndComment(t.op) ||
+        hasBlankBegComment(t.arg)
       // an operator may start a line after the lhs, so its comments need no parens
-      if (dialect.allowInfixOperatorAfterNL &&
-        (t.op.is[Quasi] || t.op.value.isIdentSymbolicNonBackquotedInfixOperator))
-        m(sg, s(p(sg, t.lhs), rest))
+      if (dialect.allowInfixOperatorAfterNL && !opBlank &&
+        (t.op.is[Quasi] || t.op.value.isIdentSymbolicNonBackquotedInfixOperator) &&
+        !hasBlankEndComment(t.lhs)) m(sg, s(p(sg, t.lhs), rest))
       else {
         // without leading operators, only the parens continue the infix at the operator
         val res = s(pContinued(sg, t.lhs), rest)
-        val needParens = hasComments(t.op) && hasBreaksAroundBegComments(t.op) && sameInParens(t)
+        val needParens = (opBlank || opBeg.nnHas(_.hasNewlinesBeforeOrAfter)) &&
+          (opBlank && t.parent.is[Term.AnonymousFunction] || sameInParens(t))
         if (needParens) m(enclosed, s("(", res, ")")) else m(sg, res)
       }
+    }
 
     private def printFunctionLikeType(
         t: Type.FunctionLikeType,
@@ -1293,6 +1303,11 @@ object TreeSyntax {
       .nnHas(_.hasNewlinesBeforeOrAfter)
     def hasBreaksAroundEndComments(tree: Tree): Boolean = ownEndComments(tree)
       .nnHas(_.hasNewlinesBeforeOrAfter)
+    def hasBlankBegComment(tree: Tree): Boolean = ownBegComments(tree).nnHas(hasBlankLine)
+    def hasBlankEndComment(tree: Tree): Boolean = ownEndComments(tree).nnHas(hasBlankLine)
+    def hasBlankEndComment(trees: Seq[Tree]): Boolean = trees.nonEmpty &&
+      hasBlankEndComment(trees.last)
+    def hasBlankComment(tree: Tree): Boolean = hasBlankBegComment(tree) || hasBlankEndComment(tree)
 
     def hasComments(tree: Tree): Boolean = comments && tree.hasComments
     def hasComments(trees: Iterable[Tree]): Boolean = comments && trees.exists(_.hasComments)
@@ -1437,6 +1452,9 @@ object TreeSyntax {
       case Some(xs) => xs.hasNewlines
     }
   }
+
+  private def hasBlankLine(c: Tree.Comments): Boolean = c.values
+    .exists(_.parts.exists(_.value.hasBlankLine))
 
   /** false if parens change the tree */
   private def sameInParens(tree: Tree): Boolean = tree.parent match {
