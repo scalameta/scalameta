@@ -30,7 +30,7 @@ trait SymbolOps {
     clearDocumentCaches()
   }
 
-  def clearDocumentCaches(): Unit = {
+  private[meta] def clearDocumentCaches(): Unit = {
     localCache.clear()
     freeExistentials.clear()
     documentAnnotations = null
@@ -423,14 +423,14 @@ trait SymbolOps {
       if (idx < 0 || idx >= declarations.length) null else declarations(idx)
   }
 
-  def startDocument(unit: g.CompilationUnit): Unit = {
+  private[meta] def startDocument(unit: g.CompilationUnit): Unit = {
     clearDocumentCaches()
     documentSource = unit.source
     documentBody = unit.body
     documentNamespace = new Namespace
     namespaces(documentSource) = documentNamespace
   }
-  def endDocument(): Unit = {
+  private[meta] def endDocument(): Unit = {
     documentSource = GNoSourceFile
     documentBody = null
     documentNamespace = null
