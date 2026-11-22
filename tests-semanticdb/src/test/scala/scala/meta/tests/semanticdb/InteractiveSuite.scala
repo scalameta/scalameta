@@ -557,4 +557,15 @@ class InteractiveSuite extends FunSuite {
     assertEquals(obtained, Nil)
   }
 
+  test("diagnostics:off") {
+    val document = toTextDocument(compiler, unusedImport, List("-P:semanticdb:diagnostics:off"))
+    assertEquals(document.diagnostics.map(_.message).toList, List("Unused import"))
+  }
+
+  test("diagnostics:off, the rest of the document") {
+    def document(options: String*) = toTextDocument(compiler, unusedImport, options.toList)
+      .withDiagnostics(Nil)
+    assertEquals(document("-P:semanticdb:diagnostics:off"), document())
+  }
+
 }

@@ -8,7 +8,7 @@ import scala.meta.io.AbsolutePath
 import scala.meta.metap.Format
 
 import java.io.File
-import java.nio.file.Files
+import java.nio.file.{Files, Path}
 
 import scala.reflect.internal.util.NoPosition
 import scala.tools.nsc.reporters.StoreReporter
@@ -47,6 +47,10 @@ class DiagnosticSuite extends SemanticdbSuite {
     val res = Map.newBuilder[String, String]
     res += "src/Parses.scala" -> lateWarning("Parses", "8")
     res += "other/Outside.scala" -> lateWarning("Outside", "8")
+    res += "src/Unused.scala" ->
+      """|import scala.collection.mutable
+         |object Unused
+         |""".stripMargin
     if (isScala213) { // scalac 2.13 compiles the literal `08`, but metac does not parse it
       res += "src/NoParse.scala" -> lateWarning("NoParse", "08")
       res += "src/Broken.scala" ->
@@ -80,17 +84,28 @@ class DiagnosticSuite extends SemanticdbSuite {
     targetroot
   }
 
+  /** the uri and the diagnostics of each document in `targetroot` */
+  private def documentsAt(targetroot: Path): List[String] = FileIO
+    .listAllFilesRecursively(AbsolutePath(targetroot)).iterator
+    .filter(_.toNIO.toString.endsWith(".semanticdb")).toList.sortBy(_.toNIO.toString)
+    .flatMap(file => TextDocuments.parseFrom(file.readAllBytes).documents).map { doc =>
+      val printed = s.Print.document(Format.Detailed, doc).linesIterator
+        .dropWhile(_ != "Diagnostics:").drop(1).takeWhile(_.nonEmpty)
+      (doc.uri +: printed.toList).mkString("\n")
+    }
+
   /** each document's uri and diagnostics, from compiling `sources` with the plugin */
   private lazy val documents: List[String] = {
     val targetroot = compile(sources, reporter, s"-P:semanticdb:failures:warning $warnUnusedImports")
     assertEquals(reporter.infos.filter(_.severity == reporter.ERROR).map(_.msg).toList, Nil)
-    FileIO.listAllFilesRecursively(AbsolutePath(targetroot)).iterator
-      .filter(_.toNIO.toString.endsWith(".semanticdb")).toList.sortBy(_.toNIO.toString)
-      .flatMap(file => TextDocuments.parseFrom(file.readAllBytes).documents).map { doc =>
-        val printed = s.Print.document(Format.Detailed, doc).linesIterator
-          .dropWhile(_ != "Diagnostics:").drop(1).takeWhile(_.nonEmpty)
-        (doc.uri +: printed.toList).mkString("\n")
-      }
+    documentsAt(targetroot)
+  }
+
+  /** each document's uri and diagnostics, from compiling `sources` with `diagnostics:off` */
+  private lazy val documentsOff: List[String] = {
+    val store = new StoreReporter(new Settings(msg => fail(msg)))
+    val options = s"-P:semanticdb:failures:warning -P:semanticdb:diagnostics:off $warnUnusedImports"
+    documentsAt(compile(sources, store, options))
   }
 
   test("a late warning in a file that parses") {
@@ -100,6 +115,14 @@ class DiagnosticSuite extends SemanticdbSuite {
          |It would fail on the following input: None""".stripMargin
     assertEquals(documents.filter(_.contains("Parses")), List("Parses.scala", late))
   }
+
+  private val unusedDocument =
+    """|Unused.scala
+       |[0:24..0:31) [warning] Unused import""".stripMargin
+
+  test("a typer warning in a file that parses")(
+    assertEquals(documents.filter(_.startsWith("Unused.scala")), List(unusedDocument)),
+  )
 
   test("a late warning in a file that does not parse") {
     assume(isScala213, "scalac 2.12 does not compile the literal `08`")
@@ -129,6 +152,19 @@ class DiagnosticSuite extends SemanticdbSuite {
       .filter(_.startsWith("failed to generate semanticdb"))
       .map(msg => msg.substring(msg.lastIndexOf(File.separatorChar) + 1).stripSuffix(":"))
     assertEquals(failed, if (isScala213) List("Broken.scala", "NoParse.scala") else Nil)
+  }
+
+  test("diagnostics:off, a typer warning in a file that parses")(
+    assertEquals(documentsOff.filter(_.startsWith("Unused.scala")), List(unusedDocument)),
+  )
+
+  test("diagnostics:off, a late warning in a file that parses")(
+    assertEquals(documentsOff.filter(_.contains("Parses")), List("Parses.scala")),
+  )
+
+  test("diagnostics:off, a typer warning and a late warning in a file that does not parse") {
+    assume(isScala213, "scalac 2.12 does not compile the literal `08`")
+    assertEquals(documentsOff.filter(_.contains("Broken")), Nil)
   }
 
   test("failures:info: a targetroot that is a file") {
