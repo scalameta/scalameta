@@ -476,8 +476,20 @@ trait TextDocumentOps {
             case _ => false
           })
 
-        private def isExpansion(gpos: g.Position): Boolean = !gpos.isRange &&
-          (mexpansions.getOrNull(gpos.point) ne null)
+        /** whether a macro built the tree at `gpos` */
+        private def isExpansion(gpos: g.Position): Boolean = gpos.isOffset && {
+          // scalac sets the missing positions of a macro's trees to the call or annotation
+          val gpoint = gpos.point
+          (mexpansions.getOrNull(gpoint) ne null) || isMacroCallAt(gpoint, genclosing)
+        }
+        @tailrec
+        private def isMacroCallAt(gpoint: Int, gtrees: List[g.Tree]): Boolean = gtrees match {
+          case gtree :: rest => gtree.attachments.get[g.analyzer.MacroExpansionAttachment] match {
+              case Some(att) if att.expandee.pos.pointOrElse(-1) == gpoint => true
+              case _ => isMacroCallAt(gpoint, rest)
+            }
+          case _ => false
+        }
         private def trySymbolDefinition(gsym: g.Symbol): Unit = {
           if (shouldNotSaveSymbol(gsym)) return
           val symbol = gsym.toSemantic
@@ -2123,7 +2135,7 @@ trait TextDocumentOps {
             case _ => null
           }
           t.attachments.get[global.SAMFunction] match {
-            case Some(sam) => addSamOccurrence(t, sam, gfor ne null)
+            case Some(sam) if !isExpansion(t.pos) => addSamOccurrence(t, sam, gfor ne null)
             case _ =>
           }
           // the parameter of a guard repeats that of its generator, which defines the `_`

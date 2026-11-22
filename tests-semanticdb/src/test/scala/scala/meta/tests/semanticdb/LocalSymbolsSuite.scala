@@ -2727,7 +2727,6 @@ class LocalSymbolsSuite extends FunSuite {
          |[3:6..3:7): p <= b/U.p.
          |[3:10..3:11): a => a/
          |[3:12..3:13): M => a/M.
-         |[3:14..3:14):  <= local2
          |[3:14..3:18): pair => a/M.pair().
          |[4:6..4:7): i <= b/U.i.
          |[4:10..4:11): p => b/U.p.
@@ -2792,7 +2791,6 @@ class LocalSymbolsSuite extends FunSuite {
          |[3:6..3:7): o <= b/U.o.
          |[3:10..3:11): a => a/
          |[3:12..3:14): M1 => a/M1.
-         |[3:15..3:15):  <= local0
          |[3:15..3:18): one => a/M1.one().
          |[4:6..4:7): i <= b/U.i.
          |[4:10..4:11): o => b/U.o.
@@ -2946,7 +2944,6 @@ class LocalSymbolsSuite extends FunSuite {
           |[2:6..2:7): o <= b/U.o.
           |[2:10..2:11): a => a/
           |[2:12..2:14): M2 => a/M2.
-          |[2:15..2:15):  <= local5
           |[2:15..2:20): codec => a/M2.codec().
           |[3:6..3:7): g <= b/U.g().
           |[3:16..3:17): c <= local15
@@ -3050,7 +3047,6 @@ class LocalSymbolsSuite extends FunSuite {
           |[2:6..2:7): o <= b/U.o.
           |[2:10..2:11): a => a/
           |[2:12..2:13): X => a/X.
-          |[2:14..2:14):  <= local0
           |[2:14..2:15): x => a/X.x().
           |----
           |collisions List()
@@ -3105,7 +3101,6 @@ class LocalSymbolsSuite extends FunSuite {
           |[2:6..2:7): o <= b/U.o.
           |[2:10..2:11): a => a/
           |[2:12..2:13): X => a/X.
-          |[2:14..2:14):  <= local0
           |[2:14..2:15): x => a/X.x().
           |----
           |collisions List()
@@ -3196,7 +3191,6 @@ class LocalSymbolsSuite extends FunSuite {
          |[2:6..2:7): o <= b/U.o.
          |[2:10..2:11): a => a/
          |[2:12..2:13): X => a/X.
-         |[2:14..2:14):  <= local0
          |[2:14..2:15): x => a/X.x().
          |----
          |collisions List()
@@ -3256,7 +3250,6 @@ class LocalSymbolsSuite extends FunSuite {
          |[2:10..2:11): a => a/
          |[2:12..2:13): W => a/W.
          |[2:14..2:15): w => a/W.w().
-         |[2:15..2:15):  <= local2
          |[2:20..2:20):  <= local4
          |[2:26..2:27): y <= local1
          |----
@@ -3343,7 +3336,6 @@ class LocalSymbolsSuite extends FunSuite {
           |[2:10..2:11): a => a/
           |[2:12..2:13): W => a/W.
           |[2:14..2:15): w => a/W.w().
-          |[2:15..2:15):  <= local8
           |[2:16..2:16):  <= local10
           |[2:33..2:48): PartialFunction => scala/PartialFunction#
           |[2:49..2:52): Int => scala/Int#
@@ -3380,7 +3372,6 @@ class LocalSymbolsSuite extends FunSuite {
          |[2:10..2:11): a => a/
          |[2:12..2:13): W => a/W.
          |[2:14..2:15): w => a/W.w().
-         |[2:15..2:15):  <= local2
          |[2:17..2:25): () => () <= local0
          |[2:17..2:25): () => () <= local1
          |[2:28..2:36): Runnable => java/lang/Runnable#
@@ -3410,7 +3401,6 @@ class LocalSymbolsSuite extends FunSuite {
          |[2:6..2:7): o <= b/U.o.
          |[2:10..2:11): a => a/
          |[2:12..2:13): X => a/X.
-         |[2:14..2:14):  <= local0
          |[2:14..2:15): x => a/X.x().
          |----
          |collisions List()
@@ -3518,7 +3508,6 @@ class LocalSymbolsSuite extends FunSuite {
          |[2:20..2:21): y <= local1
          |[2:24..2:25): a => a/
          |[2:26..2:27): X => a/X.
-         |[2:28..2:28):  <= local3
          |[2:28..2:29): x => a/X.x().
          |----
          |collisions List()
@@ -3604,7 +3593,7 @@ class LocalSymbolsSuite extends FunSuite {
           |[2:10..2:11): a => a/
           |[2:12..2:13): W => a/W.
           |[2:14..2:15): w => a/W.w().
-          |[2:16..2:16):  <= local10
+          |[2:16..2:16):  <= local0
           |----
           |collisions List()
           |dangling List()
@@ -3647,12 +3636,7 @@ class LocalSymbolsSuite extends FunSuite {
           |  Int => scala/Int#
           |local7 => synthetic param x1: Int
           |  Int => scala/Int#
-          |local8 => synthetic class $$anon extends Object with Runnable { +1 decls }
-          |  Object => java/lang/Object#
-          |  Runnable => java/lang/Runnable#
-          |local9 => synthetic method run(): Unit <: java/lang/Runnable#run().
-          |  Unit => scala/Unit#
-          |local10 => val local r: Runnable
+          |local8 => val local r: Runnable
           |  Runnable => java/lang/Runnable#
           |----
           |[0:8..0:9): b <= b/
@@ -3662,8 +3646,6 @@ class LocalSymbolsSuite extends FunSuite {
           |[2:12..2:13): W => a/W.
           |[2:14..2:15): w => a/W.w().
           |[2:16..2:16):  <= local0
-          |[2:16..2:31): { case 1 => 2 } <= local8
-          |[2:16..2:31): { case 1 => 2 } <= local9
           |----
           |collisions List()
           |dangling List()
@@ -3712,7 +3694,6 @@ class LocalSymbolsSuite extends FunSuite {
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
          |[2:10..2:20): implicitly => scala/Predef.implicitly().
-         |[2:20..2:20):  <= local0
          |[2:21..2:22): a => a/
          |[2:23..2:27): Show => a/Show#
          |[2:28..2:31): Int => scala/Int#
@@ -3753,7 +3734,6 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
-         |[2:14..2:14):  <= local0
          |----
          |collisions List()
          |dangling List()
@@ -3803,7 +3783,6 @@ class LocalSymbolsSuite extends FunSuite {
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
          |[2:25..2:26): a => a/
-         |[2:27..2:27):  <= local0
          |[2:27..2:28): E => a/E.
          |[2:29..2:30): n <= local5
          |[2:35..2:36): n => local5
@@ -3893,7 +3872,7 @@ class LocalSymbolsSuite extends FunSuite {
           |[2:58..2:61): Int => scala/Int#
           |[3:6..3:7): o <= b/U.o.
           |[3:10..3:11): f => b/U.f().
-          |[3:12..3:12):  <= local8
+          |[3:12..3:12):  <= local0
           |----
           |collisions List()
           |dangling List()
@@ -3974,15 +3953,7 @@ class LocalSymbolsSuite extends FunSuite {
           |  Int => scala/Int#
           |local7 => synthetic param x1: Int
           |  Int => scala/Int#
-          |local8 => synthetic class $$anon extends Object with Show[Int] { +1 decls }
-          |  Object => java/lang/Object#
-          |  Show => a/Show#
-          |  Int => scala/Int#
-          |local9 => synthetic method show(t: Int): String <: a/Show#show().
-          |  t => local10
-          |  Int => scala/Int#
-          |  String => scala/Predef.String#
-          |local10 => param t: Int
+          |local8 => param t: Int
           |  Int => scala/Int#
           |----
           |[0:8..0:9): b <= b/
@@ -3999,8 +3970,6 @@ class LocalSymbolsSuite extends FunSuite {
           |[3:6..3:7): o <= b/U.o.
           |[3:10..3:11): f => b/U.f().
           |[3:12..3:12):  <= local0
-          |[3:12..3:27): { case 1 => 2 } <= local8
-          |[3:12..3:27): { case 1 => 2 } <= local9
           |----
           |collisions List()
           |dangling List()
@@ -4043,10 +4012,8 @@ class LocalSymbolsSuite extends FunSuite {
           |[2:10..2:11): a => a/
           |[2:12..2:13): W => a/W.
           |[2:14..2:15): w => a/W.w().
-          |[2:15..2:15):  <= local2
           |[2:16..2:17): a => a/
           |[2:18..2:19): X => a/X.
-          |[2:20..2:20):  <= local5
           |[2:20..2:21): x => a/X.x().
           |----
           |collisions List()
