@@ -34,7 +34,7 @@ class RepeatedTypeParentSuite extends FunSuite {
     val settings = new CompilerSettings(msg => fail(s"compiler settings error: $msg"))
     settings.classpath.value = classpath
     settings.outputDirs.setSingleOutput(new PlainDirectory(new Directory(out.toFile)))
-    val reporter = new StoreReporter()
+    val reporter = new StoreReporter(settings)
     val global = new Global(settings, reporter)
     val run = new global.Run
     run.compileSources(List(new BatchSourceFile("issue1497.scala", code)))

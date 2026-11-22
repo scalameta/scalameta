@@ -56,7 +56,8 @@ class DiagnosticSuite extends SemanticdbSuite {
     res.result()
   }
 
-  private val reporter = new StoreReporter()
+  private val settings = new Settings(msg => fail(msg))
+  private val reporter = new StoreReporter(settings)
 
   /** the targetroot of a run that compiles `files` with the plugin and `options` */
   private def compile(files: Map[String, String], store: StoreReporter, options: String) = {
@@ -147,7 +148,7 @@ class DiagnosticSuite extends SemanticdbSuite {
     assertEquals((store.errorCount, store.warningCount), (0, 0))
   }
 
-  private class Wrapped extends StoreReporter() {
+  private class Wrapped extends StoreReporter(new Settings) {
     val calls = List.newBuilder[String]
     override def flush(): Unit = calls += "flush"
     override def finish(): Unit = calls += "finish"

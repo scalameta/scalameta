@@ -33,7 +33,7 @@ class AnnotationArgumentsSuite extends FunSuite {
         "-P:semanticdb:synthetics:on " +
         s"-P:semanticdb:sourceroot:$out -P:semanticdb:targetroot:$out",
     )
-    val reporter = new StoreReporter()
+    val reporter = new StoreReporter(settings)
     val g = new Global(settings, reporter)
     val code =
       """|package p

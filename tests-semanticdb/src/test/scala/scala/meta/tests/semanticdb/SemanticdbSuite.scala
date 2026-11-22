@@ -50,10 +50,9 @@ abstract class SemanticdbSuite extends FunSuite {
       " -Xplugin-require:semanticdb " + yMacroAnnotations
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
-    val reporter = new StoreReporter()
     val command = new CompilerCommand(args, emptySettings)
     val settings = command.settings
-    val g = new Global(settings, reporter)
+    val g = new Global(settings, new StoreReporter(settings))
     val run = new g.Run
     g.phase = run.parserPhase
     g.globalPhase = run.parserPhase
@@ -99,7 +98,7 @@ abstract class SemanticdbSuite extends FunSuite {
 
     g.phase = run.parserPhase
     g.globalPhase = run.parserPhase
-    val reporter = new StoreReporter()
+    val reporter = new StoreReporter(g.settings)
     g.reporter = reporter
     units.foreach(unit => unit.body = g.newUnitParser(unit).parse())
     assertNoReporterErrors()

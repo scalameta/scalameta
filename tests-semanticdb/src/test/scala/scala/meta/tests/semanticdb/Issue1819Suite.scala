@@ -171,7 +171,7 @@ class Issue1819Suite extends SemanticdbSuite {
     val settings = new Settings(msg => fail(msg))
     settings.classpath.value = sys.props("sbt.paths.tests.test.classes")
     settings.outputDirs.setSingleOutput(out.toString)
-    val reporter = new StoreReporter()
+    val reporter = new StoreReporter(settings)
     val g = new Global(settings, reporter)
     new g.Run().compileSources(List(new BatchSourceFile("Issue1819.scala", code)))
     assertEquals(reporter.infos.toList.map(_.msg), Nil)
