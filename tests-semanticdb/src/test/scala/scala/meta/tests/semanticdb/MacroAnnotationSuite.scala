@@ -2411,7 +2411,6 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |[1:15..1:19): call <= ma70/O.call().
        |[1:22..1:29): example => example/
        |[1:30..1:48): AnonymousExpansion => example/AnonymousExpansion.
-       |[1:48..1:48):  <= local0
        |""".stripMargin,
   )
 
