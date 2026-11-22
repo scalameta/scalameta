@@ -460,7 +460,7 @@ private[meta] final class ScannerTokens(
           // guard region may sit under `RegionIf`s from a chain of boolean `if` guards.
           @tailrec
           def getExtraIndent(rs: List[SepRegion]): Int = rs match {
-            case (_: RegionCaseExprGuard) :: _ => 1
+            case (_: RegionCaseGuard) :: _ => 1
             case (_: RegionIf | RegionThen | _: RegionLine) :: tail => getExtraIndent(tail)
             case _ => 0
           }
@@ -676,7 +676,7 @@ private[meta] final class ScannerTokens(
         currRef(RegionWhile(next, inCondIndent(sepRegions)) :: sepRegions)
       case _: KwIf if dialect.allowQuietSyntax && !isPrevEndMarker() =>
         currRef(dropRegionLine(sepRegions) match {
-          case (r: RegionCaseExprPat) :: rs => new RegionCaseExprGuard(r.indent) :: rs
+          case (r: RegionCaseExprPat) :: rs => new RegionCaseGuard(r.indent) :: rs
           case rs @ (_: RegionFor) :: _ => rs
           case rs @ (_: RegionDelim) :: (_: RegionFor) :: _ => rs
           // a guard after a generator that left a region, such as that of `new` or `try`
@@ -691,7 +691,7 @@ private[meta] final class ScannerTokens(
         currRef(RegionDefMark :: sepRegions)
       case _: Colon => sepRegions match {
           case RegionDefMark :: rs => currRef(RegionDefType :: rs)
-          case (_: RegionCaseExprGuard) :: _
+          case (_: RegionCaseGuard) :: _
               if dialect.allowFewerBraces && isFewerBracesPrefix(prev, allowUnquote = true) =>
             // to distinguish `=>` from lambda and end of case expr
             currRef(RegionColonMaybeFewerBraces :: sepRegions)
@@ -822,9 +822,6 @@ private[meta] final class ScannerTokens(
             if (blankBraceOr(!derives(next))) strip(xs) else null
           case RegionTemplateInherit :: xs =>
             if (blankBraceOr(!derives(next) && !derives(prev))) strip(xs) else null
-          case RegionTry :: xs
-              if !next.isAny[KwCatch, KwFinally] && canBeLeadingInfix != LeadingInfix.Yes &&
-                !isIndented(xs, nextIndent) && !isInfixOp(prevPos) => strip(xs)
           case (_: RegionGivenDecl) :: xs => strip(xs)
           case _ => if (canProduceLF(rs)) rs else null
         }
@@ -895,8 +892,8 @@ private[meta] final class ScannerTokens(
               rs: List[SepRegion],
               ctrlOnly: Boolean,
           ): OutdentInfo = dropRegionLine(nextIndent + 1, rs) match {
-            case RegionTry :: xs =>
-              if (nextIndent < r.indent || nextIndent == r.indent && next.isAny[KwCatch, KwFinally]) {
+            case (x: RegionTry.type) :: xs =>
+              if (nextIndent < r.indent || nextIndent == r.indent && x.isTerminatingToken(next)) {
                 val done = noOutdent(xs)
                 OutdentInfo(r, if (done) rs else xs, done)
               } else null
@@ -948,7 +945,6 @@ private[meta] final class ScannerTokens(
                 (rc.arrow.ne(prev) && !next.is[KwCase] || nextNonTrivia(nextPos).isClassOrObject))
                 OutdentInfo(r, dropRegionLine(nextIndent, rs))
               else getOutdentOnIndent(r, rs, ctrlOnly = true)
-            case RegionTry :: rs => if (noOutdent(rs)) null else OutdentInfo(null, rs)
             case (_: RegionNonDelimNonIndented) :: rs if (prev match {
                   // [then]  else  do  [catch]  finally  yield  [match]
                   case _: KwThen | _: KwCatch | _: KwMatch => false
@@ -1036,8 +1032,8 @@ private[meta] final class ScannerTokens(
                   case (r: RegionFor) :: rs if r.isClosingConditionToken(prev) =>
                     val ko = r.isTerminatingToken(next)
                     if (ko) null else emitIndent(rs)
-                  case RegionForMaybeParens :: rs if prev.is[RightParen] =>
-                    val ko = next.is[LeftArrow] || RegionForMaybeParens.isTerminatingToken(next)
+                  case (r: RegionForMaybeParens.type) :: rs if prev.is[RightParen] =>
+                    val ko = next.is[LeftArrow] || r.isTerminatingToken(next)
                     if (ko) null else emitIndent(rs)
                   case (x: RegionControlMaybeCond) :: rs if prev.is[RightParen] =>
                     val ko = next.is[Dot] || !x.isNotTerminatingTokenIfOptional(next) ||
@@ -1430,7 +1426,6 @@ private[meta] object ScannerTokens {
     @tailrec
     def iter(rs: List[SepRegion]): List[SepRegion] = rs match {
       case (r: RegionControl) :: _ if r.isTerminatingToken(token) => rs
-      case RegionTry :: _ if token.isAny[KwCatch, KwFinally] => rs
       case Nil | (_: RegionDelimNonIndented | _: RegionFor) :: _ => Nil
       case _ :: xs => iter(xs)
     }

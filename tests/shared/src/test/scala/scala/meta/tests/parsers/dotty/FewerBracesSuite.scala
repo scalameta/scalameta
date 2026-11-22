@@ -6511,12 +6511,10 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|foo(try a catch {
          |  case _ => b
-         |}, xs.map {
-         |  x => x + 1
-         |})
+         |}, xs.map: (x => x + 1))
          |""".stripMargin
     val arg = Term.Try(tname("a"), List(Case(Pat.Wildcard(), None, tname("b"))), None)
-    val mapArg = tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix("x", "+", lit(1)))))
+    val mapArg = Term.Ascribe(tselect("xs", "map"), pfunc("x")(pinfix("x", "+", lit(1))))
     runTestAssert[Stat](code, layout)(tapply(tname("foo"), arg, mapArg))
   }
 
