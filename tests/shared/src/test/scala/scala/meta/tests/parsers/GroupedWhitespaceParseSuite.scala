@@ -3,16 +3,14 @@ package scala.meta.tests.parsers
 import scala.meta._
 import scala.meta.tokenizers.TokenizerOptions
 
-import scala.annotation.nowarn
-
 class GroupedWhitespaceParseSuite extends ParseSuite {
+
+  override protected implicit def tokenizerOptions: TokenizerOptions =
+    new TokenizerOptions(groupWhitespace = true)
 
   test("#3979: Scala 2.11") {
     implicit val dialect: Dialect = dialects.Scala211
     implicit val parseStat: String => Stat = term(_)
-    @nowarn("msg=never used|unused") // runTestAssert does not read it
-    implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = true)
-
     val code =
       """|for {
          |  _ <-
@@ -44,9 +42,6 @@ class GroupedWhitespaceParseSuite extends ParseSuite {
 
   test("#3979: Scala 3") {
     implicit val dialect: Dialect = dialects.Scala3
-    @nowarn("msg=never used|unused") // runTestAssert does not read it
-    implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = true)
-
     val code =
       """|for {
          |  _ <-
@@ -80,8 +75,8 @@ class GroupedWhitespaceParseSuite extends ParseSuite {
          |Ident(c) [53..54)
          |LF [54..55)
          |RightBrace [59..60)
-         |Indentation.Outdent [61..61)
-         |LFLF [61..62)
+         |Indentation.Outdent [60..60)
+         |MultiNL(2) [60..62)
          |Underscore [64..65)
          |LeftArrow [66..68)
          |Ident(d) [69..70)
