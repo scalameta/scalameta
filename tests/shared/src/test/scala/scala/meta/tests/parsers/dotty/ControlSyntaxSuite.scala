@@ -30976,4 +30976,119 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestError[Stat](code, error)
   }
 
+  test("then with try and catch, else on the next line") {
+    val code =
+      """|if c then try a catch { case _ => b }
+         |else d
+         |""".stripMargin
+    val layout =
+      """|if (c) try a catch {
+         |  case _ => b
+         |} else d
+         |""".stripMargin
+    val body = Term.Try(tname("a"), List(Case(Pat.Wildcard(), None, tname("b"))), None)
+    runTestAssert[Stat](code, layout)(Term.If(tname("c"), body, tname("d"), Nil))
+  }
+
+  test("lambda argument with try and catch, a comma on the try line") {
+    val code =
+      """|foo(x =>
+         |  try a catch { case _ => b }, c)
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `,` found
+         |  try a catch { case _ => b }, c)
+         |                             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("lambda argument with try and catch, a comma at the try line end") {
+    val code =
+      """|foo(
+         |  x =>
+         |    try a catch { case _ => b },
+         |  c,
+         |)
+         |""".stripMargin
+    val layout =
+      """|foo(x => try a catch {
+         |  case _ => b
+         |}, c)
+         |""".stripMargin
+    val body = Term.Try(tname("a"), List(Case(Pat.Wildcard(), None, tname("b"))), None)
+    runTestAssert[Stat](code, layout)(tapply(tname("foo"), tfunc(tparam("x"))(body), tname("c")))
+  }
+
+  test("lambda argument with try, a comma on the try line") {
+    val code =
+      """|foo(x =>
+         |  try a, c)
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `,` found
+         |  try a, c)
+         |       ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("script: try and catch, a parenthesized line and a statement") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowToplevelTerms(true)
+    val code =
+      """|try a catch { case _ => b }
+         |(c)
+         |d
+         |""".stripMargin
+    val layout =
+      """|try a catch {
+         |  case _ => b
+         |}
+         |c
+         |d
+         |""".stripMargin
+    val stat = Term.Try(tname("a"), List(Case(Pat.Wildcard(), None, tname("b"))), None)
+    runTestAssert[Source](code, layout)(Source(List(stat, tname("c"), tname("d"))))
+  }
+
+  test("lambda argument with try and a catch expression, a comma on the try line") {
+    val code =
+      """|foo(x =>
+         |  try a catch h, c)
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `,` found
+         |  try a catch h, c)
+         |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("generator with try and catch, do on the next line") {
+    val code =
+      """|for x <- try a catch { case _ => Nil }
+         |do f(x)
+         |""".stripMargin
+    val layout =
+      """|for (x <- try a catch {
+         |  case _ => Nil
+         |}) f(x)
+         |""".stripMargin
+    val rhs = Term.Try(tname("a"), List(Case(Pat.Wildcard(), None, tname("Nil"))), None)
+    val tree = Term.For(List(Enumerator.Generator(patvar("x"), rhs)), tapply("f", "x"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("indented then with try and catch, else on the next line") {
+    val code =
+      """|if c then
+         |  try a catch { case _ => b }
+         |else d
+         |""".stripMargin
+    val layout =
+      """|if (c) try a catch {
+         |  case _ => b
+         |} else d
+         |""".stripMargin
+    val body = Term.Try(tname("a"), List(Case(Pat.Wildcard(), None, tname("b"))), None)
+    runTestAssert[Stat](code, layout)(Term.If(tname("c"), body, tname("d"), Nil))
+  }
+
 }
