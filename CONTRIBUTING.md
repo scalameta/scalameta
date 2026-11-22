@@ -71,7 +71,7 @@ Tips to make your edit/test/debug workflow as productive as possible:
   is the name of your test suite.
 - Use `testOnly *CUSTOM_SUITE -- -z "TEST_NAME"` to target an individual test case
   from a test suite.
-- Use the sbt command `save-expect` to make `ExpectSuite` pass. This command
+- Use the sbt command `save-expect` to make the expect suites pass. This command
   writes to disk the output of the current behavior. The diff may be large,
   please review it thoroughly to ensure that the new expected behavior is correct.
   The name "expect tests" comes from

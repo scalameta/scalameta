@@ -31089,4 +31089,295 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(Term.If(tname("c"), body, tname("d"), Nil))
   }
 
+  test("case clause with a try and a case on the catch line, handler arrow at the line end, cases on the next lines") {
+    val code =
+      """|def f = x match
+         |  case 1 => try a catch case e =>
+         |      case X => 1
+         |  case 2 => c
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    try a catch {
+         |      case e =>
+         |        {
+         |          case X => 1
+         |        }
+         |      case 2 =>
+         |        c
+         |    }
+         |}
+         |""".stripMargin
+    val handler = Term.PartialFunction(List(Case(tname("X"), None, int(1))))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          int(1),
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
+            None,
+          ),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case clause with a try and a case on the catch line, semicolon after the handler, next case") {
+    val code =
+      """|def f = x match
+         |  case 1 => try a catch case e => b;
+         |  case 2 => c
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    try a catch {
+         |      case e => b
+         |      case 2 => c
+         |    }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          int(1),
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(patvar("e"), None, tname("b")), Case(int(2), None, tname("c"))),
+            None,
+          ),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case clause with a try and a case on the catch line, semicolon after the handler, next case, match with braces") {
+    val code =
+      """|def f = x match {
+         |  case 1 => try a catch case e => b;
+         |  case 2 => c
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    try a catch {
+         |      case e => b
+         |      case 2 => c
+         |    }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          int(1),
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(patvar("e"), None, tname("b")), Case(int(2), None, tname("c"))),
+            None,
+          ),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case clause with a try and a case on the catch line, match in the handler, empty last case, next case") {
+    val code =
+      """|def f = x match
+         |  case 1 => try a catch case e => e match
+         |      case X => g()
+         |      case _ =>
+         |  case 2 => c
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    try a catch {
+         |      case e =>
+         |        e match {
+         |          case X =>
+         |            g()
+         |          case _ =>
+         |        }
+         |      case 2 =>
+         |        c
+         |    }
+         |}
+         |""".stripMargin
+    val handler =
+      tmatch(tname("e"), Case(tname("X"), None, tapply(tname("g"))), Case(Pat.Wildcard(), None, blk()))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          int(1),
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
+            None,
+          ),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case clause with a try and a case on the catch line, try with catch at the line end in the handler, next case") {
+    val code =
+      """|def f = x match
+         |  case 1 => try a catch case e => try b catch
+         |      case X => g()
+         |  case 2 => c
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    try a catch {
+         |      case e =>
+         |        try b catch {
+         |          case X =>
+         |            g()
+         |        }
+         |      case 2 =>
+         |        c
+         |    }
+         |}
+         |""".stripMargin
+    val handler = Term.Try(tname("b"), List(Case(tname("X"), None, tapply(tname("g")))), None)
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          int(1),
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
+            None,
+          ),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case clause with a try and a case on the catch line, try with catch at the line end in the handler, next case, match with braces") {
+    val code =
+      """|def f = x match {
+         |  case 1 => try a catch case e => try b catch
+         |      case X => g()
+         |  case 2 => c
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    try a catch {
+         |      case e =>
+         |        try b catch {
+         |          case X =>
+         |            g()
+         |        }
+         |      case 2 =>
+         |        c
+         |    }
+         |}
+         |""".stripMargin
+    val handler = Term.Try(tname("b"), List(Case(tname("X"), None, tapply(tname("g")))), None)
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          int(1),
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
+            None,
+          ),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case clause with a try and a case on the catch line, inline then with a match in the handler, next case") {
+    val code =
+      """|def f = x match
+         |  case 1 => try a catch case e => if p then e match
+         |      case X => 1
+         |  case 2 => c
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    try a catch {
+         |      case e =>
+         |        if (p) e match {
+         |          case X => 1
+         |        }
+         |      case 2 =>
+         |        c
+         |    }
+         |}
+         |""".stripMargin
+    val handler = Term
+      .If(tname("p"), tmatch(tname("e"), Case(tname("X"), None, int(1))), Lit.Unit(), Nil)
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          int(1),
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
+            None,
+          ),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
