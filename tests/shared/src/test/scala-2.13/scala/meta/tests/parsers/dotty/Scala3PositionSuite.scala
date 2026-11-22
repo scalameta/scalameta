@@ -4796,4 +4796,917 @@ class Scala3PositionSuite extends BasePositionSuite {
     showPosition = true,
   )
 
+  checkPositions[Stat](
+    """|def f = x match
+       |  case y if xs.exists: z =>
+       |    z
+       |  => 1""".stripMargin,
+    """|Term.Match x match
+       |  case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |Term.CasesBlock case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |Case case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |Term.Apply xs.exists: z =>
+       |    z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case y if xs.exists: z =>
+       |      z
+       |    => 1""".stripMargin,
+    """|Term.Match x match
+       |  case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |Term.CasesBlock case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |Case case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |Term.Apply xs.exists: z =>
+       |      z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |      z
+       |Term.Function z =>
+       |      z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case y if xs.exists: z =>
+       |    z
+       |  && b => 1""".stripMargin,
+    """|Term.Match x match
+       |  case y if xs.exists: z =>
+       |    z
+       |  && b => 1
+       |Term.CasesBlock case y if xs.exists: z =>
+       |    z
+       |  && b => 1
+       |Case case y if xs.exists: z =>
+       |    z
+       |  && b => 1
+       |Term.ApplyInfix xs.exists: z =>
+       |    z
+       |  && b
+       |Term.Apply xs.exists: z =>
+       |    z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |Type.ArgClause   && @@b => 1
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case y if xs.map: z =>
+       |    z + 1
+       |  .contains(3) => 1""".stripMargin,
+    """|Term.Match x match
+       |  case y if xs.map: z =>
+       |    z + 1
+       |  .contains(3) => 1
+       |Term.CasesBlock case y if xs.map: z =>
+       |    z + 1
+       |  .contains(3) => 1
+       |Case case y if xs.map: z =>
+       |    z + 1
+       |  .contains(3) => 1
+       |Term.Apply xs.map: z =>
+       |    z + 1
+       |  .contains(3)
+       |Term.Select xs.map: z =>
+       |    z + 1
+       |  .contains
+       |Term.Apply xs.map: z =>
+       |    z + 1
+       |Term.Select xs.map
+       |Term.Block : z =>
+       |    z + 1
+       |Term.Function z =>
+       |    z + 1
+       |Term.ParamClause z
+       |Term.Param z
+       |Term.ApplyInfix z + 1
+       |Type.ArgClause     z + @@1
+       |Term.ArgClause (3)
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case y if xs.contains:
+       |    y
+       |  => 1""".stripMargin,
+    """|Term.Match x match
+       |  case y if xs.contains:
+       |    y
+       |  => 1
+       |Term.CasesBlock case y if xs.contains:
+       |    y
+       |  => 1
+       |Case case y if xs.contains:
+       |    y
+       |  => 1
+       |Term.Apply xs.contains:
+       |    y
+       |Term.Select xs.contains
+       |Term.Block :
+       |    y
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case y if xs.contains:
+       |    y
+       |  && b => 1""".stripMargin,
+    """|Term.Match x match
+       |  case y if xs.contains:
+       |    y
+       |  && b => 1
+       |Term.CasesBlock case y if xs.contains:
+       |    y
+       |  && b => 1
+       |Case case y if xs.contains:
+       |    y
+       |  && b => 1
+       |Term.ApplyInfix xs.contains:
+       |    y
+       |  && b
+       |Term.Apply xs.contains:
+       |    y
+       |Term.Select xs.contains
+       |Term.Block :
+       |    y
+       |Type.ArgClause   && @@b => 1
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case y if xs.filter:
+       |    _ > 0
+       |  .nonEmpty => 1""".stripMargin,
+    """|Term.Match x match
+       |  case y if xs.filter:
+       |    _ > 0
+       |  .nonEmpty => 1
+       |Term.CasesBlock case y if xs.filter:
+       |    _ > 0
+       |  .nonEmpty => 1
+       |Case case y if xs.filter:
+       |    _ > 0
+       |  .nonEmpty => 1
+       |Term.Select xs.filter:
+       |    _ > 0
+       |  .nonEmpty
+       |Term.Apply xs.filter:
+       |    _ > 0
+       |Term.Select xs.filter
+       |Term.Block :
+       |    _ > 0
+       |Term.AnonymousFunction _ > 0
+       |Term.ApplyInfix _ > 0
+       |Term.Placeholder _
+       |Type.ArgClause     _ > @@0
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match {
+       |  case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |}""".stripMargin,
+    """|Term.Match x match {
+       |  case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |}
+       |Term.CasesBlock {
+       |  case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |}
+       |Case case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |Term.Apply xs.exists: z =>
+       |    z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.collect {
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |}""".stripMargin,
+    """|Term.Apply xs.collect {
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |}
+       |Term.Select xs.collect
+       |Term.PartialFunction {
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |}
+       |Case case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |Term.Apply ys.exists: z =>
+       |    z
+       |Term.Select ys.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.collect:
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1""".stripMargin,
+    """|Term.Apply xs.collect:
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |Term.Select xs.collect
+       |Term.PartialFunction :
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |Case case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |Term.Apply ys.exists: z =>
+       |    z
+       |Term.Select ys.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = try g catch
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1""".stripMargin,
+    """|Term.Try try g catch
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |Term.CasesBlock case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |Case case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |Term.Apply ys.exists: z =>
+       |    z
+       |Term.Select ys.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = try g catch {
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |}""".stripMargin,
+    """|Term.Try try g catch {
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |}
+       |Term.CasesBlock {
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |}
+       |Case case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |Term.Apply ys.exists: z =>
+       |    z
+       |Term.Select ys.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = try g catch
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |finally h""".stripMargin,
+    """|Term.Try try g catch
+       |  case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |finally h
+       |Term.CasesBlock case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |Case case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |Term.Apply ys.exists: z =>
+       |    z
+       |Term.Select ys.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = try g catch case y if ys.exists: z =>
+       |  z
+       |=> 1""".stripMargin,
+    """|Term.Try try g catch case y if ys.exists: z =>
+       |  z
+       |=> 1
+       |Term.CasesBlock case y if ys.exists: z =>
+       |  z
+       |=> 1
+       |Case case y if ys.exists: z =>
+       |  z
+       |=> 1
+       |Term.Apply ys.exists: z =>
+       |  z
+       |Term.Select ys.exists
+       |Term.Block : z =>
+       |  z
+       |Term.Function z =>
+       |  z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.collect { case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |}""".stripMargin,
+    """|Term.Apply xs.collect { case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |}
+       |Term.Select xs.collect
+       |Term.PartialFunction { case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |}
+       |Case case y if ys.exists: z =>
+       |    z
+       |  => 1
+       |Term.Apply ys.exists: z =>
+       |    z
+       |Term.Select ys.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case 0 => 0
+       |  case y if xs.exists: z =>
+       |    z
+       |  => 1""".stripMargin,
+    """|Term.Match x match
+       |  case 0 => 0
+       |  case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |Term.CasesBlock case 0 => 0
+       |  case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |Case case 0 => 0
+       |Case case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |Term.Apply xs.exists: z =>
+       |    z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case y =>
+       |    y match
+       |      case w if ws.exists: z =>
+       |        z
+       |      => 1
+       |  case _ => 2""".stripMargin,
+    """|Term.Match x match
+       |  case y =>
+       |    y match
+       |      case w if ws.exists: z =>
+       |        z
+       |      => 1
+       |  case _ => 2
+       |Term.CasesBlock case y =>
+       |    y match
+       |      case w if ws.exists: z =>
+       |        z
+       |      => 1
+       |  case _ => 2
+       |Case case y =>
+       |    y match
+       |      case w if ws.exists: z =>
+       |        z
+       |      => 1
+       |Term.Match y match
+       |      case w if ws.exists: z =>
+       |        z
+       |      => 1
+       |Term.CasesBlock case w if ws.exists: z =>
+       |        z
+       |      => 1
+       |Case case w if ws.exists: z =>
+       |        z
+       |      => 1
+       |Term.Apply ws.exists: z =>
+       |        z
+       |Term.Select ws.exists
+       |Term.Block : z =>
+       |        z
+       |Term.Function z =>
+       |        z
+       |Term.ParamClause z
+       |Term.Param z
+       |Case case _ => 2
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  x match
+       |    case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |  g""".stripMargin,
+    """|Term.Block x match
+       |    case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |  g
+       |Term.Match x match
+       |    case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |Term.CasesBlock case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |Case case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |Term.Apply xs.exists: z =>
+       |      z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |      z
+       |Term.Function z =>
+       |      z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  x match
+       |    case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |  end match""".stripMargin,
+    """|Term.Block x match
+       |    case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |  end match
+       |Term.Match x match
+       |    case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |Term.CasesBlock case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |Case case y if xs.exists: z =>
+       |      z
+       |    => 1
+       |Term.Apply xs.exists: z =>
+       |      z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |      z
+       |Term.Function z =>
+       |      z
+       |Term.ParamClause z
+       |Term.Param z
+       |Term.EndMarker end match
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|a match
+       |case n
+       |if foo: b =>
+       |  true
+       |=>
+       |  2""".stripMargin,
+    """|Term.CasesBlock case n
+       |if foo: b =>
+       |  true
+       |=>
+       |  2
+       |Case case n
+       |if foo: b =>
+       |  true
+       |=>
+       |  2
+       |Term.Apply foo: b =>
+       |  true
+       |Term.Block : b =>
+       |  true
+       |Term.Function b =>
+       |  true
+       |Term.ParamClause b
+       |Term.Param b
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f(x: Any) =
+       |  x match
+       |  case s: String if g:
+       |    s.length > 4
+       |  => s
+       |  case x => x.toString""".stripMargin,
+    """|Member.ParamClauseGroup (x: Any)
+       |Type.ParamClause def f@@(x: Any) =
+       |Term.ParamClause (x: Any)
+       |Term.Match x match
+       |  case s: String if g:
+       |    s.length > 4
+       |  => s
+       |  case x => x.toString
+       |Term.CasesBlock case s: String if g:
+       |    s.length > 4
+       |  => s
+       |  case x => x.toString
+       |Case case s: String if g:
+       |    s.length > 4
+       |  => s
+       |Pat.Typed s: String
+       |Term.Apply g:
+       |    s.length > 4
+       |Term.Block :
+       |    s.length > 4
+       |Term.ApplyInfix s.length > 4
+       |Term.Select s.length
+       |Type.ArgClause     s.length > @@4
+       |Case case x => x.toString
+       |Term.Select x.toString
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = g(x match
+       |  case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |)""".stripMargin,
+    """|Term.Apply g(x match
+       |  case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |)
+       |Term.ArgClause (x match
+       |  case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |)
+       |Term.Match x match
+       |  case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |Term.CasesBlock case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |Case case y if xs.exists: z =>
+       |    z
+       |  => 1
+       |Term.Apply xs.exists: z =>
+       |    z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case s: String if xs.exists: z =>
+       |    z == s
+       |  => 1
+       |  case _ => 2""".stripMargin,
+    """|Term.Match x match
+       |  case s: String if xs.exists: z =>
+       |    z == s
+       |  => 1
+       |  case _ => 2
+       |Term.CasesBlock case s: String if xs.exists: z =>
+       |    z == s
+       |  => 1
+       |  case _ => 2
+       |Case case s: String if xs.exists: z =>
+       |    z == s
+       |  => 1
+       |Pat.Typed s: String
+       |Term.Apply xs.exists: z =>
+       |    z == s
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |    z == s
+       |Term.Function z =>
+       |    z == s
+       |Term.ParamClause z
+       |Term.Param z
+       |Term.ApplyInfix z == s
+       |Type.ArgClause     z == @@s
+       |Case case _ => 2
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case Some(s) if xs.exists: z =>
+       |    z == s
+       |  => 1
+       |  case _ => 2""".stripMargin,
+    """|Term.Match x match
+       |  case Some(s) if xs.exists: z =>
+       |    z == s
+       |  => 1
+       |  case _ => 2
+       |Term.CasesBlock case Some(s) if xs.exists: z =>
+       |    z == s
+       |  => 1
+       |  case _ => 2
+       |Case case Some(s) if xs.exists: z =>
+       |    z == s
+       |  => 1
+       |Pat.Extract Some(s)
+       |Pat.ArgClause (s)
+       |Term.Apply xs.exists: z =>
+       |    z == s
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |    z == s
+       |Term.Function z =>
+       |    z == s
+       |Term.ParamClause z
+       |Term.Param z
+       |Term.ApplyInfix z == s
+       |Type.ArgClause     z == @@s
+       |Case case _ => 2
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case A
+       |     | B if xs.exists: z =>
+       |         z
+       |  => 1""".stripMargin,
+    """|Term.Match x match
+       |  case A
+       |     | B if xs.exists: z =>
+       |         z
+       |  => 1
+       |Term.CasesBlock case A
+       |     | B if xs.exists: z =>
+       |         z
+       |  => 1
+       |Case case A
+       |     | B if xs.exists: z =>
+       |         z
+       |  => 1
+       |Pat.Alternative A
+       |     | B
+       |Term.Apply xs.exists: z =>
+       |         z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |         z
+       |Term.Function z =>
+       |         z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case s @ Some(_) if xs.exists: z =>
+       |    z
+       |  => 1""".stripMargin,
+    """|Term.Match x match
+       |  case s @ Some(_) if xs.exists: z =>
+       |    z
+       |  => 1
+       |Term.CasesBlock case s @ Some(_) if xs.exists: z =>
+       |    z
+       |  => 1
+       |Case case s @ Some(_) if xs.exists: z =>
+       |    z
+       |  => 1
+       |Pat.Bind s @ Some(_)
+       |Pat.Extract Some(_)
+       |Pat.ArgClause (_)
+       |Term.Apply xs.exists: z =>
+       |    z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case Some(
+       |         y) if xs.exists: z =>
+       |    z
+       |  => 1""".stripMargin,
+    """|Term.Match x match
+       |  case Some(
+       |         y) if xs.exists: z =>
+       |    z
+       |  => 1
+       |Term.CasesBlock case Some(
+       |         y) if xs.exists: z =>
+       |    z
+       |  => 1
+       |Case case Some(
+       |         y) if xs.exists: z =>
+       |    z
+       |  => 1
+       |Pat.Extract Some(
+       |         y)
+       |Pat.ArgClause (
+       |         y)
+       |Term.Apply xs.exists: z =>
+       |    z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |    z
+       |Term.Function z =>
+       |    z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case y if
+       |      xs.exists: z =>
+       |        z
+       |  => 1""".stripMargin,
+    """|Term.Match x match
+       |  case y if
+       |      xs.exists: z =>
+       |        z
+       |  => 1
+       |Term.CasesBlock case y if
+       |      xs.exists: z =>
+       |        z
+       |  => 1
+       |Case case y if
+       |      xs.exists: z =>
+       |        z
+       |  => 1
+       |Term.Apply xs.exists: z =>
+       |        z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |        z
+       |Term.Function z =>
+       |        z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match
+       |  case y
+       |    if xs.exists: z =>
+       |      z
+       |    => 1""".stripMargin,
+    """|Term.Match x match
+       |  case y
+       |    if xs.exists: z =>
+       |      z
+       |    => 1
+       |Term.CasesBlock case y
+       |    if xs.exists: z =>
+       |      z
+       |    => 1
+       |Case case y
+       |    if xs.exists: z =>
+       |      z
+       |    => 1
+       |Term.Apply xs.exists: z =>
+       |      z
+       |Term.Select xs.exists
+       |Term.Block : z =>
+       |      z
+       |Term.Function z =>
+       |      z
+       |Term.ParamClause z
+       |Term.Param z
+       |""".stripMargin,
+  )
+
 }

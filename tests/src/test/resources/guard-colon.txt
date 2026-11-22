@@ -1395,3 +1395,4097 @@ def f = x match
       case X => 1
     end try
   case 2 => c
+==== pm2
+def f = x match
+  case y if a && xs.map: x =>
+    x => 1
+==== lam_sl_bodynext_arrownext
+def f = x match
+  case y if xs.exists: z =>
+    z
+  => 1
+==== lam_sl_bodynext2
+def f = x match
+  case y if xs.exists: z =>
+    val w = z
+    w => 1
+==== lam_sl_samearrow
+def f = x match
+  case y if xs.exists: z => z => 1
+==== eol_name
+def f = x match
+  case y if p:
+    Boolean => 1
+==== eol_select_lambda
+def f = x match
+  case y if xs.exists:
+    z => z => 1
+==== eol_select_lambda_arrownext
+def f = x match
+  case y if xs.exists:
+    z => z
+  => 1
+==== eol_select_arg_arrownext
+def f = x match
+  case y if xs.contains:
+    y
+  => 1
+==== eol_select_twolines_arrownext
+def f = x match
+  case y if xs.contains:
+    val w = y
+    w
+  => 1
+==== eol_apply
+def f = x match
+  case y if f(a):
+    b => 1
+==== eol_infix
+def f = x match
+  case y if a && xs.exists:
+    z => z => 1
+==== brace_match_lam
+def f = x match {
+  case y if xs.exists: z =>
+    z => 1
+}
+==== brace_match_eol
+def f = x match {
+  case y if xs.exists:
+    z => z => 1
+}
+==== pf_lam
+def f = xs.collect {
+  case y if ys.exists: z =>
+    z => 1
+}
+==== catch_lam
+def f = try g catch
+  case y if ys.exists: z =>
+    z => 1
+==== colon_cases_lam
+def f = xs.collect:
+  case y if ys.exists: z =>
+    z => 1
+==== lam_sl_arrow_eol
+def f = x match
+  case y if xs.exists: z =>
+    z =>
+    1
+==== eol_lambda_arrow_eol
+def f = x match
+  case y if xs.exists:
+    z => z =>
+      1
+==== two_cases
+def f = x match
+  case y if xs.exists: z =>
+    z => 1
+  case _ => 2
+==== lam_paren_typed
+def f = x match
+  case y if xs.exists: (z: Int) =>
+    z => 1
+==== m4518_lam
+a match
+case n
+if foo: b =>
+  true
+=>
+  2
+==== m4518_case
+a match
+case n
+if foo:
+  case b =>
+    true
+=>
+  2
+==== m4518_lam_oneliner
+a match
+case n
+if foo: b => true
+=>
+  2
+==== m4518_case_oneliner
+a match
+case n
+if foo: case b => true
+=>
+  2
+==== eol_case_arg
+def f = x match
+  case y if xs.exists:
+    case b => true
+  => 1
+==== eol_case_arg_arrowin
+def f = x match
+  case y if xs.exists:
+    case b => b => 1
+==== lam_inner_val_paren
+def f = x match
+  case y if xs.exists: z =>
+    val g = (a: Int) => a
+    g(z) => 1
+==== lam_inner_val_bare
+def f = x match
+  case y if xs.exists: z =>
+    val g = (a: Int) => a
+    g(z)
+  => 1
+==== eol_inner_val_paren
+def f = x match
+  case y if xs.exists:
+    val g = (a: Int) => a
+    g => 1
+==== eol_nested_parens
+def f = x match
+  case y if xs.exists:
+    ys.map(a => a).contains => 1
+==== lam_nested_parens
+def f = x match
+  case y if xs.exists: z =>
+    ys.map(a => a).contains(z) => 1
+==== brace_guard_ctrl
+def f = x match
+  case y if xs.exists { z => z } => 1
+==== lam_arrow_mid_indent
+def f = x match
+  case y if xs.exists: z =>
+      z
+    => 1
+==== lam_infix_after
+def f = x match
+  case y if xs.exists: z =>
+    z
+  && b => 1
+==== eol_infix_after
+def f = x match
+  case y if xs.contains:
+    y
+  && b => 1
+==== lam_curried
+def f = x match
+  case y if xs.exists: z => w =>
+    z => 1
+==== lam_body_arrow_then_more
+def f = x match
+  case y if xs.exists: z =>
+    z => 1
+    2
+==== eol_body_arrow_then_more
+def f = x match
+  case y if xs.contains:
+    y => 1
+    2
+==== for_guard_ctrl
+def f = for
+  x <- xs
+  if ys.exists: z =>
+    z
+yield x
+==== lam_using
+def f = x match
+  case y if xs.exists: (using z: Int) =>
+    z => 1
+==== lam_placeholder
+def f = x match
+  case y if xs.exists: _ =>
+    true => 1
+==== catch_oneline_lam
+def f = try g catch case y if ys.exists: z =>
+  z => 1
+==== eol_arrow_body_indent
+def f = x match
+  case y if xs.contains:
+    y
+    => 1
+==== eol_backquoted
+def f = x match
+  case y if `p`:
+    Boolean => 1
+==== eol_case_arg_body_next
+def f = x match
+  case y if xs.exists:
+    case b =>
+      b => 1
+==== eol_nested_colon_eol
+def f = x match
+  case y if xs.exists:
+    ys.exists:
+      w => w
+  => 1
+==== eol_nested_indent_val
+def f = x match
+  case y if xs.exists:
+    val g =
+      (a: Int) => a
+    g => 1
+==== eol_typeapply
+def f = x match
+  case y if p[Int]:
+    Boolean => 1
+==== guard_leading_infix
+def f = x match
+  case y if a
+    && xs.exists: z =>
+      z
+  => 1
+==== guard_leading_infix_arrowin
+def f = x match
+  case y if a
+    && xs.exists: z =>
+      z => 1
+==== guard_next_line_indented
+def f = x match
+  case y
+    if xs.exists: z =>
+      z => 1
+==== if_cond_ctrl
+def f =
+  if xs.exists: z =>
+    z
+  then 1 else 2
+==== lam_arrow_body_indent
+def f = x match
+  case y if xs.exists: z =>
+    z
+    => 1
+==== lam_arrow_deeper
+def f = x match
+  case y if xs.exists: z =>
+    z
+      => 1
+==== lam_comment_after_arrow
+def f = x match
+  case y if xs.exists: z =>
+    z => // c
+    1
+==== lam_comment_before_arrow
+def f = x match
+  case y if xs.exists: z =>
+    z // c
+  => 1
+==== lam_inner_brace_lambda
+def f = x match
+  case y if xs.exists: z =>
+    ys.map { a => a }.contains(z) => 1
+==== lam_inner_match
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case 1 => true
+      case _ => false
+  => 1
+==== lam_multi_param
+def f = x match
+  case y if m.exists: (k, v) =>
+    v => 1
+==== lam_nested_colon_eol
+def f = x match
+  case y if xs.exists: z =>
+    z.ys.exists:
+      w => w
+  => 1
+==== lam_nested_colon_lam
+def f = x match
+  case y if xs.exists: z =>
+    z.ys.exists: w =>
+      w
+  => 1
+==== lam_not_prefix
+def f = x match
+  case y if !xs.exists: z =>
+    z => 1
+==== lam_type_arrow_stat
+def f = x match
+  case y if xs.exists: z =>
+    val g: Int => Int = identity
+    g(z)
+  => 1
+==== nested_case_body_guard
+def f = x match
+  case y =>
+    y match
+      case w if ws.exists: z =>
+        z => 1
+  case _ => 2
+==== parens_ctrl_infix_typed
+def f = x match
+  case y if a && (g: A =>
+    B) => g => 1
+==== parens_ctrl_select
+def f = x match
+  case y if (ys.exists: z =>
+      z.ok) => 1
+  case _ => 0
+==== second_case_brace_eol
+def f = x match {
+  case 0 => 0
+  case y if xs.exists:
+    z => z => 1
+}
+==== second_case_lam
+def f = x match
+  case 0 => 0
+  case y if xs.exists: z =>
+    z => 1
+==== brace_match_lam_ctrl
+def f = x match {
+  case y if xs.exists: z =>
+    z
+  => 1
+}
+==== pf_lam_ctrl
+def f = xs.collect {
+  case y if ys.exists: z =>
+    z
+  => 1
+}
+==== catch_lam_ctrl
+def f = try g catch
+  case y if ys.exists: z =>
+    z
+  => 1
+==== catch_brace_lam
+def f = try g catch {
+  case y if ys.exists: z =>
+    z => 1
+}
+==== colon_cases_lam_ctrl
+def f = xs.collect:
+  case y if ys.exists: z =>
+    z
+  => 1
+==== second_case_lam_ctrl
+def f = x match
+  case 0 => 0
+  case y if xs.exists: z =>
+    z
+  => 1
+==== second_case_brace_eol_ctrl
+def f = x match {
+  case 0 => 0
+  case y if xs.contains:
+    y
+  => 1
+}
+==== nested_case_body_guard_ctrl
+def f = x match
+  case y =>
+    y match
+      case w if ws.exists: z =>
+        z
+      => 1
+  case _ => 2
+==== catch_oneline_lam_ctrl
+def f = try g catch case y if ys.exists: z =>
+  z
+=> 1
+==== guard_next_line_indented_ctrl
+def f = x match
+  case y
+    if xs.exists: z =>
+      z
+    => 1
+==== m4518_lam_arrowin
+a match
+case n
+if foo: b =>
+  b => 2
+==== m4518_eol_arrowin
+a match
+case n
+if foo:
+  b => 2
+==== eol_select_twolines
+def f = x match
+  case y if xs.contains:
+    val w = y
+    w => 1
+==== lam_val_match_then_arrow
+def f = x match
+  case y if xs.exists: z =>
+    val b = z match
+      case 1 => true
+      case _ => false
+    b => 1
+==== lam_infix_inside_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    z
+    && b => 1
+==== lam_block_comment_before_arrow
+def f = x match
+  case y if xs.exists: z =>
+    z /* c */ => 1
+==== two_colons_infix
+def f = x match
+  case y if xs.contains:
+    y
+  && ys.exists: z =>
+    z => 1
+==== conflict_brace_lam
+def f = x match {
+  case y if xs.exists: z =>
+    z => w
+  => 1
+}
+==== conflict_brace_eol
+def f = x match {
+  case y if xs.contains:
+    y => w
+  => 1
+}
+==== lam_apply_prefix
+def f = x match
+  case y if f(a): z =>
+    z => 1
+==== lam_ctx_arrow_stat
+def f = x match
+  case y if xs.exists: z =>
+    val g: Int ?=> Int = 1
+    g => 1
+==== guard_match_colon
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case 1 => true
+      case _ => false
+    => 1
+==== lam_body_val_lambda
+def f = x match
+  case y if xs.exists: z =>
+    z => 1
+    val h = (a: Int) => a
+==== eol_lambda_then_lambda
+def f = x match
+  case y if xs.exists:
+    z => z
+    w => 1
+==== r3_if_eol_lam_arrowin
+def f = x match
+  case y if
+      xs.exists: z =>
+        z => 1
+==== r3_if_eol_lam_ctrl
+def f = x match
+  case y if
+      xs.exists: z =>
+        z
+  => 1
+==== r3_if_eol_lam_arrow_at_cond
+def f = x match
+  case y if
+      xs.exists: z =>
+        z
+      => 1
+==== r3_if_eol_plain
+def f = x match
+  case y if
+      xs.exists(z => z) => 1
+==== r3_trailing_infix_lam_arrowin
+def f = x match
+  case y if a &&
+      xs.exists: z =>
+        z => 1
+==== r3_trailing_infix_lam_ctrl
+def f = x match
+  case y if a &&
+      xs.exists: z =>
+        z
+  => 1
+==== r3_lam_select_after
+def f = x match
+  case y if xs.map: z =>
+    z + 1
+  .contains(3) => 1
+==== r3_eol_select_after
+def f = x match
+  case y if xs.filter:
+    _ > 0
+  .nonEmpty => 1
+==== r3_lam_if_then_else_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then z < 9 else false => 1
+==== r3_lam_if_then_else_ctrl
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then z < 9 else false
+  => 1
+==== r3_eol_if_then_else_arrowin
+def f = x match
+  case y if p:
+    if a then b else c => 1
+==== r3_lam_if_multiline_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then
+      z < 9
+    else false => 1
+==== r3_brace_line_case_lam
+def f = xs.collect { case y if ys.exists: z =>
+    z => 1
+}
+==== r3_brace_line_case_lam_ctrl
+def f = xs.collect { case y if ys.exists: z =>
+    z
+  => 1
+}
+==== r3_catch_finally_lam
+def f = try g catch
+  case y if ys.exists: z =>
+    z => 1
+finally h
+==== r3_stat_after_match
+def f =
+  x match
+    case y if xs.exists: z =>
+      z => 1
+  g
+==== r3_stat_after_match_ctrl
+def f =
+  x match
+    case y if xs.exists: z =>
+      z
+    => 1
+  g
+==== r3_lam_paren_close_arrow
+def f = x match
+  case y if xs.exists: z =>
+    g(
+      z
+    ) => 1
+==== r3_lam_nested_colon_lam_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    z.ys.exists: w =>
+      w => 1
+==== r3_eol_nested_colon_lam
+def f = x match
+  case y if xs.exists:
+    ys.exists: w =>
+      w
+  => 1
+==== r3_if_eol_eol
+def f = x match
+  case y if
+      p:
+        Boolean
+    => 1
+==== r3_if_eol_eol_arrowin
+def f = x match
+  case y if
+      p:
+        Boolean => 1
+    => 2
+==== r3_if_eol_eol_arrowin_only
+def f = x match
+  case y if
+      p:
+        Boolean => 1
+==== r3_if_eol_eol_lambda
+def f = x match
+  case y if
+      xs.exists:
+        z => z > 0
+    => 1
+==== r4_typed_pat_eol_ctrl
+def f(x: Any) = x match
+  case s: String if g:
+    s.length > 4
+  => s
+  case x => x.toString
+==== r4_typed_pat_eol_arrowin
+def f(x: Any) = x match
+  case s: String if g:
+    s.length > 4 => s
+  case x => x.toString
+==== r4_typed_pat_lam
+def f = x match
+  case s: String if xs.exists: z =>
+    z == s => 1
+  case _ => 2
+==== r4_typed_pat_lam_ctrl
+def f = x match
+  case s: String if xs.exists: z =>
+    z == s
+  => 1
+  case _ => 2
+==== r4_typed_pat_flat
+def f(x: Any) =
+  x match
+  case s: String if g:
+    s.length > 4
+  => s
+  case x => x.toString
+==== r4_typed_pat_flat_arrowin
+def f(x: Any) =
+  x match
+  case s: String if g:
+    s.length > 4 => s
+  case x => x.toString
+==== r4_extractor_pat_lam
+def f = x match
+  case Some(s) if xs.exists: z =>
+    z == s => 1
+  case _ => 2
+==== r4_dotty_i25002_nested
+def test =
+  list.map:
+    case i: Int =>
+      n match
+      case j: Int
+      if list.exists: k =>
+        list.exists(_ == j && j == k)
+      =>
+        1
+      case _ => 2
+    case _ => 3
+==== r4_dotty_i25002_nested_arrowin
+def test =
+  list.map:
+    case i: Int =>
+      n match
+      case j: Int
+      if list.exists: k =>
+        list.exists(_ == j && j == k) =>
+        1
+      case _ => 2
+    case _ => 3
+==== r4_end_marker
+def f =
+  x match
+    case y if xs.exists: z =>
+      z => 1
+  end match
+==== r4_end_marker_ctrl
+def f =
+  x match
+    case y if xs.exists: z =>
+      z
+    => 1
+  end match
+==== r4_leading_dot_lam
+def f = x match
+  case y if xs
+      .exists: z =>
+        z => 1
+==== r4_leading_dot_lam_ctrl
+def f = x match
+  case y if xs
+      .exists: z =>
+        z
+  => 1
+==== r4_lam_arrow_eol_deeper_body
+def f = x match
+  case y if xs.exists: z =>
+    z =>
+      1
+==== r4_eol_arrow_eol_deeper_body
+def f(x: Any) = x match
+  case s: String if g:
+    s.length > 4 =>
+      s
+==== r4_lam_comment_guard_line
+def f = x match
+  case y if xs.exists: z => // c
+    z => 1
+==== r4_eol_comment_guard_line
+def f(x: Any) = x match
+  case s: String if g: // c
+    s.length > 4 => s
+==== r4_catch_brace_lam_ctrl
+def f = try g catch {
+  case y if ys.exists: z =>
+    z
+  => 1
+}
+==== r4_catch_finally_lam_ctrl
+def f = try g catch
+  case y if ys.exists: z =>
+    z
+  => 1
+finally h
+==== r5_nested_guard_lam_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case w if ws.exists: v =>
+        v => true
+      case _ => false
+  => 1
+==== r5_nested_guard_lam_ctrl
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case w if ws.exists: v =>
+        v
+      => true
+      case _ => false
+  => 1
+==== r5_nested_guard_pf_arrowin
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists: c =>
+      c => true
+    case _ => false
+  => 1
+==== r5_nested_guard_outer_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case w if ws.exists: v =>
+        v => true
+      case _ => false
+    => 1
+==== r5_comment_first_line_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    // c
+    z => 1
+==== r5_comment_first_line_ctrl
+def f = x match
+  case y if xs.exists: z =>
+    // c
+    z
+  => 1
+==== r5_comment_line_before_arrow
+def f = x match
+  case y if xs.exists: z =>
+    z
+    // c
+  => 1
+==== r5_comment_line_outdented
+def f = x match
+  case y if xs.exists: z =>
+    z
+  // c
+  => 1
+==== r5_eol_comment_first_line
+def f = x match
+  case y if p:
+    // c
+    Boolean => 1
+==== r5_g3_brace
+def f = x match {
+  case y if
+      xs.exists: z =>
+        z
+  => 1
+}
+==== r5_g3_catch
+def f = try g catch
+  case y if
+      xs.exists: z =>
+        z
+  => 1
+==== r5_g3_infix
+def f = x match
+  case y if
+      a && xs.exists: z =>
+        z
+  => 1
+==== r5_g3_multi_param
+def f = x match
+  case y if
+      m.exists: (k, v) =>
+        v
+  => 1
+==== r5_g3_second_case
+def f = x match
+  case 0 => 0
+  case y if
+      xs.exists: z =>
+        z
+  => 1
+  case _ => 2
+==== r5_extractor_pat_lam_ctrl
+def f = x match
+  case Some(s) if xs.exists: z =>
+    z == s
+  => 1
+  case _ => 2
+==== r5_leading_infix_eol_lambda
+def f = x match
+  case y if a
+    && xs.exists:
+      z => z
+  => 1
+==== r5_trailing_infix_eol_lambda
+def f = x match
+  case y if a &&
+      xs.exists:
+        z => z
+  => 1
+==== r5_leading_dot_eol_lambda
+def f = x match
+  case y if xs
+      .exists:
+        z => z
+  => 1
+==== r5_next_line_guard_eol_lambda
+def f = x match
+  case y
+    if xs.exists:
+      z => z
+    => 1
+==== r5_flat_eol_lambda
+a match
+case n
+if foo:
+  b => true
+=>
+  2
+==== r5_leading_infix_eol
+def f = x match
+  case y if a
+    && p:
+      Boolean
+  => 1
+==== r5_leading_infix_eol_arrowin
+def f = x match
+  case y if a
+    && p:
+      Boolean => 1
+==== r5_g3_pf_brace
+def f = xs.collect {
+  case y if
+      ys.exists: z =>
+        z
+  => 1
+}
+==== r5_g3_brace_infix
+def f = x match {
+  case y if
+      a && xs.exists: z =>
+        z
+  => 1
+}
+==== r5_g3_brace_arrow_at_cond
+def f = x match {
+  case y if
+      xs.exists: z =>
+        z
+      => 1
+}
+==== r5_brace_leading_infix_eol_lambda
+def f = x match {
+  case y if a
+    && xs.exists:
+      z => z
+  => 1
+}
+==== r5_next_line_guard_eol_lambda_brace
+def f = x match {
+  case y
+    if xs.exists:
+      z => z
+    => 1
+}
+==== r5_next_line_guard_eol_lambda_arrow_at_case
+def f = x match
+  case y
+    if xs.exists:
+      z => z
+  => 1
+==== r6_g4_colon_cases
+def f = xs.collect:
+  case y if
+      ys.exists: z =>
+        z
+  => 1
+==== r6_g4_catch_brace
+def f = try g catch {
+  case y if
+      xs.exists: z =>
+        z
+  => 1
+}
+==== r6_g4_brace_line_case
+def f = xs.collect { case y if
+      ys.exists: z =>
+        z
+  => 1
+}
+==== r6_g4_brace_trailing_infix_eol_lambda
+def f = x match {
+  case y if a &&
+      xs.exists:
+        z => z
+  => 1
+}
+==== r6_g4_brace_leading_dot_eol_lambda
+def f = x match {
+  case y if xs
+      .exists:
+        z => z
+  => 1
+}
+==== r6_g4_colon_cases_next_line_guard
+def f = xs.collect:
+  case y
+    if ys.exists:
+      z => z
+  => 1
+==== r6_conflict_colon_cases_eol
+def f = xs.collect:
+  case y if ys.exists:
+    z => z
+  => 1
+==== r6_conflict_colon_cases_lam
+def f = xs.collect:
+  case y if ys.exists: z =>
+    z => w
+  => 1
+==== r6_lam_brace_close_arrow
+def f = x match
+  case y if xs.exists: z =>
+    ys.exists { w =>
+      w == z
+    } => 1
+==== r6_lam_brace_close_arrow_ctrl
+def f = x match
+  case y if xs.exists: z =>
+    ys.exists { w =>
+      w == z
+    }
+  => 1
+==== r6_match_in_parens
+def f = g(x match
+  case y if xs.exists: z =>
+    z => 1
+)
+==== r6_match_in_parens_ctrl
+def f = g(x match
+  case y if xs.exists: z =>
+    z
+  => 1
+)
+==== r6_eol_arrow_eol_same_indent
+def f = x match
+  case y if xs.contains:
+    y =>
+    1
+==== r6_alt_pat_lam
+def f = x match
+  case A | B if xs.exists: z =>
+    z => 1
+==== r6_alt_pat_next_line_lam
+def f = x match
+  case A
+     | B if xs.exists: z =>
+         z
+  => 1
+==== r6_multiline_pat_lam_ctrl
+def f = x match
+  case Some(
+         y) if xs.exists: z =>
+    z
+  => 1
+==== r6_leading_infix_out_ctrl
+def f = x match
+  case y if a
+        && b
+    && xs.exists: z =>
+      z
+  => 1
+==== r6_lam_arrow_eol_body_shallower
+def f = x match
+  case y if xs.exists: z =>
+      z =>
+    1
+==== r6_binder_pat_lam
+def f = x match
+  case s @ Some(_) if xs.exists: z =>
+    z => 1
+==== r6_lam_then_more_cases_brace
+def f = x match {
+  case y if xs.exists: z =>
+    z => 1
+  case _ => 2
+}
+==== r7_multiline_pat_lam_arrowin
+def f = x match
+  case Some(
+         y) if xs.exists: z =>
+    z => 1
+==== r7_alt_pat_next_line_lam_arrowin
+def f = x match
+  case A
+     | B if xs.exists: z =>
+         z => 1
+==== r7_body_dot_deeper
+def f = x match
+  case y if xs.exists: z =>
+    z => g
+      .h
+==== r7_body_infix_deeper
+def f = x match
+  case y if xs.exists: z =>
+    z => a +
+      b
+==== r7_body_paren_deeper
+def f = x match
+  case y if xs.exists: z =>
+    z => g(
+      1)
+==== r7_body_colon_lambda
+def f = x match
+  case y if xs.exists: z =>
+    z => ys.foreach: w =>
+      w
+==== r7_eol_body_dot_deeper
+def f(x: Any) = x match
+  case s: String if g:
+    s.length > 4 => s
+      .trim
+==== r7_body_dot_deeper_brace
+def f = x match {
+  case y if xs.exists: z =>
+    z => g
+      .h
+  case _ => 2
+}
+==== r7_subcase_inner_guard
+def f = x match
+  case Some(v) if v match
+    case w if ws.exists: z =>
+      z => 1
+==== r7_subcase_after_guard_colon
+def f = x match
+  case Some(v) if xs.exists: z =>
+      z == v
+    if v match
+      case 1 => 1
+==== r7_subcase_then_guard_case
+def f = x match
+  case Some(v) if v match
+    case 1 => 1
+  case y if xs.exists: z =>
+    z => 1
+==== r7_lam_if_parens_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    if (z > 0) z < 9 else false => 1
+==== r7_lam_blank_line_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    val w = z
+
+    w => 1
+==== r7_lam_blank_line_ctrl
+def f = x match
+  case y if xs.exists: z =>
+    z
+
+  => 1
+==== r7_lam_bracket_arrow
+def f = x match
+  case y if fs.exists: f =>
+    f.isInstanceOf[Int => Int] => 1
+==== r7_scala2_brace_lambda_ctrl
+def f = x match {
+  case y if xs.exists { z =>
+    z
+  } => 1
+}
+==== r9_n_ex1_arrow4
+def f(x: Int, xs: List[Int]) = x match
+  case y if
+      xs.exists: z =>
+        z > y
+    => 1
+  case _ => 2
+==== r9_n_ifline_lam
+def f(x: Int, xs: List[Int]) = x match
+  case y
+  if xs.exists: z =>
+    z > y
+  => 1
+  case _ => 2
+==== r9_n_ifline_lamlam
+def f(x: Int, xs: List[Int]) = x match
+  case y
+  if xs.forall: w =>
+    xs.exists: z =>
+      z > w
+  => 1
+  case _ => 2
+==== r9_n_ifline4_lam
+def f(x: Int, xs: List[Int]) = x match
+  case y
+    if xs.exists: z =>
+      z > y
+    => 1
+  case _ => 2
+==== r9_n_ifline4_lamlam
+def f(x: Int, xs: List[Int]) = x match
+  case y
+    if xs.forall: w =>
+      xs.exists: z =>
+        z > w
+    => 1
+  case _ => 2
+==== r9_n_lam_lam
+def f(x: Int, xs: List[Int]) = x match
+  case y if xs.forall: w =>
+      xs.exists: z =>
+        z > w
+  => 1
+  case _ => 2
+==== r9_n_lam_plain
+def f(x: Int, xs: List[Int]) = x match
+  case y if xs.forall: w =>
+      val g = (z: Int) => z > w
+      xs.exists(g)
+  => 1
+  case _ => 2
+==== r9_n_ok1_fntype
+def f(x: Int, xs: List[Int], a: Boolean) = x match
+  case y if a
+    && xs.forall: w =>
+      val p: Int => Boolean = _ > w
+      xs.exists(p)
+  => 1
+  case _ => 2
+==== r9_n_ok1_lamlam
+def f(x: Int, xs: List[Int], a: Boolean) = x match
+  case y if a
+    && xs.forall: w =>
+      xs.exists: z =>
+        z > w
+  => 1
+  case _ => 2
+==== r9_n_ok1_lamplain
+def f(x: Int, xs: List[Int], a: Boolean) = x match
+  case y if a
+    && xs.forall: w =>
+      val g = (z: Int) => z > w
+      xs.exists(g)
+  => 1
+  case _ => 2
+==== r9_n_ok1_paren
+def f(x: Int, xs: List[Int], a: Boolean) = x match
+  case y if a
+    && xs.forall: w =>
+      xs.exists(z => z > w)
+  => 1
+  case _ => 2
+==== r9_q_body_colon_lam
+def f(x: Int, xs: List[Int]) = x match
+  case y
+    if xs.exists:
+      _ > y
+    =>
+      xs.count: z =>
+        z > y
+  case _ => 2
+==== r9_q_body_lam
+def f(x: Int, xs: List[Int]) = x match
+  case y if
+      xs.exists(_ > y)
+  =>
+    val g = (z: Int) => z > y
+    xs.count(g)
+  case _ => 2
+==== r9_q_caseline_lam
+def f(x: Int, xs: List[Int]) = x match
+  case y if xs.exists: z =>
+      z > y
+  => 1
+  case _ => 2
+==== r9_q_caseline_lam4
+def f(x: Int, xs: List[Int]) = x match
+  case y if xs.exists: z =>
+    z > y
+  => 1
+  case _ => 2
+==== r9_q_dedent_infix
+def f(x: Int, a: Boolean, b: Boolean) = x match
+  case y if
+      a
+    && b
+  => 1
+  case _ => 2
+==== r9_q_dedent_trailing
+def f(x: Int, a: Boolean, b: Boolean) = x match
+  case y if
+      a &&
+    b
+  => 1
+  case _ => 2
+==== r9_q_if_block_fntype
+def f(x: Int, xs: List[Int]) = x match
+  case y if
+      val p: Int => Boolean = _ > y
+      xs.exists(p)
+  => 1
+  case _ => 2
+==== r9_q_if_block_lam
+def f(x: Int, xs: List[Int]) = x match
+  case y if
+      val g = (z: Int) => z > y
+      xs.exists(g)
+  => 1
+  case _ => 2
+==== r9_q_if_inner_match
+def f(x: Int, xs: List[Int]) = x match
+  case y if
+      y match
+        case 0 => true
+        case _ => false
+  => 1
+  case _ => 2
+==== r9_q_if_paren_lam
+def f(x: Int, xs: List[Int]) = x match
+  case y if
+      xs.exists(z => z > y)
+  => 1
+  case _ => 2
+==== r9_q_match_eol_col4
+def f(x: Int, xs: List[Int]) = x match
+  case y if y match
+    case 0 => xs.exists(z => z > y)
+    case _ => false
+  => 1
+  case _ => 2
+==== r9_q_match_eol_fntype
+def f(x: Int, xs: List[Int]) = x match
+  case y if y match
+      case 0 =>
+        val p: Int => Boolean = _ > y
+        xs.exists(p)
+      case _ => false
+    => 1
+  case _ => 2
+==== r9_v_match
+def f(x: Int, xs: List[Int]) = x match
+  case y if y match
+      case 0 => xs.exists: z =>
+        z > y
+      case _ => false
+    => 1
+  case _ => 2
+==== r9_v_match_ctl
+def f(x: Int, xs: List[Int]) = x match
+  case y if y match
+      case 0 => xs.exists(z => z > y)
+      case _ => false
+    => 1
+  case _ => 2
+==== r9_ctx_fntype
+def f(x: Int, xs: List[Int], a: Boolean) = x match
+  case y if a
+    && xs.forall: w =>
+      val p: Int ?=> Boolean = summon[Int] > w
+      xs.exists(z => p(using z))
+  => 1
+  case _ => 2
+==== r10_empty_body_lam
+def f = x match
+  case y if xs.exists: z =>
+    z > y =>
+  case _ => g()
+==== r10_empty_body_ctrl
+def f = x match
+  case y if xs.exists: z =>
+    z > y
+  =>
+  case _ => g()
+==== r10_empty_body_eol
+def f = x match
+  case y if xs.contains:
+    y =>
+  case _ => g()
+==== r10_empty_body_catch
+def f = try g() catch {
+  case e if ignored.exists: c =>
+    c == e =>
+}
+==== r10_empty_body_catch_ctrl
+def f = try g() catch {
+  case e if ignored.exists: c =>
+    c == e
+  =>
+}
+==== r10_empty_body_last
+def f = x match
+  case y if xs.exists: z =>
+    z > y =>
+==== r10_in_colon_lam
+def f = xs.foreach: x =>
+  x match
+    case y if ys.exists: z =>
+      z > y => g(y)
+    case _ => g(0)
+==== r10_in_colon_lam_ctrl
+def f = xs.foreach: x =>
+  x match
+    case y if ys.exists: z =>
+      z > y
+    => g(y)
+    case _ => g(0)
+==== r10_after_colon_body
+def f = x match
+  case 0 => xs.foreach: z =>
+      g(z)
+  case y if ys.exists: z =>
+    z > y => 1
+==== r10_after_colon_body_ctrl
+def f = x match
+  case 0 => xs.foreach: z =>
+      g(z)
+  case y if ys.exists: z =>
+    z > y
+  => 1
+==== r10_brace_infix_fntype
+def f(x: Int, xs: List[Int], a: Boolean) = x match {
+  case y if a
+    && xs.exists:
+      val p: Int => Boolean = _ > y
+      p(y)
+  => 1
+}
+==== r10_brace_ok1_fntype
+def f(x: Int, xs: List[Int], a: Boolean) = x match {
+  case y if a
+    && xs.forall: w =>
+      val p: Int => Boolean = _ > w
+      xs.exists(p)
+  => 1
+}
+==== r10_brace_ok1_lamlam
+def f(x: Int, xs: List[Int], a: Boolean) = x match {
+  case y if a
+    && xs.forall: w =>
+      xs.exists: z =>
+        z > w
+  => 1
+}
+==== r10_brace_ifline_lamlam
+def f(x: Int, xs: List[Int]) = x match {
+  case y
+  if xs.forall: w =>
+    xs.exists: z =>
+      z > w
+  => 1
+}
+==== r10_eol_placeholder
+def f(x: Int, xs: List[Int]) = x match
+  case y if xs.exists:
+    _ > y => 1
+  case _ => 2
+==== r10_lam_placeholder_body
+def f(x: Int, xs: List[List[Int]]) = x match
+  case y if xs.exists: z =>
+    z.exists(_ > y) && z.forall(_ < 9) => 1
+  case _ => 2
+==== r10_ctx_lam
+def f(x: Int, g: (Int ?=> Boolean) => Boolean) = x match
+  case y if g: (z: Int) ?=>
+    z > y => 1
+  case _ => 2
+==== x_infix_after_region
+def f = x match
+  case y
+    if xs.exists:
+      z => z > 0
+    && b => 1
+==== x_dot_after_region
+def f = x match
+  case y
+    if xs.filter:
+      z => z > 0
+    .nonEmpty => 1
+==== x_infix_after_region_caseline
+def f = x match
+  case y if xs.exists:
+    z => z > 0
+  && b => 1
+==== x_ctx_oneline
+def f(x: Int, g: (Int ?=> Boolean) => Boolean) = x match
+  case y if g: (z: Int) ?=> z > y => 1
+  case _ => 2
+==== x_ctx_eol_direct
+def f(x: Int, g: (Int ?=> Boolean) => Boolean) = x match
+  case y if g:
+    (z: Int) ?=> z > y => 1
+  case _ => 2
+==== x_ctx_eol_body
+def f(x: Int, g: (Int ?=> Boolean) => Boolean) = x match
+  case y if g:
+    (z: Int) ?=>
+      z > y
+  => 1
+  case _ => 2
+==== x_ctx_lam_ctrl
+def f(x: Int, g: (Int ?=> Boolean) => Boolean) = x match
+  case y if g: (z: Int) ?=>
+    z > y
+  => 1
+  case _ => 2
+==== x_subcase_plain
+def f = x match
+  case Some(v) if v match
+    case 1 => 1
+  case y if a => 2
+==== x_two_direct_then_smaller
+def f = x match
+  case y
+    if xs.exists:
+      val g = (z: Int) => z > 0
+      g(1)
+    => 1
+==== x_comment_line_then_smaller
+def f = x match
+  case y
+    if xs.exists:
+      z => z > 0
+      // c
+    => 1
+==== x_inner_case_next_line_body
+def f = x match
+  case y if xs.exists:
+    case b =>
+      b
+  => 1
+==== x_inner_case_then_case_arrowin
+def f = x match
+  case y if xs.exists:
+    case 0 => false
+    case b => b => 1
+==== x_paren_arg_lines
+def f = x match
+  case y if xs.exists:
+    z => (z >
+  0) => 1
+==== x_infix_after_region_at_case
+def f = x match
+  case y if a
+    && xs.exists:
+      z => z > 0
+  && b => 1
+==== x_dot_after_region_caseline
+def f = x match
+  case y if xs.filter:
+    z => z > 0
+  .nonEmpty => 1
+==== x_dot_after_region_lam
+def f = x match
+  case y
+    if xs.filter: z =>
+      z > 0
+    .nonEmpty => 1
+==== x_nonguard_infix_after_region
+def f = xs.exists:
+    z => z > 0
+  && b
+==== x_cond_infix_after_region
+def f = if xs.exists:
+      z => z > 0
+    && b
+  then 1 else 2
+==== x_infix_after_region_lam
+def f = x match
+  case y
+    if xs.exists: z =>
+      z > 0
+    && b => 1
+==== x_subcase_lambda_body
+def f = x match
+  case Some(v) if v match
+    case 1 => (a: Int) => a
+  case _ => g
+==== x_subcase_lambda_body_last
+def f = x match
+  case Some(v) if v match
+    case 1 => (a: Int) => a
+==== x_guard_match_lambda_body
+def f = x match
+  case y if y match
+      case 0 => (a: Int) => a > 0
+      case _ => false
+    => 1
+==== r1_body_lines_then_dot
+def f(x: Int, xs: List[Int]) =
+  x match
+    case 0 => 0
+    case y if xs.exists: z =>
+      z > y =>
+      val a = 1
+      a
+  .toString
+==== r1_comment_then_dot
+def f(x: Int, xs: List[Int]) =
+  x match
+    case 0 => 0
+    case y if xs.exists: z =>
+      z > y => 1 // one
+    // last
+  .toString
+==== r1_dot_after_colon_arg
+def f(x: Int, ys: List[Int]) = Option:
+    x match
+      case 0 => 0
+      case y if ys.exists: z =>
+        z > y => 1
+  .get
+==== r1_dot_after_colon_lam
+def f(xs: List[Int], ys: List[Int]) = xs.map: x =>
+    x match
+      case 0 => 0
+      case y if ys.exists: z =>
+        z > y => 1
+  .sum
+==== r1_dot_after_colon_lam_ctrl
+def f(xs: List[Int], ys: List[Int]) = xs.map: x =>
+    x match
+      case 0 => 0
+      case y if ys.exists: z =>
+        z > y
+      => 1
+  .sum
+==== r1_dot_after_colon_lam_eol
+def f(xs: List[Int], ys: List[Int]) = xs.map: x =>
+    x match
+      case 0 => 0
+      case y if ys.exists:
+        _ > y => 1
+  .sum
+==== r1_dot_after_colon_lam_twocases
+def f(xs: List[Int], ys: List[Int]) = xs.map: x =>
+    x match
+      case y if ys.exists: z =>
+        z > y => 1
+      case _ => 0
+  .sum
+==== r1_dot_after_match_ctrl
+def f(x: Int, xs: List[Int]) =
+  x match
+    case 0 => 0
+    case y if xs.exists: z =>
+      z > y
+    => 1
+  .toString
+==== r1_dot_after_match_eol
+def f(x: Int, xs: List[Int]) =
+  x match
+    case 0 => 0
+    case y if xs.exists:
+      _ > y => 1
+  .toString
+==== r1_dot_after_match_lam
+def f(x: Int, xs: List[Int]) =
+  x match
+    case 0 => 0
+    case y if xs.exists: z =>
+      z > y => 1
+  .toString
+==== r1_dot_after_match_plain
+def f(x: Int, xs: List[Int]) =
+  x match
+    case 0 => 0
+    case y if xs.exists(_ > y) => 1
+  .toString
+==== r1_end_match
+def f(x: Int, xs: List[Int]) =
+  x match
+    case 0 => 0
+    case y if xs.exists: z =>
+      z > y => 1
+  end match
+==== r1_infix_after_colon_lam
+def f(xs: List[Int], ys: List[Int], q: Boolean) = xs.forall: x =>
+    x match
+      case 0 => true
+      case y if ys.exists: z =>
+        z > y => false
+  && q
+==== r1_infix_after_match
+def f(x: Int, xs: List[Int], q: Boolean) =
+  x match
+    case 0 => false
+    case y if xs.exists: z =>
+      z > y => true
+  || q
+==== r1_inner_match_then_dot
+def f(x: Int, w: Int, xs: List[Int]) = x match
+  case 0 =>
+    w match
+      case 0 => 0
+      case y if xs.exists: z =>
+        z > y => 1
+    .toString
+  case _ => ""
+==== y_g9_arg_at_if
+def f = x match
+  case y
+    if xs.exists:
+    z => z > 0
+  => 1
+==== y_g9_subcase_oneline_body_next
+def f = x match
+  case Some(v)
+    if v match case 1 =>
+      true
+  case _ => false
+==== y_g9_infix_at_if_paren
+def f = x match
+  case y
+    if xs.exists(z =>
+      z > 0)
+    && b => 1
+==== y_g9_infix_deeper
+def f = x match
+  case y
+    if xs.exists:
+        z => z > 0
+      || b => 1
+==== y_g9_infix_at_if_two_args
+def f = x match
+  case y
+    if xs.exists:
+      z => z > 0
+    && ys.exists:
+      w => w > 0
+    => 1
+==== y_g9_infix_at_if_two_args_arrowin
+def f = x match
+  case y
+    if xs.exists: z =>
+      z > 0
+    && ys.exists: w =>
+      w > 0 => 1
+==== y_g9_infix_at_if_braces
+def f = x match {
+  case y
+    if xs.exists:
+      z => z > 0
+    && b => 1
+}
+==== y_b2_infix_at_case_lam
+def f = x match
+  case y if a
+    && xs.exists: z =>
+      z > 0
+  && b => 1
+==== y_b2_dot_at_case_after_infix
+def f = x match
+  case y if a
+    && xs.filter:
+      z => z > 0
+  .nonEmpty => 1
+==== y_g8_inner_case_infix_next
+def f = x match
+  case y if xs.exists:
+    case b => b
+      && c => 1
+==== y_g8_inner_case_next_line_guard
+def f = x match
+  case y
+    if xs.exists:
+      case b => b
+    => 1
+==== y_g8_inner_case_next_line_guard_arrowin
+def f = x match
+  case y
+    if xs.exists:
+      case b => b => 1
+==== y_g8_inner_case_guard
+def f = x match
+  case y if xs.exists:
+    case b if b => b => 1
+==== y_g8_else_eol
+def f = x match
+  case y if if a then b else
+      c => 1
+==== y_g8_match_in_arg
+def f = x match
+  case y if xs.exists:
+    z => z match
+      case 1 => true
+      case _ => false
+  => 1
+==== y_g8_match_in_arg_lam
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case 1 => true
+      case _ => false
+    => 1
+==== z_b2_comment_dot
+def f = xs.map: x =>
+    x match
+      case 0 => 0
+      case y if ys.exists: z =>
+        z > y => 1
+    // done
+  .sum
+==== z_blank_then_arrow
+def f = x match
+  case y
+    if xs.exists:
+      z => z > 0
+
+    => 1
+==== z_blank_then_infix
+def f = x match
+  case y
+    if xs.exists:
+      z => z > 0
+
+    && b => 1
+==== z_blank_then_infix_deeper
+def f = x match
+  case y
+    if xs.exists:
+        z => z > 0
+
+      && b
+    => 1
+==== z_brace_case_brace_line_if_next
+def f = x match { case y
+  if xs.exists: z =>
+    z > 0 => 1
+}
+==== z_brace_if_line_eol_infix_at_case
+def f = x match {
+  case y
+    if xs.exists:
+      z => z > 0
+  && b => 1
+}
+==== z_brace_if_line_lam_arrowin
+def f = x match {
+  case y
+    if xs.exists: z =>
+      z > 0 => 1
+}
+==== z_brace_lam_inner_guard_colon
+def f = x match
+  case y if xs.exists { z =>
+    z match
+      case w if ws.exists: v =>
+        v => true
+      case _ => false
+  } => 1
+==== z_comment_after_case_body
+def f = x match
+  case y if xs.exists: z =>
+    z > 0 => 1
+  // a comment
+  case _ => 2
+==== z_comment_then_dot_at_case
+def f = x match
+  case y if a && xs.filter: z =>
+      z > 0
+    // nonEmpty
+    .nonEmpty => 1
+==== z_comment_then_infix_at_if
+def f = x match
+  case y
+    if xs.exists:
+      z => z > 0
+    // and b
+    && b => 1
+==== z_end_def
+def f =
+  x match
+    case y if xs.exists: z =>
+      z => 1
+end f
+==== z_eol_match_bodyline
+def f = x match
+  case y if p:
+    q match
+      case 0 => false
+      case _ => true
+    => 1
+==== z_eol_try_catch_bodyline
+def f = x match
+  case y if p:
+    try q
+    catch case _: Exception => false
+    => 1
+==== z_g9_brace_if_line_paren_colon_lam
+def f = x match {
+  case y
+    if xs.exists(z => z.ws.exists: w =>
+      w > z) => 1
+}
+==== z_g9_if_line_body_next
+def f = x match
+  case y
+    if a =>
+      1
+  case _ => 2
+==== z_g9_if_line_brace_body_next
+def f = x match {
+  case y
+    if a =>
+      1
+  case _ => 2
+}
+==== z_g9_if_line_eol_arrow_at_if
+def f = x match
+  case y
+    if xs.exists:
+      z => z > 0
+    => 1
+  case _ => 2
+==== z_g9_if_line_infix_at_if_body_next
+def f = x match
+  case y
+    if xs.exists:
+      z => z > 0
+    && b =>
+      1
+  case _ => 2
+==== z_g9_if_line_lam_arrowin_next_case
+def f = x match
+  case y
+    if xs.exists: z =>
+      z > 0 => 1
+  case _ => 2
+==== z_g9_lam_if_then_else
+def f = x match
+  case y
+    if xs.exists: z =>
+      if z > 0 then true
+      else false
+    => 1
+==== z_g9_match_in_guard_line
+def f = x match
+  case y
+    if y match
+      case 0 => false
+      case _ => true
+    => 1
+  case _ => 2
+==== z_g9_plain_leading_infix
+def f = x match
+  case y
+    if a
+    && b => 1
+  case _ => 2
+==== z_g9_plain_leading_infix_brace
+def f = x match {
+  case y
+    if a
+    && b => 1
+  case _ => 2
+}
+==== z_g9_plain_leading_infix_deeper
+def f = x match
+  case y
+    if a
+      && b => 1
+  case _ => 2
+==== z_g9_plain_trailing_infix
+def f = x match
+  case y
+    if a &&
+    b => 1
+  case _ => 2
+==== z_guard_match_inner_guard_colon
+def f = x match
+  case y if y match
+      case w if ws.exists: z =>
+        z > w => true
+      case _ => false
+    => 1
+  case _ => 2
+==== z_lam_colon_lam_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    z.ws.exists: w =>
+      w > z
+    => 1
+==== z_lam_if_else_lines_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then true
+    else false
+    => 1
+==== z_lam_match_brace_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    z match { case 0 => false case _ => true } => 1
+==== z_lam_match_end_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case 0 => false
+      case _ => true
+    end match
+    => 1
+==== z_lam_new_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    new P(z).ok
+    => 1
+==== z_lam_try_catch_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch case _: Exception => false
+    => 1
+==== z_lam_try_catch_brace_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch { case _: Exception => false } => 1
+==== z_lam_try_catch_ctrl
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch case _: Exception => false
+  => 1
+==== z_lam_try_catch_lines_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch
+      case _: Exception => false
+    => 1
+==== z_lam_try_finally_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    finally g()
+    => 1
+==== z_match_in_then_else
+def f =
+  if c then
+    x match
+      case y if xs.exists: z =>
+        z > 0 => 1
+  else 2
+==== z_nested_guard_eol_cases_last
+def f = x match
+  case y if xs.exists:
+    case w if ws.exists: v =>
+      v > w => true
+    case _ => false => 1
+==== z_two_guards_blank_comment
+def f = x match
+  case y if xs.exists: z =>
+    z > 0 => 1
+
+  // other
+  case y if ys.exists: z =>
+    z < 0 => 2
+==== t_brace_case_after_try_catch_brace
+def f = x match {
+  case 1 => try a catch { case _: Exception => b }
+  case 2 => c
+}
+==== t_brace_guard_case_after_try_catch
+def f = x match {
+  case 1 => try a catch { case _: Exception => b }
+  case 2 if c => d
+}
+==== t_dot_after_try_catch_lines
+val r =
+  try a
+  catch case _: Exception => b
+  .toString
+==== t_finally_after_cases
+val r =
+  try a
+  catch
+    case _: Exception => b
+  finally c
+==== t_finally_next_line_brace
+val r =
+  try a
+  catch { case _: Exception => b }
+  finally c
+==== t_finally_next_line_case
+val r =
+  try a
+  catch case _: Exception => b
+  finally c
+==== t_finally_same_line
+val r = try a catch { case _: Exception => b } finally c
+==== t_finally_same_line_case
+val r = try a catch case _: Exception => b finally c
+==== t_for_guard_after_try_catch
+def f = for x <- try a catch { case _: Exception => b } if x > 0 yield x
+==== t_ind_case_after_try_catch_brace
+def f = x match
+  case 1 => try a catch { case _: Exception => b }
+  case 2 => c
+==== t_ind_case_after_try_lines
+def f = x match
+  case 1 =>
+    try a
+    catch case _: Exception => b
+  case 2 => c
+==== t_infix_after_try_catch_lines
+val r =
+  try a
+  catch case _: Exception => b
+  + c
+==== t_lam_body_try_catch_dot
+val r = xs.map: x =>
+    try f(x)
+    catch case _: Exception => 0
+  .sum
+==== t_pf_case_after_try_catch
+val g: PartialFunction[Int, Int] = {
+  case 1 => try a catch { case _: Exception => b }
+  case 2 => c
+}
+==== u_brace_lam_try_catch_bodyline
+def f = x match {
+  case y if xs.exists: z =>
+    try z > 0
+    catch case _: Exception => false
+    => 1
+}
+==== u_catch_lam_try_catch_bodyline
+def f = try g catch
+  case y if xs.exists: z =>
+    try z > 0
+    catch case _: Exception => false
+    => 1
+==== u_eol_if_then_bodyline
+def f = x match
+  case y if p:
+    if a then b
+    => 1
+==== u_eol_try_catch_lines_bodyline
+def f = x match
+  case y if p:
+    try q
+    catch
+      case _: Exception => false
+    => 1
+==== u_lam_try_catch_body_lines
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch case _: Exception => false
+    =>
+      g()
+      1
+==== u_lam_try_catch_brace_arrow_eol
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch { case _: Exception => false } =>
+      1
+==== u_lam_try_catch_brace_oneline_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0 catch { case _: Exception => false }
+    => 1
+==== u_lam_try_catch_case_arrow_sameline
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0 catch case _: Exception => false => 1
+==== u_lam_try_catch_dot_ctrl
+def f = x match
+  case y if xs.exists: z =>
+      try z > 0
+      catch case _: Exception => false
+    .nonEmpty => 1
+==== u_lam_try_catch_expr_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch h
+    => 1
+==== u_lam_try_catch_finally_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch case _: Exception => false
+    finally g()
+    => 1
+==== u_lam_try_catch_infix_after
+def f = x match
+  case y
+    if xs.exists: z =>
+        try z > 0
+        catch case _: Exception => false
+    && b => 1
+==== u_lam_try_catch_next_case
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch case _: Exception => false
+    => 1
+  case _ => 2
+==== u_lam_try_catch_oneline_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0 catch case _: Exception => false
+    => 1
+==== u_lam_try_catch_two_cases_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch
+      case _: ArithmeticException => false
+      case _: Exception => true
+    => 1
+==== u_lam_try_lines_catch_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try
+      z > 0
+    catch case _: Exception => false
+    => 1
+==== u_lam_try_oneline_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0 catch h
+    => 1
+==== u_lam_try_catch_oneline_ctrl
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0 catch case _: Exception => false
+  => 1
+==== w3_catch_case_paren_lam_arrow_eol
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch case _: Exception => ys.exists(w => w > z)
+    =>
+      1
+==== w3_catch_lines_case_body_colon_lam
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch
+      case _: Exception =>
+        ys.exists: w =>
+          w > z
+    => 1
+==== w3_else_colon_lam_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then true
+    else ys.exists: w =>
+        w > z
+    => 1
+==== w3_else_line_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then true
+    else false => 1
+==== w3_g4_brace_try_catch
+def f = x match {
+  case y
+    if xs.exists: z =>
+      try z > 0
+      catch case _: Exception => false
+  => 1
+}
+==== w3_g4_catch_paren_lam
+def f = x match
+  case y
+    if xs.exists: z =>
+      try z > 0
+      catch case e: Exception => ys.exists(w => w > z)
+    => 1
+==== w3_g4_if_eol_try_catch
+def f = x match
+  case y if
+      xs.exists: z =>
+        try z > 0
+        catch case _: Exception => false
+  => 1
+==== w3_g4_then_colon_lam
+def f = x match
+  case y
+    if xs.exists: z =>
+      if z > 0 then ys.exists: w =>
+          w > z
+      else false
+    => 1
+==== w3_g4_then_else_lines
+def f = x match
+  case y
+    if xs.exists: z =>
+      if z > 0
+      then true
+      else false
+    => 1
+==== w3_g4_try_catch_dot
+def f = x match
+  case y
+    if xs.filter: z =>
+        try z > 0
+        catch case _: Exception => false
+    .nonEmpty => 1
+==== w3_g4_try_catch_finally
+def f = x match
+  case y
+    if xs.exists: z =>
+      try z > 0
+      catch case _: Exception => false
+      finally g()
+    => 1
+==== w3_g4_try_colon_lam
+def f = x match
+  case y
+    if xs.exists: z =>
+      try ys.exists: w =>
+          w > z
+      catch case _: Exception => false
+    => 1
+==== w3_g8_case_if_else_arrowin
+def f = x match
+  case y if xs.exists:
+    case b => if b then c else d => 1
+==== w3_g8_case_if_else_next_line
+def f = x match
+  case y if xs.exists:
+    case b => if b then c else d
+    => 1
+==== w3_g8_case_plain_next_line
+def f = x match
+  case y if xs.exists:
+    case b => b
+    => 1
+==== w3_g8_case_try_brace_arrowin
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch { case _: Exception => false } => 1
+==== w3_g8_case_try_brace_next_line
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch { case _: Exception => false }
+    => 1
+==== w3_g8_case_try_case_next_line
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case _: Exception => false
+    => 1
+==== w3_g8_case_try_finally_arrowin
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) finally h() => 1
+==== w3_g8_case_try_lines
+def f = x match
+  case y if xs.exists:
+    case b =>
+      try g(b)
+      catch case _: Exception => false
+    => 1
+==== w3_if_paren_else_lines
+def f = x match
+  case y if xs.exists: z =>
+    if (z > 0) true
+    else false
+    => 1
+==== w3_if_then_else_three_lines
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0
+    then true
+    else false
+    => 1
+==== w3_lam_match_case_try_brace_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    z match { case b => try g(b) catch { case _: Exception => false } } => 1
+==== w3_nested_guard_try_inner
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case w if ws.exists: v =>
+        try v > w
+        catch case _: Exception => false
+        => true
+      case _ => false
+    => 1
+==== w3_t_case_body_if_then_case_guard
+def f = x match
+  case 0 => if a then b
+  case y if xs.exists: z =>
+    z > 0 => 1
+==== w3_t_case_body_try_then_case_guard
+def f = x match
+  case 0 =>
+    try a
+    catch case _: Exception => b
+  case y if xs.exists: z =>
+    z > 0 => 1
+==== w3_then_colon_lam_else_lines
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then ys.exists: w =>
+        w > z
+    else false
+    => 1
+==== w3_then_eol_else_eol_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then
+      true
+    else
+      false
+    => 1
+==== w3_then_nested_guard_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then z match
+      case w if ws.exists: v =>
+        v > w => true
+      case _ => false
+    else false
+    => 1
+==== w3_then_paren_lam_else_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then ys.exists(w => w > z) else false => 1
+==== w3_then_paren_lam_else_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then ys.exists(w => w > z) else false
+    => 1
+==== w3_try_body_colon_lam_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try ys.exists: w =>
+        w > z
+    catch case _: Exception => false
+    => 1
+==== w3_try_catch_finally_lines
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch
+      case _: Exception => false
+    finally
+      g()
+    => 1
+==== w3_try_catch_next_case_body
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    catch case _: Exception => false
+    => try 1 catch case _: Exception => 2
+  case _ => 3
+==== w3_try_finally_colon_lam
+def f = x match
+  case y if xs.exists: z =>
+    try z > 0
+    finally ys.foreach: w =>
+        g(w)
+    => 1
+==== w3_try_lines_colon_lam_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try
+      ys.exists: w =>
+        w > z
+    catch case _: Exception => false
+    => 1
+==== w3_try_nested_guard_arrowin
+def f = x match
+  case y if xs.exists: z =>
+    try z match
+      case w if ws.exists: v =>
+        v > w => true
+      case _ => false
+    catch case _: Exception => false
+    => 1
+==== w3_try_nested_guard_at_case
+def f = x match
+  case y if xs.exists: z =>
+    try z match
+      case w if ws.exists: v =>
+        v > w
+      => true
+      case _ => false
+    catch case _: Exception => false
+    => 1
+==== w3_try_paren_lam_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    try ys.exists(w => w > z)
+    catch case _: Exception => false
+    => 1
+==== v4_g8_case_try_catch_lines_after
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch
+      case _: Exception => false
+    => 1
+==== v4_g8_case_try_brace_ctrl
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch { case _: Exception => false }
+  => 1
+==== v4_g8_case_try_brace_braces
+def f = x match {
+  case y if xs.exists:
+    case b => try g(b) catch { case _: Exception => false }
+    => 1
+}
+==== v4_g8_case_try_brace_in_catch
+def f = try a catch
+  case y if xs.exists:
+    case b => try g(b) catch { case _: Exception => false }
+    => 1
+==== v4_g8_case_try_then_case
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch { case _: Exception => false }
+    case c => c
+    => 1
+==== v4_g8_first_case_then_case_try
+def f = x match
+  case y if xs.exists:
+    case 0 => false
+    case b => try g(b) catch case _: Exception => false
+    => 1
+==== v4_g8_case_try_catch_finally_next_line
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch { case _: Exception => false } finally h()
+    => 1
+==== v4_g8_case_try_brace_body_lines
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch { case _: Exception => false }
+    => 1
+      2
+==== v4_g8_case_if_then_next_line
+def f = x match
+  case y if p:
+    case b => if b then c
+    => 1
+==== v4_lam_match_case_try_next_line
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case b => try g(b) catch { case _: Exception => false }
+    => 1
+==== v4_g8_case_try_brace_next_case
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch { case _: Exception => false }
+    => 1
+  case _ => 2
+==== s4_case_colon_cases_try
+def f = x match
+  case y if xs.exists:
+    case b => b.ws.exists:
+      case w => try g(w) catch case _: Exception => false
+    => 1
+==== s4_case_colon_cases_try_inner_arrow
+def f = x match
+  case y if xs.exists:
+    case b => b.ws.exists:
+      case w => try g(w) catch case _: Exception => false
+      => 1
+==== s4_case_match_lines
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case 1 => true
+      case _ => false
+    => 1
+==== s4_case_one_line_match
+def f = x match
+  case y if xs.exists:
+    case b => b match case 1 => true
+    => 1
+==== s4_case_then_colon_lam_else
+def f = x match
+  case y if xs.exists:
+    case b => if b.ok then b.ws.forall: w =>
+        w > 0
+      else false
+    => 1
+==== s4_case_then_else_line_next_case
+def f = x match
+  case y if xs.exists:
+    case b => if b then c
+      else d
+    case _ => e
+    => 1
+==== s4_case_then_match_else
+def f = x match
+  case y if xs.exists:
+    case b => if b.ok then b.n match
+        case 1 => true
+        case _ => false
+      else false
+    => 1
+==== s4_case_then_no_else_next_case
+def f = x match
+  case y if xs.exists:
+    case b => if b then c
+    case _ => d
+    => 1
+==== s4_case_then_try_else
+def f = x match
+  case y if xs.exists:
+    case b => if b.ok then try g(b) catch { case _: Exception => false } else false
+    => 1
+==== s4_case_then_try_no_else
+def f = x match
+  case y if xs.exists:
+    case b => if b.ok then try g(b) catch { case _: Exception => () }
+    => 1
+==== s4_case_trailing_infix
+def f = x match
+  case y if xs.exists:
+    case b => g(b) &&
+        h(b)
+    => 1
+==== s4_case_try_catch_brace_lines
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch {
+        case _: Exception => false
+      }
+    => 1
+==== s4_case_try_catch_next_line
+def f = x match
+  case y if xs.exists:
+    case b => try g(b)
+      catch case _: Exception => false
+    => 1
+==== s4_case_try_colon_lam
+def f = x match
+  case y if xs.exists:
+    case b => try b.ws.forall: w =>
+        w > 0
+      catch case _: Exception => false
+    => 1
+==== s4_case_try_finally_line_next_case
+def f = x match
+  case y if xs.exists:
+    case b => try g(b)
+      finally h()
+    case _ => e
+    => 1
+==== s4_case_try_finally_next_line
+def f = x match
+  case y if xs.exists:
+    case b => try g(b)
+      finally h()
+    => 1
+==== s4_case_try_lines
+def f = x match
+  case y if xs.exists:
+    case b =>
+      try g(b)
+      catch case _: Exception => false
+    => 1
+==== s4_case_try_match_inner_guard_arrowin
+def f = x match
+  case y if xs.exists:
+    case b => try b match
+        case c if c.ws.exists: w =>
+          w > 0 => true
+        case _ => false
+      catch case _: Exception => false
+    => 1
+==== s4_case_try_match_inner_guard_ctrl
+def f = x match
+  case y if xs.exists:
+    case b => try b match
+        case c if c.ws.exists: w =>
+            w > 0
+          => true
+        case _ => false
+      catch case _: Exception => false
+    => 1
+==== s4_case_try_match_lines
+def f = x match
+  case y if xs.exists:
+    case b => try b match
+        case 1 => true
+        case _ => false
+      catch case _: Exception => false
+    => 1
+==== s4_case_try_paren_lam
+def f = x match
+  case y if xs.exists:
+    case b => try b.ws.forall(w => w > 0) catch { case _: Exception => false }
+    => 1
+==== s4_case_try_then_case_next
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case _: Exception => false
+    case c => if c.ok then true else false
+    => 1
+==== s4_case_try_then_else
+def f = x match
+  case y if xs.exists:
+    case b => try if b.ok then g(b) else false catch { case _: Exception => false }
+    => 1
+==== s4_g4_case_try_brace
+def f = x match {
+  case y if
+      xs.exists:
+        case b => try g(b) catch { case _: Exception => false }
+  => 1
+}
+==== s4_g4_case_try_case_next_line
+def f = x match {
+  case y
+    if xs.exists:
+      case b => try g(b) catch case _: Exception => false
+    => 1
+}
+==== s4_inner_guard_arrowin_try_body
+def f = x match
+  case y if xs.exists:
+    case b if b.ws.exists: w =>
+      w > 0 => try g(b) catch case _: Exception => false
+    => 1
+==== s4_inner_guard_lam_try_ctrl
+def f = x match
+  case y if xs.exists:
+    case b if b.ws.exists: w =>
+        try w > 0 catch { case _: Exception => false }
+      => true
+    => 1
+==== s4_inner_guard_lam_try_lines
+def f = x match
+  case y if xs.exists:
+    case b if b.ws.exists: w =>
+      try w > 0
+      catch case _: Exception => false
+      => true
+    => 1
+==== s4_lam_match_inner_guard_try_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case b if b.ws.exists: w =>
+        try w > 0
+        catch case _: Exception => false
+        => true
+      case _ => false
+    => 1
+==== s4_lam_match_inner_guard_try_ctrl
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case b if b.ws.exists: w =>
+        try w > 0
+        catch case _: Exception => false
+        => true
+      case _ => false
+  => 1
+==== s4_lam_then_no_else_match
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then z match
+      case 1 => true
+      case _ => false
+    => 1
+==== s4_lam_then_try_else
+def f = x match
+  case y if xs.exists: z =>
+    if z > 0 then try g(z) catch { case _: Exception => false } else false
+    => 1
+==== s4_lam_try_colon_lam
+def f = x match
+  case y if xs.exists: z =>
+    try z.ws.forall: w =>
+        w > 0
+    catch case _: Exception => false
+    => 1
+==== s4_lam_try_match_lines
+def f = x match
+  case y if xs.exists: z =>
+    try z match
+        case 1 => true
+        case _ => false
+    catch case _: Exception => false
+    => 1
+==== s4_nested_lam_inner_ctrl_last_case
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case w if ws.exists: v =>
+        v > w
+      => true
+  => 1
+==== s4_nested_lam_last_case_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case w if ws.exists: v =>
+        v => true
+    => 1
+==== s4_nested_lam_last_case_brace
+def f = x match {
+  case y if xs.exists: z =>
+    z match
+      case w if ws.exists: v =>
+        v => true
+  => 1
+}
+==== s4_nested_lam_last_case_ctrl
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case w if ws.exists: v =>
+        v => true
+  => 1
+==== s4_nested_pf_default_first
+def f = x match
+  case y if xs.exists:
+    case 0 => false
+    case b if bs.exists: c =>
+      c => true
+  => 1
+==== s4_nested_pf_eol_last_case
+def f = x match
+  case y if xs.exists:
+    case b if bs.contains:
+      b => true
+  => 1
+==== s4_nested_pf_last_case_bodyline
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists: c =>
+      c => true
+    => 1
+==== s4_nested_pf_last_case_ctrl
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists: c =>
+      c => true
+  => 1
+==== a1_nested_after_pat_case_indent
+def f = x match
+  case y
+    if xs.exists:
+      case b
+        if bs.exists:
+          c => c
+      => true
+    => 1
+==== a2_nested_after_pat_if_indent
+def f = x match
+  case y
+    if xs.exists:
+      case b
+        if bs.exists:
+          c => c
+        => true
+    => 1
+==== a3_brace_arrow_left_of_case
+def f = x match {
+    case y if
+        xs.exists: z =>
+          z
+  => 1
+}
+==== a4_nested_outer_after_pat_inner_lam
+def f = x match
+  case y
+    if xs.exists:
+      case b if bs.exists: c =>
+        c => true
+      => 1
+==== a5_nested_outer_if_eol_inner_lam
+def f = x match
+  case y if
+      xs.exists:
+        case b if bs.exists: c =>
+          c => true
+  => 1
+==== a7_nested_brace_bodyline
+def f = x match {
+  case y if xs.exists:
+    case b if bs.exists: c =>
+      c => true
+    => 1
+}
+==== a8_nested_inner_arrow_own_line
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists: c =>
+      c
+      => true
+  => 1
+==== a9_nested_after_pat_case_indent_infix
+def f = x match
+  case y
+    if xs.exists:
+      case b
+        if bs.exists:
+          c => c
+      => true
+    && p => 1
+==== c14_try_catch_case_finally_case
+def f = x match
+  case 1 => try a catch case e => b
+    finally c
+  case 2 => d
+==== c2_def_try_catch_case_next
+object A:
+  def f =
+    try a catch case e => b
+    case g => c
+==== c3_flat_catch_eol_in_case
+def f = x match
+  case 1 => try a catch
+  case e => b
+  case g => c
+==== c5_lam_try_catch_case_next
+def f = x match
+  case 1 => xs.map: y => try a catch case e => b
+  case 2 => 3
+==== c8_try_catch_case_arrow_eol_case_next
+def f = x match
+  case 1 => try a catch case e =>
+  case 2 => c
+==== k5_body_next_line_try
+def f = x match
+  case 1 =>
+    try a catch case e => b
+  case 2 => c
+==== k5_case_after_finally_line
+def f = x match
+  case 1 => try a catch case e => b
+  finally c
+  case 2 => d
+==== k5_def_deeper_case
+object A:
+  def f =
+    try a catch case e => b
+      case g => c
+==== k5_finally_sameline
+def f = x match
+  case 1 => try a catch case e => b finally c
+  case 2 => d
+==== k5_paren_try
+def f = x match
+  case 1 => g(try a catch case e => b)
+  case 2 => c
+==== k5_try_eol_catch_case_aligned
+def f = x match
+  case 1 =>
+    try
+      a
+    catch case e => b
+    case 2 => c
+==== q5_after_pat_inner_if_eol
+def f = x match
+  case y
+    if xs.exists:
+      case b if
+          bs.exists: c =>
+            c
+      => true
+    => 1
+==== q5_if_eol_inner_after_pat
+def f = x match
+  case y if
+      xs.exists:
+        case b
+          if bs.exists:
+            c => c
+        => true
+  => 1
+==== q5_mid_body_lam_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    z.ws.exists:
+      case b => b match
+        case c if cs.exists: d =>
+          d => true
+    => 1
+==== q5_mid_body_match_bodyline
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists: d =>
+        d => true
+    => 1
+==== q5_mid_body_match_brace_bodyline
+def f = x match {
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists: d =>
+        d => true
+    => 1
+}
+==== q5_mid_body_match_ctrl
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists: d =>
+        d => true
+  => 1
+==== q5_mid_body_next_line_bodyline
+def f = x match
+  case y if xs.exists:
+    case b =>
+      b match
+        case c if cs.exists: d =>
+          d => true
+    => 1
+==== q5_mid_body_next_line_ctrl
+def f = x match
+  case y if xs.exists:
+    case b =>
+      b match
+        case c if cs.exists: d =>
+          d => true
+  => 1
+==== q5_nested_arrow_eol_body_next
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists: c =>
+      c =>
+        true
+  => 1
+==== q5_nested_body_two_lines
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists: c =>
+      c => g(b)
+        true
+  => 1
+==== q5_nested_brace_left
+def f = x match {
+  case y if xs.exists:
+    case b if bs.exists: c =>
+      c => true
+  => 1
+}
+==== q5_nested_catch_ctx
+def f = try g catch
+  case y if xs.exists:
+    case b if bs.exists: c =>
+      c => true
+  => 1
+==== q5_nested_comment_line
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists: c =>
+      c => true
+      // done
+  => 1
+==== q5_nested_dot_at_case
+def f = x match
+  case y if xs.collect:
+    case b if bs.exists: c =>
+      c => b
+    .nonEmpty => 1
+==== q5_nested_dot_left
+def f = x match
+  case y if xs.collect:
+    case b if bs.exists: c =>
+      c => b
+  .nonEmpty => 1
+==== q5_nested_infix_left
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists: c =>
+      c => true
+  && p => 1
+==== q5_nested_lam_mid_if
+def f = x match
+  case y if xs.exists: z =>
+    if z.ok then z.v match
+      case c if cs.exists: d =>
+        d => true
+    else false
+  => 1
+==== q5_nested_lam_mid_try
+def f = x match
+  case y if xs.exists: z =>
+    try z match
+      case c if cs.exists: d =>
+        d => true
+    catch case _: Exception => false
+  => 1
+==== q5_nested_two_outer_cases
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists: c =>
+      c => true
+  => 1
+  case _ => 2
+==== q5_three_after_pat
+def f = x match
+  case y
+    if xs.exists:
+      case b
+        if bs.exists:
+          case c
+            if cs.exists:
+              d => d
+          => true
+      => false
+    => 1
+==== q5_three_after_pat_inner_eol
+def f = x match
+  case y
+    if xs.exists:
+      case b
+        if bs.exists:
+          case c if
+              cs.exists: d =>
+                d
+          => true
+      => false
+    => 1
+==== q5_three_bodyline_bodyline
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists:
+      case c if cs.exists: d =>
+        d => true
+      => false
+    => 1
+==== q5_three_bodyline_left
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists:
+      case c if cs.exists: d =>
+        d => true
+      => false
+  => 1
+==== q5_three_lam_bodyline
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case b if bs.exists: w =>
+        w match
+          case c if cs.exists: d =>
+            d => true
+        => false
+    => 1
+==== q5_three_lam_left
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case b if bs.exists: w =>
+        w match
+          case c if cs.exists: d =>
+            d => true
+    => false
+  => 1
+==== q5_three_left_bodyline
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists:
+      case c if cs.exists: d =>
+        d => true
+    => false
+    => 1
+==== q5_three_left_left
+def f = x match
+  case y if xs.exists:
+    case b if bs.exists:
+      case c if cs.exists: d =>
+        d => true
+    => false
+  => 1
+==== e10_mid_body_in_catch
+def f = try g catch
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists: d =>
+        d => true
+    => 1
+==== e6_mid_body_then_match
+def f = x match
+  case y if xs.exists:
+    case b => if b.ok then b match
+      case c if cs.exists: d =>
+        d => true
+    else false
+    => 1
+==== e7_two_mid_bodies
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case c => c match
+        case d if ds.exists: e =>
+          e => true
+    => 1
+==== e8_handler_colon_in_guard_arg
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => ys.map:
+        case Z => true
+    case c => false
+    => 1
+==== e9_mid_body_brace_cases
+def f = x match
+  case y if xs.exists:
+    case b => b match {
+      case c if cs.exists: d =>
+        d => true
+    }
+    => 1
+==== f6_end_match_at_case
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => b
+      case _ => c
+  end match
+  case 2 => d
+==== f6_finally_after_colon_cases
+def f = x match
+  case 1 => try a catch case e => xs.map:
+      case X => 1
+    finally c
+  case 2 => d
+==== f6_handler_guard_colon
+def f = x match
+  case 1 => try a catch case e if xs.exists: z =>
+      z => b
+  case 2 => c
+==== f6_indent_body_colon_cases
+def f = x match
+  case 1 =>
+    try a catch case e => xs.map:
+        case X => 1
+  case 2 => c
+==== m6_mid_after_pat
+def f = x match
+  case y
+    if xs.exists:
+      case b => b match
+        case c
+          if cs.exists:
+            d => d
+        => true
+    => 1
+==== m6_mid_arrow_eol
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists: d =>
+        d => true
+    =>
+      1
+==== m6_mid_catch_eol_match
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch
+      case e => e match
+        case c if cs.exists: d =>
+          d => true
+    => 1
+==== m6_mid_catch_handler_colon
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => e.cs.exists:
+      case c if cs.exists: d =>
+        d => true
+    => 1
+==== m6_mid_catch_handler_match
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => e match
+      case c if cs.exists: d =>
+        d => true
+    => 1
+==== m6_mid_catch_handler_match_ctrl
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => e match
+      case c if cs.exists: d =>
+        d => true
+  => 1
+==== m6_mid_comment_line
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists: d =>
+        d => true
+    // outer
+    => 1
+==== m6_mid_else_match
+def f = x match
+  case y if xs.exists:
+    case b => if b.ok then false else b match
+      case c if cs.exists: d =>
+        d => true
+    => 1
+==== m6_mid_flat_match
+def f = x match
+  case y if xs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d => true
+    => 1
+==== m6_mid_inner_eol_arrow_at_case
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists:
+        d => d
+      => true
+    => 1
+==== m6_mid_inner_eol_bodyline
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists:
+        d => d => true
+    => 1
+==== m6_mid_lam_inline
+def f = x match
+  case y if xs.exists:
+    case b => b.ws.exists: w =>
+      w match
+        case c if cs.exists: d =>
+          d => true
+    => 1
+==== m6_mid_lam_outer_try
+def f = x match
+  case y if xs.exists: z =>
+    try z match
+      case c if cs.exists: d =>
+        d => true
+    finally log(z)
+    => 1
+==== m6_mid_lam_sameline_match
+def f = x match
+  case y if xs.exists:
+    case b => b.ws.exists: w => w match
+      case c if cs.exists: d =>
+        d => true
+    => 1
+==== m6_mid_match_case_sameline
+def f = x match
+  case y if xs.exists:
+    case b => b match case c if cs.exists: d =>
+      d => true
+    => 1
+==== m6_mid_then_eol_body
+def f = x match
+  case y if xs.exists:
+    case b => if b.ok then
+        b match
+          case c if cs.exists: d =>
+            d => true
+      else false
+    => 1
+==== m6_mid_try_eol_body
+def f = x match
+  case y if xs.exists:
+    case b => try
+        b match
+          case c if cs.exists: d =>
+            d => true
+      catch case _: Exception => false
+    => 1
+==== m6_mid_try_nocatch_bodyline
+def f = x match
+  case y if xs.exists:
+    case b => try b match
+      case c if cs.exists: d =>
+        d => true
+    => 1
+==== m6_mid_two_inner_cases
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists: d =>
+        d => true
+      case _ => false
+    => 1
+==== m6_mid_val_then_match
+def f = x match
+  case y if xs.exists:
+    case b =>
+      val v = b
+      v match
+        case c if cs.exists: d =>
+          d => true
+    => 1
+==== m6_three_mid_bodies
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists:
+        case d => d match
+          case e if es.exists: g =>
+            g => true
+        => false
+    => 1
+==== m6_three_mid_bodies_brace
+def f = x match {
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists:
+        case d => d match
+          case e if es.exists: g =>
+            g => true
+        => false
+    => 1
+}
+==== m6_three_mid_bodies_ctrl
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists:
+        case d => d match
+          case e if es.exists: g =>
+            g => true
+        => false
+  => 1
+==== m6_three_mid_inner_left
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists:
+        case d => d match
+          case e if es.exists: g =>
+            g => true
+      => false
+    => 1
+==== e7_semi_def_body
+def f = try a catch case e => b;
+  case 2 => c
+==== e7_semi_catch_eol_cases
+def f = x match
+  case 1 => try a catch
+    case e => b;
+    case g => c
+==== e7_semi_finally_next
+def f = x match
+  case 1 => try a catch case e => b;
+  finally d
+==== e7_flat_ctrl
+def f = x match
+  case y if xs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d => true
+  => 1
+==== e7_flat_inner_arrow_at_cases
+def f = x match
+  case y if xs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d
+    => true
+  => 1
+==== e7_flat_two_inner_cases
+def f = x match
+  case y if xs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d => true
+    case e => false
+    => 1
+==== e7_flat_brace_outer
+def f = x match {
+  case y if xs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d => true
+    => 1
+}
+==== e7_handler_match_brace_outer
+def f = x match {
+  case y if xs.exists:
+    case b => try g(b) catch case e => e match
+      case c if cs.exists: d =>
+        d => true
+    => 1
+}
+==== e7_handler_match_two_cases
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => e match
+      case c if cs.exists: d =>
+        d => true
+      case _ => false
+    => 1
+==== e7_handler_match_in_catch
+def f = try h catch
+  case y if xs.exists:
+    case b => try g(b) catch case e => e match
+      case c if cs.exists: d =>
+        d => true
+    => 1
+==== e7_flat_after_pat_3_3
+def f = x match
+  case y
+    if xs.exists:
+      case b => b match
+      case c
+        if cs.exists:
+          d => d
+      => true
+    => 1
+==== e7_flat_lam_line
+def f = x match
+  case y if xs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d
+    => 1
+==== e7_flat_def_body_arrow_at_cases
+def f =
+  x match
+  case y if xs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d => true
+    => 1
+==== n7_flat_after_pat_curried
+def f = x match
+  case y
+    if xs.exists:
+      case b => b match
+      case c
+        if cs.exists: d =>
+          d => true
+      => false
+    => 1
+==== n7_flat_arrow_eol_body
+def f = x match
+  case y if xs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d =>
+        true
+    => 1
+==== n7_flat_arrow_eol_empty
+def f = x match
+  case y if xs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d =>
+    => 1
+==== n7_flat_catch_eol
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch
+    case e if es.exists: d =>
+      d => true
+    => 1
+==== n7_flat_handler_arrow_eol_empty
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => e match
+      case c if cs.exists: d =>
+        d =>
+    => 1
+==== n7_flat_inner_brace
+def f = x match
+  case y if xs.exists:
+    case b => b match {
+    case c if cs.exists: d =>
+      d => true
+    }
+    => 1
+==== n7_flat_outer_flat_inner
+def g =
+  x match
+  case y if xs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d => true
+    => 1
+==== n7_flat_then_outer_case
+def f = x match
+  case y if xs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d => true
+    => 1
+  case _ => 0
+==== n7_flat_two_outer_args
+def f = x match
+  case y if xs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d => true
+    => 1
+  case z if zs.exists:
+    case b => b match
+    case c if cs.exists: d =>
+      d => false
+    => 2
+==== n7_handler_empty_body
+def f = x match
+  case 1 => try a catch case _ =>
+  case 2 => c
+==== n7_handler_flat_inner_match
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => e match
+    case c if cs.exists: d =>
+      d => true
+    => 1
+==== n7_mid_arrow_eol_empty
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case c if cs.exists: d =>
+        d =>
+    => 1
+==== n7_semi_body_line
+def f = x match
+  case 1 =>
+    try a catch case e => b;
+  case 2 => c
+==== n7_semi_deeper_body_case
+def f = x match
+  case 1 => try a catch case e =>
+      b;
+      case 2 => c
+==== n7_semi_finally_sameline
+def f = x match
+  case 1 => try a catch case e => b finally d;
+  case 2 => c
+==== n7_semi_lambda_body
+def f = x match
+  case 1 => xs.foreach: y =>
+      try y catch case e => b;
+  case 2 => c
+==== n7_two_flat
+def f = x match
+  case y if xs.exists:
+    case b => b match
+    case c => c match
+    case d if ds.exists: e =>
+      e => true
+    => 1
+==== e8_empty_last_finally
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _ =>
+    finally h()
+  case 2 => c
+==== e8_empty_last_stat_after
+def f = x match
+  case 1 =>
+    try a catch case e => e match
+      case X => g()
+      case _ =>
+    d
+  case 2 => c
+==== e8_empty_last_guard_lam
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => e match
+      case X => true
+      case _ =>
+    case c => false
+  => 1
+==== e8_empty_last_inner_flat
+def f = x match
+  case 1 => try a catch case e => e match
+  case X => g()
+  case _ =>
+  case 2 => c
+==== p8_close_brace_lambda
+def f = xs.map { y =>
+  try a catch case e => e match
+    case X => g()
+    case _ =>
+}
+==== p8_close_brace_next_line
+def f = x match {
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _ =>
+}
+==== p8_end_marker_inner_match
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _ =>
+    end match
+  case 2 => c
+==== p8_handler_in_colon_arg
+def f = x match
+  case 1 => g:
+    try a catch case e => e match
+      case X => 1
+      case _ =>
+  case 2 => c
+==== p8_inner_match_then_dot
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => 1
+      case _ => 2
+    .toString
+  case 2 => c
+==== p8_inner_try_catch_eol_body_line
+def f = x match
+  case 1 =>
+    try a catch case e => try b catch
+      case X => g()
+  case 2 => c
+==== e9_try_catch_eol_then_dot
+def f = x match
+  case 1 => try a catch case e => try b catch
+      case X => g()
+    .h
+  case 2 => c
+==== q9_catch_eol_cases_then_match
+def f = x match
+  case 1 => try a catch
+      case e => if p then e match
+          case X => 1
+      case f => 2
+  case 2 => c
+==== q9_def_nested_handlers_case
+def g =
+  try a catch case e => try b catch case f => if p then f match
+      case X => 1
+      case Y => 2
+==== q9_guard_eol_handler_then_match_bodyline
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => if p then e match
+        case X => true
+    => 1
+==== q9_guard_lam_handler_then_match
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then e match
+      case X => true
+    => 1
+==== q9_guard_lam_handler_try_catch_eol
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => try h(z) catch
+      case X => true
+    => 1
+==== q9_guard_lam_handler_try_lambda
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => try ys.map: w =>
+        h(w)
+    => 1
+==== q9_guard_lam_match_handler_then_match
+def f = x match
+  case y if xs.exists: z =>
+    z match
+      case b => try g(b) catch case e => if p then e match
+          case X => true
+      case c => false
+    => 1
+==== q9b_guard_eol_case_handler_then_inline
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => if p then false
+    => 1
+==== q9b_guard_eol_case_handler_try_catch_eol
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => try h(b) catch
+        case X => true
+    => 1
+==== q9b_guard_lam_handler_match
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => e match
+      case X => true
+    => 1
+==== q9b_guard_lam_handler_then_else
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then false else true
+    => 1
+==== q9b_guard_lam_handler_then_inline
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then false
+    => 1
+==== q9b_guard_lam_handler_then_match_ctrl
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then e match
+      case X => true
+  => 1
+==== q9b_guard_lam_handler_then_match_next_case
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then e match
+      case X => true
+    => 1
+  case _ => 2
+==== q9b_guard_lam_handler_try_nocatch
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => try h(z)
+    => 1
+==== q9c_handler_arrow_eol_empty
+def f = x match
+  case 1 => try a catch case e =>
+  case 2 => c
+==== e10_guard_lam_then_colon_cases
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then e.fold:
+      case X => true
+    => 1
+==== e10_guard_lam_try_lam_body
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => try ys.map: w =>
+        h(w)
+    => 1
+==== e10_guard_lam_then_else_next
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then true
+    else false
+    => 1
+==== e10_guard_lam_try_finally_next
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => try h(z)
+    finally c
+    => 1
+==== e10_guard_lam_then_try_catch_eol
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then try h(z) catch
+      case X => true
+    => 1
+==== e10_guard_lam_then_match_ctrl
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then e match
+      case X => true
+  => 1
+==== e10_guard_eol_try_nocatch
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => try h(b)
+    => 1
+==== e10_guard_lam_then_match_brace
+def f = x match {
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then e match
+      case X => true
+    => 1
+}
+==== e10_guard_lam_then_match_stat
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then e match
+      case X => true
+    z > 0
+    => 1
+==== e10_guard_lam_then_inline_stat
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then false
+    z > 0
+    => 1
+==== e10_def_try_nocatch_stat
+def g =
+  try a catch case e => try b
+  h()
+==== e10_def_then_inline_stat
+def g =
+  try a catch case e => if p then b
+  h()
+==== e10_def_then_else_next
+def g =
+  try a catch case e => if p then b
+  else c
+  h()
+==== e10_def_try_finally_next
+def g =
+  try a catch case e => try b
+  finally c
+  h()
+==== e10_def_while_match_stat
+def g =
+  try a catch case e => while p do e match
+      case X => 1
+  h()
+==== e10_def_then_match_deeper_stat
+def g =
+  try a catch case e => if p then e match
+      case X => 1
+    h()
+==== e10_def_then_match_infix
+def g =
+  try a catch case e => if p then e match
+      case X => 1
+  + 2
+==== e10_def_then_match_dot
+def g =
+  try a catch case e => if p then e match
+      case X => 1
+  .h
+==== e10_def_then_match_else_next
+def g =
+  try a catch case e => if p then e match
+      case X => 1
+  else c
+  h()
+==== e10_def_try_catch_eol_finally_next
+def g =
+  try a catch case e => try b catch
+      case X => 1
+  finally c
+  h()
+==== e10_cont_then_inline_infix
+def g =
+  try a catch case e => if p then b
+  + c
+==== e10_cont_try_nocatch_infix
+def g =
+  try a catch case e => try b
+  + c
+==== e10_cont_then_inline_dot
+def g =
+  try a catch case e => if p then b
+  .h
+==== e10_cont_try_nocatch_dot
+def g =
+  try a catch case e => try b
+  .h
+==== e10_cont_plain_infix
+def g =
+  try a catch case e => b
+  + c
+==== e10_cont_plain_dot
+def g =
+  try a catch case e => b
+  .h
+==== e10_cont_flat_then_infix
+def g =
+  x match
+  case 1 => if p then b
+  + c
+==== e10_cont_flat_then_dot
+def g =
+  x match
+  case 1 => if p then b
+  .h
+==== e10_cont_guard_then_infix
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then b
+    + c
+    => 1
+==== e10_cont_guard_then_dot
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then b
+    .h
+    => 1
+==== e10_cont_then_match_infix_deeper
+def g =
+  try a catch case e => if p then e match
+      case X => 1
+    + c
+==== e10_cont_then_trailing_infix
+def g =
+  try a catch case e => if p then b +
+  c
+==== e10_guard_lam_then_match_empty_last
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then e match
+      case X => g()
+      case _ =>
+    => 1
+==== e10_guard_lam_try_nocatch_semi
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => try h(z);
+    => 1
+==== e10_guard_lam_then_match_comment
+def f = x match
+  case y if xs.exists: z =>
+    try g(z) catch case e => if p then e match
+      case X => true
+    // c
+    => 1
+==== r10_C_flat_plain
+def f =
+  try a catch
+  case e => b
+  h()
+==== r10_C_flat_then
+def f =
+  try a catch
+  case e => if p then b
+  h()
+==== r10_C_flat_then_finally
+def f =
+  try a catch
+  case e => if p then b
+  finally h()
+==== r10_C_flat_try
+def f =
+  try a catch
+  case e => try b
+  h()
+==== r10_F_closed_then_lam_paren
+def f =
+  x match
+  case 1 => if p then xs.foreach: y =>
+      g(y)
+  (c)
+==== r10_F_plain_end_match
+def f =
+  x match
+  case 1 => b
+  end match
+  h()
+==== r10_F_scala2_if_stat
+def f =
+  x match
+  case 1 => if (p) b
+  h()
+==== r10_F_then_end_match
+def f =
+  x match
+  case 1 => if p then b
+  end match
+==== r10_F_then_match_line
+def f =
+  x match
+  case 1 => if p then b
+  match
+    case _ => c
+==== r10_F_then_paren
+def f =
+  x match
+  case 1 => if p then b
+  (c)
+==== r10_F_try_end_match
+def f =
+  x match
+  case 1 => try b
+  end match
+  h()
+==== r10_H_closed_try_lam_dot
+def f =
+  try a catch case e => try xs.map: y =>
+    g(y)
+  .sum
+==== r10_H_scala2_if_stat
+def f =
+  try a catch case e => if (p) b
+  h()
+==== r10_H_then_end_if
+def f =
+  try a catch case e => if p then
+    b
+  end if
+  h()
+==== r10_H_then_paren
+def f =
+  try a catch case e => if p then b
+  (c)
+==== r10_H_then_trailing_alpha_op
+def f =
+  try a catch case e => if p then b max
+  c
+==== r10_H_trailing_op_case
+def f = x match
+  case 1 => try a catch case e => b max
+  case 2 => c
+==== r10_M_plain
+def f =
+  x match case 1 => a
+  h()
+==== r10_M_then
+def f =
+  x match case 1 => if p then a
+  h()
+==== r10_M_then_in_handler_case
+def f = y match
+  case 0 => try a catch case e => e match case 1 => if p then b
+  case 2 => c
+==== r10_M_try
+def f =
+  x match case 1 => try a
+  h()
+==== r10_block_handler_then
+def f = {
+  try a catch case e => if p then b
+  h()
+}
+==== r10_brace_lambda_handler_then
+def f = xs.foreach { x =>
+  try a catch case e => if p then b
+  h()
+}
+==== r10_case_body_handler_then
+def f = x match
+  case 1 =>
+    try a catch case e => if p then b
+    h()
+  case 2 => c
+==== r10_colon_lambda_handler_then
+def f = xs.foreach: x =>
+  try a catch case e => if p then b
+  h()
+==== r10_end_try_after_handler_then
+def f =
+  try a
+  catch case e => if p then b
+  end try
+  h()
+==== r10_end_try_case_body_then
+def f = x match
+  case 1 =>
+    try a
+    catch case e => if p then b
+    end try
+  case 2 => c
+==== r10_flat_in_block_try_stat
+def f = {
+  x match
+  case 1 => try b
+  h()
+}
+==== r10_flat_in_lambda_then_stat
+def f = xs.foreach: x =>
+  x match
+  case 1 => if p then b
+  h()
+==== r10_for_enum_handler_plain
+def f =
+  for
+    y <- ys
+    z = try a catch case e => b
+    w <- ws
+  yield z
+==== r10_for_enum_handler_then
+def f =
+  for
+    y <- ys
+    z = try a catch case e => if p then b
+    w <- ws
+  yield z
+==== r10_if_body_handler_then
+def f =
+  if c then
+    try a catch case e => if p then b
+    h()
+  else d
+==== r10_template_handler_then
+object A:
+  try a catch case e => if p then b
+  val c = 1
+==== r10_val_flat_then_stat
+object A:
+  val r = x match
+  case 1 => if p then b
+  val c = 1
