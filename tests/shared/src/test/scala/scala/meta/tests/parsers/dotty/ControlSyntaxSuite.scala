@@ -30881,4 +30881,87 @@ class ControlSyntaxSuite extends BaseDottySuite {
     assertEquals(ifTree.elsep.pos.start, ifTree.thenp.pos.end)
   }
 
+  test("flat match cases with a then body, a select on the next line") {
+    val code =
+      """|def g =
+         |  x match
+         |  case 1 => if p then b
+         |  .h
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `.` found
+         |  .h
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("one-line catch case with a try body, a select on the next line") {
+    val code =
+      """|def g =
+         |  try a catch case e => try b
+         |  .h
+         |""".stripMargin
+    val layout =
+      """|def g = try a catch {
+         |  case e =>
+         |    try b.h
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, Term.Try(tselect("b", "h"), Nil, None))
+    val tree = Defn.Def(Nil, "g", Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("one-line catch case with a then body, a select on the next line") {
+    val code =
+      """|def g =
+         |  try a catch case e => if p then b
+         |  .h
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `.` found
+         |  .h
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("one-line catch case with an if and else body, a select on the next line") {
+    val code =
+      """|def g =
+         |  try a catch case e => if p then b else c
+         |  .h
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `.` found
+         |  .h
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("one-line catch case with a parenthesized if body, a select on the next line") {
+    val code =
+      """|def g =
+         |  try a catch case e => if (p) b
+         |  .h
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `.` found
+         |  .h
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("one-line catch case with a while body, a select on the next line") {
+    val code =
+      """|def g =
+         |  try a catch case e => while (p) b
+         |  .h
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `.` found
+         |  .h
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
