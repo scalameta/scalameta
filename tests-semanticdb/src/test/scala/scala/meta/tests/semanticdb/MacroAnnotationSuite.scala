@@ -2389,4 +2389,69 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  occurrences(
+    """|package ma69
+       |@example.AddMember object O { def f = 1 }
+       |""".stripMargin,
+    """|[0:8..0:12): ma69 <= ma69/
+       |[1:1..1:8): example => example/
+       |[1:9..1:18): AddMember => example/AddMember#
+       |[1:26..1:27): O <= ma69/O.
+       |[1:34..1:35): f <= ma69/O.f().
+       |""".stripMargin,
+  )
+
+  // the call of `example.AnonymousExpansion` that `example.AddMember` adds, in the source
+  occurrences(
+    """|package ma70
+       |object O { def call = example.AnonymousExpansion() }
+       |""".stripMargin,
+    """|[0:8..0:12): ma70 <= ma70/
+       |[1:7..1:8): O <= ma70/O.
+       |[1:15..1:19): call <= ma70/O.call().
+       |[1:22..1:29): example => example/
+       |[1:30..1:48): AnonymousExpansion => example/AnonymousExpansion.
+       |[1:48..1:48):  <= local0
+       |""".stripMargin,
+  )
+
+  // written classes in an annottee that the annotation expands to one definition
+  occurrences(
+    """|package ma71
+       |@example.AddMember object O {
+       |  val v = new AnyRef { def w = 1 }
+       |  val p: PartialFunction[Int, Int] = { case 1 => 2 }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:12): ma71 <= ma71/
+       |[1:1..1:8): example => example/
+       |[1:9..1:18): AddMember => example/AddMember#
+       |[1:26..1:27): O <= ma71/O.
+       |[2:6..2:7): v <= ma71/O.v.
+       |[2:14..2:14):  <= local0
+       |[2:14..2:20): AnyRef => scala/AnyRef#
+       |[2:20..2:20):  => java/lang/Object#`<init>`().
+       |[2:27..2:28): w <= local1
+       |[3:6..3:7): p <= ma71/O.p.
+       |[3:9..3:24): PartialFunction => scala/PartialFunction#
+       |[3:25..3:28): Int => scala/Int#
+       |[3:30..3:33): Int => scala/Int#
+       |[3:37..3:37):  <= local2
+       |""".stripMargin,
+  )
+
+  // a written SAM lambda in an annottee that the annotation expands to one definition
+  occurrences(
+    """|package ma72
+       |@example.AddMember object O { val r: Runnable = () => () }
+       |""".stripMargin,
+    """|[0:8..0:12): ma72 <= ma72/
+       |[1:1..1:8): example => example/
+       |[1:9..1:18): AddMember => example/AddMember#
+       |[1:26..1:27): O <= ma72/O.
+       |[1:34..1:35): r <= ma72/O.r.
+       |[1:37..1:45): Runnable => java/lang/Runnable#
+       |""".stripMargin,
+  )
+
 }
