@@ -3741,6 +3741,681 @@ class LocalSymbolsSuite extends FunSuite {
     }
   }
 
+  /** a def macro `a.<obj>.m`, or `a.<obj>.m(i)` with `arg`, whose expansion is `tree` */
+  private def macroOf(obj: String, tree: String, ctx: String = "whitebox", arg: Boolean = false) = {
+    val (param, implParam) = if (arg) ("(i: Any)", "(i: c.Tree)") else ("", "")
+    Map {
+      s"$obj.scala" ->
+        s"""|package a
+            |import scala.language.experimental.macros
+            |import scala.reflect.macros.$ctx
+            |object $obj {
+            |  def m$param: Any = macro impl
+            |  def impl(c: $ctx.Context)$implParam: c.Tree = {
+            |    import c.universe._
+            |    q"$tree"
+            |  }
+            |}
+            |""".stripMargin
+    }
+  }
+
+  test("a macro call of the same name in a macro expansion") {
+    val a = macroOf("X", "1") ++ macroOf("Y", "_root_.a.X.m")
+    assertSummary(fromClassfile(a, inU("a.Y.m"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:14..2:15): m => a/X.m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a blackbox macro call in a macro expansion") {
+    val a = macroOf("X", "1", "blackbox") ++ macroOf("Y", "_root_.a.X.m")
+    assertSummary(fromClassfile(a, inU("a.Y.m"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Any
+         |  Any => scala/Any#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:14..2:15): m => a/X.m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in a blackbox macro expansion") {
+    val a = macroOf("X", "1") ++ macroOf("Y", "_root_.a.X.m", "blackbox")
+    assertSummary(fromClassfile(a, inU("a.Y.m"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Any
+         |  Any => scala/Any#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in an argument of a macro expansion") {
+    val a = macroOf("X", "1") ++ macroOf("Y", "_root_.scala.Predef.identity(_root_.a.X.m)")
+    assertSummary(fromClassfile(a, inU("a.Y.m"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in a macro expansion in a macro expansion") {
+    val a = macroOf("X", "1") ++ macroOf("Y", "_root_.a.X.m") ++ macroOf("Z", "_root_.a.Y.m")
+    assertSummary(fromClassfile(a, inU("a.Z.m"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:14..2:15): m => a/X.m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in a macro expansion, with the written argument") {
+    val a = macroOf("X", "$i", arg = true) ++ macroOf("Y", "_root_.a.X.m($i)", arg = true)
+    assertSummary(fromClassfile(a, inU("a.Y.m(U.hashCode)"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:16..2:17): U => b/U.
+         |[2:18..2:26): hashCode => java/lang/Object#hashCode().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("an implicit macro whose expansion is a macro call") {
+    val a = macroOf("X", "new _root_.a.S") ++ Map {
+      "S.scala" ->
+        """|package a
+           |import scala.language.experimental.macros
+           |import scala.reflect.macros.whitebox
+           |class S
+           |object S {
+           |  implicit def m: S = macro impl
+           |  def impl(c: whitebox.Context): c.Tree = {
+           |    import c.universe._
+           |    q"_root_.a.X.m"
+           |  }
+           |}
+           |""".stripMargin
+    }
+    assertSummary(fromClassfile(a, inU("implicitly[a.S]"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: S
+         |  S => a/S#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:20): implicitly => scala/Predef.implicitly().
+         |[2:21..2:22): a => a/
+         |[2:23..2:24): S => a/S#
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a blackbox macro call in a blackbox macro expansion") {
+    val a = macroOf("X", "1", "blackbox") ++ macroOf("Y", "_root_.a.X.m", "blackbox")
+    assertSummary(fromClassfile(a, inU("a.Y.m"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Any
+         |  Any => scala/Any#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call with a type argument in a macro expansion") {
+    val a = macroOf("X", "1") ++ Map {
+      "Y.scala" ->
+        """|package a
+           |import scala.language.experimental.macros
+           |import scala.reflect.macros.whitebox
+           |object Y {
+           |  def m[T]: Any = macro impl
+           |  def impl(c: whitebox.Context): c.Tree = {
+           |    import c.universe._
+           |    q"_root_.a.X.m"
+           |  }
+           |}
+           |""".stripMargin
+    }
+    assertSummary(fromClassfile(a, inU("a.Y.m[Int]"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("an infix macro call in a macro expansion, with the written argument") {
+    val a = macroOf("X", "$i", arg = true) ++ macroOf("Y", "_root_.a.X.m($i)", arg = true)
+    assertSummary(fromClassfile(a, inU("a.Y m U.hashCode"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:14..2:15): m => a/X.m().
+         |[2:16..2:17): U => b/U.
+         |[2:18..2:26): hashCode => java/lang/Object#hashCode().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  /** a def macro `a.Y.m` with an implicit argument, whose expansion is `tree` */
+  private def implicitArgY(tree: String) = Map {
+    "Y.scala" ->
+      s"""|package a
+          |import scala.language.experimental.macros
+          |import scala.reflect.macros.whitebox
+          |class S
+          |object S {
+          |  implicit val s: S = new S
+          |}
+          |object Y {
+          |  def m(implicit s: S): Any = macro impl
+          |  def impl(c: whitebox.Context)(s: c.Tree): c.Tree = {
+          |    import c.universe._
+          |    q"$tree"
+          |  }
+          |}
+          |""".stripMargin
+  }
+
+  test("a macro call with an implicit argument in a macro expansion") {
+    val a = macroOf("X", "1") ++ implicitArgY("_root_.a.X.m")
+    assertSummary(fromClassfile(a, inU("a.Y.m"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:14..2:15): m => a/X.m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("an apply macro call in a macro expansion, with the written argument") {
+    val a = macroOf("X", "$i", arg = true) ++ Map {
+      "Y.scala" ->
+        """|package a
+           |import scala.language.experimental.macros
+           |import scala.reflect.macros.whitebox
+           |object Y {
+           |  def apply(i: Any): Any = macro impl
+           |  def impl(c: whitebox.Context)(i: c.Tree): c.Tree = {
+           |    import c.universe._
+           |    q"_root_.a.X.m($i)"
+           |  }
+           |}
+           |""".stripMargin
+    }
+    assertSummary(fromClassfile(a, inU("a.Y(U.hashCode)"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:14..2:15): U => b/U.
+         |[2:16..2:24): hashCode => java/lang/Object#hashCode().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call on a value in a macro expansion") {
+    val a = macroOf("X", "1") ++ Map {
+      "C.scala" ->
+        """|package a
+           |import scala.language.experimental.macros
+           |import scala.reflect.macros.whitebox
+           |class C {
+           |  def m: Any = macro C.impl
+           |}
+           |object C {
+           |  def impl(c: whitebox.Context): c.Tree = {
+           |    import c.universe._
+           |    q"_root_.a.X.m"
+           |  }
+           |}
+           |object Y {
+           |  val c = new C
+           |}
+           |""".stripMargin
+    }
+    assertSummary(fromClassfile(a, inU("a.Y.c.m"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:16..2:17): m => a/X.m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in a macro expansion, as an argument of a written call") {
+    val a = macroOf("X", "1") ++ macroOf("Y", "_root_.a.X.m")
+    assertSummary(fromClassfile(a, inU("identity(a.Y.m)"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:18): identity => scala/Predef.identity().
+         |[2:23..2:24): m => a/X.m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in a macro expansion, with a written block argument") {
+    val a = macroOf("X", "$i", arg = true) ++ macroOf("Y", "_root_.a.X.m($i)", arg = true)
+    assertSummary(fromClassfile(a, inU("a.Y.m { val q = U; q.hashCode }"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |local0 => val local q: U.type
+         |  U => b/U.
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:22..2:23): q <= local0
+         |[2:26..2:27): U => b/U.
+         |[2:29..2:30): q => local0
+         |[2:31..2:39): hashCode => java/lang/Object#hashCode().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in a macro expansion, whose inner macro takes an implicit argument") {
+    val a = Map {
+      "X.scala" ->
+        """|package a
+           |import scala.language.experimental.macros
+           |import scala.reflect.macros.whitebox
+           |class S
+           |object S {
+           |  implicit val s: S = new S
+           |}
+           |object X {
+           |  def m(implicit s: S): Any = macro impl
+           |  def impl(c: whitebox.Context)(s: c.Tree): c.Tree = {
+           |    import c.universe._
+           |    q"1"
+           |  }
+           |}
+           |""".stripMargin
+    } ++ macroOf("Y", "_root_.a.X.m")
+    assertSummary(fromClassfile(a, inU("a.Y.m"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  /** the document `uri` of `b`, compiled with synthetics against the classes of `a` */
+  private def withSynthetics(a: Map[String, String], b: Map[String, String], uri: String) = {
+    val out = Files.createTempDirectory("issue1591_")
+    val options = semanticdb.options + " -P:semanticdb:synthetics:on"
+    assertEquals(new Compiler(options, compile(a).toString).compile(b, out).map(_.msg), Nil)
+    document(out, uri)
+  }
+
+  test("synthetics of a macro call with an implicit argument") {
+    val doc = withSynthetics(implicitArgY("1"), inU("a.Y.m"), "U.scala")
+    assertNoDiff(
+      section(doc, "Synthetics"),
+      """|[2:10..2:15): a.Y.m => *(s)
+         |  s => a/S.s.
+         |""".stripMargin,
+    )
+  }
+
+  test("synthetics of a macro call with an implicit argument in a macro expansion") {
+    val doc =
+      withSynthetics(macroOf("X", "1") ++ implicitArgY("_root_.a.X.m"), inU("a.Y.m"), "U.scala")
+    assertNoDiff(section(doc, "Synthetics"), "")
+  }
+
+  /** a def macro `a.Y.m[T](i: T)`, whose expansion is `tree` */
+  private def typeArgY(tree: String) = Map {
+    "Y.scala" ->
+      s"""|package a
+          |import scala.language.experimental.macros
+          |import scala.reflect.macros.whitebox
+          |object Y {
+          |  def m[T](i: T): Any = macro impl[T]
+          |  def impl[T: c.WeakTypeTag](c: whitebox.Context)(i: c.Tree): c.Tree = {
+          |    import c.universe._
+          |    q"$tree"
+          |  }
+          |}
+          |""".stripMargin
+  }
+
+  test("synthetics of a macro call with an inferred type argument") {
+    val doc = withSynthetics(typeArgY("1"), inU("a.Y.m(1)"), "U.scala")
+    assertNoDiff(
+      section(doc, "Synthetics"),
+      """|[2:10..2:15): a.Y.m => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin,
+    )
+  }
+
+  test("synthetics of a macro call with an inferred type argument in a macro expansion") {
+    val doc =
+      withSynthetics(macroOf("X", "1") ++ typeArgY("_root_.a.X.m"), inU("a.Y.m(1)"), "U.scala")
+    assertNoDiff(section(doc, "Synthetics"), "")
+  }
+
+  test("a macro call in a macro expansion, whose inner call has a type argument") {
+    val a = macroOf("Y", "_root_.a.X.m[Int]") ++ Map {
+      "X.scala" ->
+        """|package a
+           |import scala.language.experimental.macros
+           |import scala.reflect.macros.whitebox
+           |object X {
+           |  def m[T]: Any = macro impl[T]
+           |  def impl[T: c.WeakTypeTag](c: whitebox.Context): c.Tree = {
+           |    import c.universe._
+           |    q"1"
+           |  }
+           |}
+           |""".stripMargin
+    }
+    assertSummary(fromClassfile(a, inU("a.Y.m"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:14..2:15): m => a/X.m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in a macro expansion, whose inner macro infers a type argument") {
+    val a = macroOf("Y", "_root_.a.X.m") ++ Map {
+      "X.scala" ->
+        """|package a
+           |import scala.language.experimental.macros
+           |import scala.reflect.macros.whitebox
+           |object X {
+           |  def m[T]: Option[T] = macro impl[T]
+           |  def impl[T: c.WeakTypeTag](c: whitebox.Context): c.Tree = {
+           |    import c.universe._
+           |    q"_root_.scala.None"
+           |  }
+           |}
+           |""".stripMargin
+    }
+    assertSummary(fromClassfile(a, inU("a.Y.m"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: None.type
+         |  None => scala/None.
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in a macro expansion, whose inner call is on a value") {
+    val a = macroOf("Y", "_root_.a.V.c.m") ++ Map {
+      "C.scala" ->
+        """|package a
+           |import scala.language.experimental.macros
+           |import scala.reflect.macros.whitebox
+           |class C {
+           |  def m: Any = macro C.impl
+           |}
+           |object C {
+           |  def impl(c: whitebox.Context): c.Tree = {
+           |    import c.universe._
+           |    q"1"
+           |  }
+           |}
+           |object V {
+           |  val c = new C
+           |}
+           |""".stripMargin
+    }
+    assertSummary(fromClassfile(a, inU("a.Y.m"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:14..2:15): m => a/C#m().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in a macro expansion, whose inner call is an imported name") {
+    val a = macroOf("X", "1") ++ macroOf("Y", "n") ++ Map(
+      "N.scala" ->
+        """|package a
+           |import scala.language.experimental.macros
+           |object N {
+           |  def n: Any = macro X.impl
+           |}
+           |""".stripMargin,
+    )
+    assertSummary(fromClassfile(a, inU("{ import a.N._; a.Y.m }"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:19..2:20): a => a/
+         |[2:21..2:22): N => a/N.
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call that untypechecks a written block argument") {
+    val b = inU("a.W.w { val q = U; q.hashCode }")
+    assertSummary(fromClassfile(wrapsIn("$a"), b, "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |local0 => val local q: U.type
+         |  U => b/U.
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): W => a/W.
+         |[2:14..2:15): w => a/W.w().
+         |[2:22..2:23): q <= local0
+         |[2:26..2:27): U => b/U.
+         |[2:29..2:30): q => local0
+         |[2:31..2:39): hashCode => java/lang/Object#hashCode().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in a macro expansion that untypechecks a written block argument") {
+    val a = macroOf("X", "$i", arg = true) ++ wrapsIn("_root_.a.X.m($a)")
+    assertSummary(fromClassfile(a, inU("a.W.w { val q = U; q.hashCode }"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |local0 => val local q: U.type
+         |  U => b/U.
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:22..2:23): q <= local0
+         |[2:26..2:27): U => b/U.
+         |[2:29..2:30): q => local0
+         |[2:31..2:39): hashCode => java/lang/Object#hashCode().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
   /** an extractor macro `a.E(n)` whose expansion is a name-based extractor */
   private val extractorA = Map {
     "E.scala" ->
