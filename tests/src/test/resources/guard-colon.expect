@@ -1,500 +1,500 @@
-t_brace_case_after_try_catch_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n      case 2 => c\n    }\n}
-t_brace_case_after_try_catch_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n      case 2 => c\n    }\n}
-t_ind_case_after_try_catch_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n      case 2 => c\n    }\n}
-t_ind_case_after_try_catch_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n      case 2 => c\n    }\n}
-c10_try_catch_case_aligned_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-c10_try_catch_case_aligned_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-c11_try_catch_case_then_dot_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n      case 3 => d\n    }\n}
-c11_try_catch_case_then_dot_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n      case 3 => d\n    }\n}
-c12_handler_body_next_line_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-c12_handler_body_next_line_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-c13_flat_match_try_catch_case_next Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-c13_flat_match_try_catch_case_next Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-c1_then_try_catch_case_next Scala3: def f = x match {\n  case 1 =>\n    if (p) try a catch {\n      case _: Exception => b\n      case 2 => c\n    }\n}
-c1_then_try_catch_case_next Scala32: def f = x match {\n  case 1 =>\n    if (p) try a catch {\n      case _: Exception => b\n      case 2 => c\n    }\n}
-c4_else_try_catch_case_next Scala3: def f = x match {\n  case 1 =>\n    if (p) a else try b catch {\n      case _: Exception => c\n      case 2 => d\n    }\n}
-c4_else_try_catch_case_next Scala32: def f = x match {\n  case 1 =>\n    if (p) a else try b catch {\n      case _: Exception => c\n      case 2 => d\n    }\n}
-c6_brace_pf_try_catch_case_next Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-c6_brace_pf_try_catch_case_next Scala32: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-c7_catch_ctx_try_catch_case_next Scala3: def f = try g catch {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-c7_catch_ctx_try_catch_case_next Scala32: def f = try g catch {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-c9_try_catch_case_deeper_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-c9_try_catch_case_deeper_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-k5_arrow_eol_deeper_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-k5_arrow_eol_deeper_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-k5_assign_try Scala3: def f = x match {\n  case 1 =>\n    y = try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-k5_assign_try Scala32: def f = x match {\n  case 1 =>\n    y = try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-k5_brace_catch_ctx Scala3: def f = try g catch {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-k5_brace_catch_ctx Scala32: def f = try g catch {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-k5_chain Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n      case 2 =>\n        try c catch {\n          case f => d\n          case 3 => e\n        }\n    }\n}
-k5_chain Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n      case 2 =>\n        try c catch {\n          case f => d\n          case 3 => e\n        }\n    }\n}
-k5_colon_cases Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
+t_brace_case_after_try_catch_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+t_brace_case_after_try_catch_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+t_ind_case_after_try_catch_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+t_ind_case_after_try_catch_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+c10_try_catch_case_aligned_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+c10_try_catch_case_aligned_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+c11_try_catch_case_then_dot_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n  case 3 =>\n    d\n}
+c11_try_catch_case_then_dot_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n  case 3 =>\n    d\n}
+c12_handler_body_next_line_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+c12_handler_body_next_line_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+c13_flat_match_try_catch_case_next Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+c13_flat_match_try_catch_case_next Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+c1_then_try_catch_case_next Scala3: def f = x match {\n  case 1 =>\n    if (p) try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+c1_then_try_catch_case_next Scala32: def f = x match {\n  case 1 =>\n    if (p) try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+c4_else_try_catch_case_next Scala3: def f = x match {\n  case 1 =>\n    if (p) a else try b catch {\n      case _: Exception => c\n    }\n  case 2 =>\n    d\n}
+c4_else_try_catch_case_next Scala32: def f = x match {\n  case 1 =>\n    if (p) a else try b catch {\n      case _: Exception => c\n    }\n  case 2 =>\n    d\n}
+c6_brace_pf_try_catch_case_next Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 => c\n}
+c6_brace_pf_try_catch_case_next Scala32: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 => c\n}
+c7_catch_ctx_try_catch_case_next Scala3: def f = try g catch {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+c7_catch_ctx_try_catch_case_next Scala32: def f = try g catch {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+c9_try_catch_case_deeper_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+c9_try_catch_case_deeper_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_arrow_eol_deeper_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+k5_arrow_eol_deeper_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+k5_assign_try Scala3: def f = x match {\n  case 1 =>\n    y = try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_assign_try Scala32: def f = x match {\n  case 1 =>\n    y = try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_brace_catch_ctx Scala3: def f = try g catch {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_brace_catch_ctx Scala32: def f = try g catch {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_chain Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    try c catch {\n      case f => d\n    }\n  case 3 =>\n    e\n}
+k5_chain Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    try c catch {\n      case f => d\n    }\n  case 3 =>\n    e\n}
+k5_colon_cases Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 => c\n}
 k5_colon_cases Scala32: error 2:3: `identifier` expected but `case` found
-k5_else_body_match Scala3: def f = if (p) 0 else x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-k5_else_body_match Scala32: def f = if (p) 0 else x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-k5_handler_colon_arg Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          log(e)\n        }\n      case 2 =>\n        c\n    }\n}
+k5_else_body_match Scala3: def f = if (p) 0 else x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_else_body_match Scala32: def f = if (p) 0 else x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_handler_colon_arg Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          log(e)\n        }\n    }\n  case 2 =>\n    c\n}
 k5_handler_colon_arg Scala32: error 3:10: `outdent` expected but `(` found
-k5_handler_colon_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+k5_handler_colon_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 k5_handler_colon_cases Scala32: error 3:7: `identifier` expected but `case` found
-k5_handler_guard Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e if p(e) => b\n      case 2 => c\n    }\n}
-k5_handler_guard Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e if p(e) => b\n      case 2 => c\n    }\n}
-k5_handler_if_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n      case 2 =>\n        d\n    }\n}
-k5_handler_if_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n      case 2 =>\n        d\n    }\n}
-k5_handler_match_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case _: X => b\n          case _ => c\n        }\n      case 2 =>\n        d\n    }\n}
-k5_handler_match_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case _: X => b\n          case _ => c\n        }\n      case 2 =>\n        d\n    }\n}
-k5_handler_then_dot_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b.foo\n      case 2 =>\n        c\n    }\n}
-k5_handler_then_dot_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b.foo\n      case 2 =>\n        c\n    }\n}
-k5_if_then_else_sameline Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n      case 2 =>\n        d\n    }\n}
-k5_if_then_else_sameline Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n      case 2 =>\n        d\n    }\n}
-k5_if_then_sameline Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n      case 2 =>\n        d\n    }\n}
-k5_if_then_sameline Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n      case 2 =>\n        d\n    }\n}
-k5_inner_match_ctx Scala3: def f = x match {\n  case 1 =>\n    y match {\n      case 2 =>\n        try a catch {\n          case e => b\n          case 3 => c\n        }\n    }\n  case 4 =>\n    d\n}
-k5_inner_match_ctx Scala32: def f = x match {\n  case 1 =>\n    y match {\n      case 2 =>\n        try a catch {\n          case e => b\n          case 3 => c\n        }\n    }\n  case 4 =>\n    d\n}
-k5_lam_body_match Scala3: def f = xs.map {\n  y => y match {\n    case 1 =>\n      try a catch {\n        case e => b\n        case 2 => c\n      }\n  }\n}
+k5_handler_guard Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e if p(e) => b\n    }\n  case 2 =>\n    c\n}
+k5_handler_guard Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e if p(e) => b\n    }\n  case 2 =>\n    c\n}
+k5_handler_if_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n    }\n  case 2 =>\n    d\n}
+k5_handler_if_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n    }\n  case 2 =>\n    d\n}
+k5_handler_match_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case _: X => b\n          case _ => c\n        }\n    }\n  case 2 =>\n    d\n}
+k5_handler_match_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case _: X => b\n          case _ => c\n        }\n    }\n  case 2 =>\n    d\n}
+k5_handler_then_dot_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b.foo\n    }\n  case 2 =>\n    c\n}
+k5_handler_then_dot_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b.foo\n    }\n  case 2 =>\n    c\n}
+k5_if_then_else_sameline Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n    }\n  case 2 =>\n    d\n}
+k5_if_then_else_sameline Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n    }\n  case 2 =>\n    d\n}
+k5_if_then_sameline Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n    }\n  case 2 =>\n    d\n}
+k5_if_then_sameline Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n    }\n  case 2 =>\n    d\n}
+k5_inner_match_ctx Scala3: def f = x match {\n  case 1 =>\n    y match {\n      case 2 =>\n        try a catch {\n          case e => b\n        }\n      case 3 =>\n        c\n    }\n  case 4 =>\n    d\n}
+k5_inner_match_ctx Scala32: def f = x match {\n  case 1 =>\n    y match {\n      case 2 =>\n        try a catch {\n          case e => b\n        }\n      case 3 =>\n        c\n    }\n  case 4 =>\n    d\n}
+k5_lam_body_match Scala3: def f = xs.map {\n  y => y match {\n    case 1 =>\n      try a catch {\n        case e => b\n      }\n    case 2 =>\n      c\n  }\n}
 k5_lam_body_match Scala32: error 3:15: `identifier` expected but `try` found
-k5_nested_try_in_handler Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f => c\n          case 2 => d\n        }\n    }\n}
-k5_nested_try_in_handler Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f => c\n          case 2 => d\n        }\n    }\n}
-k5_semi_then_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n        c\n      case 2 =>\n        d\n    }\n}
-k5_semi_then_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n        c\n      case 2 =>\n        d\n    }\n}
-k5_subcase Scala3: def f = x match {\n  case Some(v) if (v match {\n    case 1 =>\n      try a catch {\n        case e => true\n        case _ => false\n      }\n  }) => 1\n}
-k5_subcase Scala32: def f = x match {\n  case Some(v) if (v match {\n    case 1 =>\n      try a catch {\n        case e => true\n        case _ => false\n      }\n  }) => 1\n}
-k5_then_body_match Scala3: def f = if (p) x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n} else d
-k5_then_body_match Scala32: def f = if (p) x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n} else d
-k5_try_eol_catch_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-k5_try_eol_catch_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-k5_val_try Scala3: def f = x match {\n  case 1 =>\n    val r = try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-k5_val_try Scala32: def f = x match {\n  case 1 =>\n    val r = try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-k5_while_body Scala3: def f = x match {\n  case 1 =>\n    while (p) try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-k5_while_body Scala32: def f = x match {\n  case 1 =>\n    while (p) try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-e1_handler_comment_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b // note\n      case 2 => c\n    }\n}
-e1_handler_comment_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b // note\n      case 2 => c\n    }\n}
-e11_handler_colon_cases_brace Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+k5_nested_try_in_handler Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f => c\n        }\n    }\n  case 2 =>\n    d\n}
+k5_nested_try_in_handler Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f => c\n        }\n    }\n  case 2 =>\n    d\n}
+k5_semi_then_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n        c\n    }\n  case 2 =>\n    d\n}
+k5_semi_then_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n        c\n    }\n  case 2 =>\n    d\n}
+k5_subcase Scala3: def f = x match {\n  case Some(v) if (v match {\n    case 1 =>\n      try a catch {\n        case e => true\n      }\n    case _ =>\n      false\n  }) => 1\n}
+k5_subcase Scala32: def f = x match {\n  case Some(v) if (v match {\n    case 1 =>\n      try a catch {\n        case e => true\n      }\n    case _ =>\n      false\n  }) => 1\n}
+k5_then_body_match Scala3: def f = if (p) x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n} else d
+k5_then_body_match Scala32: def f = if (p) x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n} else d
+k5_try_eol_catch_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_try_eol_catch_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_val_try Scala3: def f = x match {\n  case 1 =>\n    val r = try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_val_try Scala32: def f = x match {\n  case 1 =>\n    val r = try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_while_body Scala3: def f = x match {\n  case 1 =>\n    while (p) try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+k5_while_body Scala32: def f = x match {\n  case 1 =>\n    while (p) try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+e1_handler_comment_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b // note\n    }\n  case 2 =>\n    c\n}
+e1_handler_comment_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b // note\n    }\n  case 2 =>\n    c\n}
+e11_handler_colon_cases_brace Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 e11_handler_colon_cases_brace Scala32: error 3:7: `identifier` expected but `case` found
-e12_handler_colon_cases_flat Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+e12_handler_colon_cases_flat Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 e12_handler_colon_cases_flat Scala32: error 3:5: `identifier` expected but `case` found
-e2_handler_colon_lam_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          y => y\n        }\n      case 2 =>\n        c\n    }\n}
+e2_handler_colon_lam_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          y => y\n        }\n    }\n  case 2 =>\n    c\n}
 e2_handler_colon_lam_lines Scala32: error 2:45: `outdent` expected but `=>` found
-e3_handler_colon_two_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
+e3_handler_colon_two_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
 e3_handler_colon_two_cases Scala32: error 3:7: `identifier` expected but `case` found
-e4_handler_then_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else d\n      case 2 =>\n        c\n    }\n}
-e4_handler_then_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else d\n      case 2 =>\n        c\n    }\n}
-e5_handler_infix_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b + d\n      case 2 =>\n        c\n    }\n}
-e5_handler_infix_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b + d\n      case 2 =>\n        c\n    }\n}
-f6_blank_line_between Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-f6_blank_line_between Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-f6_block_comment_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b /* note */\n      case 2 => c\n    }\n}
-f6_block_comment_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b /* note */\n      case 2 => c\n    }\n}
-f6_brace_body_colon_cases_brace Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-f6_brace_body_colon_cases_brace Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-f6_brace_lambda_close Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          x => log(x)\n        }\n      case 2 =>\n        c\n    }\n}
-f6_brace_lambda_close Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          x => log(x)\n        }\n      case 2 =>\n        c\n    }\n}
-f6_colon_cases_comment_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X =>\n            1\n            // done\n        }\n      case 2 =>\n        c\n    }\n}
+e4_handler_then_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else d\n    }\n  case 2 =>\n    c\n}
+e4_handler_then_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else d\n    }\n  case 2 =>\n    c\n}
+e5_handler_infix_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b + d\n    }\n  case 2 =>\n    c\n}
+e5_handler_infix_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b + d\n    }\n  case 2 =>\n    c\n}
+f6_blank_line_between Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+f6_blank_line_between Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+f6_block_comment_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b /* note */\n    }\n  case 2 =>\n    c\n}
+f6_block_comment_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b /* note */\n    }\n  case 2 =>\n    c\n}
+f6_brace_body_colon_cases_brace Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+f6_brace_body_colon_cases_brace Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+f6_brace_lambda_close Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          x => log(x)\n        }\n    }\n  case 2 =>\n    c\n}
+f6_brace_lambda_close Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          x => log(x)\n        }\n    }\n  case 2 =>\n    c\n}
+f6_colon_cases_comment_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X =>\n            1\n            // done\n        }\n    }\n  case 2 =>\n    c\n}
 f6_colon_cases_comment_line Scala32: error 3:7: `identifier` expected but `case` found
-f6_colon_cases_dot_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }.sum\n      case 2 =>\n        c\n    }\n}
+f6_colon_cases_dot_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }.sum\n    }\n  case 2 =>\n    c\n}
 f6_colon_cases_dot_line Scala32: error 3:7: `identifier` expected but `case` found
-f6_colon_cases_infix_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        } ++ ys\n      case 2 =>\n        c\n    }\n}
+f6_colon_cases_infix_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        } ++ ys\n    }\n  case 2 =>\n    c\n}
 f6_colon_cases_infix_line Scala32: error 3:7: `identifier` expected but `case` found
-f6_colon_lam_brace_close Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          y => g(y) {\n            y\n          }\n        }\n      case 2 =>\n        c\n    }\n}
+f6_colon_lam_brace_close Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          y => g(y) {\n            y\n          }\n        }\n    }\n  case 2 =>\n    c\n}
 f6_colon_lam_brace_close Scala32: error 2:45: `outdent` expected but `=>` found
-f6_comment_line_between Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      // next\n      case 2 => c\n    }\n}
-f6_comment_line_between Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      // next\n      case 2 => c\n    }\n}
-f6_else_colon_cases Scala3: def f = x match {\n  case 1 =>\n    if (p) a else try b catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+f6_comment_line_between Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n      // next\n    }\n  case 2 =>\n    c\n}
+f6_comment_line_between Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n      // next\n    }\n  case 2 =>\n    c\n}
+f6_else_colon_cases Scala3: def f = x match {\n  case 1 =>\n    if (p) a else try b catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 f6_else_colon_cases Scala32: error 3:7: `identifier` expected but `case` found
-f6_end_if Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (e.ok) b else c\n        end if\n      case 2 =>\n        d\n    }\n}
-f6_end_if Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (e.ok) b else c\n        end if\n      case 2 =>\n        d\n    }\n}
-f6_end_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X => b\n          case _ => c\n        }\n        end match\n      case 2 =>\n        d\n    }\n}
-f6_end_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X => b\n          case _ => c\n        }\n        end match\n      case 2 =>\n        d\n    }\n}
-f6_end_while Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) g()\n        end while\n      case 2 =>\n        d\n    }\n}
-f6_end_while Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) g()\n        end while\n      case 2 =>\n        d\n    }\n}
-f6_handler_match_deeper_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X => b\n        }\n      case 2 =>\n        c\n    }\n}
-f6_handler_match_deeper_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X => b\n        }\n      case 2 =>\n        c\n    }\n}
-f6_infix_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b + d\n      case 2 =>\n        c\n    }\n}
-f6_infix_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b + d\n      case 2 =>\n        c\n    }\n}
-f6_interp Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        s"err $e"\n      case 2 =>\n        c\n    }\n}
-f6_interp Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        s"err $e"\n      case 2 =>\n        c\n    }\n}
-f6_lam_body_colon_cases Scala3: def f = xs.map {\n  y => y match {\n    case 1 =>\n      try a catch {\n        case e =>\n          ys.map {\n            case X => 1\n          }\n        case 2 =>\n          c\n      }\n  }\n}
+f6_end_if Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (e.ok) b else c\n        end if\n    }\n  case 2 =>\n    d\n}
+f6_end_if Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (e.ok) b else c\n        end if\n    }\n  case 2 =>\n    d\n}
+f6_end_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X => b\n          case _ => c\n        }\n        end match\n    }\n  case 2 =>\n    d\n}
+f6_end_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X => b\n          case _ => c\n        }\n        end match\n    }\n  case 2 =>\n    d\n}
+f6_end_while Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) g()\n        end while\n    }\n  case 2 =>\n    d\n}
+f6_end_while Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) g()\n        end while\n    }\n  case 2 =>\n    d\n}
+f6_handler_match_deeper_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X => b\n        }\n    }\n  case 2 =>\n    c\n}
+f6_handler_match_deeper_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X => b\n        }\n    }\n  case 2 =>\n    c\n}
+f6_infix_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b + d\n    }\n  case 2 =>\n    c\n}
+f6_infix_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b + d\n    }\n  case 2 =>\n    c\n}
+f6_interp Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        s"err $e"\n    }\n  case 2 =>\n    c\n}
+f6_interp Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        s"err $e"\n    }\n  case 2 =>\n    c\n}
+f6_lam_body_colon_cases Scala3: def f = xs.map {\n  y => y match {\n    case 1 =>\n      try a catch {\n        case e =>\n          ys.map {\n            case X => 1\n          }\n      }\n    case 2 =>\n      c\n  }\n}
 f6_lam_body_colon_cases Scala32: error 3:15: `identifier` expected but `try` found
-f6_null Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => null\n      case 2 => c\n    }\n}
-f6_null Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => null\n      case 2 => c\n    }\n}
-f6_paren_close Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        g(e)\n      case 2 =>\n        c\n    }\n}
-f6_paren_close Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        g(e)\n      case 2 =>\n        c\n    }\n}
-f6_pf_colon_cases Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        ys.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+f6_null Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => null\n    }\n  case 2 =>\n    c\n}
+f6_null Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => null\n    }\n  case 2 =>\n    c\n}
+f6_paren_close Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        g(e)\n    }\n  case 2 =>\n    c\n}
+f6_paren_close Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        g(e)\n    }\n  case 2 =>\n    c\n}
+f6_pf_colon_cases Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        ys.map {\n          case X => 1\n        }\n    }\n  case 2 => c\n}
 f6_pf_colon_cases Scala32: error 3:7: `identifier` expected but `case` found
-f6_semi_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-f6_semi_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-f6_semi_eol_brace Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-f6_semi_eol_brace Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-f6_then_colon_cases Scala3: def f = x match {\n  case 1 =>\n    if (p) try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+f6_semi_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+f6_semi_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+f6_semi_eol_brace Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+f6_semi_eol_brace Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+f6_then_colon_cases Scala3: def f = x match {\n  case 1 =>\n    if (p) try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 f6_then_colon_cases Scala32: error 3:7: `identifier` expected but `case` found
-e7_semi_deeper_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-e7_semi_deeper_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-e7_semi_comment Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b // note\n      case 2 => c\n    }\n}
-e7_semi_comment Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b // note\n      case 2 => c\n    }\n}
-e7_semi_twice Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-e7_semi_twice Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-e7_semi_mid_and_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n        d\n      case 2 =>\n        c\n    }\n}
-e7_semi_mid_and_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n        d\n      case 2 =>\n        c\n    }\n}
-e7_semi_brace_pf Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-e7_semi_brace_pf Scala32: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-e7_semi_then Scala3: def f = x match {\n  case 1 =>\n    if (p) try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-e7_semi_then Scala32: def f = x match {\n  case 1 =>\n    if (p) try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-e7_semi_in_guard_arg Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e => false\n        case c => true\n      }\n  } => 1\n}
+e7_semi_deeper_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+e7_semi_deeper_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+e7_semi_comment Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b // note\n    }\n  case 2 =>\n    c\n}
+e7_semi_comment Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b // note\n    }\n  case 2 =>\n    c\n}
+e7_semi_twice Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+e7_semi_twice Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+e7_semi_mid_and_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n        d\n    }\n  case 2 =>\n    c\n}
+e7_semi_mid_and_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n        d\n    }\n  case 2 =>\n    c\n}
+e7_semi_brace_pf Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 => c\n}
+e7_semi_brace_pf Scala32: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 => c\n}
+e7_semi_then Scala3: def f = x match {\n  case 1 =>\n    if (p) try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+e7_semi_then Scala32: def f = x match {\n  case 1 =>\n    if (p) try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+e7_semi_in_guard_arg Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e => false\n      }\n    case c => true\n  } => 1\n}
 e7_semi_in_guard_arg Scala32: error 2:22: `=>` expected but `:` found
-e7_semi_flat Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-e7_semi_flat Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-e7_semi_colon_arg_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+e7_semi_flat Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+e7_semi_flat Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+e7_semi_colon_arg_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 e7_semi_colon_arg_cases Scala32: error 3:7: `identifier` expected but `case` found
-n7_colon_cases_empty_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
+n7_colon_cases_empty_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
 n7_colon_cases_empty_last Scala32: error 3:7: `identifier` expected but `case` found
-n7_colon_cases_empty_last_brace Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
+n7_colon_cases_empty_last_brace Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
 n7_colon_cases_empty_last_brace Scala32: error 3:7: `identifier` expected but `case` found
-n7_handler_match_empty_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-n7_handler_match_empty_last Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-n7_handler_match_empty_last_guard Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          e match {\n            case X => true\n            case _ =>\n          }\n        case c =>\n          false\n      }\n  } => 1\n}
+n7_handler_match_empty_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+n7_handler_match_empty_last Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+n7_handler_match_empty_last_guard Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          e match {\n            case X => true\n            case _ =>\n          }\n      }\n    case c => false\n  } => 1\n}
 n7_handler_match_empty_last_guard Scala32: error 2:22: `=>` expected but `:` found
-n7_nested_handlers Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f => c\n          case 2 => d\n        }\n    }\n}
-n7_nested_handlers Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f => c\n          case 2 => d\n        }\n    }\n}
-n7_return_eol Scala3: def f: Unit = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        return\n      case 2 =>\n        c\n    }\n}
-n7_return_eol Scala32: def f: Unit = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        return\n      case 2 =>\n        c\n    }\n}
-n7_semi_apply_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        g(e)\n      case 2 =>\n        c\n    }\n}
-n7_semi_apply_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        g(e)\n      case 2 =>\n        c\n    }\n}
-n7_semi_arrow_eol_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-n7_semi_arrow_eol_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-n7_semi_catch_brace_outer Scala3: def f = try z catch {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-n7_semi_catch_brace_outer Scala32: def f = try z catch {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-n7_semi_catch_indent_outer Scala3: def f = try z catch {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-n7_semi_catch_indent_outer Scala32: def f = try z catch {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-n7_semi_colon_cases_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+n7_nested_handlers Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f => c\n        }\n    }\n  case 2 =>\n    d\n}
+n7_nested_handlers Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f => c\n        }\n    }\n  case 2 =>\n    d\n}
+n7_return_eol Scala3: def f: Unit = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        return\n    }\n  case 2 =>\n    c\n}
+n7_return_eol Scala32: def f: Unit = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        return\n    }\n  case 2 =>\n    c\n}
+n7_semi_apply_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        g(e)\n    }\n  case 2 =>\n    c\n}
+n7_semi_apply_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        g(e)\n    }\n  case 2 =>\n    c\n}
+n7_semi_arrow_eol_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_arrow_eol_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_catch_brace_outer Scala3: def f = try z catch {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_catch_brace_outer Scala32: def f = try z catch {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_catch_indent_outer Scala3: def f = try z catch {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_catch_indent_outer Scala32: def f = try z catch {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_colon_cases_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 n7_semi_colon_cases_last Scala32: error 3:7: `identifier` expected but `case` found
-n7_semi_colon_cases_pf Scala3: def f = xs.collect {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
+n7_semi_colon_cases_pf Scala3: def f = xs.collect {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 => c\n}
 n7_semi_colon_cases_pf Scala32: error 2:3: `identifier` expected but `case` found
-n7_semi_colon_cases_two Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
+n7_semi_colon_cases_two Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
 n7_semi_colon_cases_two Scala32: error 3:7: `identifier` expected but `case` found
-n7_semi_else_branch Scala3: def f = x match {\n  case 1 =>\n    if (p) a else try b catch {\n      case e => c\n      case 2 => d\n    }\n}
-n7_semi_else_branch Scala32: def f = x match {\n  case 1 =>\n    if (p) a else try b catch {\n      case e => c\n      case 2 => d\n    }\n}
-n7_semi_flat_handler_arrow_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-n7_semi_flat_handler_arrow_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-n7_semi_handler_guard Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e if e.ok => b\n      case 2 => c\n    }\n}
-n7_semi_handler_guard Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e if e.ok => b\n      case 2 => c\n    }\n}
-n7_semi_if_then Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n      case 2 =>\n        d\n    }\n}
-n7_semi_if_then Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n      case 2 =>\n        d\n    }\n}
-n7_semi_if_then_else Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n      case 2 =>\n        d\n    }\n}
-n7_semi_if_then_else Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n      case 2 =>\n        d\n    }\n}
-n7_semi_lam_body_match Scala3: def f = xs.map {\n  y => y match {\n    case 1 =>\n      try a catch {\n        case e => b\n        case 2 => c\n      }\n  }\n}
+n7_semi_else_branch Scala3: def f = x match {\n  case 1 =>\n    if (p) a else try b catch {\n      case e => c\n    }\n  case 2 =>\n    d\n}
+n7_semi_else_branch Scala32: def f = x match {\n  case 1 =>\n    if (p) a else try b catch {\n      case e => c\n    }\n  case 2 =>\n    d\n}
+n7_semi_flat_handler_arrow_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_flat_handler_arrow_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_handler_guard Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e if e.ok => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_handler_guard Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e if e.ok => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_if_then Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n    }\n  case 2 =>\n    d\n}
+n7_semi_if_then Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n    }\n  case 2 =>\n    d\n}
+n7_semi_if_then_else Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n    }\n  case 2 =>\n    d\n}
+n7_semi_if_then_else Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n    }\n  case 2 =>\n    d\n}
+n7_semi_lam_body_match Scala3: def f = xs.map {\n  y => y match {\n    case 1 =>\n      try a catch {\n        case e => b\n      }\n    case 2 =>\n      c\n  }\n}
 n7_semi_lam_body_match Scala32: error 3:15: `identifier` expected but `try` found
-n7_semi_nested_handlers Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f => c\n          case 2 => d\n        }\n    }\n}
-n7_semi_nested_handlers Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f => c\n          case 2 => d\n        }\n    }\n}
-n7_semi_three_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n      case 2 =>\n        try c catch {\n          case e => d\n          case 3 => e\n        }\n    }\n}
-n7_semi_three_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b\n      case 2 =>\n        try c catch {\n          case e => d\n          case 3 => e\n        }\n    }\n}
-n7_semi_type_pat Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n      case 2 => c\n    }\n}
-n7_semi_type_pat Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n      case 2 => c\n    }\n}
-n7_semi_while Scala3: def f = x match {\n  case 1 =>\n    while (p) try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-n7_semi_while Scala32: def f = x match {\n  case 1 =>\n    while (p) try a catch {\n      case e => b\n      case 2 => c\n    }\n}
-e8_empty_last_deeper_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_deeper_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_aligned_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_aligned_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_two_levels Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            y match {\n              case Z =>\n                g()\n              case _ =>\n            }\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_two_levels Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            y match {\n              case Z =>\n                g()\n              case _ =>\n            }\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_three_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n      case 3 =>\n        d\n    }\n}
-e8_empty_last_three_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n      case 3 =>\n        d\n    }\n}
-e8_empty_last_typed Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _: Foo =>\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_typed Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _: Foo =>\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_comment Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ => // nothing\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_comment Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ => // nothing\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_blank_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_blank_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-e8_colon_lambda_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          y => g(y)\n        }\n      case 2 =>\n        c\n    }\n}
+n7_semi_nested_handlers Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f => c\n        }\n    }\n  case 2 =>\n    d\n}
+n7_semi_nested_handlers Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f => c\n        }\n    }\n  case 2 =>\n    d\n}
+n7_semi_three_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    try c catch {\n      case e => d\n    }\n  case 3 =>\n    e\n}
+n7_semi_three_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e => b\n    }\n  case 2 =>\n    try c catch {\n      case e => d\n    }\n  case 3 =>\n    e\n}
+n7_semi_type_pat Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_type_pat Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case _: Exception => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_while Scala3: def f = x match {\n  case 1 =>\n    while (p) try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+n7_semi_while Scala32: def f = x match {\n  case 1 =>\n    while (p) try a catch {\n      case e => b\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_deeper_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_deeper_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_aligned_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_aligned_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_two_levels Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            y match {\n              case Z =>\n                g()\n              case _ =>\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_two_levels Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            y match {\n              case Z =>\n                g()\n              case _ =>\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_three_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n  case 3 =>\n    d\n}
+e8_empty_last_three_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n  case 3 =>\n    d\n}
+e8_empty_last_typed Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _: Foo =>\n        }\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_typed Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _: Foo =>\n        }\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_comment Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ => // nothing\n        }\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_comment Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ => // nothing\n        }\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_blank_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_blank_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+e8_colon_lambda_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          y => g(y)\n        }\n    }\n  case 2 =>\n    c\n}
 e8_colon_lambda_body Scala32: error 2:49: `outdent` expected but `=>` found
-e8_then_body_next_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (e.ok) g()\n      case 2 =>\n        c\n    }\n}
-e8_then_body_next_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (e.ok) g()\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_brace_outer_pf Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_brace_outer_pf Scala32: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-e8_empty_last_guard_two_cases Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          e match {\n            case X => true\n            case _ =>\n          }\n        case c =>\n          false\n        case d =>\n          true\n      }\n  } => 1\n}
+e8_then_body_next_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (e.ok) g()\n    }\n  case 2 =>\n    c\n}
+e8_then_body_next_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (e.ok) g()\n    }\n  case 2 =>\n    c\n}
+e8_empty_last_brace_outer_pf Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 => c\n}
+e8_empty_last_brace_outer_pf Scala32: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 => c\n}
+e8_empty_last_guard_two_cases Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          e match {\n            case X => true\n            case _ =>\n          }\n      }\n    case c => false\n    case d => true\n  } => 1\n}
 e8_empty_last_guard_two_cases Scala32: error 2:22: `=>` expected but `:` found
-e8_lambda_arrow_eol_inner Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n            (y: Int) => y\n        }\n      case 2 =>\n        c\n    }\n}
-e8_lambda_arrow_eol_inner Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n            (y: Int) => y\n        }\n      case 2 =>\n        c\n    }\n}
-p8_body_next_line_empty_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-p8_body_next_line_empty_last Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-p8_comment_line_before_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n          // done\n        }\n      case 2 =>\n        c\n    }\n}
-p8_comment_line_before_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n          // done\n        }\n      case 2 =>\n        c\n    }\n}
-p8_dot_line_colon_cases_at Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+e8_lambda_arrow_eol_inner Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n            (y: Int) => y\n        }\n    }\n  case 2 =>\n    c\n}
+e8_lambda_arrow_eol_inner Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n            (y: Int) => y\n        }\n    }\n  case 2 =>\n    c\n}
+p8_body_next_line_empty_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+p8_body_next_line_empty_last Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+p8_comment_line_before_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n          // done\n        }\n    }\n  case 2 =>\n    c\n}
+p8_comment_line_before_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n          // done\n        }\n    }\n  case 2 =>\n    c\n}
+p8_dot_line_colon_cases_at Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 p8_dot_line_colon_cases_at Scala32: error 4:5: `identifier` expected but `case` found
-p8_dot_line_colon_cases_deeper Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+p8_dot_line_colon_cases_deeper Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 p8_dot_line_colon_cases_deeper Scala32: error 4:7: `identifier` expected but `case` found
-p8_dot_line_colon_cases_left Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+p8_dot_line_colon_cases_left Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 p8_dot_line_colon_cases_left Scala32: error 4:5: `identifier` expected but `case` found
-p8_dot_line_match_deeper Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.head match {\n          case X => 1\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-p8_dot_line_match_deeper Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.head match {\n          case X => 1\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-p8_dot_line_match_left Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.head match {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-p8_dot_line_match_left Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.head match {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-p8_else_inline_colon_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+p8_dot_line_match_deeper Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.head match {\n          case X => 1\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+p8_dot_line_match_deeper Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.head match {\n          case X => 1\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+p8_dot_line_match_left Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.head match {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+p8_dot_line_match_left Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.head match {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+p8_else_inline_colon_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 p8_else_inline_colon_cases Scala32: error 3:7: `identifier` expected but `case` found
-p8_guard_inner_match_handler_empty Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      b match {\n        case 1 =>\n          try g(b) catch {\n            case e =>\n              e match {\n                case X => true\n                case _ =>\n              }\n            case 2 =>\n              false\n          }\n      }\n  } => 1\n}
+p8_guard_inner_match_handler_empty Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      b match {\n        case 1 =>\n          try g(b) catch {\n            case e =>\n              e match {\n                case X => true\n                case _ =>\n              }\n          }\n        case 2 =>\n          false\n      }\n  } => 1\n}
 p8_guard_inner_match_handler_empty Scala32: error 2:22: `=>` expected but `:` found
-p8_handler_colon_lambda_eol_inner Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          y => y match {\n            case X =>\n              g()\n            case _ =>\n          }\n        }\n      case 2 =>\n        c\n    }\n}
+p8_handler_colon_lambda_eol_inner Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.foreach {\n          y => y match {\n            case X =>\n              g()\n            case _ =>\n          }\n        }\n    }\n  case 2 =>\n    c\n}
 p8_handler_colon_lambda_eol_inner Scala32: error 2:49: `outdent` expected but `=>` found
-p8_indent_catch_outer Scala3: def f = try z catch {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-p8_indent_catch_outer Scala32: def f = try z catch {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-p8_infix_line_colon_cases_deeper Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        a ++ xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+p8_indent_catch_outer Scala3: def f = try z catch {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+p8_indent_catch_outer Scala32: def f = try z catch {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+p8_infix_line_colon_cases_deeper Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        a ++ xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 p8_infix_line_colon_cases_deeper Scala32: error 4:7: `identifier` expected but `case` found
-p8_infix_line_colon_cases_left Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        a ++ xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+p8_infix_line_colon_cases_left Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        a ++ xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
 p8_infix_line_colon_cases_left Scala32: error 4:5: `identifier` expected but `case` found
-p8_inner_case_colon_empty_then_next_inner Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            xs.foreach {\n              case P =>\n            }\n          case Y =>\n            2\n        }\n      case 2 =>\n        c\n    }\n}
+p8_inner_case_colon_empty_then_next_inner Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            xs.foreach {\n              case P =>\n            }\n          case Y =>\n            2\n        }\n    }\n  case 2 =>\n    c\n}
 p8_inner_case_colon_empty_then_next_inner Scala32: error 4:11: `identifier` expected but `case` found
-p8_inner_case_colon_then_next_inner Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            xs.map {\n              case P => 1\n            }\n          case Y =>\n            2\n        }\n      case 2 =>\n        c\n    }\n}
+p8_inner_case_colon_then_next_inner Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            xs.map {\n              case P => 1\n            }\n          case Y =>\n            2\n        }\n    }\n  case 2 =>\n    c\n}
 p8_inner_case_colon_then_next_inner Scala32: error 4:11: `identifier` expected but `case` found
-p8_inner_colon_then_dot Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }.sum\n      case 2 =>\n        c\n    }\n}
+p8_inner_colon_then_dot Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X => 1\n        }.sum\n    }\n  case 2 =>\n    c\n}
 p8_inner_colon_then_dot Scala32: error 3:7: `identifier` expected but `case` found
-p8_inner_for_do_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        for (y <- ys) g(y)\n      case 2 =>\n        c\n    }\n}
-p8_inner_for_do_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        for (y <- ys) g(y)\n      case 2 =>\n        c\n    }\n}
-p8_inner_if_else_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) g() else h()\n      case 2 =>\n        c\n    }\n}
-p8_inner_if_else_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) g() else h()\n      case 2 =>\n        c\n    }\n}
-p8_inner_match_arrow_eol_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_match_arrow_eol_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_match_then_case_same_line_semi Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_match_then_case_same_line_semi Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_match_then_infix Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        (e match {\n          case X => 1\n          case _ => 2\n        }) + 3\n      case 2 =>\n        c\n    }\n}
-p8_inner_match_then_infix Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        (e match {\n          case X => 1\n          case _ => 2\n        }) + 3\n      case 2 =>\n        c\n    }\n}
-p8_inner_then_else_sameline Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) g() else h()\n      case 2 =>\n        c\n    }\n}
-p8_inner_then_else_sameline Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) g() else h()\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_body_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_body_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_brace_catch Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_brace_catch Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_brace_outer Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_brace_outer Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_empty_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_empty_last Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_finally Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        } finally h()\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_finally Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        } finally h()\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_guard Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          try h(e) catch {\n            case X => true\n          }\n        case c =>\n          false\n      }\n  } => 1\n}
+p8_inner_for_do_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        for (y <- ys) g(y)\n    }\n  case 2 =>\n    c\n}
+p8_inner_for_do_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        for (y <- ys) g(y)\n    }\n  case 2 =>\n    c\n}
+p8_inner_if_else_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) g() else h()\n    }\n  case 2 =>\n    c\n}
+p8_inner_if_else_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) g() else h()\n    }\n  case 2 =>\n    c\n}
+p8_inner_match_arrow_eol_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_match_arrow_eol_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_match_then_case_same_line_semi Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_match_then_case_same_line_semi Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_match_then_infix Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        (e match {\n          case X => 1\n          case _ => 2\n        }) + 3\n    }\n  case 2 =>\n    c\n}
+p8_inner_match_then_infix Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        (e match {\n          case X => 1\n          case _ => 2\n        }) + 3\n    }\n  case 2 =>\n    c\n}
+p8_inner_then_else_sameline Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) g() else h()\n    }\n  case 2 =>\n    c\n}
+p8_inner_then_else_sameline Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) g() else h()\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_body_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_body_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_brace_catch Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_brace_catch Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_brace_outer Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_brace_outer Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_empty_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_empty_last Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_finally Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        } finally h()\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_finally Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        } finally h()\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_guard Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          try h(e) catch {\n            case X => true\n          }\n      }\n    case c => false\n  } => 1\n}
 p8_inner_try_catch_eol_guard Scala32: error 2:22: `=>` expected but `:` found
-p8_inner_try_catch_eol_in_inner_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case P => 1\n            }\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_in_inner_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case P => 1\n            }\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_pf Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_pf Scala32: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_two_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n          case Y =>\n            h()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_catch_eol_two_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n          case Y =>\n            h()\n        }\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_finally_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try g() finally h()\n      case 2 =>\n        c\n    }\n}
-p8_inner_try_finally_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try g() finally h()\n      case 2 =>\n        c\n    }\n}
-p8_inner_while_do_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) g()\n      case 2 =>\n        c\n    }\n}
-p8_inner_while_do_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) g()\n      case 2 =>\n        c\n    }\n}
-p8_lam_body_match Scala3: def f = xs.map {\n  y => y match {\n    case 1 =>\n      try a catch {\n        case e =>\n          e match {\n            case X =>\n              g()\n            case _ =>\n          }\n        case 2 =>\n          c\n      }\n  }\n}
+p8_inner_try_catch_eol_in_inner_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case P => 1\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_in_inner_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case P => 1\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_pf Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 => c\n}
+p8_inner_try_catch_eol_pf Scala32: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 => c\n}
+p8_inner_try_catch_eol_two_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n          case Y =>\n            h()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_catch_eol_two_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n          case Y =>\n            h()\n        }\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_finally_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try g() finally h()\n    }\n  case 2 =>\n    c\n}
+p8_inner_try_finally_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try g() finally h()\n    }\n  case 2 =>\n    c\n}
+p8_inner_while_do_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) g()\n    }\n  case 2 =>\n    c\n}
+p8_inner_while_do_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) g()\n    }\n  case 2 =>\n    c\n}
+p8_lam_body_match Scala3: def f = xs.map {\n  y => y match {\n    case 1 =>\n      try a catch {\n        case e =>\n          e match {\n            case X =>\n              g()\n            case _ =>\n          }\n      }\n    case 2 =>\n      c\n  }\n}
 p8_lam_body_match Scala32: error 3:15: `identifier` expected but `try` found
-p8_nested_handler_inner_match_empty Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                f match {\n                  case P => 1\n                  case _ =>\n                }\n              case Y =>\n                2\n            }\n        }\n      case 2 =>\n        c\n    }\n}
-p8_nested_handler_inner_match_empty Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                f match {\n                  case P => 1\n                  case _ =>\n                }\n              case Y =>\n                2\n            }\n        }\n      case 2 =>\n        c\n    }\n}
-p8_then_inline_colon_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) xs.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-p8_then_inline_colon_cases Scala32: error 3:7: `identifier` expected but `case` found
-p8_then_inline_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-p8_then_inline_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-p8_then_inline_match_empty_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-p8_then_inline_match_empty_last Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-p8_while_inline_colon_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) xs.foreach {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
+p8_nested_handler_inner_match_empty Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                f match {\n                  case P => 1\n                  case _ =>\n                }\n            }\n          case Y =>\n            2\n        }\n    }\n  case 2 =>\n    c\n}
+p8_nested_handler_inner_match_empty Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                f match {\n                  case P => 1\n                  case _ =>\n                }\n            }\n          case Y =>\n            2\n        }\n    }\n  case 2 =>\n    c\n}
+p8_then_inline_colon_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) xs.map {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+p8_then_inline_colon_cases Scala32: error 2:52: `identifier` expected but `outdent` found
+p8_then_inline_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+p8_then_inline_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+p8_then_inline_match_empty_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+p8_then_inline_match_empty_last Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+p8_while_inline_colon_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) xs.foreach {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
 p8_while_inline_colon_cases Scala32: error 3:7: `identifier` expected but `case` found
-e9_try_no_catch_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b\n      case 2 =>\n        c\n    }\n}
-e9_try_no_catch_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b\n      case 2 =>\n        c\n    }\n}
-e9_then_no_else_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n      case 2 =>\n        c\n    }\n}
-e9_then_no_else_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n      case 2 =>\n        c\n    }\n}
-e9_then_eol_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n      case 2 =>\n        c\n    }\n}
-e9_then_eol_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n      case 2 =>\n        c\n    }\n}
-e9_try_finally_eol_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b finally g()\n      case 2 =>\n        c\n    }\n}
-e9_try_finally_eol_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b finally g()\n      case 2 =>\n        c\n    }\n}
-e9_then_match_two_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-e9_then_match_two_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-e9_then_match_empty_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-e9_then_match_empty_last Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case _ =>\n        }\n      case 2 =>\n        c\n    }\n}
-e9_else_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else e match {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-e9_else_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else e match {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-e9_while_do_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) e match {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-e9_while_do_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) e match {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-e9_then_try_catch_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-e9_then_try_catch_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-e9_try_catch_eol_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            if (q) e match {\n              case Y => 1\n            }\n        }\n      case 2 =>\n        c\n    }\n}
-e9_try_catch_eol_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            if (q) e match {\n              case Y => 1\n            }\n        }\n      case 2 =>\n        c\n    }\n}
-e9_then_handler_on_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) try b catch {\n          case X =>\n            g()\n          case 2 =>\n            c\n        }\n    }\n}
-e9_then_handler_on_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) try b catch {\n          case X =>\n            g()\n          case 2 =>\n            c\n        }\n    }\n}
-e9_try_body_match_two Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X =>\n            g()\n          case Y =>\n            h()\n        }\n      case 2 =>\n        c\n    }\n}
-e9_try_body_match_two Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X =>\n            g()\n          case Y =>\n            h()\n        }\n      case 2 =>\n        c\n    }\n}
-e9_try_catch_eol_inner_deeper Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n          case Y =>\n            h()\n        }\n      case 2 =>\n        c\n    }\n}
-e9_try_catch_eol_inner_deeper Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n          case Y =>\n            h()\n        }\n      case 2 =>\n        c\n    }\n}
-e9_try_catch_eol_brace_outer_two Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n      case 3 =>\n        d\n    }\n}
-e9_try_catch_eol_brace_outer_two Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n      case 3 =>\n        d\n    }\n}
-e9_then_match_guard Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          if (p) e match {\n            case X => true\n          }\n        case c =>\n          false\n      }\n  } => 1\n}
+e9_try_no_catch_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b\n    }\n  case 2 =>\n    c\n}
+e9_try_no_catch_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b\n    }\n  case 2 =>\n    c\n}
+e9_then_no_else_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n    }\n  case 2 =>\n    c\n}
+e9_then_no_else_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n    }\n  case 2 =>\n    c\n}
+e9_then_eol_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n    }\n  case 2 =>\n    c\n}
+e9_then_eol_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n    }\n  case 2 =>\n    c\n}
+e9_try_finally_eol_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b finally g()\n    }\n  case 2 =>\n    c\n}
+e9_try_finally_eol_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b finally g()\n    }\n  case 2 =>\n    c\n}
+e9_then_match_two_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+e9_then_match_two_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+e9_then_match_empty_last Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+e9_then_match_empty_last Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case _ =>\n        }\n    }\n  case 2 =>\n    c\n}
+e9_else_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else e match {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+e9_else_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else e match {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+e9_while_do_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) e match {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+e9_while_do_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) e match {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+e9_then_try_catch_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+e9_then_try_catch_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+e9_try_catch_eol_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            if (q) e match {\n              case Y => 1\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+e9_try_catch_eol_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            if (q) e match {\n              case Y => 1\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+e9_then_handler_on_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+e9_then_handler_on_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+e9_try_body_match_two Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X =>\n            g()\n          case Y =>\n            h()\n        }\n    }\n  case 2 =>\n    c\n}
+e9_try_body_match_two Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X =>\n            g()\n          case Y =>\n            h()\n        }\n    }\n  case 2 =>\n    c\n}
+e9_try_catch_eol_inner_deeper Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n          case Y =>\n            h()\n        }\n    }\n  case 2 =>\n    c\n}
+e9_try_catch_eol_inner_deeper Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n          case Y =>\n            h()\n        }\n    }\n  case 2 =>\n    c\n}
+e9_try_catch_eol_brace_outer_two Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n  case 3 =>\n    d\n}
+e9_try_catch_eol_brace_outer_two Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n  case 3 =>\n    d\n}
+e9_then_match_guard Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          if (p) e match {\n            case X => true\n          }\n      }\n    case c => false\n  } => 1\n}
 e9_then_match_guard Scala32: error 2:22: `=>` expected but `:` found
-e9_try_body_match_guard Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          try e match {\n            case X => true\n          }\n        case c =>\n          false\n      }\n  } => 1\n}
+e9_try_body_match_guard Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          try e match {\n            case X => true\n          }\n      }\n    case c => false\n  } => 1\n}
 e9_try_body_match_guard Scala32: error 2:22: `=>` expected but `:` found
-e9_dot_line_then_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b.c\n      case 2 =>\n        d\n    }\n}
-e9_dot_line_then_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b.c\n      case 2 =>\n        d\n    }\n}
-e9_infix_line_then_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b + c\n      case 2 =>\n        d\n    }\n}
-e9_infix_line_then_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b + c\n      case 2 =>\n        d\n    }\n}
-e9_then_dot_line_then_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b.c\n      case 2 =>\n        d\n    }\n}
-e9_then_dot_line_then_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b.c\n      case 2 =>\n        d\n    }\n}
-e9_try_catch_eol_not_case Scala3: def g = try a catch {\n  case e =>\n    try b catch {\n      case X => 1\n    }\n    h()\n}
-e9_try_catch_eol_not_case Scala32: def g = try a catch {\n  case e =>\n    try b catch {\n      case X => 1\n    }\n    h()\n}
-e9_then_match_not_case Scala3: def g = try a catch {\n  case e =>\n    if (p) e match {\n      case X => 1\n    }\n    h()\n}
-e9_then_match_not_case Scala32: def g = try a catch {\n  case e =>\n    if (p) e match {\n      case X => 1\n    }\n    h()\n}
-e9_then_colon_cases_in_lambda Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) ys.map {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
+e9_dot_line_then_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b.c\n    }\n  case 2 =>\n    d\n}
+e9_dot_line_then_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b.c\n    }\n  case 2 =>\n    d\n}
+e9_infix_line_then_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b + c\n    }\n  case 2 =>\n    d\n}
+e9_infix_line_then_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        b + c\n    }\n  case 2 =>\n    d\n}
+e9_then_dot_line_then_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b.c\n    }\n  case 2 =>\n    d\n}
+e9_then_dot_line_then_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b.c\n    }\n  case 2 =>\n    d\n}
+e9_try_catch_eol_not_case Scala3: def g = {\n  try a catch {\n    case e =>\n      try b catch {\n        case X => 1\n      }\n  }\n  h()\n}
+e9_try_catch_eol_not_case Scala32: def g = {\n  try a catch {\n    case e =>\n      try b catch {\n        case X => 1\n      }\n  }\n  h()\n}
+e9_then_match_not_case Scala3: def g = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n  }\n  h()\n}
+e9_then_match_not_case Scala32: def g = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n  }\n  h()\n}
+e9_then_colon_cases_in_lambda Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) ys.map {\n          case X => 1\n        }\n    }\n  case 2 => c\n}
 e9_then_colon_cases_in_lambda Scala32: error 2:3: `identifier` expected but `case` found
-e9b_if_then_else_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n      case 2 =>\n        d\n    }\n}
-e9b_if_then_else_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n      case 2 =>\n        d\n    }\n}
-e9b_for_yield_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        for (y <- ys) yield g(y)\n      case 2 =>\n        c\n    }\n}
-e9b_for_yield_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        for (y <- ys) yield g(y)\n      case 2 =>\n        c\n    }\n}
-e9b_while_do_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) g()\n      case 2 =>\n        c\n    }\n}
-e9b_while_do_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) g()\n      case 2 =>\n        c\n    }\n}
-e9b_new_template_colon Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        new A { def g = 1 }\n      case 2 =>\n        c\n    }\n}
-e9b_new_template_colon Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        new A { def g = 1 }\n      case 2 =>\n        c\n    }\n}
-e9b_try_eol_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b finally g()\n      case 2 =>\n        c\n    }\n}
-e9b_try_eol_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b finally g()\n      case 2 =>\n        c\n    }\n}
-e9b_then_lambda_colon Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) xs.map {\n          y => g(y)\n        }\n      case 2 =>\n        c\n    }\n}
+e9b_if_then_else_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n    }\n  case 2 =>\n    d\n}
+e9b_if_then_else_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b else c\n    }\n  case 2 =>\n    d\n}
+e9b_for_yield_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        for (y <- ys) yield g(y)\n    }\n  case 2 =>\n    c\n}
+e9b_for_yield_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        for (y <- ys) yield g(y)\n    }\n  case 2 =>\n    c\n}
+e9b_while_do_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) g()\n    }\n  case 2 =>\n    c\n}
+e9b_while_do_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        while (p) g()\n    }\n  case 2 =>\n    c\n}
+e9b_new_template_colon Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        new A { def g = 1 }\n    }\n  case 2 =>\n    c\n}
+e9b_new_template_colon Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        new A { def g = 1 }\n    }\n  case 2 =>\n    c\n}
+e9b_try_eol_body Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b finally g()\n    }\n  case 2 =>\n    c\n}
+e9b_try_eol_body Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b finally g()\n    }\n  case 2 =>\n    c\n}
+e9b_then_lambda_colon Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) xs.map {\n          y => g(y)\n        }\n    }\n  case 2 =>\n    c\n}
 e9b_then_lambda_colon Scala32: error 3:8: `outdent` expected but `(` found
-e9b_try_lambda_colon Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try xs.map {\n          y => g(y)\n        }\n      case 2 =>\n        c\n    }\n}
+e9b_try_lambda_colon Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try xs.map {\n          y => g(y)\n        }\n    }\n  case 2 =>\n    c\n}
 e9b_try_lambda_colon Scala32: error 3:8: `outdent` expected but `(` found
-e9b_try_colon_arg Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try g {\n          b\n        }\n      case 2 =>\n        c\n    }\n}
-e9b_try_colon_arg Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try g: b\n      case 2 =>\n        c\n    }\n}
-e9b_try_eol_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b\n      case 2 =>\n        c\n    }\n}
-e9b_try_eol_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b\n      case 2 =>\n        c\n    }\n}
-e9b_try_lambda_two_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try xs.map { y =>\n          g(y)\n          h(y)\n        }\n      case 2 =>\n        c\n    }\n}
+e9b_try_colon_arg Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try g {\n          b\n        }\n    }\n  case 2 =>\n    c\n}
+e9b_try_colon_arg Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try g: b\n    }\n  case 2 =>\n    c\n}
+e9b_try_eol_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b\n    }\n  case 2 =>\n    c\n}
+e9b_try_eol_lines Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b\n    }\n  case 2 =>\n    c\n}
+e9b_try_lambda_two_lines Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try xs.map { y =>\n          g(y)\n          h(y)\n        }\n    }\n  case 2 =>\n    c\n}
 e9b_try_lambda_two_lines Scala32: error 3:8: `outdent` expected but `(` found
-e9b_then_try_lambda Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) try xs.map {\n          y => g(y)\n        }\n      case 2 =>\n        c\n    }\n}
+e9b_then_try_lambda Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) try xs.map {\n          y => g(y)\n        }\n    }\n  case 2 =>\n    c\n}
 e9b_then_try_lambda Scala32: error 3:8: `outdent` expected but `(` found
-e9b_try_lambda_guard Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          try ys.map {\n            z => h(z)\n          }\n        case c =>\n          false\n      }\n  } => 1\n}
+e9b_try_lambda_guard Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          try ys.map {\n            z => h(z)\n          }\n      }\n    case c => false\n  } => 1\n}
 e9b_try_lambda_guard Scala32: error 2:22: `=>` expected but `:` found
-e9b_try_lambda_brace_outer Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try xs.map {\n          y => g(y)\n        }\n      case 2 =>\n        c\n    }\n}
+e9b_try_lambda_brace_outer Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try xs.map {\n          y => g(y)\n        }\n    }\n  case 2 =>\n    c\n}
 e9b_try_lambda_brace_outer Scala32: error 3:8: `outdent` expected but `(` found
-e9b_try_lambda_deeper_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try xs.map {\n          y => g(y)\n        }\n      case 2 =>\n        c\n    }\n}
+e9b_try_lambda_deeper_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try xs.map {\n          y => g(y)\n        }\n    }\n  case 2 =>\n    c\n}
 e9b_try_lambda_deeper_case Scala32: error 3:8: `outdent` expected but `(` found
-q9_brace_then_match_two Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_brace_then_match_two Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_colon_cases_then_try_lambda Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) try ys.map {\n          y => g(y)\n        }\n      case 2 =>\n        c\n    }\n}
+q9_brace_then_match_two Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_brace_then_match_two Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_colon_cases_then_try_lambda Scala3: def f = xs.map {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) try ys.map {\n          y => g(y)\n        }\n    }\n  case 2 => c\n}
 q9_colon_cases_then_try_lambda Scala32: error 2:3: `identifier` expected but `case` found
-q9_guard_eol_then_match_arrow_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          if (p) e match {\n            case X => true\n          }\n        case c =>\n          false\n      }\n  } => 1\n  case _ => 2\n}
+q9_guard_eol_then_match_arrow_ctrl Scala3: def f = x match {\n  case y if xs.exists {\n    case b =>\n      try g(b) catch {\n        case e =>\n          if (p) e match {\n            case X => true\n          }\n      }\n    case c => false\n  } => 1\n  case _ => 2\n}
 q9_guard_eol_then_match_arrow_ctrl Scala32: error 2:22: `=>` expected but `:` found
-q9_handler_next_line_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-q9_handler_next_line_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-q9_mid_handler_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                if (p) f match {\n                  case Z => 1\n                }\n              case Y =>\n                2\n            }\n        }\n      case 2 =>\n        c\n    }\n}
-q9_mid_handler_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                if (p) f match {\n                  case Z => 1\n                }\n              case Y =>\n                2\n            }\n        }\n      case 2 =>\n        c\n    }\n}
-q9_mid_handler_try_catch_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                try d catch {\n                  case Z => 1\n                }\n              case Y =>\n                2\n            }\n        }\n      case 2 =>\n        c\n    }\n}
-q9_mid_handler_try_catch_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                try d catch {\n                  case Z => 1\n                }\n              case Y =>\n                2\n            }\n        }\n      case 2 =>\n        c\n    }\n}
-q9_mid_handler_try_lambda Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                try xs.map {\n                  y => g(y)\n                }\n              case Y =>\n                2\n            }\n        }\n      case 2 =>\n        c\n    }\n}
+q9_handler_next_line_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+q9_handler_next_line_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+q9_mid_handler_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                if (p) f match {\n                  case Z => 1\n                }\n            }\n          case Y =>\n            2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_mid_handler_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                if (p) f match {\n                  case Z => 1\n                }\n            }\n          case Y =>\n            2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_mid_handler_try_catch_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                try d catch {\n                  case Z => 1\n                }\n            }\n          case Y =>\n            2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_mid_handler_try_catch_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                try d catch {\n                  case Z => 1\n                }\n            }\n          case Y =>\n            2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_mid_handler_try_lambda Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try b catch {\n              case f =>\n                try xs.map {\n                  y => g(y)\n                }\n            }\n          case Y =>\n            2\n        }\n    }\n  case 2 =>\n    c\n}
 q9_mid_handler_try_lambda Scala32: error 4:12: `outdent` expected but `(` found
-q9_mid_match_try_lambda Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try xs.map {\n              y => g(y)\n            }\n          case Y =>\n            2\n        }\n      case 2 =>\n        c\n    }\n}
+q9_mid_match_try_lambda Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        e match {\n          case X =>\n            try xs.map {\n              y => g(y)\n            }\n          case Y =>\n            2\n        }\n    }\n  case 2 =>\n    c\n}
 q9_mid_match_try_lambda Scala32: error 4:12: `outdent` expected but `(` found
-q9_mid_try_catch_eol_lambda Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            xs.map {\n              y => g(y)\n            }\n          case Y =>\n            h()\n        }\n      case 2 =>\n        c\n    }\n}
+q9_mid_try_catch_eol_lambda Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            xs.map {\n              y => g(y)\n            }\n          case Y =>\n            h()\n        }\n    }\n  case 2 =>\n    c\n}
 q9_mid_try_catch_eol_lambda Scala32: error 3:27: `outdent` expected but `=>` found
-q9_mid_try_catch_eol_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            if (p) x match {\n              case Z => 1\n            }\n          case Y =>\n            h()\n        }\n      case 2 =>\n        c\n    }\n}
-q9_mid_try_catch_eol_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            if (p) x match {\n              case Z => 1\n            }\n          case Y =>\n            h()\n        }\n      case 2 =>\n        c\n    }\n}
-q9_nested_handlers_inner_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            f match {\n              case X => 1\n              case Y => 2\n            }\n          case 2 =>\n            c\n        }\n    }\n}
-q9_nested_handlers_inner_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            f match {\n              case X => 1\n              case Y => 2\n            }\n          case 2 =>\n            c\n        }\n    }\n}
-q9_nested_handlers_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            if (p) f match {\n              case X => 1\n            }\n          case 2 =>\n            c\n        }\n    }\n}
-q9_nested_handlers_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            if (p) f match {\n              case X => 1\n            }\n          case 2 =>\n            c\n        }\n    }\n}
-q9_nested_handlers_try_catch_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            try d catch {\n              case X => 1\n            }\n          case 2 =>\n            c\n        }\n    }\n}
-q9_nested_handlers_try_catch_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            try d catch {\n              case X => 1\n            }\n          case 2 =>\n            c\n        }\n    }\n}
-q9_nested_handlers_try_lambda Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            try xs.map {\n              y => g(y)\n            }\n          case 2 =>\n            c\n        }\n    }\n}
+q9_mid_try_catch_eol_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            if (p) x match {\n              case Z => 1\n            }\n          case Y =>\n            h()\n        }\n    }\n  case 2 =>\n    c\n}
+q9_mid_try_catch_eol_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            if (p) x match {\n              case Z => 1\n            }\n          case Y =>\n            h()\n        }\n    }\n  case 2 =>\n    c\n}
+q9_nested_handlers_inner_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            f match {\n              case X => 1\n              case Y => 2\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+q9_nested_handlers_inner_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            f match {\n              case X => 1\n              case Y => 2\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+q9_nested_handlers_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            if (p) f match {\n              case X => 1\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+q9_nested_handlers_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            if (p) f match {\n              case X => 1\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+q9_nested_handlers_try_catch_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            try d catch {\n              case X => 1\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+q9_nested_handlers_try_catch_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            try d catch {\n              case X => 1\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+q9_nested_handlers_try_lambda Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            try xs.map {\n              y => g(y)\n            }\n        }\n    }\n  case 2 =>\n    c\n}
 q9_nested_handlers_try_lambda Scala32: error 3:8: `outdent` expected but `(` found
-q9_pf_brace_try_catch_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X =>\n            try b catch {\n              case Y => 1\n            }\n          case Z => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_pf_brace_try_catch_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X =>\n            try b catch {\n              case Y => 1\n            }\n          case Z => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_body_braces Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) {\n          b\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_body_braces Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) {\n          b\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_eol_body_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_eol_body_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_match_braces Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_match_braces Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_match_comment_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X =>\n            1\n            // done\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_match_comment_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X =>\n            1\n            // done\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_match_else_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else 3\n      case 2 =>\n        c\n    }\n}
-q9_then_match_else_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else 3\n      case 2 =>\n        c\n    }\n}
-q9_then_match_else_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else e match {\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_match_else_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else e match {\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_match_empty_first Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X =>\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_match_empty_first Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X =>\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_then_match_end_if Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n        end if\n      case 2 =>\n        c\n    }\n}
-q9_then_match_end_if Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n        end if\n      case 2 =>\n        c\n    }\n}
-q9_then_match_two_else_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        } else 3\n      case 2 =>\n        c\n    }\n}
-q9_then_match_two_else_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        } else 3\n      case 2 =>\n        c\n    }\n}
-q9_try_body_braces Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try {\n          b\n        }\n      case 2 =>\n        c\n    }\n}
-q9_try_body_braces Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try {\n          b\n        }\n      case 2 =>\n        c\n    }\n}
-q9_try_body_match_cases_left Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_try_body_match_cases_left Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_try_body_match_end_marker Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        }\n        end try\n      case 2 =>\n        c\n    }\n}
-q9_try_body_match_end_marker Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        }\n        end try\n      case 2 =>\n        c\n    }\n}
-q9_try_brace_catch_braces Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-q9_try_brace_catch_braces Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X => 1\n        }\n      case 2 =>\n        c\n    }\n}
-q9_try_catch_eol_empty_first Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_try_catch_eol_empty_first Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_try_eol_body_catch_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n          case 2 => c\n        }\n    }\n}
-q9_try_eol_body_catch_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n          case 2 => c\n        }\n    }\n}
-q9_try_eol_body_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_try_eol_body_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n          case Y => 2\n        }\n      case 2 =>\n        c\n    }\n}
-q9_try_match_catch_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n          case 2 => c\n        }\n    }\n}
-q9_try_match_catch_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n          case 2 => c\n        }\n    }\n}
-q9_try_match_finally_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } finally g()\n      case 2 =>\n        c\n    }\n}
-q9_try_match_finally_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } finally g()\n      case 2 =>\n        c\n    }\n}
-q9b_body_line_then_match_else Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else 3\n      case 2 =>\n        c\n    }\n}
-q9b_body_line_then_match_else Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else 3\n      case 2 =>\n        c\n    }\n}
-q9b_body_line_try_match_catch Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n        }\n      case 2 =>\n        c\n    }\n}
-q9b_body_line_try_match_catch Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n        }\n      case 2 =>\n        c\n    }\n}
-q9b_nested3_handlers_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            try d catch {\n              case g =>\n                if (p) g match {\n                  case X => 1\n                }\n              case 2 =>\n                c\n            }\n        }\n    }\n}
-q9b_nested3_handlers_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            try d catch {\n              case g =>\n                if (p) g match {\n                  case X => 1\n                }\n              case 2 =>\n                c\n            }\n        }\n    }\n}
-q9b_then_match_else_at_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else 3\n      case 2 =>\n        c\n    }\n}
-q9b_then_match_else_at_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else 3\n      case 2 =>\n        c\n    }\n}
-q9b_try_catch_eol_finally_at_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X => 1\n        } finally g()\n      case 2 =>\n        c\n    }\n}
-q9b_try_catch_eol_finally_at_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X => 1\n        } finally g()\n      case 2 =>\n        c\n    }\n}
-q9b_try_match_catch_at_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n          case 2 => c\n        }\n    }\n}
-q9b_try_match_catch_at_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n          case 2 => c\n        }\n    }\n}
-q9b_try_match_finally_at_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } finally g()\n      case 2 =>\n        c\n    }\n}
-q9b_try_match_finally_at_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } finally g()\n      case 2 =>\n        c\n    }\n}
-q9c_then_match_comment_own_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n      // next\n      case 2 =>\n        c\n    }\n}
-q9c_then_match_comment_own_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n      // next\n      case 2 =>\n        c\n    }\n}
-q9c_try_catch_eol_blank_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-q9c_try_catch_eol_blank_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n      case 2 =>\n        c\n    }\n}
-q9c_try_lambda_blank_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try xs.map {\n          y => g(y)\n        }\n      case 2 =>\n        c\n    }\n}
+q9_pf_brace_try_catch_eol Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X =>\n            try b catch {\n              case Y => 1\n            }\n          case Z => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_pf_brace_try_catch_eol Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        xs.map {\n          case X =>\n            try b catch {\n              case Y => 1\n            }\n          case Z => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_body_braces Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) {\n          b\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_body_braces Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) {\n          b\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_eol_body_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_eol_body_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_match_braces Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_match_braces Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_match_comment_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X =>\n            1\n            // done\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_match_comment_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X =>\n            1\n            // done\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_match_else_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else 3\n    }\n  case 2 =>\n    c\n}
+q9_then_match_else_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else 3\n    }\n  case 2 =>\n    c\n}
+q9_then_match_else_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else e match {\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_match_else_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else e match {\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_match_empty_first Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X =>\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_match_empty_first Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X =>\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_then_match_end_if Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n        end if\n    }\n  case 2 =>\n    c\n}
+q9_then_match_end_if Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n        end if\n    }\n  case 2 =>\n    c\n}
+q9_then_match_two_else_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        } else 3\n    }\n  case 2 =>\n    c\n}
+q9_then_match_two_else_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n          case Y => 2\n        } else 3\n    }\n  case 2 =>\n    c\n}
+q9_try_body_braces Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try {\n          b\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_body_braces Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try {\n          b\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_body_match_cases_left Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_body_match_cases_left Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_body_match_end_marker Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        }\n        end try\n    }\n  case 2 =>\n    c\n}
+q9_try_body_match_end_marker Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        }\n        end try\n    }\n  case 2 =>\n    c\n}
+q9_try_brace_catch_braces Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_brace_catch_braces Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X => 1\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_catch_eol_empty_first Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_catch_eol_empty_first Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_eol_body_catch_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_eol_body_catch_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_eol_body_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_eol_body_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n          case Y => 2\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_match_catch_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_match_catch_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n        }\n    }\n  case 2 =>\n    c\n}
+q9_try_match_finally_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } finally g()\n    }\n  case 2 =>\n    c\n}
+q9_try_match_finally_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } finally g()\n    }\n  case 2 =>\n    c\n}
+q9b_body_line_then_match_else Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else 3\n    }\n  case 2 =>\n    c\n}
+q9b_body_line_then_match_else Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else 3\n    }\n  case 2 =>\n    c\n}
+q9b_body_line_try_match_catch Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n        }\n    }\n  case 2 =>\n    c\n}
+q9b_body_line_try_match_catch Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n        }\n    }\n  case 2 =>\n    c\n}
+q9b_nested3_handlers_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            try d catch {\n              case g =>\n                if (p) g match {\n                  case X => 1\n                }\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+q9b_nested3_handlers_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case f =>\n            try d catch {\n              case g =>\n                if (p) g match {\n                  case X => 1\n                }\n            }\n        }\n    }\n  case 2 =>\n    c\n}
+q9b_then_match_else_at_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else 3\n    }\n  case 2 =>\n    c\n}
+q9b_then_match_else_at_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        } else 3\n    }\n  case 2 =>\n    c\n}
+q9b_try_catch_eol_finally_at_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X => 1\n        } finally g()\n    }\n  case 2 =>\n    c\n}
+q9b_try_catch_eol_finally_at_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X => 1\n        } finally g()\n    }\n  case 2 =>\n    c\n}
+q9b_try_match_catch_at_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n        }\n    }\n  case 2 =>\n    c\n}
+q9b_try_match_catch_at_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } catch {\n          case _ => 3\n        }\n    }\n  case 2 =>\n    c\n}
+q9b_try_match_finally_at_cases Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } finally g()\n    }\n  case 2 =>\n    c\n}
+q9b_try_match_finally_at_cases Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try e match {\n          case X => 1\n        } finally g()\n    }\n  case 2 =>\n    c\n}
+q9c_then_match_comment_own_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n      // next\n    }\n  case 2 =>\n    c\n}
+q9c_then_match_comment_own_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n      // next\n    }\n  case 2 =>\n    c\n}
+q9c_try_catch_eol_blank_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+q9c_try_catch_eol_blank_line Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try b catch {\n          case X =>\n            g()\n        }\n    }\n  case 2 =>\n    c\n}
+q9c_try_lambda_blank_line Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        try xs.map {\n          y => g(y)\n        }\n    }\n  case 2 =>\n    c\n}
 q9c_try_lambda_blank_line Scala32: error 3:8: `outdent` expected but `(` found
-e10_def_try_nocatch_match_stat Scala3: def g = try a catch {\n  case e =>\n    try e match {\n      case X => 1\n    }\n    h()\n}
-e10_def_try_nocatch_match_stat Scala32: def g = try a catch {\n  case e =>\n    try e match {\n      case X => 1\n    }\n    h()\n}
-e10_def_then_try_catch_eol_stat Scala3: def g = try a catch {\n  case e =>\n    if (p) try b catch {\n      case X => 1\n    }\n    h()\n}
-e10_def_then_try_catch_eol_stat Scala32: def g = try a catch {\n  case e =>\n    if (p) try b catch {\n      case X => 1\n    }\n    h()\n}
-e10_def_try_lam_body_stat Scala3: def g = try a catch {\n  case e =>\n    try xs.map {\n      y => f(y)\n    }\n    h()\n}
+e10_def_try_nocatch_match_stat Scala3: def g = {\n  try a catch {\n    case e =>\n      try e match {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_def_try_nocatch_match_stat Scala32: def g = {\n  try a catch {\n    case e =>\n      try e match {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_def_then_try_catch_eol_stat Scala3: def g = {\n  try a catch {\n    case e =>\n      if (p) try b catch {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_def_then_try_catch_eol_stat Scala32: def g = {\n  try a catch {\n    case e =>\n      if (p) try b catch {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_def_try_lam_body_stat Scala3: def g = {\n  try a catch {\n    case e =>\n      try xs.map {\n        y => f(y)\n      }\n  }\n  h()\n}
 e10_def_try_lam_body_stat Scala32: error 3:8: `outdent` expected but `(` found
-e10_def_then_colon_cases_stat Scala3: def g = try a catch {\n  case e =>\n    if (p) e.fold {\n      case X => 1\n    }\n    h()\n}
+e10_def_then_colon_cases_stat Scala3: def g = {\n  try a catch {\n    case e =>\n      if (p) e.fold {\n        case X => 1\n      }\n  }\n  h()\n}
 e10_def_then_colon_cases_stat Scala32: error 3:7: `identifier` expected but `case` found
-e10_flat_then_match_stat Scala3: def g = x match {\n  case 1 =>\n    if (p) e match {\n      case X => 1\n    }\n    h()\n}
-e10_flat_then_match_stat Scala32: def g = x match {\n  case 1 =>\n    if (p) e match {\n      case X => 1\n    }\n    h()\n}
-e10_flat_try_catch_eol_stat Scala3: def g = x match {\n  case 1 =>\n    try a catch {\n      case X => 1\n    }\n    h()\n}
-e10_flat_try_catch_eol_stat Scala32: def g = x match {\n  case 1 =>\n    try a catch {\n      case X => 1\n    }\n    h()\n}
-e10_flat_try_body_match_stat Scala3: def g = x match {\n  case 1 =>\n    try e match {\n      case X => 1\n    }\n    h()\n}
-e10_flat_try_body_match_stat Scala32: def g = x match {\n  case 1 =>\n    try e match {\n      case X => 1\n    }\n    h()\n}
-e10_object_then_match_stat Scala3: object A {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n      def h = 1\n  }\n}
-e10_object_then_match_stat Scala32: object A {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n      def h = 1\n  }\n}
-e10_val_then_match_stat Scala3: def g = {\n  val v = try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n      h(v)\n  }\n}
-e10_val_then_match_stat Scala32: def g = {\n  val v = try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n      h(v)\n  }\n}
-e10_def_then_match_blank_stat Scala3: def g = try a catch {\n  case e =>\n    if (p) e match {\n      case X => 1\n    }\n    h()\n}
-e10_def_then_match_blank_stat Scala32: def g = try a catch {\n  case e =>\n    if (p) e match {\n      case X => 1\n    }\n    h()\n}
-e10_def_then_match_comment_stat Scala3: def g = try a catch {\n  case e =>\n    if (p) e match {\n      case X => 1\n    }\n    // c\n    h()\n}
-e10_def_then_match_comment_stat Scala32: def g = try a catch {\n  case e =>\n    if (p) e match {\n      case X => 1\n    }\n    // c\n    h()\n}
-e10_match_case_then_match_stat Scala3: def g = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n        h()\n    }\n  case 2 =>\n    c\n}
-e10_match_case_then_match_stat Scala32: def g = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n        h()\n    }\n  case 2 =>\n    c\n}
-r10_C_flat_closed_then_stat Scala3: def f = try a catch {\n  case e =>\n    if (p) e match {\n      case X => 1\n    }\n    h()\n}
-r10_C_flat_closed_then_stat Scala32: def f = try a catch {\n  case e =>\n    if (p) e match {\n      case X => 1\n    }\n    h()\n}
-r10_F_closed_match_line Scala3: def f = x match {\n  case 1 =>\n    if (p) (e match {\n      case X => 1\n    }) match {\n      case _ => c\n    }\n}
-r10_F_closed_match_line Scala32: def f = x match {\n  case 1 =>\n    if (p) (e match {\n      case X => 1\n    }) match {\n      case _ => c\n    }\n}
-r10_F_closed_try_match_line Scala3: def f = x match {\n  case 1 =>\n    try (e match {\n      case X => 1\n    }) match {\n      case _ => c\n    }\n}
-r10_F_closed_try_match_line Scala32: def f = x match {\n  case 1 =>\n    try (e match {\n      case X => 1\n    }) match {\n      case _ => c\n    }\n}
+e10_flat_then_match_stat Scala3: def g = {\n  x match {\n    case 1 =>\n      if (p) e match {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_flat_then_match_stat Scala32: def g = {\n  x match {\n    case 1 =>\n      if (p) e match {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_flat_try_catch_eol_stat Scala3: def g = {\n  x match {\n    case 1 =>\n      try a catch {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_flat_try_catch_eol_stat Scala32: def g = {\n  x match {\n    case 1 =>\n      try a catch {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_flat_try_body_match_stat Scala3: def g = {\n  x match {\n    case 1 =>\n      try e match {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_flat_try_body_match_stat Scala32: def g = {\n  x match {\n    case 1 =>\n      try e match {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_object_then_match_stat Scala3: object A {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n  }\n  def h = 1\n}
+e10_object_then_match_stat Scala32: object A {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n  }\n  def h = 1\n}
+e10_val_then_match_stat Scala3: def g = {\n  val v = try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n  }\n  h(v)\n}
+e10_val_then_match_stat Scala32: def g = {\n  val v = try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n  }\n  h(v)\n}
+e10_def_then_match_blank_stat Scala3: def g = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_def_then_match_blank_stat Scala32: def g = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n  }\n  h()\n}
+e10_def_then_match_comment_stat Scala3: def g = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n    // c\n  }\n  h()\n}
+e10_def_then_match_comment_stat Scala32: def g = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n    // c\n  }\n  h()\n}
+e10_match_case_then_match_stat Scala3: def g = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n    }\n    h()\n  case 2 =>\n    c\n}
+e10_match_case_then_match_stat Scala32: def g = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n    }\n    h()\n  case 2 =>\n    c\n}
+r10_C_flat_closed_then_stat Scala3: def f = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n  }\n  h()\n}
+r10_C_flat_closed_then_stat Scala32: def f = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X => 1\n      }\n  }\n  h()\n}
+r10_F_closed_match_line Scala3: def f = (x match {\n  case 1 =>\n    if (p) e match {\n      case X => 1\n    }\n}) match {\n  case _ => c\n}
+r10_F_closed_match_line Scala32: def f = (x match {\n  case 1 =>\n    if (p) e match {\n      case X => 1\n    }\n}) match {\n  case _ => c\n}
+r10_F_closed_try_match_line Scala3: def f = (x match {\n  case 1 =>\n    try e match {\n      case X => 1\n    }\n}) match {\n  case _ => c\n}
+r10_F_closed_try_match_line Scala32: def f = (x match {\n  case 1 =>\n    try e match {\n      case X => 1\n    }\n}) match {\n  case _ => c\n}
 r10_F_try_match_line Scala3: def f = (x match {\n  case 1 =>\n    try b\n}) match {\n  case _ => c\n}
 r10_F_try_match_line Scala32: def f = (x match {\n  case 1 =>\n    try b\n}) match {\n  case _ => c\n}
-r10_H_case_then_end_if Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n        end if\n      case 2 =>\n        c\n    }\n}
-r10_H_case_then_end_if Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n        end if\n      case 2 =>\n        c\n    }\n}
-r10_H_closed_comma Scala3: error 4:3: `outdent` expected but `,` found
-r10_H_closed_comma Scala32: error 4:3: `outdent` expected but `,` found
-r10_H_return_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) return\n      case 2 =>\n        c\n    }\n}
-r10_H_return_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) return\n      case 2 =>\n        c\n    }\n}
-r10_H_then_match_end_match Scala3: def f = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X =>\n          g()\n      }\n      end match\n  }\n  h()\n}
-r10_H_then_match_end_match Scala32: def f = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X =>\n          g()\n      }\n      end match\n  }\n  h()\n}
-r10_M_closed_try_stat Scala3: def f = x match {\n  case 1 =>\n    try e match {\n      case X => 1\n    }\n    h()\n}
-r10_M_closed_try_stat Scala32: def f = x match {\n  case 1 =>\n    try e match {\n      case X => 1\n    }\n    h()\n}
-r10_M_then_match Scala3: def f = x match {\n  case 1 =>\n    if (p) e match {\n      case X =>\n        g()\n    }\n    h()\n}
-r10_M_then_match Scala32: def f = x match {\n  case 1 =>\n    if (p) e match {\n      case X =>\n        g()\n    }\n    h()\n}
-r10_end_try_case_body_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n        end try\n    }\n  case 2 =>\n    c\n}
-r10_end_try_case_body_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n        end try\n    }\n  case 2 =>\n    c\n}
+r10_H_case_then_end_if Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n        end if\n    }\n  case 2 =>\n    c\n}
+r10_H_case_then_end_if Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) b\n        end if\n    }\n  case 2 =>\n    c\n}
+r10_H_closed_comma Scala3: def f = g(try a catch {\n  case e =>\n    if (p) e match {\n      case X => 1\n    }\n}, b)
+r10_H_closed_comma Scala32: def f = g(try a catch {\n  case e =>\n    if (p) e match {\n      case X => 1\n    }\n}, b)
+r10_H_return_case Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) return\n    }\n  case 2 =>\n    c\n}
+r10_H_return_case Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) return\n    }\n  case 2 =>\n    c\n}
+r10_H_then_match_end_match Scala3: def f = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X =>\n          g()\n      }\n  }\n  end match\n  h()\n}
+r10_H_then_match_end_match Scala32: def f = {\n  try a catch {\n    case e =>\n      if (p) e match {\n        case X =>\n          g()\n      }\n  }\n  end match\n  h()\n}
+r10_M_closed_try_stat Scala3: def f = {\n  x match {\n    case 1 =>\n      try e match {\n        case X => 1\n      }\n  }\n  h()\n}
+r10_M_closed_try_stat Scala32: def f = {\n  x match {\n    case 1 =>\n      try e match {\n        case X => 1\n      }\n  }\n  h()\n}
+r10_M_then_match Scala3: def f = {\n  x match {\n    case 1 =>\n      if (p) e match {\n        case X =>\n          g()\n      }\n  }\n  h()\n}
+r10_M_then_match Scala32: def f = {\n  x match {\n    case 1 =>\n      if (p) e match {\n        case X =>\n          g()\n      }\n  }\n  h()\n}
+r10_end_try_case_body_then_match Scala3: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n    }\n    end try\n  case 2 =>\n    c\n}
+r10_end_try_case_body_then_match Scala32: def f = x match {\n  case 1 =>\n    try a catch {\n      case e =>\n        if (p) e match {\n          case X => 1\n        }\n    }\n    end try\n  case 2 =>\n    c\n}

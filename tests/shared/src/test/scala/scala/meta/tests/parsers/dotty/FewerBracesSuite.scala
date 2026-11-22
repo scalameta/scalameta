@@ -6533,9 +6533,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |        xs.map {
          |          case X => 1
          |        }
-         |      case 2 =>
-         |        c
          |    }
+         |  case 2 =>
+         |    c
          |}
          |""".stripMargin
     val handler =
@@ -6547,15 +6547,8 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(
-          int(1),
-          None,
-          Term.Try(
-            tname("a"),
-            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
-            None,
-          ),
-        ),
+        Case(int(1), None, Term.Try(tname("a"), List(Case(patvar("e"), None, handler)), None)),
+        Case(int(2), None, tname("c")),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -6579,9 +6572,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |            g()
          |          case _ =>
          |        }
-         |      case 2 =>
-         |        c
          |    }
+         |  case 2 =>
+         |    c
          |}
          |""".stripMargin
     val handler = tapply(
@@ -6597,15 +6590,8 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(
-          int(1),
-          None,
-          Term.Try(
-            tname("a"),
-            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
-            None,
-          ),
-        ),
+        Case(int(1), None, Term.Try(tname("a"), List(Case(patvar("e"), None, handler)), None)),
+        Case(int(2), None, tname("c")),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -6630,9 +6616,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |            g()
          |          case _ =>
          |        }
-         |      case 2 =>
-         |        c
          |    }
+         |  case 2 =>
+         |    c
          |}
          |""".stripMargin
     val handler = tapply(
@@ -6648,15 +6634,8 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(
-          int(1),
-          None,
-          Term.Try(
-            tname("a"),
-            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
-            None,
-          ),
-        ),
+        Case(int(1), None, Term.Try(tname("a"), List(Case(patvar("e"), None, handler)), None)),
+        Case(int(2), None, tname("c")),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -6682,9 +6661,8 @@ class FewerBracesSuite extends BaseDottySuite {
          |            case X => true
          |            case _ =>
          |          }
-         |        case c =>
-         |          false
          |      }
+         |    case c => false
          |  } => 1
          |}
          |""".stripMargin
@@ -6701,15 +6679,15 @@ class FewerBracesSuite extends BaseDottySuite {
           patvar("y"),
           Some(tapply(
             tselect("xs", "exists"),
-            Term.PartialFunction(List(Case(
-              patvar("b"),
-              None,
-              Term.Try(
-                tapply(tname("g"), tname("b")),
-                List(Case(patvar("e"), None, handler), Case(patvar("c"), None, bool(false))),
+            Term.PartialFunction(List(
+              Case(
+                patvar("b"),
                 None,
+                Term
+                  .Try(tapply(tname("g"), tname("b")), List(Case(patvar("e"), None, handler)), None),
               ),
-            ))),
+              Case(patvar("c"), None, bool(false)),
+            )),
           )),
           int(1),
         ),
@@ -6736,9 +6714,8 @@ class FewerBracesSuite extends BaseDottySuite {
          |          try h(e) catch {
          |            case X => true
          |          }
-         |        case c =>
-         |          false
          |      }
+         |    case c => false
          |  } => 1
          |}
          |""".stripMargin
@@ -6755,15 +6732,15 @@ class FewerBracesSuite extends BaseDottySuite {
           patvar("y"),
           Some(tapply(
             tselect("xs", "exists"),
-            Term.PartialFunction(List(Case(
-              patvar("b"),
-              None,
-              Term.Try(
-                tapply(tname("g"), tname("b")),
-                List(Case(patvar("e"), None, handler), Case(patvar("c"), None, bool(false))),
+            Term.PartialFunction(List(
+              Case(
+                patvar("b"),
                 None,
+                Term
+                  .Try(tapply(tname("g"), tname("b")), List(Case(patvar("e"), None, handler)), None),
               ),
-            ))),
+              Case(patvar("c"), None, bool(false)),
+            )),
           )),
           int(1),
         ),

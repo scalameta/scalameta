@@ -31104,9 +31104,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |        {
          |          case X => 1
          |        }
-         |      case 2 =>
-         |        c
          |    }
+         |  case 2 =>
+         |    c
          |}
          |""".stripMargin
     val handler = Term.PartialFunction(List(Case(tname("X"), None, int(1))))
@@ -31117,15 +31117,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(
-          int(1),
-          None,
-          Term.Try(
-            tname("a"),
-            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
-            None,
-          ),
-        ),
+        Case(int(1), None, Term.Try(tname("a"), List(Case(patvar("e"), None, handler)), None)),
+        Case(int(2), None, tname("c")),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -31142,8 +31135,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  case 1 =>
          |    try a catch {
          |      case e => b
-         |      case 2 => c
          |    }
+         |  case 2 =>
+         |    c
          |}
          |""".stripMargin
     val tree = Defn.Def(
@@ -31153,15 +31147,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(
-          int(1),
-          None,
-          Term.Try(
-            tname("a"),
-            List(Case(patvar("e"), None, tname("b")), Case(int(2), None, tname("c"))),
-            None,
-          ),
-        ),
+        Case(int(1), None, Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None)),
+        Case(int(2), None, tname("c")),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -31179,8 +31166,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  case 1 =>
          |    try a catch {
          |      case e => b
-         |      case 2 => c
          |    }
+         |  case 2 =>
+         |    c
          |}
          |""".stripMargin
     val tree = Defn.Def(
@@ -31190,15 +31178,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(
-          int(1),
-          None,
-          Term.Try(
-            tname("a"),
-            List(Case(patvar("e"), None, tname("b")), Case(int(2), None, tname("c"))),
-            None,
-          ),
-        ),
+        Case(int(1), None, Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None)),
+        Case(int(2), None, tname("c")),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -31222,9 +31203,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |            g()
          |          case _ =>
          |        }
-         |      case 2 =>
-         |        c
          |    }
+         |  case 2 =>
+         |    c
          |}
          |""".stripMargin
     val handler =
@@ -31236,15 +31217,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(
-          int(1),
-          None,
-          Term.Try(
-            tname("a"),
-            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
-            None,
-          ),
-        ),
+        Case(int(1), None, Term.Try(tname("a"), List(Case(patvar("e"), None, handler)), None)),
+        Case(int(2), None, tname("c")),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -31266,9 +31240,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |          case X =>
          |            g()
          |        }
-         |      case 2 =>
-         |        c
          |    }
+         |  case 2 =>
+         |    c
          |}
          |""".stripMargin
     val handler = Term.Try(tname("b"), List(Case(tname("X"), None, tapply(tname("g")))), None)
@@ -31279,15 +31253,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(
-          int(1),
-          None,
-          Term.Try(
-            tname("a"),
-            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
-            None,
-          ),
-        ),
+        Case(int(1), None, Term.Try(tname("a"), List(Case(patvar("e"), None, handler)), None)),
+        Case(int(2), None, tname("c")),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -31310,9 +31277,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |          case X =>
          |            g()
          |        }
-         |      case 2 =>
-         |        c
          |    }
+         |  case 2 =>
+         |    c
          |}
          |""".stripMargin
     val handler = Term.Try(tname("b"), List(Case(tname("X"), None, tapply(tname("g")))), None)
@@ -31323,15 +31290,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(
-          int(1),
-          None,
-          Term.Try(
-            tname("a"),
-            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
-            None,
-          ),
-        ),
+        Case(int(1), None, Term.Try(tname("a"), List(Case(patvar("e"), None, handler)), None)),
+        Case(int(2), None, tname("c")),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -31352,9 +31312,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |        if (p) e match {
          |          case X => 1
          |        }
-         |      case 2 =>
-         |        c
          |    }
+         |  case 2 =>
+         |    c
          |}
          |""".stripMargin
     val handler = Term
@@ -31366,15 +31326,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(
-          int(1),
-          None,
-          Term.Try(
-            tname("a"),
-            List(Case(patvar("e"), None, handler), Case(int(2), None, tname("c"))),
-            None,
-          ),
-        ),
+        Case(int(1), None, Term.Try(tname("a"), List(Case(patvar("e"), None, handler)), None)),
+        Case(int(2), None, tname("c")),
       ),
     )
     runTestAssert[Stat](code, layout)(tree)

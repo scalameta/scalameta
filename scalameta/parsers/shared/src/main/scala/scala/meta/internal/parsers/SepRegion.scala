@@ -17,6 +17,9 @@ sealed trait SepRegionNonIndented extends SepRegion {
   override final def isIndented = false
 }
 
+/** Records an open construct but its end is determined by the enclosing region */
+sealed trait RegionDeferring extends SepRegion
+
 // this describes delimiters (indent, parens, braces, brackets)
 sealed trait RegionDelim extends SepRegion
 // this describes delimiters which are non-indented
@@ -26,13 +29,17 @@ sealed trait RegionNonDelimNonIndented extends SepRegionNonIndented
 
 case class RegionIndent(override val indent: Int) extends SepRegionIndented with RegionDelim
 
+/** The indented region of a `case` on the line of its `catch`. As in dotty, it holds one case. */
+final class RegionCatchSameLine(indent: Int) extends RegionIndent(indent)
+
 /**
  * A lambda after a colon that ends on its line, with the indentation of its context. As dotty's
  * `ENDlambda`, it ends at the first line end outside the delimiters, cases and conditions in it.
  */
 final class RegionColonLambda(override val indent: Int) extends SepRegionIndented
 
-case class RegionLine(override val indent: Int) extends RegionNonDelimNonIndented with CanProduceLF
+case class RegionLine(override val indent: Int)
+    extends RegionNonDelimNonIndented with CanProduceLF with RegionDeferring
 
 case class RegionParen(override val indent: Int) extends RegionDelimNonIndented
 case class RegionBracket(override val indent: Int) extends RegionDelimNonIndented
@@ -43,7 +50,7 @@ sealed trait RegionCaseExpr extends RegionNonDelimNonIndented
 final class RegionCaseExprPat(override val indent: Int) extends RegionCaseExpr
 final class RegionCaseGuard(override val indent: Int) extends RegionCaseExpr
 final class RegionCaseBody(override val indent: Int, val arrow: Token)
-    extends SepRegionNonIndented with CanProduceLF
+    extends SepRegionNonIndented with CanProduceLF with RegionDeferring
 
 case object RegionColonMaybeFewerBraces extends RegionNonDelimNonIndented with CanProduceLF
 
@@ -176,7 +183,7 @@ final class RegionIfMaybeCond(inCondIndent: Int) extends RegionControlMaybeCond 
 /**
  * Describes the body of an `if` statement, with a possible `else` following.
  */
-case object RegionThen extends RegionControl {
+case object RegionThen extends RegionControl with RegionDeferring {
   def isControlKeyword(token: Token): Boolean = token.is[Token.KwThen]
   def isTerminatingToken(token: Token): Boolean = token.is[Token.KwElse]
   def isTerminatingTokenRequired(): Boolean = false
@@ -211,7 +218,7 @@ case object RegionForOther extends RegionFor {
   def isClosingConditionToken(token: Token): Boolean = false
 }
 
-case object RegionTry extends RegionControl {
+case object RegionTry extends RegionControl with RegionDeferring {
   def isControlKeyword(token: Token): Boolean = token.is[Token.KwTry]
   def isTerminatingToken(token: Token): Boolean = token.isAny[Token.KwCatch, Token.KwFinally]
   def isTerminatingTokenRequired(): Boolean = false
