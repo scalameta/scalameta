@@ -68,13 +68,22 @@ trait TextDocumentOps {
     private def traverseUnvisited(gtree: g.Tree): Unit = {
       enter(gtree)
       gtree.attachments.get(MacroExpansionTag) match {
-        case Some(att) => traverse(att.expandee)
+        case Some(att) => traverseExpandee(att.expandee)
         case _ =>
       }
       val hasOriginal = traverseOriginal(gtree)
       visit(gtree, hasOriginal)
       super.traverse(gtree)
       leave(gtree)
+    }
+
+    /** traverses the macro call whose whole expansion is `gtree`, then `gtree` */
+    private def traverseExpandee(gtree: g.Tree): Unit = if (isVisited.add(gtree)) {
+      gtree.attachments.get(ExpansionOfTag) match {
+        case Some(att) => traverseExpandee(att.expandee)
+        case _ =>
+      }
+      traverseUnvisited(gtree)
     }
 
     // false if `tree` has no original

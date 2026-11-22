@@ -3734,6 +3734,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): y => a/Y.y().
          |----
          |collisions List()
          |dangling List()
@@ -3771,7 +3774,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
-         |[2:14..2:15): m => a/X.m().
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
          |----
          |collisions List()
          |dangling List()
@@ -3790,7 +3795,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
-         |[2:14..2:15): m => a/X.m().
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
          |----
          |collisions List()
          |dangling List()
@@ -3851,7 +3858,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
-         |[2:14..2:15): m => a/X.m().
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Z => a/Z.
+         |[2:14..2:15): m => a/Z.m().
          |----
          |collisions List()
          |dangling List()
@@ -3870,6 +3879,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
          |[2:16..2:17): U => b/U.
          |[2:18..2:26): hashCode => java/lang/Object#hashCode().
          |----
@@ -3959,6 +3971,10 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
+         |[2:16..2:19): Int => scala/Int#
          |----
          |collisions List()
          |dangling List()
@@ -3977,7 +3993,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
-         |[2:14..2:15): m => a/X.m().
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
          |[2:16..2:17): U => b/U.
          |[2:18..2:26): hashCode => java/lang/Object#hashCode().
          |----
@@ -4018,7 +4036,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
-         |[2:14..2:15): m => a/X.m().
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
          |----
          |collisions List()
          |dangling List()
@@ -4050,6 +4070,8 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
          |[2:14..2:15): U => b/U.
          |[2:16..2:24): hashCode => java/lang/Object#hashCode().
          |----
@@ -4088,7 +4110,10 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
-         |[2:16..2:17): m => a/X.m().
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): c => a/Y.c.
+         |[2:16..2:17): m => a/C#m().
          |----
          |collisions List()
          |dangling List()
@@ -4108,7 +4133,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
          |[2:10..2:18): identity => scala/Predef.identity().
-         |[2:23..2:24): m => a/X.m().
+         |[2:19..2:20): a => a/
+         |[2:21..2:22): Y => a/Y.
+         |[2:23..2:24): m => a/Y.m().
          |----
          |collisions List()
          |dangling List()
@@ -4129,6 +4156,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
          |[2:22..2:23): q <= local0
          |[2:26..2:27): U => b/U.
          |[2:29..2:30): q => local0
@@ -4199,7 +4229,12 @@ class LocalSymbolsSuite extends FunSuite {
   test("synthetics of a macro call with an implicit argument in a macro expansion") {
     val doc =
       withSynthetics(macroOf("X", "1") ++ implicitArgY("_root_.a.X.m"), inU("a.Y.m"), "U.scala")
-    assertNoDiff(section(doc, "Synthetics"), "")
+    assertNoDiff(
+      section(doc, "Synthetics"),
+      """|[2:10..2:15): a.Y.m => *(s)
+         |  s => a/S.s.
+         |""".stripMargin,
+    )
   }
 
   /** a def macro `a.Y.m[T](i: T)`, whose expansion is `tree` */
@@ -4231,7 +4266,12 @@ class LocalSymbolsSuite extends FunSuite {
   test("synthetics of a macro call with an inferred type argument in a macro expansion") {
     val doc =
       withSynthetics(macroOf("X", "1") ++ typeArgY("_root_.a.X.m"), inU("a.Y.m(1)"), "U.scala")
-    assertNoDiff(section(doc, "Synthetics"), "")
+    assertNoDiff(
+      section(doc, "Synthetics"),
+      """|[2:10..2:15): a.Y.m => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin,
+    )
   }
 
   test("a macro call in a macro expansion, whose inner call has a type argument") {
@@ -4258,7 +4298,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
-         |[2:14..2:15): m => a/X.m().
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
          |----
          |collisions List()
          |dangling List()
@@ -4329,7 +4371,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
-         |[2:14..2:15): m => a/C#m().
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): Y => a/Y.
+         |[2:14..2:15): m => a/Y.m().
          |----
          |collisions List()
          |dangling List()
@@ -4358,6 +4402,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[2:6..2:7): o <= b/U.o.
          |[2:19..2:20): a => a/
          |[2:21..2:22): N => a/N.
+         |[2:26..2:27): a => a/
+         |[2:28..2:29): Y => a/Y.
+         |[2:30..2:31): m => a/Y.m().
          |----
          |collisions List()
          |dangling List()
@@ -4405,6 +4452,9 @@ class LocalSymbolsSuite extends FunSuite {
          |[0:8..0:9): b <= b/
          |[1:7..1:8): U <= b/U.
          |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): W => a/W.
+         |[2:14..2:15): w => a/W.w().
          |[2:22..2:23): q <= local0
          |[2:26..2:27): U => b/U.
          |[2:29..2:30): q => local0
