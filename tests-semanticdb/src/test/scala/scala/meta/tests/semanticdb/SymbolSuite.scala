@@ -27,6 +27,9 @@ class SymbolSuite extends FunSuite {
   def checkAsMulti(symbol: String, suffix: List[String], expected: List[String]): Unit =
     test("  multi: " + symbol + " :: " + suffix)(assertEquals(symbol.asMulti(suffix), expected))
 
+  def checkContainsSymbol(symbol: String, other: String, expected: Boolean): Unit =
+    test("contains: " + symbol + " " + other)(assertEquals(symbol.containsSymbol(other), expected))
+
   def checkGlobal(symbol: String): Unit = test(" global: " + symbol)(assert(symbol.isGlobal))
 
   def checkNotGlobal(symbol: String): Unit = test("!global: " + symbol)(assert(!symbol.isGlobal))
@@ -81,6 +84,16 @@ class SymbolSuite extends FunSuite {
   checkAsMulti(";a.;b.", "z." :: Nil, "a." :: "b." :: "z." :: Nil)
   checkAsMulti(";com/`a;b`#;c.", "z." :: Nil, "com/`a;b`#" :: "c." :: "z." :: Nil)
   checkAsMulti(";c.;com/`a;b`#", "z." :: Nil, "c." :: "com/`a;b`#" :: "z." :: Nil)
+  checkContainsSymbol("local12", "local12", true)
+  checkContainsSymbol("local12", "local1", false)
+  checkContainsSymbol(";local12;local3", "local12", true)
+  checkContainsSymbol(";local12;local3", "local3", true)
+  checkContainsSymbol(";local12;local3", "local1", false)
+  checkContainsSymbol(";a.;b.", "b", false)
+  checkContainsSymbol(";xlocal1;local1", "local1", true)
+  checkContainsSymbol(";local1x;local1", "local1", true)
+  checkContainsSymbol(";local1x;xlocal1", "local1", false)
+  checkContainsSymbol(";com/`a;c.;b`#;d.", "c.", false)
 
   checkMultiRoundtrip(Nil)
   checkMultiRoundtrip("com/Bar#" :: Nil)

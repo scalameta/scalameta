@@ -48,6 +48,26 @@ object Scala {
       })
     def isLocal: Boolean = symbol.startsWith(Symbols.LocalPrefix)
     def isMulti: Boolean = symbol.startsWith(";")
+    def containsSymbol(other: String): Boolean =
+      if (isMulti) {
+        val len = symbol.length
+        @tailrec
+        def iter(idx: Int): Boolean = idx < len && {
+          symbol.charAt(idx) match {
+            case ';' =>
+              val nidx = idx + 1
+              if (symbol.startsWith(other, nidx)) {
+                val end = nidx + other.length
+                end == len || symbol.charAt(end) == ';' || iter(end)
+              } else iter(nidx)
+            case '`' =>
+              val end = symbol.indexOf('`', idx + 1) + 1
+              end > 0 && iter(end)
+            case _ => iter(idx + 1)
+          }
+        }
+        iter(0)
+      } else symbol == other
     def asMulti: List[String] = asMulti(Nil)
     def asMulti(suffix: List[String]): List[String] =
       if (!isMulti) symbol :: suffix
