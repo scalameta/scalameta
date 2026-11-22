@@ -210,13 +210,16 @@ trait SymbolOps {
 
   implicit class XtensionGSymbol(sym: g.Symbol) {
 
+    def hasAllFlags(flagsInclude: Long, flagsExclude: Long): Boolean = sym
+      .getFlag(flagsInclude | flagsExclude) == flagsInclude
+
     def ssym: String = sym.toSemantic
     def self: g.Type = sym.thisSym.info match {
       case g.RefinedType(List(_, self), _) if sym.thisSym != sym => self
       case _ => g.NoType
     }
     def isSelfParameter: Boolean = sym != g.NoSymbol && sym.owner.thisSym == sym
-    private def isJavaNonPackage: Boolean = sym.getFlag(gf.PACKAGE | gf.JAVA) == gf.JAVA
+    private def isJavaNonPackage: Boolean = hasAllFlags(gf.JAVA, gf.PACKAGE)
     def isJavaClass: Boolean = isJavaNonPackage && (sym.isClass || sym.isModule)
     def isSyntheticConstructor: Boolean = {
       val owner = sym.owner
