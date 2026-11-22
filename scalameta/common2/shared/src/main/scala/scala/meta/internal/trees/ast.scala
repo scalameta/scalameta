@@ -489,21 +489,36 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           istats1 +=
             q"final override def canEqual(that: Any): $BooleanClass = that.isInstanceOf[$iname]"
           istats1 +=
-            q"final override def equals(that: Any): $BooleanClass = this eq that.asInstanceOf[AnyRef]"
+            q"""
+              final override def equals(that: Any): $BooleanClass =
+                this eq that.asInstanceOf[AnyRef]
+            """
           istats1 += q"final override def hashCode: $IntClass = System.identityHashCode(this)"
           istats1 +=
-            q"final override def toString: $StringClass = scala.meta.internal.prettyprinters.TreeToString(this)"
+            q"""
+              final override def toString: $StringClass =
+               scala.meta.internal.prettyprinters.TreeToString(this)
+            """
         }
 
         // step 8: implement foreachChild (allocation-free); `children` and
         // `childrenCount` derive from it in the base trait (childrenCount is
         // overridden here to avoid the builder).
         stats1 +=
-          q"override def foreachChild(f: $TreeClass => _root_.scala.Unit): _root_.scala.Unit = $CommonTyperMacrosModule.foreachChild[$iname, $TreeClass](f)"
+          q"""
+            override def foreachChild(f: $TreeClass => _root_.scala.Unit): _root_.scala.Unit =
+              $CommonTyperMacrosModule.foreachChild[$iname, $TreeClass](f)
+          """
         stats1 +=
-          q"override def childrenCount: $IntClass = $CommonTyperMacrosModule.childrenCount[$iname]"
+          q"""
+            override def childrenCount: $IntClass =
+              $CommonTyperMacrosModule.childrenCount[$iname]
+          """
         stats1 +=
-          q"override private[meta] def lastChild: $TreeClass = $CommonTyperMacrosModule.lastChild[$iname, $TreeClass]"
+          q"""
+            override private[meta] def lastChild: $TreeClass =
+              $CommonTyperMacrosModule.lastChild[$iname, $TreeClass]
+          """
 
         // step 9: generate boilerplate required by the @ast infrastructure
         ianns1 += q"new $AstMetadataModule.astClass"
@@ -519,7 +534,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         iparents1 += tq"$ProductClass"
 
         stats1 +=
-          q"override def productPrefix: $StringClass = $CommonTyperMacrosModule.productPrefix[$iname]"
+          q"""
+            override def productPrefix: $StringClass =
+              $CommonTyperMacrosModule.productPrefix[$iname]
+          """
         stats1 += q"override def productArity: $IntClass = ${params.length}"
 
         def patternMatchClauses(fromField: (ValDef, Int) => Tree) = {
@@ -530,12 +548,22 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         }
 
         val pelClauses = patternMatchClauses((vr, i) => cq"$i => this.${vr.name}")
-        stats1 += q"override def productElement(n: $IntClass): Any = n match { case ..$pelClauses }"
         stats1 +=
-          q"override def productIterator: $IteratorClass[$AnyClass] = $ScalaRunTimeModule.typedProductIterator(this)"
+          q"""
+            override def productElement(n: $IntClass): Any =
+              n match { case ..$pelClauses }
+          """
+        stats1 +=
+          q"""
+            override def productIterator: $IteratorClass[$AnyClass] =
+              $ScalaRunTimeModule.typedProductIterator(this)
+          """
         val productFields = params.map(_.name.toString)
         stats1 +=
-          q"override def productFields: $ListClass[$StringClass] = _root_.scala.List(..$productFields)"
+          q"""
+            override def productFields: $ListClass[$StringClass] =
+              _root_.scala.List(..$productFields)
+          """
 
         // step 13a add productElementName for 2.13
         if (MacroCompat.productFieldNamesAvailable) {
@@ -544,7 +572,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             cq"""$i => $lit """
           }
           stats1 +=
-            q"override def productElementName(n: $IntClass): java.lang.String = n match { case ..$penClauses }"
+            q"""
+              override def productElementName(n: $IntClass): java.lang.String =
+                n match { case ..$penClauses }
+            """
         }
 
         // step 12: generate serialization logic
