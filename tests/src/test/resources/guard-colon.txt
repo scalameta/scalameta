@@ -1,0 +1,1397 @@
+==== t_brace_case_after_try_catch_case
+def f = x match {
+  case 1 => try a catch case _: Exception => b
+  case 2 => c
+}
+==== t_ind_case_after_try_catch_case
+def f = x match
+  case 1 => try a catch case _: Exception => b
+  case 2 => c
+==== c10_try_catch_case_aligned_case
+def f = x match
+  case 1 => try a catch case e => b
+                        case 2 => c
+==== c11_try_catch_case_then_dot_case
+def f = x match
+  case 1 => try a catch case e => b
+  case 2 => c
+  case 3 => d
+==== c12_handler_body_next_line_case
+def f = x match
+  case 1 => try a catch case e =>
+      b
+  case 2 => c
+==== c13_flat_match_try_catch_case_next
+def f = x match
+case 1 => try a catch case e => b
+case 2 => c
+==== c1_then_try_catch_case_next
+def f = x match
+  case 1 => if p then try a catch case _: Exception => b
+  case 2 => c
+==== c4_else_try_catch_case_next
+def f = x match
+  case 1 => if p then a else try b catch case _: Exception => c
+  case 2 => d
+==== c6_brace_pf_try_catch_case_next
+def f = xs.map {
+  case 1 => try a catch case e => b
+  case 2 => c
+}
+==== c7_catch_ctx_try_catch_case_next
+def f = try g catch
+  case 1 => try a catch case e => b
+  case 2 => c
+==== c9_try_catch_case_deeper_case
+def f = x match
+  case 1 => try a catch case e => b
+    case 2 => c
+==== k5_arrow_eol_deeper_cases
+def f = x match
+  case 1 => try a catch case e =>
+      case X => 1
+  case 2 => c
+==== k5_assign_try
+def f = x match
+  case 1 => y = try a catch case e => b
+  case 2 => c
+==== k5_brace_catch_ctx
+def f = try g catch {
+  case 1 => try a catch case e => b
+  case 2 => c
+}
+==== k5_chain
+def f = x match
+  case 1 => try a catch case e => b
+  case 2 => try c catch case f => d
+  case 3 => e
+==== k5_colon_cases
+def f = xs.map:
+  case 1 => try a catch case e => b
+  case 2 => c
+==== k5_else_body_match
+def f =
+  if p then 0
+  else x match
+    case 1 => try a catch case e => b
+    case 2 => c
+==== k5_handler_colon_arg
+def f = x match
+  case 1 => try a catch case e => xs.foreach:
+      log(e)
+  case 2 => c
+==== k5_handler_colon_cases
+def f = x match
+  case 1 => try a catch case e => xs.map:
+      case X => 1
+  case 2 => c
+==== k5_handler_guard
+def f = x match
+  case 1 => try a catch case e if p(e) => b
+  case 2 => c
+==== k5_handler_if_lines
+def f = x match
+  case 1 => try a catch case e =>
+      if p then b
+      else c
+  case 2 => d
+==== k5_handler_match_lines
+def f = x match
+  case 1 => try a catch case e => e match
+    case _: X => b
+    case _ => c
+  case 2 => d
+==== k5_handler_then_dot_lines
+def f = x match
+  case 1 => try a catch case e => b
+      .foo
+  case 2 => c
+==== k5_if_then_else_sameline
+def f = x match
+  case 1 => try a catch case e => if p then b else c
+  case 2 => d
+==== k5_if_then_sameline
+def f = x match
+  case 1 => try a catch case e => if p then b
+  case 2 => d
+==== k5_inner_match_ctx
+def f = x match
+  case 1 => y match
+    case 2 => try a catch case e => b
+    case 3 => c
+  case 4 => d
+==== k5_lam_body_match
+def f = xs.map: y =>
+  y match
+    case 1 => try a catch case e => b
+    case 2 => c
+==== k5_nested_try_in_handler
+def f = x match
+  case 1 => try a catch case e => try b catch case f => c
+  case 2 => d
+==== k5_semi_then_case
+def f = x match
+  case 1 => try a catch case e => b; c
+  case 2 => d
+==== k5_subcase
+def f = x match
+  case Some(v) if v match
+    case 1 => try a catch case e => true
+    case _ => false
+  => 1
+==== k5_then_body_match
+def f = if p then x match
+    case 1 => try a catch case e => b
+    case 2 => c
+  else d
+==== k5_try_eol_catch_case
+def f = x match
+  case 1 => try
+      a
+    catch case e => b
+  case 2 => c
+==== k5_val_try
+def f = x match
+  case 1 => val r = try a catch case e => b
+  case 2 => c
+==== k5_while_body
+def f = x match
+  case 1 => while p do try a catch case e => b
+  case 2 => c
+==== e1_handler_comment_case
+def f = x match
+  case 1 => try a catch case e => b // note
+  case 2 => c
+==== e11_handler_colon_cases_brace
+def f = x match {
+  case 1 => try a catch case e => xs.map:
+      case X => 1
+  case 2 => c
+}
+==== e12_handler_colon_cases_flat
+def f = x match
+case 1 => try a catch case e => xs.map:
+    case X => 1
+case 2 => c
+==== e2_handler_colon_lam_lines
+def f = x match
+  case 1 => try a catch case e => xs.map: y =>
+      y
+  case 2 => c
+==== e3_handler_colon_two_cases
+def f = x match
+  case 1 => try a catch case e => xs.map:
+      case X => 1
+      case Y => 2
+  case 2 => c
+==== e4_handler_then_eol
+def f = x match
+  case 1 => try a catch case e => if p then
+      b
+    else d
+  case 2 => c
+==== e5_handler_infix_eol
+def f = x match
+  case 1 => try a catch case e => b +
+      d
+  case 2 => c
+==== f6_blank_line_between
+def f = x match
+  case 1 => try a catch case e => b
+
+  case 2 => c
+==== f6_block_comment_eol
+def f = x match
+  case 1 => try a catch case e => b /* note */
+  case 2 => c
+==== f6_brace_body_colon_cases_brace
+def f = x match {
+  case 1 => try a catch case e => xs.map {
+      case X => 1 }
+  case 2 => c
+}
+==== f6_brace_lambda_close
+def f = x match
+  case 1 => try a catch case e => xs.foreach { x =>
+      log(x)
+    }
+  case 2 => c
+==== f6_colon_cases_comment_line
+def f = x match
+  case 1 => try a catch case e => xs.map:
+      case X => 1
+      // done
+  case 2 => c
+==== f6_colon_cases_dot_line
+def f = x match
+  case 1 => try a catch case e => xs.map:
+      case X => 1
+    .sum
+  case 2 => c
+==== f6_colon_cases_infix_line
+def f = x match
+  case 1 => try a catch case e => xs.map:
+      case X => 1
+    ++ ys
+  case 2 => c
+==== f6_colon_lam_brace_close
+def f = x match
+  case 1 => try a catch case e => xs.map: y =>
+      g(y) {
+        y
+      }
+  case 2 => c
+==== f6_comment_line_between
+def f = x match
+  case 1 => try a catch case e => b
+  // next
+  case 2 => c
+==== f6_else_colon_cases
+def f = x match
+  case 1 => if p then a else try b catch case e => xs.map:
+      case X => 1
+  case 2 => c
+==== f6_end_if
+def f = x match
+  case 1 => try a catch case e => if e.ok then
+      b
+    else
+      c
+    end if
+  case 2 => d
+==== f6_end_match
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => b
+      case _ => c
+    end match
+  case 2 => d
+==== f6_end_while
+def f = x match
+  case 1 => try a catch case e => while p do
+      g()
+    end while
+  case 2 => d
+==== f6_handler_match_deeper_case
+def f = x match
+  case 1 => try a catch case e => e match
+        case X => b
+    case 2 => c
+==== f6_infix_line
+def f = x match
+  case 1 => try a catch case e => b
+      + d
+  case 2 => c
+==== f6_interp
+def f = x match
+  case 1 => try a catch case e => s"err $e"
+  case 2 => c
+==== f6_lam_body_colon_cases
+def f = xs.map: y =>
+  y match
+    case 1 => try a catch case e => ys.map:
+        case X => 1
+    case 2 => c
+==== f6_null
+def f = x match
+  case 1 => try a catch case e => null
+  case 2 => c
+==== f6_paren_close
+def f = x match
+  case 1 => try a catch case e => g(
+      e)
+  case 2 => c
+==== f6_pf_colon_cases
+def f = xs.map {
+  case 1 => try a catch case e => ys.map:
+      case X => 1
+  case 2 => c
+}
+==== f6_semi_eol
+def f = x match
+  case 1 => try a catch case e => b;
+  case 2 => c
+==== f6_semi_eol_brace
+def f = x match {
+  case 1 => try a catch case e => b;
+  case 2 => c
+}
+==== f6_then_colon_cases
+def f = x match
+  case 1 => if p then try a catch case e => xs.map:
+      case X => 1
+  case 2 => c
+==== e7_semi_deeper_case
+def f = x match
+  case 1 => try a catch case e => b;
+    case 2 => c
+==== e7_semi_comment
+def f = x match
+  case 1 => try a catch case e => b; // note
+  case 2 => c
+==== e7_semi_twice
+def f = x match
+  case 1 => try a catch case e => b;;
+  case 2 => c
+==== e7_semi_mid_and_eol
+def f = x match
+  case 1 => try a catch case e => b; d;
+  case 2 => c
+==== e7_semi_brace_pf
+def f = xs.map {
+  case 1 => try a catch case e => b;
+  case 2 => c
+}
+==== e7_semi_then
+def f = x match
+  case 1 => if p then try a catch case e => b;
+  case 2 => c
+==== e7_semi_in_guard_arg
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => false;
+    case c => true
+  => 1
+==== e7_semi_flat
+def f = x match
+case 1 => try a catch case e => b;
+case 2 => c
+==== e7_semi_colon_arg_cases
+def f = x match
+  case 1 => try a catch case e => xs.map:
+      case X => 1;
+  case 2 => c
+==== n7_colon_cases_empty_last
+def f = x match
+  case 1 => try a catch case e => xs.foreach:
+      case X => g()
+      case _ =>
+  case 2 => c
+==== n7_colon_cases_empty_last_brace
+def f = x match {
+  case 1 => try a catch case e => xs.foreach:
+      case X => g()
+      case _ =>
+  case 2 => c
+}
+==== n7_handler_match_empty_last
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _ =>
+  case 2 => c
+==== n7_handler_match_empty_last_guard
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => e match
+        case X => true
+        case _ =>
+    case c => false
+  => 1
+==== n7_nested_handlers
+def f = x match
+  case 1 => try a catch case e => try b catch case f => c
+  case 2 => d
+==== n7_return_eol
+def f: Unit = x match
+  case 1 => try a catch case e => return
+  case 2 => c
+==== n7_semi_apply_eol
+def f = x match
+  case 1 => try a catch case e => g(e);
+  case 2 => c
+==== n7_semi_arrow_eol_body
+def f = x match
+  case 1 => try a catch case e =>
+      b;
+  case 2 => c
+==== n7_semi_catch_brace_outer
+def f = try z catch {
+  case 1 => try a catch case e => b;
+  case 2 => c
+}
+==== n7_semi_catch_indent_outer
+def f = try z catch
+  case 1 => try a catch case e => b;
+  case 2 => c
+==== n7_semi_colon_cases_last
+def f = x match
+  case 1 => try a catch case e => xs.map:
+      case X => 1;
+  case 2 => c
+==== n7_semi_colon_cases_pf
+def f = xs.collect:
+  case 1 => try a catch case e => b;
+  case 2 => c
+==== n7_semi_colon_cases_two
+def f = x match
+  case 1 => try a catch case e => xs.map:
+      case X => 1;
+      case Y => 2
+  case 2 => c
+==== n7_semi_else_branch
+def f = x match
+  case 1 => if p then a else try b catch case e => c;
+  case 2 => d
+==== n7_semi_flat_handler_arrow_line
+def f = x match
+  case 1 => try a catch case e =>
+    b;
+  case 2 => c
+==== n7_semi_handler_guard
+def f = x match
+  case 1 => try a catch case e if e.ok => b;
+  case 2 => c
+==== n7_semi_if_then
+def f = x match
+  case 1 => try a catch case e => if p then b;
+  case 2 => d
+==== n7_semi_if_then_else
+def f = x match
+  case 1 => try a catch case e => if p then b else c;
+  case 2 => d
+==== n7_semi_lam_body_match
+def f = xs.map: y =>
+  y match
+    case 1 => try a catch case e => b;
+    case 2 => c
+==== n7_semi_nested_handlers
+def f = x match
+  case 1 => try a catch case e => try b catch case f => c;
+  case 2 => d
+==== n7_semi_three_cases
+def f = x match
+  case 1 => try a catch case e => b;
+  case 2 => try c catch case e => d;
+  case 3 => e
+==== n7_semi_type_pat
+def f = x match
+  case 1 => try a catch case _: Exception => b;
+  case 2 => c
+==== n7_semi_while
+def f = x match
+  case 1 => while p do try a catch case e => b;
+  case 2 => c
+==== e8_empty_last_deeper_case
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _ =>
+    case 2 => c
+==== e8_empty_last_aligned_case
+def f = x match
+  case 1 => try a catch case e => e match
+                          case X => g()
+                          case _ =>
+  case 2 => c
+==== e8_empty_last_two_levels
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => y match
+        case Z => g()
+        case _ =>
+  case 2 => c
+==== e8_empty_last_three_cases
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _ =>
+  case 2 => c
+  case 3 => d
+==== e8_empty_last_typed
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _: Foo =>
+  case 2 => c
+==== e8_empty_last_comment
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _ => // nothing
+  case 2 => c
+==== e8_empty_last_blank_line
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _ =>
+
+  case 2 => c
+==== e8_colon_lambda_body
+def f = x match
+  case 1 => try a catch case e => xs.foreach: y =>
+      g(y)
+  case 2 => c
+==== e8_then_body_next_line
+def f = x match
+  case 1 => try a catch case e => if e.ok then
+      g()
+  case 2 => c
+==== e8_empty_last_brace_outer_pf
+def f = xs.map {
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _ =>
+  case 2 => c
+}
+==== e8_empty_last_guard_two_cases
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => e match
+        case X => true
+        case _ =>
+    case c => false
+    case d => true
+  => 1
+==== e8_lambda_arrow_eol_inner
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _ => (y: Int) =>
+        y
+  case 2 => c
+==== p8_body_next_line_empty_last
+def f = x match
+  case 1 => try a catch case e =>
+      e match
+        case X => g()
+        case _ =>
+  case 2 => c
+==== p8_comment_line_before_case
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _ =>
+      // done
+  case 2 => c
+==== p8_dot_line_colon_cases_at
+def f = x match
+  case 1 => try a catch case e => xs
+    .map:
+    case X => 1
+  case 2 => c
+==== p8_dot_line_colon_cases_deeper
+def f = x match
+  case 1 => try a catch case e => xs
+    .map:
+      case X => 1
+  case 2 => c
+==== p8_dot_line_colon_cases_left
+def f = x match
+  case 1 => try a catch case e => xs
+      .map:
+    case X => 1
+  case 2 => c
+==== p8_dot_line_match_deeper
+def f = x match
+  case 1 => try a catch case e => xs
+    .head match
+      case X => 1
+      case _ =>
+  case 2 => c
+==== p8_dot_line_match_left
+def f = x match
+  case 1 => try a catch case e => xs
+      .head match
+    case X => 1
+  case 2 => c
+==== p8_else_inline_colon_cases
+def f = x match
+  case 1 => try a catch case e => if p then b else xs.map:
+      case X => 1
+  case 2 => c
+==== p8_guard_inner_match_handler_empty
+def f = x match
+  case y if xs.exists:
+    case b => b match
+      case 1 => try g(b) catch case e => e match
+          case X => true
+          case _ =>
+      case 2 => false
+  => 1
+==== p8_handler_colon_lambda_eol_inner
+def f = x match
+  case 1 => try a catch case e => xs.foreach: y =>
+      y match
+        case X => g()
+        case _ =>
+  case 2 => c
+==== p8_indent_catch_outer
+def f = try z catch
+  case 1 => try a catch case e => e match
+      case X => g()
+      case _ =>
+  case 2 => c
+==== p8_infix_line_colon_cases_deeper
+def f = x match
+  case 1 => try a catch case e => a
+    ++ xs.map:
+      case X => 1
+  case 2 => c
+==== p8_infix_line_colon_cases_left
+def f = x match
+  case 1 => try a catch case e => a
+      ++ xs.map:
+    case X => 1
+  case 2 => c
+==== p8_inner_case_colon_empty_then_next_inner
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => xs.foreach:
+          case P =>
+      case Y => 2
+  case 2 => c
+==== p8_inner_case_colon_then_next_inner
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => xs.map:
+          case P => 1
+      case Y => 2
+  case 2 => c
+==== p8_inner_colon_then_dot
+def f = x match
+  case 1 => try a catch case e => xs.map:
+      case X => 1
+    .sum
+  case 2 => c
+==== p8_inner_for_do_body
+def f = x match
+  case 1 => try a catch case e => for y <- ys do
+      g(y)
+  case 2 => c
+==== p8_inner_if_else_lines
+def f = x match
+  case 1 => try a catch case e => if p then
+      g()
+    else
+      h()
+  case 2 => c
+==== p8_inner_match_arrow_eol_body
+def f = x match
+  case 1 => try a catch case e => e match
+      case X =>
+        g()
+  case 2 => c
+==== p8_inner_match_then_case_same_line_semi
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => g(); case _ =>
+  case 2 => c
+==== p8_inner_match_then_infix
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => 1
+      case _ => 2
+    + 3
+  case 2 => c
+==== p8_inner_then_else_sameline
+def f = x match
+  case 1 => try a catch case e => if p then
+      g()
+    else h()
+  case 2 => c
+==== p8_inner_try_body_match
+def f = x match
+  case 1 => try a catch case e => try e match
+      case X => g()
+  case 2 => c
+==== p8_inner_try_brace_catch
+def f = x match
+  case 1 => try a catch case e => try b catch {
+      case X => g()
+    }
+  case 2 => c
+==== p8_inner_try_catch_eol_brace_outer
+def f = x match {
+  case 1 => try a catch case e => try b catch
+      case X => g()
+  case 2 => c
+}
+==== p8_inner_try_catch_eol_cases
+def f = x match
+  case 1 => try a catch case e => try b catch
+      case X => g()
+  case 2 => c
+==== p8_inner_try_catch_eol_empty_last
+def f = x match
+  case 1 => try a catch case e => try b catch
+      case X => g()
+      case _ =>
+  case 2 => c
+==== p8_inner_try_catch_eol_finally
+def f = x match
+  case 1 => try a catch case e => try b catch
+      case X => g()
+    finally h()
+  case 2 => c
+==== p8_inner_try_catch_eol_guard
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => try h(e) catch
+        case X => true
+    case c => false
+  => 1
+==== p8_inner_try_catch_eol_in_inner_match
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => try b catch
+          case P => 1
+  case 2 => c
+==== p8_inner_try_catch_eol_pf
+def f = xs.map {
+  case 1 => try a catch case e => try b catch
+      case X => g()
+  case 2 => c
+}
+==== p8_inner_try_catch_eol_two_cases
+def f = x match
+  case 1 => try a catch case e => try b catch
+      case X => g()
+      case Y => h()
+  case 2 => c
+==== p8_inner_try_finally_lines
+def f = x match
+  case 1 => try a catch case e => try
+      g()
+    finally
+      h()
+  case 2 => c
+==== p8_inner_while_do_body
+def f = x match
+  case 1 => try a catch case e => while p do
+      g()
+  case 2 => c
+==== p8_lam_body_match
+def f = xs.map: y =>
+  y match
+    case 1 => try a catch case e => e match
+        case X => g()
+        case _ =>
+    case 2 => c
+==== p8_nested_handler_inner_match_empty
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => try b catch case f => f match
+          case P => 1
+          case _ =>
+      case Y => 2
+  case 2 => c
+==== p8_then_inline_colon_cases
+def f = x match
+  case 1 => try a catch case e => if p then xs.map:
+      case X => 1
+  case 2 => c
+==== p8_then_inline_match
+def f = x match
+  case 1 => try a catch case e => if p then e match
+      case X => 1
+  case 2 => c
+==== p8_then_inline_match_empty_last
+def f = x match
+  case 1 => try a catch case e => if p then e match
+      case X => 1
+      case _ =>
+  case 2 => c
+==== p8_while_inline_colon_cases
+def f = x match
+  case 1 => try a catch case e => while p do xs.foreach:
+      case X => g()
+  case 2 => c
+==== e9_try_no_catch_line
+def f = x match
+  case 1 => try a catch case e => try b
+  case 2 => c
+==== e9_then_no_else_line
+def f = x match
+  case 1 => try a catch case e => if p then b
+  case 2 => c
+==== e9_then_eol_body
+def f = x match
+  case 1 => try a catch case e => if p then
+      b
+  case 2 => c
+==== e9_try_finally_eol_body
+def f = x match
+  case 1 => try a catch case e => try b finally
+      g()
+  case 2 => c
+==== e9_then_match_two_cases
+def f = x match
+  case 1 => try a catch case e => if p then e match
+      case X => 1
+      case Y => 2
+  case 2 => c
+==== e9_then_match_empty_last
+def f = x match
+  case 1 => try a catch case e => if p then e match
+      case X => 1
+      case _ =>
+  case 2 => c
+==== e9_else_match
+def f = x match
+  case 1 => try a catch case e => if p then b else e match
+      case X => 1
+  case 2 => c
+==== e9_while_do_match
+def f = x match
+  case 1 => try a catch case e => while p do e match
+      case X => g()
+  case 2 => c
+==== e9_then_try_catch_eol
+def f = x match
+  case 1 => try a catch case e => if p then try b catch
+      case X => g()
+  case 2 => c
+==== e9_try_catch_eol_then_match
+def f = x match
+  case 1 => try a catch case e => try b catch
+      case X => if q then e match
+          case Y => 1
+  case 2 => c
+==== e9_then_handler_on_line
+def f = x match
+  case 1 => try a catch case e => if p then try b catch case X => g()
+  case 2 => c
+==== e9_try_body_match_two
+def f = x match
+  case 1 => try a catch case e => try e match
+      case X => g()
+      case Y => h()
+  case 2 => c
+==== e9_try_catch_eol_inner_deeper
+def f = x match
+  case 1 => try a catch case e => try b catch
+      case X => g()
+      case Y => h()
+    case 2 => c
+==== e9_try_catch_eol_brace_outer_two
+def f = x match {
+  case 1 => try a catch case e => try b catch
+      case X => g()
+  case 2 => c
+  case 3 => d
+}
+==== e9_then_match_guard
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => if p then e match
+        case X => true
+    case c => false
+  => 1
+==== e9_try_body_match_guard
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => try e match
+        case X => true
+    case c => false
+  => 1
+==== e9_dot_line_then_case
+def f = x match
+  case 1 => try a catch case e => b
+      .c
+  case 2 => d
+==== e9_infix_line_then_case
+def f = x match
+  case 1 => try a catch case e => b
+      + c
+  case 2 => d
+==== e9_then_dot_line_then_case
+def f = x match
+  case 1 => try a catch case e => if p then b
+      .c
+  case 2 => d
+==== e9_try_catch_eol_not_case
+def g =
+  try a catch case e => try b catch
+      case X => 1
+  h()
+==== e9_then_match_not_case
+def g =
+  try a catch case e => if p then e match
+      case X => 1
+  h()
+==== e9_then_colon_cases_in_lambda
+def f = xs.map:
+  case 1 => try a catch case e => if p then ys.map:
+      case X => 1
+  case 2 => c
+==== e9b_if_then_else_lines
+def f = x match
+  case 1 => try a catch case e => if p then
+      b
+    else
+      c
+  case 2 => d
+==== e9b_for_yield_lines
+def f = x match
+  case 1 => try a catch case e => for y <- ys yield
+      g(y)
+  case 2 => c
+==== e9b_while_do_eol
+def f = x match
+  case 1 => try a catch case e => while p do
+      g()
+  case 2 => c
+==== e9b_new_template_colon
+def f = x match
+  case 1 => try a catch case e => new A:
+      def g = 1
+  case 2 => c
+==== e9b_try_eol_body
+def f = x match
+  case 1 => try a catch case e => try
+      b
+    finally g()
+  case 2 => c
+==== e9b_then_lambda_colon
+def f = x match
+  case 1 => try a catch case e => if p then xs.map: y =>
+      g(y)
+  case 2 => c
+==== e9b_try_lambda_colon
+def f = x match
+  case 1 => try a catch case e => try xs.map: y =>
+      g(y)
+  case 2 => c
+==== e9b_try_colon_arg
+def f = x match
+  case 1 => try a catch case e => try g:
+      b
+  case 2 => c
+==== e9b_try_eol_lines
+def f = x match
+  case 1 => try a catch case e => try
+      b
+  case 2 => c
+==== e9b_try_lambda_two_lines
+def f = x match
+  case 1 => try a catch case e => try xs.map: y =>
+      g(y)
+      h(y)
+  case 2 => c
+==== e9b_then_try_lambda
+def f = x match
+  case 1 => try a catch case e => if p then try xs.map: y =>
+      g(y)
+  case 2 => c
+==== e9b_try_lambda_guard
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => try ys.map: z =>
+        h(z)
+    case c => false
+  => 1
+==== e9b_try_lambda_brace_outer
+def f = x match {
+  case 1 => try a catch case e => try xs.map: y =>
+      g(y)
+  case 2 => c
+}
+==== e9b_try_lambda_deeper_case
+def f = x match
+  case 1 => try a catch case e => try xs.map: y =>
+      g(y)
+    case 2 => c
+==== q9_brace_then_match_two
+def f = x match {
+  case 1 => try a catch case e => if p then e match
+      case X => 1
+      case Y => 2
+  case 2 => c
+}
+==== q9_colon_cases_then_try_lambda
+def f = xs.map:
+  case 1 => try a catch case e => if p then try ys.map: y =>
+      g(y)
+  case 2 => c
+==== q9_guard_eol_then_match_arrow_ctrl
+def f = x match
+  case y if xs.exists:
+    case b => try g(b) catch case e => if p then e match
+        case X => true
+    case c => false
+  => 1
+  case _ => 2
+==== q9_handler_next_line_then_match
+def f = x match
+  case 1 => try a catch case e =>
+      if p then e match
+        case X => 1
+  case 2 => c
+==== q9_mid_handler_then_match
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => try b catch case f => if p then f match
+          case Z => 1
+      case Y => 2
+  case 2 => c
+==== q9_mid_handler_try_catch_eol
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => try b catch case f => try d catch
+          case Z => 1
+      case Y => 2
+  case 2 => c
+==== q9_mid_handler_try_lambda
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => try b catch case f => try xs.map: y =>
+          g(y)
+      case Y => 2
+  case 2 => c
+==== q9_mid_match_try_lambda
+def f = x match
+  case 1 => try a catch case e => e match
+      case X => try xs.map: y =>
+          g(y)
+      case Y => 2
+  case 2 => c
+==== q9_mid_try_catch_eol_lambda
+def f = x match
+  case 1 => try a catch case e => try b catch
+      case X => xs.map: y =>
+          g(y)
+      case Y => h()
+  case 2 => c
+==== q9_mid_try_catch_eol_then_match
+def f = x match
+  case 1 => try a catch case e => try b catch
+      case X => if p then x match
+          case Z => 1
+      case Y => h()
+  case 2 => c
+==== q9_nested_handlers_inner_match
+def f = x match
+  case 1 => try a catch case e => try b catch case f => f match
+      case X => 1
+      case Y => 2
+  case 2 => c
+==== q9_nested_handlers_then_match
+def f = x match
+  case 1 => try a catch case e => try b catch case f => if p then f match
+      case X => 1
+  case 2 => c
+==== q9_nested_handlers_try_catch_eol
+def f = x match
+  case 1 => try a catch case e => try b catch case f => try d catch
+      case X => 1
+  case 2 => c
+==== q9_nested_handlers_try_lambda
+def f = x match
+  case 1 => try a catch case e => try b catch case f => try xs.map: y =>
+      g(y)
+  case 2 => c
+==== q9_pf_brace_try_catch_eol
+def f = x match
+  case 1 => try a catch case e => xs.map { case X => try b catch
+        case Y => 1
+      case Z => 2
+    }
+  case 2 => c
+==== q9_then_body_braces
+def f = x match
+  case 1 => try a catch case e => if p then {
+      b
+    }
+  case 2 => c
+==== q9_then_eol_body_match
+def f = x match
+  case 1 => try a catch case e => if p then
+        e match
+          case X => 1
+          case Y => 2
+  case 2 => c
+==== q9_then_match_braces
+def f = x match
+  case 1 => try a catch case e => if p then e match {
+      case X => 1
+    }
+  case 2 => c
+==== q9_then_match_comment_line
+def f = x match
+  case 1 => try a catch case e => if p then e match
+      case X => 1
+      // done
+  case 2 => c
+==== q9_then_match_else_line
+def f = x match
+  case 1 => try a catch case e => if p then e match
+      case X => 1
+    else 3
+  case 2 => c
+==== q9_then_match_else_match
+def f = x match
+  case 1 => try a catch case e => if p then e match
+      case X => 1
+    else e match
+      case Y => 2
+  case 2 => c
+==== q9_then_match_empty_first
+def f = x match
+  case 1 => try a catch case e => if p then e match
+      case X =>
+      case Y => 2
+  case 2 => c
+==== q9_then_match_end_if
+def f = x match
+  case 1 => try a catch case e => if p then e match
+      case X => 1
+    end if
+  case 2 => c
+==== q9_then_match_two_else_line
+def f = x match
+  case 1 => try a catch case e => if p then e match
+      case X => 1
+      case Y => 2
+    else 3
+  case 2 => c
+==== q9_try_body_braces
+def f = x match
+  case 1 => try a catch case e => try {
+      b
+    }
+  case 2 => c
+==== q9_try_body_match_cases_left
+def f = x match
+  case 1 => try a catch case e => try e match
+    case X => 1
+    case Y => 2
+  case 2 => c
+==== q9_try_body_match_end_marker
+def f = x match
+  case 1 => try a catch case e => try e match
+      case X => 1
+    end try
+  case 2 => c
+==== q9_try_brace_catch_braces
+def f = x match
+  case 1 => try a catch case e => try b catch {
+      case X => 1
+    }
+  case 2 => c
+==== q9_try_catch_eol_empty_first
+def f = x match
+  case 1 => try a catch case e => try b catch
+      case X =>
+      case Y => 2
+  case 2 => c
+==== q9_try_eol_body_catch_line
+def f = x match
+  case 1 => try a catch case e => try
+        e match
+          case X => 1
+      catch case _ => 3
+  case 2 => c
+==== q9_try_eol_body_match
+def f = x match
+  case 1 => try a catch case e => try
+        e match
+          case X => 1
+          case Y => 2
+  case 2 => c
+==== q9_try_match_catch_line
+def f = x match
+  case 1 => try a catch case e => try e match
+      case X => 1
+    catch case _ => 3
+  case 2 => c
+==== q9_try_match_finally_line
+def f = x match
+  case 1 => try a catch case e => try e match
+      case X => 1
+    finally g()
+  case 2 => c
+==== q9b_body_line_then_match_else
+def f = x match
+  case 1 => try a catch case e =>
+      if p then e match
+        case X => 1
+      else 3
+  case 2 => c
+==== q9b_body_line_try_match_catch
+def f = x match
+  case 1 => try a catch case e =>
+      try e match
+        case X => 1
+      catch case _ => 3
+  case 2 => c
+==== q9b_nested3_handlers_then_match
+def f = x match
+  case 1 => try a catch case e => try b catch case f => try d catch case g => if p then g match
+      case X => 1
+  case 2 => c
+==== q9b_then_match_else_at_cases
+def f = x match
+  case 1 => try a catch case e => if p then e match
+      case X => 1
+      else 3
+  case 2 => c
+==== q9b_try_catch_eol_finally_at_cases
+def f = x match
+  case 1 => try a catch case e => try b catch
+      case X => 1
+      finally g()
+  case 2 => c
+==== q9b_try_match_catch_at_cases
+def f = x match
+  case 1 => try a catch case e => try e match
+      case X => 1
+      catch case _ => 3
+  case 2 => c
+==== q9b_try_match_finally_at_cases
+def f = x match
+  case 1 => try a catch case e => try e match
+      case X => 1
+      finally g()
+  case 2 => c
+==== q9c_then_match_comment_own_line
+def f = x match
+  case 1 => try a catch case e => if p then e match
+      case X => 1
+  // next
+  case 2 => c
+==== q9c_try_catch_eol_blank_line
+def f = x match
+  case 1 => try a catch case e => try b catch
+      case X => g()
+
+  case 2 => c
+==== q9c_try_lambda_blank_line
+def f = x match
+  case 1 => try a catch case e => try xs.map: y =>
+      g(y)
+
+  case 2 => c
+==== e10_def_try_nocatch_match_stat
+def g =
+  try a catch case e => try e match
+      case X => 1
+  h()
+==== e10_def_then_try_catch_eol_stat
+def g =
+  try a catch case e => if p then try b catch
+      case X => 1
+  h()
+==== e10_def_try_lam_body_stat
+def g =
+  try a catch case e => try xs.map: y =>
+      f(y)
+  h()
+==== e10_def_then_colon_cases_stat
+def g =
+  try a catch case e => if p then e.fold:
+      case X => 1
+  h()
+==== e10_flat_then_match_stat
+def g =
+  x match
+  case 1 => if p then e match
+      case X => 1
+  h()
+==== e10_flat_try_catch_eol_stat
+def g =
+  x match
+  case 1 => try a catch
+      case X => 1
+  h()
+==== e10_flat_try_body_match_stat
+def g =
+  x match
+  case 1 => try e match
+      case X => 1
+  h()
+==== e10_object_then_match_stat
+object A:
+  try a catch case e => if p then e match
+      case X => 1
+  def h = 1
+==== e10_val_then_match_stat
+def g =
+  val v = try a catch case e => if p then e match
+      case X => 1
+  h(v)
+==== e10_def_then_match_blank_stat
+def g =
+  try a catch case e => if p then e match
+      case X => 1
+
+  h()
+==== e10_def_then_match_comment_stat
+def g =
+  try a catch case e => if p then e match
+      case X => 1
+  // c
+  h()
+==== e10_match_case_then_match_stat
+def g = x match
+  case 1 =>
+    try a catch case e => if p then e match
+        case X => 1
+    h()
+  case 2 => c
+==== r10_C_flat_closed_then_stat
+def f =
+  try a catch
+  case e => if p then e match
+    case X => 1
+  h()
+==== r10_F_closed_match_line
+def f =
+  x match
+  case 1 => if p then e match
+    case X => 1
+  match
+    case _ => c
+==== r10_F_closed_try_match_line
+def f =
+  x match
+  case 1 => try e match
+    case X => 1
+  match
+    case _ => c
+==== r10_F_try_match_line
+def f =
+  x match
+  case 1 => try b
+  match
+    case _ => c
+==== r10_H_case_then_end_if
+def f = x match
+  case 1 => try a catch case e => if p then
+      b
+    end if
+  case 2 => c
+==== r10_H_closed_comma
+def f = g(
+  try a catch case e => if p then e match
+    case X => 1
+  , b
+)
+==== r10_H_return_case
+def f = x match
+  case 1 => try a catch case e => if p then return
+  case 2 => c
+==== r10_H_then_match_end_match
+def f =
+  try a catch case e => if p then e match
+    case X => g()
+  end match
+  h()
+==== r10_M_closed_try_stat
+def f =
+  x match case 1 => try e match
+    case X => 1
+  h()
+==== r10_M_then_match
+def f =
+  x match case 1 => if p then e match
+    case X => g()
+  h()
+==== r10_end_try_case_body_then_match
+def f = x match
+  case 1 =>
+    try a
+    catch case e => if p then e match
+      case X => 1
+    end try
+  case 2 => c

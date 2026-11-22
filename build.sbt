@@ -151,6 +151,9 @@ def helloContributor(): Unit = println(
 // Projects
 // ==========================================
 
+def saveGuardColon =
+  s"${tests.jvm(PublishedScala213).id}/Test/runMain scala.meta.tests.parsers.dotty.GuardColonSuite"
+
 def rootSettings = Def.settings(
   sharedSettings,
   name := "scalametaRoot",
@@ -187,7 +190,7 @@ def rootSettings = Def.settings(
   },
   commands += Command.command("save-expect")(s =>
     // run Scala 2.13 last: both versions save the shared expect files
-    LatestScala2.foldRight(s) { case (version, s) =>
+    LatestScala2.foldRight(saveGuardColon :: s) { case (version, s) =>
       s"${semanticdbScalacPlugin.jvm(version).id}/compile" ::
         s"${semanticdbIntegration.jvm(version).id}/compile" ::
         s"${testsSemanticdb.jvm(version).id}/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" ::
