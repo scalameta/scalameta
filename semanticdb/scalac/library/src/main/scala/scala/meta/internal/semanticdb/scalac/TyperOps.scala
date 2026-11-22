@@ -20,6 +20,10 @@ trait TyperOps {
   private[meta] final class TypedAnnotArg(val tree: Tree)
   private[scalac] val TypedAnnotArgTag = classTag[TypedAnnotArg]
 
+  /** the macro call whose whole expansion is the macro call with this attachment */
+  private[meta] final class ExpansionOf(val expandee: Tree)
+  private[scalac] val ExpansionOfTag = classTag[ExpansionOf]
+
   private[scalac] val MacroExpansionTag = classTag[MacroExpansionAttachment]
 
   /**
@@ -84,6 +88,7 @@ trait TyperOps {
       if ((null eq currentRun) || isPastTyper) return tpe // we just need the typer phase
 
       recordBinding(typer, tree)
+      recordExpansionOf(tree)
       try tree match {
           case t: ValDef =>
             val gsym = t.symbol
@@ -114,6 +119,21 @@ trait TyperOps {
         }
       catch { case ex if NonFatal(ex) => }
       tpe
+    }
+
+    /**
+     * attaches the outer call to a macro call that is its whole expansion. When scalac expands the
+     * macro call, it replaces the `MacroExpansionAttachment` that names the outer call
+     */
+    private def recordExpansionOf(tree: Tree): Unit = {
+      val atts = tree.attachments
+      try if (!atts.isEmpty && treeInfo.isMacroApplication(tree))
+          atts.get(MacroExpansionTag) match {
+            case Some(att) if att.expandee ne tree =>
+              tree.updateAttachment(new ExpansionOf(att.expandee))(ExpansionOfTag)
+            case _ =>
+          }
+      catch { case ex if NonFatal(ex) => }
     }
 
     /**
