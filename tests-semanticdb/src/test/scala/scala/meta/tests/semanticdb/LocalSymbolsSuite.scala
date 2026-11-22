@@ -2855,6 +2855,1206 @@ class LocalSymbolsSuite extends FunSuite {
     }
   }
 
+  private val serializable =
+    if (ScalaVersion.is212) "scala/Serializable#" else "java/io/Serializable#"
+
+  private val macroLocalsA = Map {
+    "M2.scala" ->
+      """|package a
+         |import scala.language.experimental.macros
+         |import scala.reflect.macros.whitebox
+         |object M2 {
+         |  def codec: Any = macro impl
+         |  def impl(c: whitebox.Context): c.Tree = {
+         |    import c.universe._
+         |    q"new { def f(a: Int) = { val b = a + 1; Option(b).map(x => x).collect { case y if y > 0 => y } } }"
+         |  }
+         |}
+         |""".stripMargin
+  }
+
+  test("locals in a method of a macro expansion, and a local after it") {
+    val b = Map(
+      "U.scala" ->
+        """|package b
+           |object U {
+           |  val o = a.M2.codec
+           |  def g = { val c = 1; c }
+           |}
+           |""".stripMargin,
+    )
+    assertSummary(fromClassfile(macroLocalsA, b, "U.scala")) {
+      s"""|b/U. => final object U extends AnyRef { +2 decls }
+          |  AnyRef => scala/AnyRef#
+          |b/U.g(). => method g: Int
+          |  Int => scala/Int#
+          |b/U.o. => val method o: AnyRef { def f(a: Int): Option[Int] }
+          |  AnyRef => scala/AnyRef#
+          |  f => local1
+          |  a => local2
+          |  Int => scala/Int#
+          |  Option => scala/Option#
+          |local0 => final class $$anon extends AnyRef { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |local1 => method f(a: Int): Option[Int]
+          |  a => local2
+          |  Int => scala/Int#
+          |  Option => scala/Option#
+          |local2 => param a: Int
+          |  Int => scala/Int#
+          |local3 => val local b: Int
+          |  Int => scala/Int#
+          |local4 => param x: Int
+          |  Int => scala/Int#
+          |local5 => @SerialVersionUID synthetic final class $$anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+          |  SerialVersionUID => scala/SerialVersionUID#
+          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+          |  Int => scala/Int#
+          |  Serializable => $serializable
+          |local6 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+          |  A1 => local11
+          |  Int => scala/Int#
+          |  B1 => local10
+          |  x1 => local8
+          |  default => local9
+          |  Function1 => scala/Function1#
+          |local7 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+          |  x1 => local13
+          |  Int => scala/Int#
+          |  Boolean => scala/Boolean#
+          |local8 => synthetic param x1: A1
+          |  A1 => local11
+          |local9 => synthetic param default: Function1[A1, B1]
+          |  Function1 => scala/Function1#
+          |  A1 => local11
+          |  B1 => local10
+          |local10 => typeparam B1 >: Int
+          |  Int => scala/Int#
+          |local11 => typeparam A1 <: Int
+          |  Int => scala/Int#
+          |local12 => val local y: Int
+          |  Int => scala/Int#
+          |local13 => synthetic param x1: Int
+          |  Int => scala/Int#
+          |local14 => val local y: Int
+          |  Int => scala/Int#
+          |local15 => val local c: Int
+          |  Int => scala/Int#
+          |----
+          |[0:8..0:9): b <= b/
+          |[1:7..1:8): U <= b/U.
+          |[2:6..2:7): o <= b/U.o.
+          |[2:10..2:11): a => a/
+          |[2:12..2:14): M2 => a/M2.
+          |[2:15..2:15):  <= local5
+          |[2:15..2:20): codec => a/M2.codec().
+          |[3:6..3:7): g <= b/U.g().
+          |[3:16..3:17): c <= local15
+          |[3:23..3:24): c => local15
+          |----
+          |collisions List()
+          |dangling List()
+          |""".stripMargin
+    }
+  }
+
+  /** a def macro `a.X.x` whose expansion is `tree` */
+  private def expandsTo(tree: String) = Map {
+    "X.scala" ->
+      s"""|package a
+          |import scala.language.experimental.macros
+          |import scala.reflect.macros.whitebox
+          |object X {
+          |  def x: Any = macro impl
+          |  def impl(c: whitebox.Context): c.Tree = {
+          |    import c.universe._
+          |    q"$tree"
+          |  }
+          |}
+          |""".stripMargin
+  }
+
+  /** a def macro `a.W.w(arg)` whose expansion is `tree`, with `$a` for the argument */
+  private def wrapsIn(tree: String, argType: String = "Any") = Map {
+    "W.scala" ->
+      s"""|package a
+          |import scala.language.experimental.macros
+          |import scala.reflect.macros.whitebox
+          |object W {
+          |  def w(arg: $argType): Any = macro impl
+          |  def impl(c: whitebox.Context)(arg: c.Tree): c.Tree = {
+          |    import c.universe._
+          |    val a = c.untypecheck(arg)
+          |    q"$tree"
+          |  }
+          |}
+          |""".stripMargin
+  }
+
+  /** `U.scala`, whose `o` is `call` */
+  private def inU(call: String) = Map(
+    "U.scala" ->
+      s"""|package b
+          |object U {
+          |  val o = $call
+          |}
+          |""".stripMargin,
+  )
+
+  test("a partial function of a macro expansion") {
+    val a = expandsTo("{ val pf: PartialFunction[Int, Int] = { case y => y }; pf }")
+    assertSummary(fromClassfile(a, inU("a.X.x"), "U.scala")) {
+      s"""|b/U. => final object U extends AnyRef { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |b/U.o. => val method o: PartialFunction[Int, Int]
+          |  PartialFunction => scala/PartialFunction#
+          |  Int => scala/Int#
+          |local0 => @SerialVersionUID synthetic final class $$anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+          |  SerialVersionUID => scala/SerialVersionUID#
+          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+          |  Int => scala/Int#
+          |  Serializable => $serializable
+          |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+          |  A1 => local6
+          |  Int => scala/Int#
+          |  B1 => local5
+          |  x1 => local3
+          |  default => local4
+          |  Function1 => scala/Function1#
+          |local2 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+          |  x1 => local8
+          |  Int => scala/Int#
+          |  Boolean => scala/Boolean#
+          |local3 => synthetic param x1: A1
+          |  A1 => local6
+          |local4 => synthetic param default: Function1[A1, B1]
+          |  Function1 => scala/Function1#
+          |  A1 => local6
+          |  B1 => local5
+          |local5 => typeparam B1 >: Int
+          |  Int => scala/Int#
+          |local6 => typeparam A1 <: Int
+          |  Int => scala/Int#
+          |local7 => val local y: Int
+          |  Int => scala/Int#
+          |local8 => synthetic param x1: Int
+          |  Int => scala/Int#
+          |local9 => val local y: Int
+          |  Int => scala/Int#
+          |local10 => val local pf: PartialFunction[Int, Int]
+          |  PartialFunction => scala/PartialFunction#
+          |  Int => scala/Int#
+          |----
+          |[0:8..0:9): b <= b/
+          |[1:7..1:8): U <= b/U.
+          |[2:6..2:7): o <= b/U.o.
+          |[2:10..2:11): a => a/
+          |[2:12..2:13): X => a/X.
+          |[2:14..2:14):  <= local0
+          |[2:14..2:15): x => a/X.x().
+          |----
+          |collisions List()
+          |dangling List()
+          |""".stripMargin
+    }
+  }
+
+  test("a partial function lambda of a macro expansion") {
+    assume(!ScalaVersion.is212, "2.12 rejects a lambda typed as a partial function")
+    val a = expandsTo("{ val pf: PartialFunction[Int, Int] = y => y; pf }")
+    assertSummary(fromClassfile(a, inU("a.X.x"), "U.scala")) {
+      s"""|b/U. => final object U extends AnyRef { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |b/U.o. => val method o: PartialFunction[Int, Int]
+          |  PartialFunction => scala/PartialFunction#
+          |  Int => scala/Int#
+          |local0 => @SerialVersionUID synthetic final class $$anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+          |  SerialVersionUID => scala/SerialVersionUID#
+          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+          |  Int => scala/Int#
+          |  Serializable => $serializable
+          |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](y: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+          |  A1 => local6
+          |  Int => scala/Int#
+          |  B1 => local5
+          |  y => local3
+          |  default => local4
+          |  Function1 => scala/Function1#
+          |local2 => final method isDefinedAt(y: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+          |  y => local7
+          |  Int => scala/Int#
+          |  Boolean => scala/Boolean#
+          |local3 => synthetic param y: A1
+          |  A1 => local6
+          |local4 => synthetic param default: Function1[A1, B1]
+          |  Function1 => scala/Function1#
+          |  A1 => local6
+          |  B1 => local5
+          |local5 => typeparam B1 >: Int
+          |  Int => scala/Int#
+          |local6 => typeparam A1 <: Int
+          |  Int => scala/Int#
+          |local7 => synthetic param y: Int
+          |  Int => scala/Int#
+          |local8 => val local pf: PartialFunction[Int, Int]
+          |  PartialFunction => scala/PartialFunction#
+          |  Int => scala/Int#
+          |----
+          |[0:8..0:9): b <= b/
+          |[1:7..1:8): U <= b/U.
+          |[2:6..2:7): o <= b/U.o.
+          |[2:10..2:11): a => a/
+          |[2:12..2:13): X => a/X.
+          |[2:14..2:14):  <= local0
+          |[2:14..2:15): x => a/X.x().
+          |----
+          |collisions List()
+          |dangling List()
+          |""".stripMargin
+    }
+  }
+
+  test("a SAM lambda of a macro expansion") {
+    val a = expandsTo("{ val r: Runnable = () => (); r }")
+    assertSummary(fromClassfile(a, inU("a.X.x"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Runnable
+         |  Runnable => java/lang/Runnable#
+         |local0 => val local r: Runnable
+         |  Runnable => java/lang/Runnable#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): X => a/X.
+         |[2:14..2:15): x => a/X.x().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a local class of a macro expansion") {
+    val a = expandsTo("{ class K { def x = 1 }; new K }")
+    assertSummary(fromClassfile(a, inU("a.X.x"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: AnyRef { def x: Int }
+         |  AnyRef => scala/AnyRef#
+         |  x => local2
+         |  Int => scala/Int#
+         |local0 => class K extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |local1 => primary ctor <init>()
+         |local2 => method x: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): X => a/X.
+         |[2:14..2:15): x => a/X.x().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a context bound of a macro expansion") {
+    val a = expandsTo("new { def f[T: Ordering](t: T) = t }")
+    assertSummary(fromClassfile(a, inU("a.X.x"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: AnyRef { def f[T](t: T)(implicit evidence$1: Ordering[T]): T }
+         |  AnyRef => scala/AnyRef#
+         |  f => local1
+         |  T => local4
+         |  t => local2
+         |  evidence$1 => local3
+         |  Ordering => scala/package.Ordering#
+         |local0 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local1 => method f[T](t: T)(implicit evidence$1: Ordering[T]): T
+         |  T => local4
+         |  t => local2
+         |  evidence$1 => local3
+         |  Ordering => scala/package.Ordering#
+         |local2 => param t: T
+         |  T => local4
+         |local3 => synthetic implicit param evidence$1: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local4
+         |local4 => typeparam T
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): X => a/X.
+         |[2:14..2:14):  <= local0
+         |[2:14..2:15): x => a/X.x().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a placeholder of a macro expansion") {
+    val a = expandsTo("List(1).map(_ + 1)")
+    assertSummary(fromClassfile(a, inU("a.X.x"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): X => a/X.
+         |[2:14..2:15): x => a/X.x().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a written anonymous class in a macro's argument") {
+    val b = inU("a.W.w(new { def y = 1 })")
+    assertSummary(fromClassfile(wrapsIn("new { def v = $a }"), b, "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: AnyRef { def v: AnyRef { private def y: Int } }
+         |  AnyRef => scala/AnyRef#
+         |  v => local3
+         |  y => local1
+         |  Int => scala/Int#
+         |local0 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local1 => private method y: Int
+         |  Int => scala/Int#
+         |local2 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local3 => method v: AnyRef { private def y: Int }
+         |  AnyRef => scala/AnyRef#
+         |  y => local1
+         |  Int => scala/Int#
+         |local4 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): W => a/W.
+         |[2:14..2:15): w => a/W.w().
+         |[2:15..2:15):  <= local2
+         |[2:20..2:20):  <= local4
+         |[2:26..2:27): y <= local1
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a written partial function in a macro's argument") {
+    val b = inU("a.W.w({ case 1 => 2 }: PartialFunction[Int, Int])")
+    assertSummary(fromClassfile(wrapsIn("new { def v = $a }"), b, "U.scala")) {
+      s"""|b/U. => final object U extends AnyRef { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |b/U.o. => val method o: AnyRef { def v: PartialFunction[Int, Int] }
+          |  AnyRef => scala/AnyRef#
+          |  v => local9
+          |  PartialFunction => scala/PartialFunction#
+          |  Int => scala/Int#
+          |local0 => @SerialVersionUID synthetic final class $$anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+          |  SerialVersionUID => scala/SerialVersionUID#
+          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+          |  Int => scala/Int#
+          |  Serializable => $serializable
+          |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+          |  A1 => local6
+          |  Int => scala/Int#
+          |  B1 => local5
+          |  x1 => local3
+          |  default => local4
+          |  Function1 => scala/Function1#
+          |local2 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+          |  x1 => local7
+          |  Int => scala/Int#
+          |  Boolean => scala/Boolean#
+          |local3 => synthetic param x1: A1
+          |  A1 => local6
+          |local4 => synthetic param default: Function1[A1, B1]
+          |  Function1 => scala/Function1#
+          |  A1 => local6
+          |  B1 => local5
+          |local5 => typeparam B1 >: Int
+          |  Int => scala/Int#
+          |local6 => typeparam A1 <: Int
+          |  Int => scala/Int#
+          |local7 => synthetic param x1: Int
+          |  Int => scala/Int#
+          |local8 => final class $$anon extends AnyRef { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |local9 => method v: PartialFunction[Int, Int]
+          |  PartialFunction => scala/PartialFunction#
+          |  Int => scala/Int#
+          |local10 => synthetic final class $$anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+          |  Int => scala/Int#
+          |  Serializable => $serializable
+          |local11 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+          |  A1 => local16
+          |  Int => scala/Int#
+          |  B1 => local15
+          |  x1 => local13
+          |  default => local14
+          |  Function1 => scala/Function1#
+          |local12 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+          |  x1 => local17
+          |  Int => scala/Int#
+          |  Boolean => scala/Boolean#
+          |local13 => synthetic param x1: A1
+          |  A1 => local16
+          |local14 => synthetic param default: Function1[A1, B1]
+          |  Function1 => scala/Function1#
+          |  A1 => local16
+          |  B1 => local15
+          |local15 => typeparam B1 >: Int
+          |  Int => scala/Int#
+          |local16 => typeparam A1 <: Int
+          |  Int => scala/Int#
+          |local17 => synthetic param x1: Int
+          |  Int => scala/Int#
+          |----
+          |[0:8..0:9): b <= b/
+          |[1:7..1:8): U <= b/U.
+          |[2:6..2:7): o <= b/U.o.
+          |[2:10..2:11): a => a/
+          |[2:12..2:13): W => a/W.
+          |[2:14..2:15): w => a/W.w().
+          |[2:15..2:15):  <= local8
+          |[2:16..2:16):  <= local10
+          |[2:33..2:48): PartialFunction => scala/PartialFunction#
+          |[2:49..2:52): Int => scala/Int#
+          |[2:54..2:57): Int => scala/Int#
+          |----
+          |collisions List()
+          |dangling List()
+          |""".stripMargin
+    }
+  }
+
+  test("a written SAM lambda in a macro's argument") {
+    val b = inU("a.W.w((() => ()): Runnable)")
+    assertSummary(fromClassfile(wrapsIn("new { def v = $a }"), b, "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: AnyRef { def v: Runnable }
+         |  AnyRef => scala/AnyRef#
+         |  v => local3
+         |  Runnable => java/lang/Runnable#
+         |local0 => synthetic class $anon extends Object with Runnable { +1 decls }
+         |  Object => java/lang/Object#
+         |  Runnable => java/lang/Runnable#
+         |local1 => synthetic method run(): Unit <: java/lang/Runnable#run().
+         |  Unit => scala/Unit#
+         |local2 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local3 => method v: Runnable
+         |  Runnable => java/lang/Runnable#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): W => a/W.
+         |[2:14..2:15): w => a/W.w().
+         |[2:15..2:15):  <= local2
+         |[2:17..2:25): () => () <= local0
+         |[2:17..2:25): () => () <= local1
+         |[2:28..2:36): Runnable => java/lang/Runnable#
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a member of a macro expansion with the name of the macro") {
+    val a = expandsTo("new { def x = 1 }")
+    assertSummary(fromClassfile(a, inU("a.X.x"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: AnyRef { def x: Int }
+         |  AnyRef => scala/AnyRef#
+         |  x => local1
+         |  Int => scala/Int#
+         |local0 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local1 => method x: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): X => a/X.
+         |[2:14..2:14):  <= local0
+         |[2:14..2:15): x => a/X.x().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a local of a macro expansion with the name of the macro") {
+    val a = expandsTo("{ val x = 1; x }")
+    assertSummary(fromClassfile(a, inU("a.X.x"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |local0 => val local x: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): X => a/X.
+         |[2:14..2:15): x => a/X.x().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a lambda parameter of a macro expansion with the name of the macro") {
+    val a = expandsTo("List(1).map(x => x)")
+    assertSummary(fromClassfile(a, inU("a.X.x"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: List[Int]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |local0 => param x: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): X => a/X.
+         |[2:14..2:15): x => a/X.x().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a local class of a macro expansion with the name of the macro") {
+    val a = expandsTo("{ class x; new x }")
+    assertSummary(fromClassfile(a, inU("a.X.x"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: AnyRef
+         |  AnyRef => scala/AnyRef#
+         |local0 => class x extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local1 => primary ctor <init>()
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:11): a => a/
+         |[2:12..2:13): X => a/X.
+         |[2:14..2:15): x => a/X.x().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in a written anonymous class") {
+    val b = inU("new { def y = a.X.x }")
+    assertSummary(fromClassfile(expandsTo("new { def z = 1 }"), b, "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: AnyRef { def y: AnyRef { def z: Int } }
+         |  AnyRef => scala/AnyRef#
+         |  y => local1
+         |  z => local2
+         |  Int => scala/Int#
+         |local0 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local1 => method y: AnyRef { def z: Int }
+         |  AnyRef => scala/AnyRef#
+         |  z => local2
+         |  Int => scala/Int#
+         |local2 => method z: Int
+         |  Int => scala/Int#
+         |local3 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:14..2:14):  <= local0
+         |[2:20..2:21): y <= local1
+         |[2:24..2:25): a => a/
+         |[2:26..2:27): X => a/X.
+         |[2:28..2:28):  <= local3
+         |[2:28..2:29): x => a/X.x().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a written partial function as a macro's block argument") {
+    val a = wrapsIn("new { def v = $a }", "PartialFunction[Int, Int]")
+    assertSummary(fromClassfile(a, inU("a.W.w { case 1 => 2 }"), "U.scala")) {
+      s"""|b/U. => final object U extends AnyRef { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |b/U.o. => val method o: AnyRef { def v: PartialFunction[Int, Int] }
+          |  AnyRef => scala/AnyRef#
+          |  v => local9
+          |  PartialFunction => scala/PartialFunction#
+          |  Int => scala/Int#
+          |local0 => @SerialVersionUID synthetic final class $$anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+          |  SerialVersionUID => scala/SerialVersionUID#
+          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+          |  Int => scala/Int#
+          |  Serializable => $serializable
+          |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+          |  A1 => local6
+          |  Int => scala/Int#
+          |  B1 => local5
+          |  x1 => local3
+          |  default => local4
+          |  Function1 => scala/Function1#
+          |local2 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+          |  x1 => local7
+          |  Int => scala/Int#
+          |  Boolean => scala/Boolean#
+          |local3 => synthetic param x1: A1
+          |  A1 => local6
+          |local4 => synthetic param default: Function1[A1, B1]
+          |  Function1 => scala/Function1#
+          |  A1 => local6
+          |  B1 => local5
+          |local5 => typeparam B1 >: Int
+          |  Int => scala/Int#
+          |local6 => typeparam A1 <: Int
+          |  Int => scala/Int#
+          |local7 => synthetic param x1: Int
+          |  Int => scala/Int#
+          |local8 => final class $$anon extends AnyRef { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |local9 => method v: PartialFunction[Int, Int]
+          |  PartialFunction => scala/PartialFunction#
+          |  Int => scala/Int#
+          |local10 => synthetic final class $$anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+          |  Int => scala/Int#
+          |  Serializable => $serializable
+          |local11 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+          |  A1 => local16
+          |  Int => scala/Int#
+          |  B1 => local15
+          |  x1 => local13
+          |  default => local14
+          |  Function1 => scala/Function1#
+          |local12 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+          |  x1 => local17
+          |  Int => scala/Int#
+          |  Boolean => scala/Boolean#
+          |local13 => synthetic param x1: A1
+          |  A1 => local16
+          |local14 => synthetic param default: Function1[A1, B1]
+          |  Function1 => scala/Function1#
+          |  A1 => local16
+          |  B1 => local15
+          |local15 => typeparam B1 >: Int
+          |  Int => scala/Int#
+          |local16 => typeparam A1 <: Int
+          |  Int => scala/Int#
+          |local17 => synthetic param x1: Int
+          |  Int => scala/Int#
+          |----
+          |[0:8..0:9): b <= b/
+          |[1:7..1:8): U <= b/U.
+          |[2:6..2:7): o <= b/U.o.
+          |[2:10..2:11): a => a/
+          |[2:12..2:13): W => a/W.
+          |[2:14..2:15): w => a/W.w().
+          |[2:16..2:16):  <= local10
+          |----
+          |collisions List()
+          |dangling List()
+          |""".stripMargin
+    }
+  }
+
+  test("a SAM lambda of a macro expansion, with a partial function as the block argument") {
+    val a = wrapsIn("{ val r: Runnable = () => (); r }", "PartialFunction[Int, Int]")
+    assertSummary(fromClassfile(a, inU("a.W.w { case 1 => 2 }"), "U.scala")) {
+      s"""|b/U. => final object U extends AnyRef { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |b/U.o. => val method o: Runnable
+          |  Runnable => java/lang/Runnable#
+          |local0 => @SerialVersionUID synthetic final class $$anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+          |  SerialVersionUID => scala/SerialVersionUID#
+          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+          |  Int => scala/Int#
+          |  Serializable => $serializable
+          |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+          |  A1 => local6
+          |  Int => scala/Int#
+          |  B1 => local5
+          |  x1 => local3
+          |  default => local4
+          |  Function1 => scala/Function1#
+          |local2 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+          |  x1 => local7
+          |  Int => scala/Int#
+          |  Boolean => scala/Boolean#
+          |local3 => synthetic param x1: A1
+          |  A1 => local6
+          |local4 => synthetic param default: Function1[A1, B1]
+          |  Function1 => scala/Function1#
+          |  A1 => local6
+          |  B1 => local5
+          |local5 => typeparam B1 >: Int
+          |  Int => scala/Int#
+          |local6 => typeparam A1 <: Int
+          |  Int => scala/Int#
+          |local7 => synthetic param x1: Int
+          |  Int => scala/Int#
+          |local8 => synthetic class $$anon extends Object with Runnable { +1 decls }
+          |  Object => java/lang/Object#
+          |  Runnable => java/lang/Runnable#
+          |local9 => synthetic method run(): Unit <: java/lang/Runnable#run().
+          |  Unit => scala/Unit#
+          |local10 => val local r: Runnable
+          |  Runnable => java/lang/Runnable#
+          |----
+          |[0:8..0:9): b <= b/
+          |[1:7..1:8): U <= b/U.
+          |[2:6..2:7): o <= b/U.o.
+          |[2:10..2:11): a => a/
+          |[2:12..2:13): W => a/W.
+          |[2:14..2:15): w => a/W.w().
+          |[2:16..2:16):  <= local0
+          |[2:16..2:31): { case 1 => 2 } <= local8
+          |[2:16..2:31): { case 1 => 2 } <= local9
+          |----
+          |collisions List()
+          |dangling List()
+          |""".stripMargin
+    }
+  }
+
+  /** an implicit def macro `a.Show.materialize` whose expansion is an anonymous `a.Show` */
+  private val materializerA = Map {
+    "Show.scala" ->
+      """|package a
+         |import scala.language.experimental.macros
+         |import scala.reflect.macros.whitebox
+         |trait Show[T] { def show(t: T): String }
+         |object Show {
+         |  implicit def materialize[T]: Show[T] = macro impl[T]
+         |  def impl[T: c.WeakTypeTag](c: whitebox.Context): c.Tree = {
+         |    import c.universe._
+         |    val t = weakTypeOf[T]
+         |    q"new _root_.a.Show[$t] { def show(t: $t) = t.toString }"
+         |  }
+         |}
+         |""".stripMargin
+  }
+
+  test("an implicit macro that materializes an anonymous class") {
+    val b = inU("implicitly[a.Show[Int]]")
+    assertSummary(fromClassfile(materializerA, b, "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Show[Int]
+         |  Show => a/Show#
+         |  Int => scala/Int#
+         |local0 => final class $anon extends AnyRef with Show[Int] { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |  Show => a/Show#
+         |  Int => scala/Int#
+         |local1 => method show(t: Int): String <: a/Show#show().
+         |  t => local2
+         |  Int => scala/Int#
+         |  String => java/lang/String#
+         |local2 => param t: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:10..2:20): implicitly => scala/Predef.implicitly().
+         |[2:20..2:20):  <= local0
+         |[2:21..2:22): a => a/
+         |[2:23..2:27): Show => a/Show#
+         |[2:28..2:31): Int => scala/Int#
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("a macro call in a macro expansion") {
+    val a = expandsTo("new { def z = 1 }") ++ Map {
+      "Y.scala" ->
+        """|package a
+           |import scala.language.experimental.macros
+           |import scala.reflect.macros.whitebox
+           |object Y {
+           |  def y: Any = macro impl
+           |  def impl(c: whitebox.Context): c.Tree = {
+           |    import c.universe._
+           |    q"_root_.a.X.x"
+           |  }
+           |}
+           |""".stripMargin
+    }
+    assertSummary(fromClassfile(a, inU("a.Y.y"), "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: AnyRef { def z: Int }
+         |  AnyRef => scala/AnyRef#
+         |  z => local1
+         |  Int => scala/Int#
+         |local0 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local1 => method z: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:14..2:14):  <= local0
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  /** an extractor macro `a.E(n)` whose expansion is a name-based extractor */
+  private val extractorA = Map {
+    "E.scala" ->
+      """|package a
+         |import scala.language.experimental.macros
+         |import scala.reflect.macros.whitebox
+         |object E {
+         |  def unapply(x: Int): Any = macro impl
+         |  def impl(c: whitebox.Context)(x: c.Tree): c.Tree = {
+         |    import c.universe._
+         |    q"new { def isEmpty = false; def get = 1; def unapply(y: Int) = this }.unapply($x)"
+         |  }
+         |}
+         |""".stripMargin
+  }
+
+  test("an extractor macro in a pattern") {
+    val b = inU("1 match { case a.E(n) => n }")
+    assertSummary(fromClassfile(extractorA, b, "U.scala")) {
+      """|b/U. => final object U extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/U.o. => val method o: Int
+         |  Int => scala/Int#
+         |local0 => final class $anon extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |local1 => method isEmpty: Boolean
+         |  Boolean => scala/Boolean#
+         |local2 => method get: Int
+         |  Int => scala/Int#
+         |local3 => method unapply(y: Int): $anon
+         |  y => local4
+         |  Int => scala/Int#
+         |  $anon => local0
+         |local4 => param y: Int
+         |  Int => scala/Int#
+         |local5 => val local n: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:8): U <= b/U.
+         |[2:6..2:7): o <= b/U.o.
+         |[2:25..2:26): a => a/
+         |[2:27..2:27):  <= local0
+         |[2:27..2:28): E => a/E.
+         |[2:29..2:30): n <= local5
+         |[2:35..2:36): n => local5
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin
+    }
+  }
+
+  test("an implicit macro that materializes an anonymous class, at a partial function") {
+    val b = Map(
+      "U.scala" ->
+        """|package b
+           |object U {
+           |  def f(pf: PartialFunction[Int, Int])(implicit s: a.Show[Int]) = 1
+           |  val o = f { case 1 => 2 }
+           |}
+           |""".stripMargin,
+    )
+    assertSummary(fromClassfile(materializerA, b, "U.scala")) {
+      s"""|b/U. => final object U extends AnyRef { +2 decls }
+          |  AnyRef => scala/AnyRef#
+          |b/U.f(). => method f(pf: PartialFunction[Int, Int])(implicit s: Show[Int]): Int
+          |  pf => b/U.f().(pf)
+          |  PartialFunction => scala/PartialFunction#
+          |  Int => scala/Int#
+          |  s => b/U.f().(s)
+          |  Show => a/Show#
+          |b/U.f().(pf) => param pf: PartialFunction[Int, Int]
+          |  PartialFunction => scala/PartialFunction#
+          |  Int => scala/Int#
+          |b/U.f().(s) => implicit param s: Show[Int]
+          |  Show => a/Show#
+          |  Int => scala/Int#
+          |b/U.o. => val method o: Int
+          |  Int => scala/Int#
+          |local0 => @SerialVersionUID synthetic final class $$anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+          |  SerialVersionUID => scala/SerialVersionUID#
+          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+          |  Int => scala/Int#
+          |  Serializable => $serializable
+          |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+          |  A1 => local6
+          |  Int => scala/Int#
+          |  B1 => local5
+          |  x1 => local3
+          |  default => local4
+          |  Function1 => scala/Function1#
+          |local2 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+          |  x1 => local7
+          |  Int => scala/Int#
+          |  Boolean => scala/Boolean#
+          |local3 => synthetic param x1: A1
+          |  A1 => local6
+          |local4 => synthetic param default: Function1[A1, B1]
+          |  Function1 => scala/Function1#
+          |  A1 => local6
+          |  B1 => local5
+          |local5 => typeparam B1 >: Int
+          |  Int => scala/Int#
+          |local6 => typeparam A1 <: Int
+          |  Int => scala/Int#
+          |local7 => synthetic param x1: Int
+          |  Int => scala/Int#
+          |local8 => final class $$anon extends AnyRef with Show[Int] { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |  Show => a/Show#
+          |  Int => scala/Int#
+          |local9 => method show(t: Int): String <: a/Show#show().
+          |  t => local10
+          |  Int => scala/Int#
+          |  String => java/lang/String#
+          |local10 => param t: Int
+          |  Int => scala/Int#
+          |----
+          |[0:8..0:9): b <= b/
+          |[1:7..1:8): U <= b/U.
+          |[2:6..2:7): f <= b/U.f().
+          |[2:8..2:10): pf <= b/U.f().(pf)
+          |[2:12..2:27): PartialFunction => scala/PartialFunction#
+          |[2:28..2:31): Int => scala/Int#
+          |[2:33..2:36): Int => scala/Int#
+          |[2:48..2:49): s <= b/U.f().(s)
+          |[2:51..2:52): a => a/
+          |[2:53..2:57): Show => a/Show#
+          |[2:58..2:61): Int => scala/Int#
+          |[3:6..3:7): o <= b/U.o.
+          |[3:10..3:11): f => b/U.f().
+          |[3:12..3:12):  <= local8
+          |----
+          |collisions List()
+          |dangling List()
+          |""".stripMargin
+    }
+  }
+
+  /** an implicit def macro `a.Show.materialize` whose expansion is a SAM lambda */
+  private val samMaterializerA = Map {
+    "Show.scala" ->
+      """|package a
+         |import scala.language.experimental.macros
+         |import scala.reflect.macros.whitebox
+         |trait Show[T] { def show(t: T): String }
+         |object Show {
+         |  implicit def materialize[T]: Show[T] = macro impl[T]
+         |  def impl[T: c.WeakTypeTag](c: whitebox.Context): c.Tree = {
+         |    import c.universe._
+         |    val t = weakTypeOf[T]
+         |    q"((t: $t) => t.toString): _root_.a.Show[$t]"
+         |  }
+         |}
+         |""".stripMargin
+  }
+
+  test("an implicit macro that materializes a SAM lambda, at a partial function") {
+    val b = Map(
+      "U.scala" ->
+        """|package b
+           |object U {
+           |  def f(pf: PartialFunction[Int, Int])(implicit s: a.Show[Int]) = 1
+           |  val o = f { case 1 => 2 }
+           |}
+           |""".stripMargin,
+    )
+    assertSummary(fromClassfile(samMaterializerA, b, "U.scala")) {
+      s"""|b/U. => final object U extends AnyRef { +2 decls }
+          |  AnyRef => scala/AnyRef#
+          |b/U.f(). => method f(pf: PartialFunction[Int, Int])(implicit s: Show[Int]): Int
+          |  pf => b/U.f().(pf)
+          |  PartialFunction => scala/PartialFunction#
+          |  Int => scala/Int#
+          |  s => b/U.f().(s)
+          |  Show => a/Show#
+          |b/U.f().(pf) => param pf: PartialFunction[Int, Int]
+          |  PartialFunction => scala/PartialFunction#
+          |  Int => scala/Int#
+          |b/U.f().(s) => implicit param s: Show[Int]
+          |  Show => a/Show#
+          |  Int => scala/Int#
+          |b/U.o. => val method o: Int
+          |  Int => scala/Int#
+          |local0 => @SerialVersionUID synthetic final class $$anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+          |  SerialVersionUID => scala/SerialVersionUID#
+          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+          |  Int => scala/Int#
+          |  Serializable => $serializable
+          |local1 => final override method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+          |  A1 => local6
+          |  Int => scala/Int#
+          |  B1 => local5
+          |  x1 => local3
+          |  default => local4
+          |  Function1 => scala/Function1#
+          |local2 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+          |  x1 => local7
+          |  Int => scala/Int#
+          |  Boolean => scala/Boolean#
+          |local3 => synthetic param x1: A1
+          |  A1 => local6
+          |local4 => synthetic param default: Function1[A1, B1]
+          |  Function1 => scala/Function1#
+          |  A1 => local6
+          |  B1 => local5
+          |local5 => typeparam B1 >: Int
+          |  Int => scala/Int#
+          |local6 => typeparam A1 <: Int
+          |  Int => scala/Int#
+          |local7 => synthetic param x1: Int
+          |  Int => scala/Int#
+          |local8 => synthetic class $$anon extends Object with Show[Int] { +1 decls }
+          |  Object => java/lang/Object#
+          |  Show => a/Show#
+          |  Int => scala/Int#
+          |local9 => synthetic method show(t: Int): String <: a/Show#show().
+          |  t => local10
+          |  Int => scala/Int#
+          |  String => scala/Predef.String#
+          |local10 => param t: Int
+          |  Int => scala/Int#
+          |----
+          |[0:8..0:9): b <= b/
+          |[1:7..1:8): U <= b/U.
+          |[2:6..2:7): f <= b/U.f().
+          |[2:8..2:10): pf <= b/U.f().(pf)
+          |[2:12..2:27): PartialFunction => scala/PartialFunction#
+          |[2:28..2:31): Int => scala/Int#
+          |[2:33..2:36): Int => scala/Int#
+          |[2:48..2:49): s <= b/U.f().(s)
+          |[2:51..2:52): a => a/
+          |[2:53..2:57): Show => a/Show#
+          |[2:58..2:61): Int => scala/Int#
+          |[3:6..3:7): o <= b/U.o.
+          |[3:10..3:11): f => b/U.f().
+          |[3:12..3:12):  <= local0
+          |[3:12..3:27): { case 1 => 2 } <= local8
+          |[3:12..3:27): { case 1 => 2 } <= local9
+          |----
+          |collisions List()
+          |dangling List()
+          |""".stripMargin
+    }
+  }
+
+  test("a macro call in a macro's argument") {
+    val a = expandsTo("new { def z = 1 }") ++ wrapsIn("new { def v = $a }")
+    // from 2.13.16, Symbols lists one more `method z`
+    val z = if (ScalaVersion.atLeast213_16) "\nlocal7 => method z: Int\n  Int => scala/Int#" else ""
+    assertSummary(fromClassfile(a, inU("a.W.w(a.X.x)"), "U.scala")) {
+      s"""|b/U. => final object U extends AnyRef { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |b/U.o. => val method o: AnyRef { def v: AnyRef { def z: Int } }
+          |  AnyRef => scala/AnyRef#
+          |  v => local3
+          |  z => local4
+          |  Int => scala/Int#
+          |local0 => final class $$anon extends AnyRef { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |local1 => method z: Int
+          |  Int => scala/Int#
+          |local2 => final class $$anon extends AnyRef { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |local3 => method v: AnyRef { def z: Int }
+          |  AnyRef => scala/AnyRef#
+          |  z => local4
+          |  Int => scala/Int#
+          |local4 => method z: Int
+          |  Int => scala/Int#
+          |local5 => final class $$anon extends AnyRef { +1 decls }
+          |  AnyRef => scala/AnyRef#
+          |local6 => method z: Int
+          |  Int => scala/Int#$z
+          |----
+          |[0:8..0:9): b <= b/
+          |[1:7..1:8): U <= b/U.
+          |[2:6..2:7): o <= b/U.o.
+          |[2:10..2:11): a => a/
+          |[2:12..2:13): W => a/W.
+          |[2:14..2:15): w => a/W.w().
+          |[2:15..2:15):  <= local2
+          |[2:16..2:17): a => a/
+          |[2:18..2:19): X => a/X.
+          |[2:20..2:20):  <= local5
+          |[2:20..2:21): x => a/X.x().
+          |----
+          |collisions List()
+          |dangling List()
+          |""".stripMargin
+    }
+  }
+
   test("a local outside a document") {
     val file = Files.createTempDirectory("issue1591_").resolve("O.scala")
     Files.write(file, "object O { def f = { val x = 1; x } }".getBytes("UTF-8"))
