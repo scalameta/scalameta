@@ -78,12 +78,13 @@ object TreeSyntax {
     def p(og: TreeSyntacticGroup, t: Tree, force: Boolean = false) = parens(og, s(t), force)
     // the expression goes on after the tree, so a comment that ends its line needs the parens
     private def pContinued(og: TreeSyntacticGroup, t: Tree) = {
-      val c = ownEndComments(t)
-      p(og, t, force = (c.hasNewlinesAfter || c.hasNewlines) && sameInParens(t))
+      val commentHasNewlines = ownEndComments(t).nnHas(c => c.hasNewlinesAfter || c.hasNewlines)
+      p(og, t, force = commentHasNewlines && sameInParens(t))
     }
     // in scala 3, the type must start on the same line as the colon
     private def pAfterColon(og: TreeSyntacticGroup, t: Tree) =
-      p(og, t, force = ownBegComments(t).hasNewlines)
+      p(og, t, force = ownBegComments(t).nnHas(_.hasNewlines))
+
     private def parens(og: TreeSyntacticGroup, res: Show.Result, force: Boolean = false) = res match {
       case x: Show.Meta =>
         val needParens = force ||
@@ -766,7 +767,7 @@ object TreeSyntax {
         val ptype = templateParentType(t)
         def isOldGiven = ptype eq Defn.Given
         def isNewGiven = ptype eq Decl.Given
-        val hasBodyComments = isOldGiven && ownBegComments(t.body).isDefined
+        val hasBodyComments = isOldGiven && (null ne ownBegComments(t.body))
         // record the body now: it prints before `with`, which prints its comments
         if (hasBodyComments) addKeywordOwner(t.body)
         val pbody = s(t.body)
@@ -997,7 +998,7 @@ object TreeSyntax {
         // the comments that the last selector prints end with a space of their own
         def rspace: Boolean = {
           val imp = imps.last
-          getLine(imp) >= 0 && ownEndComments(imp).isEmpty && {
+          getLine(imp) >= 0 && (null eq ownEndComments(imp)) && {
             val tokens = imp.tokens
             val idx = tokens.skipWideIf(_.is[Token.Trivia], tokens.length)
             idx > tokens.length && tokens.getWideOrNull(idx).is[Token.RightBrace]
@@ -1270,30 +1271,28 @@ object TreeSyntax {
         s(if (keyword.head == '.') s() else if (indent) " " else spn(), withKeyword(bodyPre))
       val holder = if (owner eq null) body else owner
       val begComments = ownBegComments(holder)
-      // record the holder before the body prints, so that the body leaves its comments to us
-      if (begComments.isDefined) addKeywordOwner(holder)
-      begComments match {
-        case None => afterPrev()
-        case Some(c) =>
-          val (before, after) = commentsBeforeKeyword(c, body)
-          if (before.isEmpty) afterPrev(printLeading(after, c.newlinesBefore))
-          else {
-            val newlines = after.headOrNull.nnFold(0)(countNewlinesBefore)
-            val res = withKeyword(printLeading(after, newlines))
-            i(s(newlinesBefore(c, force = true), printComments(before), res), indent)
-          }
+      if (null eq begComments) afterPrev()
+      else {
+        addKeywordOwner(holder) // record before the body prints, so it leaves its comments to us
+        val (before, after) = commentsBeforeKeyword(begComments, body)
+        if (before.isEmpty) afterPrev(printLeading(after, begComments.newlinesBefore))
+        else {
+          val newlines = after.headOrNull.nnFold(0)(countNewlinesBefore)
+          val res = withKeyword(printLeading(after, newlines))
+          i(s(newlinesBefore(begComments, force = true), printComments(before), res), indent)
+        }
       }
     }
 
-    def ownBegComments(tree: Tree): Option[Tree.Comments] =
-      if (comments) TreeSyntax.ownBegComments(tree) else None
-    def ownEndComments(tree: Tree): Option[Tree.Comments] =
-      if (comments) TreeSyntax.ownEndComments(tree) else None
+    def ownBegComments(tree: Tree): Tree.Comments =
+      if (comments) TreeSyntax.ownBegComments(tree) else null
+    def ownEndComments(tree: Tree): Tree.Comments =
+      if (comments) TreeSyntax.ownEndComments(tree) else null
 
     def hasBreaksAroundBegComments(tree: Tree): Boolean = ownBegComments(tree)
-      .hasNewlinesBeforeOrAfter
+      .nnHas(_.hasNewlinesBeforeOrAfter)
     def hasBreaksAroundEndComments(tree: Tree): Boolean = ownEndComments(tree)
-      .hasNewlinesBeforeOrAfter
+      .nnHas(_.hasNewlinesBeforeOrAfter)
 
     def hasComments(tree: Tree): Boolean = comments && tree.hasComments
     def hasComments(trees: Iterable[Tree]): Boolean = comments && trees.exists(_.hasComments)
@@ -1329,12 +1328,13 @@ object TreeSyntax {
     )(f: T => Show.Result): Show.Result =
       if (hasMultilineComments(t)) {
         // an attached comment stays after the opening delimiter
-        val attached = if (xs.isEmpty) None else ownBegComments(xs.head).filter(!_.isDetached)
-        if (attached.isDefined) addKeywordOwner(xs.head)
-        val afterOpen = attached match {
-          case Some(c) => spi(printComments(c), space = true)
-          case None => s()
-        }
+        val attached = if (xs.isEmpty) null else ownBegComments(xs.head).nnIf(!_.isDetached)
+        val afterOpen =
+          if (null eq attached) s()
+          else {
+            addKeywordOwner(xs.head)
+            spi(printComments(attached), space = true)
+          }
         s(open, afterOpen, i(s(pre, rsepWith(xs, multiline = true)(f))), n(close))
       } else {
         val res = s(open, pre, rsepWith(xs)(f), close)
@@ -1352,11 +1352,7 @@ object TreeSyntax {
       sequenceWithLast(xs) { (x, isLast) =>
         // an attached comment stays after the separator before the value, as after the delimiter
         val attached =
-          if (!multiline || (x eq xs.head)) null
-          else ownBegComments(x) match {
-            case Some(c) if !c.isDetached => c
-            case _ => null
-          }
+          if (!multiline || (x eq xs.head)) null else ownBegComments(x).nnIf(!_.isDetached)
         if (attached ne null) addKeywordOwner(x)
         val res =
           if (isLast) reprintWith(x)(f)
@@ -1390,10 +1386,17 @@ object TreeSyntax {
 
   /* the comments a tree prints itself: the parent prints the ones it refers to as well, and
    * its group holds the child's comments when it extends the child's group */
-  private def ownComments(tree: Tree)(f: Tree => Option[Tree.Comments]): Option[Tree.Comments] =
-    f(tree).filterNot(tc =>
-      tree.parent.flatMap(f).exists(ptc => (tc eq ptc) || tokensOverlap(tc.origin, ptc.origin)),
-    )
+  private def ownComments(tree: Tree)(f: Tree => Option[Tree.Comments]): Tree.Comments =
+    f(tree) match {
+      case Some(tc) if (tree.parent match {
+            case Some(p) => f(p) match {
+                case Some(ptc) => (tc ne ptc) && !tokensOverlap(tc.origin, ptc.origin)
+                case _ => true
+              }
+            case _ => true
+          }) => tc
+      case _ => null
+    }
 
   // the bar before already indents this one if it starts its own line
   private def isBarAfterDetachedBar(t: Pat.Alternative): Boolean = t.parent match {
@@ -1441,7 +1444,7 @@ object TreeSyntax {
     case _ => !PlaceholderChecks.hasPlaceholder(tree, includeArg = false)
   }
 
-  private def ownBegComments(tree: Tree): Option[Tree.Comments] = ownComments(tree)(_.begComment)
+  private def ownBegComments(tree: Tree): Tree.Comments = ownComments(tree)(_.begComment)
 
   // the tree prints a body first, whose brace a blank line before it would detach
   private def opensBody(tree: Tree): Boolean = tree match {
@@ -1485,12 +1488,19 @@ object TreeSyntax {
     case o: Origin.Parsed => Tokens.countOf(o.allInputTokens().newlinesBefore(o.begTokenIdx))
     case _ => 0
   }
-  private def ownEndComments(tree: Tree): Option[Tree.Comments] = ownComments(tree)(_.endComment)
+  private def ownEndComments(tree: Tree): Tree.Comments = ownComments(tree)(_.endComment)
 
-  private def printBegComments(tree: Tree, out: Tree.Comments => Show.Result): Show.Result =
-    ownBegComments(tree).fold(s())(out)
+  private def printBegComments(tree: Tree, out: Tree.Comments => Show.Result): Show.Result = {
+    val tc = ownBegComments(tree)
+    if (null eq tc) s() else out(tc)
+  }
+
   private def printEndComments(tree: Tree, out: Tree.Comments => Show.Result): Show.Result =
-    if (endCommentsInside(tree)) s() else ownEndComments(tree).fold(s())(out)
+    if (endCommentsInside(tree)) s()
+    else {
+      val tc = ownEndComments(tree)
+      if (tc eq null) s() else out(tc)
+    }
 
   // an empty enclosure in parens or braces prints its comments inside its delimiters
   private def endCommentsInside(tree: Tree): Boolean =
@@ -1592,18 +1602,18 @@ object TreeSyntax {
       afterKeyword: => Boolean = false,
   )(syntax: Show.Result): Show.Result = {
     val res = s(
-      ownBegComments(tree) match {
-        case None => syntax
-        case Some(c) =>
-          if (!layout) s(printBegCommentsPlain(c), syntax)
-          else if (afterKeyword) syntax
-          // a body's comments go on lines of their own, at the column of its brace
-          else if (opensBody(tree))
-            s(s(c.values.map(x => Show.outerNewline(printComment(x))): _*), syntax)
-          else { // a blank line inside an infix would end it
-            val newlines = if (isAfterInfixLhs(tree)) c.newlinesBefore.min(1) else c.newlinesBefore
-            s(printLeading(c.values, newlines), syntax)
-          }
+      {
+        val c = ownBegComments(tree)
+        if (null eq c) syntax
+        else if (!layout) s(printBegCommentsPlain(c), syntax)
+        else if (afterKeyword) syntax
+        // a body's comments go on lines of their own, at the column of its brace
+        else if (opensBody(tree))
+          s(s(c.values.map(x => Show.outerNewline(printComment(x))): _*), syntax)
+        else { // a blank line inside an infix would end it
+          val newlines = if (isAfterInfixLhs(tree)) c.newlinesBefore.min(1) else c.newlinesBefore
+          s(printLeading(c.values, newlines), syntax)
+        }
       },
       after,
       printEndComments(

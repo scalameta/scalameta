@@ -400,51 +400,44 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   private def asComment(parts: List[Lit.String], beg: Int, end: Int): Tree.Comment =
     asComment(parts, asOrigin(beg, end), end - 1)
 
-  private def concatComments(one: Tree.Comments, two: Tree.Comments): Tree.Comments = {
-    val origin = asOrigin(one.begTokenIdx, two.endTokenIdx)
-    val values = one.values ::: two.values
-    Tree.Comments._ctor(origin = origin, values = values, newlinesBefore = one.newlinesBefore)
-  }
-
-  private def concatComments(one: Tree.Comments, twoOpt: Option[Tree.Comments]): Tree.Comments =
-    twoOpt match {
-      case Some(two) => concatComments(one, two)
-      case None => one
+  private def concatComments(one: Tree.Comments, two: Tree.Comments): Tree.Comments =
+    if (null eq one) two
+    else if (null eq two) one
+    else {
+      val origin = asOrigin(one.begTokenIdx, two.endTokenIdx)
+      val values = one.values ::: two.values
+      Tree.Comments._ctor(origin = origin, values = values, newlinesBefore = one.newlinesBefore)
     }
 
-  private def concatComments(oneOpt: Option[Tree.Comments], two: Tree.Comments): Tree.Comments =
-    oneOpt match {
-      case Some(one) => concatComments(one, two)
-      case None => two
-    }
-
-  private def concatComments(
-      oneOpt: Option[Tree.Comments],
-      twoOpt: Option[Tree.Comments],
-  ): Option[Tree.Comments] = (oneOpt, twoOpt) match {
-    case (Some(one), Some(two)) => Some(concatComments(one, two))
-    case (_, None) => oneOpt
-    case _ => twoOpt
+  private def prependBegComment(tree: Tree, tc: Tree.Comments): Unit = if (tc ne null) {
+    val own = tree.begCommentOrNull
+    if (own ne tc) tree.privateSetBegComment(Some(concatComments(tc, own)))
   }
 
-  private def prependBegComment(tree: Tree, tc: Tree.Comments): Unit = tree
-    .privateSetBegComment(Some(concatComments(tc, tree.begComment)))
-  private def prependBegComment(tree: Tree, tcOpt: Option[Tree.Comments]): Unit = tcOpt match {
-    case Some(tc) => prependBegComment(tree, tc)
-    case None =>
+  private def prependBegCommentFrom(tree: Tree, other: Tree): Unit = other.begComment match {
+    case tcOpt @ Some(tc) =>
+      val own = tree.begCommentOrNull
+      if (own ne tc) tree
+        .privateSetBegComment(if (own eq null) tcOpt else Some(concatComments(tc, own)))
+    case _ =>
   }
 
-  private def appendEndComment(tree: Tree, tc: Tree.Comments): Unit = tree
-    .privateSetEndComment(Some(concatComments(tree.endComment, tc)))
-
-  private def appendEndComment(tree: Tree, tcOpt: Option[Tree.Comments]): Unit = tcOpt match {
-    case Some(tc) => appendEndComment(tree, tc)
-    case None =>
+  private def appendEndComment(tree: Tree, tc: Tree.Comments): Unit = if (tc ne null) {
+    val own = tree.endCommentOrNull
+    if (own ne tc) tree.privateSetEndComment(Some(concatComments(own, tc)))
   }
 
-  private def asComments(values: collection.Seq[Tree.Comment]): Option[Tree.Comments] =
-    if ((values eq null) || values.isEmpty) None
-    else Some {
+  private def appendEndCommentFrom(tree: Tree, other: Tree): Unit = other.endComment match {
+    case tcOpt @ Some(tc) =>
+      val own = tree.endCommentOrNull
+      if (own ne tc) tree
+        .privateSetEndComment(if (own eq null) tcOpt else Some(concatComments(own, tc)))
+    case _ =>
+  }
+
+  private def asComments(values: collection.Seq[Tree.Comment]): Tree.Comments =
+    if ((values eq null) || values.isEmpty) null
+    else {
       val beg = values.head.begTokenIdx
       val origin = asOrigin(beg, values.last.endTokenIdx)
       val newlinesBefore = Tokens.countOf(tokens.newlinesBefore(beg))
@@ -482,178 +475,189 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     }
     val origin = asOrigin(start, endExcl)
 
-    var begComment: Option[Tree.Comments] = None
-    var endComment: Option[Tree.Comments] = None
-    if (options.captureComments)
-      if (body.hasComments) {
-        begComment = body.begComment
-        endComment = body.endComment
-      } else if (endExcl > start || body.is[Source]) { // an empty tree has no comment beside it
-        val bodyBegToken = tokens(start)
-        val bodyEndToken = tokens(endExcl - 1)
+    // the tree's comments, kept when unchanged; without capture, the tree has none
+    var begCommentSource = if (options.captureComments) body.begComment else None
+    var endCommentSource = if (options.captureComments) body.endComment else None
 
-        // we don't use comments attributed to a child
-        // a child that starts before the tree, such as a clause's `implicit`, keeps its own
-        childSpan.reset(start)
-        body.foreachChild(childSpan)
-        val minChild = childSpan.minChild
-        val minChildBeg = childSpan.minChildBeg
-        val maxChild = childSpan.maxChild
-        val maxChildEnd = childSpan.maxChildEnd
+    var begComment: Tree.Comments = begCommentSource.orNull
+    var endComment: Tree.Comments = endCommentSource.orNull
+    if (options.captureComments && !body.hasComments && (endExcl > start || body.is[Source])) { // an empty tree has no comment beside it
+      val bodyBegToken = tokens(start)
+      val bodyEndToken = tokens(endExcl - 1)
 
-        val bodyIsBlock = body.is[Tree.Block]
+      // we don't use comments attributed to a child
+      // a child that starts before the tree, such as a clause's `implicit`, keeps its own
+      childSpan.reset(start)
+      body.foreachChild(childSpan)
+      val minChild = childSpan.minChild
+      val minChildBeg = childSpan.minChildBeg
+      val maxChild = childSpan.maxChild
+      val maxChildEnd = childSpan.maxChildEnd
 
-        begComment =
-          if (bodyBegToken.start < minChildBeg) leadingComments(body, start)
-          else if (!bodyIsBlock) minChild.begComment
-          // braceless: the scan starts at the token that opens it, or before its first child's comments
-          else leadingComments(body, prevNonTriviaAt(start - 1) + 1, minChild)
+      val bodyIsBlock = body.is[Tree.Block]
 
-        endComment =
-          if (bodyEndToken.end > maxChildEnd) body match {
-            case b: Case if b.body eq maxChild => // body in parens
-              appendTrailingComments(maxChild, endExcl, detached = false)
-              None // printer may drop parens, so move comments to case body
-            case _ => trailingComments(endExcl)
+      begComment =
+        if (bodyBegToken.start < minChildBeg) leadingComments(body, start)
+        else if (!bodyIsBlock) {
+          begCommentSource = minChild.begComment
+          begCommentSource.orNull
+        }
+        // braceless: the scan starts at the token that opens it, or before its first child's comments
+        else leadingComments(body, prevNonTriviaAt(start - 1) + 1, minChild)
+
+      endComment =
+        if (bodyEndToken.end > maxChildEnd) body match {
+          case b: Case if b.body eq maxChild => // body in parens
+            appendTrailingComments(maxChild, endExcl, detached = false)
+            null // printer may drop parens, so move comments to case body
+          case _ => trailingComments(endExcl)
+        }
+        else if (bodyIsBlock || body.is[Case]) null // let the child own it
+        else maxChild.endComment match {
+          // the child keeps the comments inside its delimiters, and the ones after them trail us
+          case Some(c) if c.endTokenIdx < maxChild.endTokenIdx => trailingComments(endExcl)
+          case x =>
+            endCommentSource = x
+            x.orNull
+        }
+
+      body match {
+        case _: Quasi => // an unquoted tree has no parts to read
+        // a modifier takes the comments after it that the next one leaves
+        case _: Stat.WithMods | _: Member.Param | _: Ctor.Primary | _: Term.MatchLike =>
+          var after: Tree = null // right after the modifiers, it takes the comments it leads
+          var mods = body match {
+            case b: Stat.WithMods => b.mods
+            case b: Member.Param =>
+              after = b.name
+              b.mods.dropWhile(_.begTokenIdx < start) // the clause's `implicit` or `using`
+            case b: Ctor.Primary =>
+              after = b.paramClauses.headOrNull
+              b.mods
+            case b: Term.MatchLike =>
+              after = b.expr
+              b.mods
           }
-          else if (bodyIsBlock || body.is[Case]) None // let the child own it
-          else maxChild.endComment match {
-            // the child keeps the comments inside its delimiters, and the ones after them trail us
-            case Some(c) if c.endTokenIdx < maxChild.endTokenIdx => trailingComments(endExcl)
-            case x => x
+          while (mods.nonEmpty) {
+            val bound = mods.tail match {
+              case next :: _ => begOfComments(next)
+              case Nil => if (after eq null) Int.MaxValue else begOfComments(after)
+            }
+            val mod = mods.head
+            if (!mod.is[Quasi]) appendTrailingComments(mod, bound = bound, pastBlank = true)
+            // an unquoted modifier is replaced, so the comments after the last one lead the tree
+            else if (mods.tail.isEmpty) {
+              val from = endOfComments(mod)
+              val tc = trailingComments(from, detached = true, pastBlank = true)
+              begComment = concatComments(begComment, tc)
+            }
+            mods = mods.tail
           }
-
-        body match {
-          case _: Quasi => // an unquoted tree has no parts to read
-          // a modifier takes the comments after it that the next one leaves
-          case _: Stat.WithMods | _: Member.Param | _: Ctor.Primary | _: Term.MatchLike =>
-            var after: Tree = null // right after the modifiers, it takes the comments it leads
-            var mods = body match {
-              case b: Stat.WithMods => b.mods
-              case b: Member.Param =>
-                after = b.name
-                b.mods.dropWhile(_.begTokenIdx < start) // the clause's `implicit` or `using`
-              case b: Ctor.Primary =>
-                after = b.paramClauses.headOrNull
-                b.mods
-              case b: Term.MatchLike =>
-                after = b.expr
-                b.mods
-            }
-            while (mods.nonEmpty) {
-              val bound = mods.tail match {
-                case next :: _ => begOfComments(next)
-                case Nil => if (after eq null) Int.MaxValue else begOfComments(after)
-              }
-              val mod = mods.head
-              if (!mod.is[Quasi]) appendTrailingComments(mod, bound = bound, pastBlank = true)
-              // an unquoted modifier is replaced, so the comments after the last one lead the tree
-              else if (mods.tail.isEmpty) {
-                val from = endOfComments(mod)
-                val tc = trailingComments(from, detached = true, pastBlank = true)
-                begComment = concatComments(begComment, tc)
-              }
-              mods = mods.tail
-            }
-          case b: Pat.Bind => appendTrailingComments(b.lhs, pastBlank = true)
-          case b: Pat.Alternative => appendTrailingComments(b.lhs, pastBlank = true)
-          // the comments between a quote or a splice and what follows it lead the whole macro
-          case _: Term.QuotedMacroLike | _: Term.SplicedMacroLike
-              if bodyBegToken.start < minChildBeg =>
-            val next = nextNonTriviaAt(start)
-            begComment = concatComments(begComment, commentsAmong(start + 1, next))
-            if (minChild.begTokenIdx == next) minChild.privateSetBegComment(None)
-          case _ =>
-        }
-
-        // parents and enum cases have no enclosure: the next one leads the comments after a blank
-        body match {
-          case b: Template =>
-            leadNextElems(b.inits)
-            leadNextElems(b.derives)
-          case b: Defn.RepeatedEnumCase => leadNextElems(b.cases)
-          case b: Defn.EnumCase => leadNextElems(b.inits)
-          case b: Type.Bounds => leadNextElems(b.context)
-          case _ =>
-        }
-
-        // an enclosure with elements: a block, a clause, a tuple
-        val bodyElems = body match {
-          case _: Quasi => Nil
-          case b: Term.QuotedMacroType => b.tpe match {
-              case tpe: Type.Block => tpe.allElems
-              case tpe => tpe :: Nil
-            }
-          case b: Tree.Block => b.allElems
-          case b: Member.Tuple => b.args
-          case b: Type.CapturesSet => b.values
-          case b: Member.SyntaxValuesClause => b.values
-          case _ => Nil
-        }
-        if (bodyElems.nonEmpty) {
-          /* - First element: include all comments before it.
-           * - Between elements: add detached comments before blank line to first, rest to second.
-           * - Last element: include all comments after it. */
-          var prev: Tree = null
-          var elems = bodyElems
-          while (elems.nonEmpty) {
-            val next = elems.head
-            val bound = begOfComments(next)
-            // an empty enclosure holds the comments inside it, so the next element takes those after it
-            val afterEmpty = (prev ne null) &&
-              (prev.endComment match {
-                case Some(c) => c.endTokenIdx < prev.endTokenIdx
-                case _ => false
-              })
-            def from =
-              if (prev ne null) appendTrailingComments(prev, bound = bound)
-              // the element took the comments before our opening delimiter
-              else if (bound < start && bodyBegToken.is[OpenDelim]) bound
-              else {
-                val prevIdx = tokens.rskipIf(isTrivia, bound - 1, prevNonTriviaAt(start - 1))
-                // the scan starts at BOF, which counts as the start of a line
-                val end = if (tokens.getOrNull(prevIdx).isInstanceOf[BOF]) prevIdx - 1 else prevIdx
-                // skip the comments that the trailing scan of the tree before took
-                if (endsTree(end, next)) trailingCommentsEnd(end + 1) else end + 1
-              }
-            prependBegComment(
-              next,
-              if (afterEmpty) commentsAmong(prev.endTokenIdx, bound)
-              else trailingComments(from, bound, detached = true, pastBlank = true),
-            )
-            prev = next
-            elems = elems.tail
-          }
-          val lastBound = if (bodyEndToken.is[CloseDelim]) endExcl - 1 else endPos + 1
-          appendTrailingComments(prev, bound = lastBound, pastBlank = true)
-        }
-
-        if (maxChild eq null) {
-          if ((bodyIsBlock || body.isAny[Member.SyntaxValuesClause, Lit.Unit]) &&
-            bodyBegToken.is[OpenDelim]) {
-            /* an empty enclosure in parens or braces keeps the comments inside its delimiters,
-             * over the ones after them: those go to a parent that ends there, and are lost
-             * without one */
-            val inside = commentsAfter(start)
-            if (inside.isDefined) endComment = inside
-          } else if (!bodyIsBlock && endExcl - start > 1) // a literal with its unary operator, `_*`
-            endComment = concatComments(commentsAfter(start), endComment)
-          else if (bodyIsBlock && endComment.isEmpty) // an empty braceless block
-            endComment = trailingComments(start, endExcl, detached = true, pastBlank = true)
-        }
-        // no child takes a comment among the tokens that end the tree, such as `.type` or `: _*`
-        else if (bodyElems.isEmpty && bodyEndToken.end > maxChildEnd) endComment =
-          concatComments(commentsAmong(endOfComments(maxChild), endExcl - 1), endComment)
+        case b: Pat.Bind => appendTrailingComments(b.lhs, pastBlank = true)
+        case b: Pat.Alternative => appendTrailingComments(b.lhs, pastBlank = true)
+        // the comments between a quote or a splice and what follows it lead the whole macro
+        case _: Term.QuotedMacroLike | _: Term.SplicedMacroLike
+            if bodyBegToken.start < minChildBeg =>
+          val next = nextNonTriviaAt(start)
+          begComment = concatComments(begComment, commentsAmong(start + 1, next))
+          if (minChild.begTokenIdx == next) minChild.privateSetBegComment(None)
+        case _ =>
       }
 
-    body.privateSetOrigin(origin = origin, begComment = begComment, endComment = endComment)
+      // parents and enum cases have no enclosure: the next one leads the comments after a blank
+      body match {
+        case b: Template =>
+          leadNextElems(b.inits)
+          leadNextElems(b.derives)
+        case b: Defn.RepeatedEnumCase => leadNextElems(b.cases)
+        case b: Defn.EnumCase => leadNextElems(b.inits)
+        case b: Type.Bounds => leadNextElems(b.context)
+        case _ =>
+      }
+
+      // an enclosure with elements: a block, a clause, a tuple
+      val bodyElems = body match {
+        case _: Quasi => Nil
+        case b: Term.QuotedMacroType => b.tpe match {
+            case tpe: Type.Block => tpe.allElems
+            case tpe => tpe :: Nil
+          }
+        case b: Tree.Block => b.allElems
+        case b: Member.Tuple => b.args
+        case b: Type.CapturesSet => b.values
+        case b: Member.SyntaxValuesClause => b.values
+        case _ => Nil
+      }
+      if (bodyElems.nonEmpty) {
+        /* - First element: include all comments before it.
+         * - Between elements: add detached comments before blank line to first, rest to second.
+         * - Last element: include all comments after it. */
+        var prev: Tree = null
+        var elems = bodyElems
+        while (elems.nonEmpty) {
+          val next = elems.head
+          val bound = begOfComments(next)
+          // an empty enclosure holds the comments inside it, so the next element takes those after it
+          val afterEmpty = (prev ne null) &&
+            (prev.endComment match {
+              case Some(c) => c.endTokenIdx < prev.endTokenIdx
+              case _ => false
+            })
+          def from =
+            if (prev ne null) appendTrailingComments(prev, bound = bound)
+            // the element took the comments before our opening delimiter
+            else if (bound < start && bodyBegToken.is[OpenDelim]) bound
+            else {
+              val prevIdx = tokens.rskipIf(isTrivia, bound - 1, prevNonTriviaAt(start - 1))
+              // the scan starts at BOF, which counts as the start of a line
+              val end = if (tokens.getOrNull(prevIdx).isInstanceOf[BOF]) prevIdx - 1 else prevIdx
+              // skip the comments that the trailing scan of the tree before took
+              if (endsTree(end, next)) trailingCommentsEnd(end + 1) else end + 1
+            }
+          prependBegComment(
+            next,
+            if (afterEmpty) commentsAmong(prev.endTokenIdx, bound)
+            else trailingComments(from, bound, detached = true, pastBlank = true),
+          )
+          prev = next
+          elems = elems.tail
+        }
+        val lastBound = if (bodyEndToken.is[CloseDelim]) endExcl - 1 else endPos + 1
+        appendTrailingComments(prev, bound = lastBound, pastBlank = true)
+      }
+
+      if (maxChild eq null) {
+        if ((bodyIsBlock || body.isAny[Member.SyntaxValuesClause, Lit.Unit]) &&
+          bodyBegToken.is[OpenDelim]) {
+          /* an empty enclosure in parens or braces keeps the comments inside its delimiters,
+           * over the ones after them: those go to a parent that ends there, and are lost
+           * without one */
+          val inside = commentsAfter(start)
+          if (inside ne null) endComment = inside
+        } else if (!bodyIsBlock && endExcl - start > 1) // a literal with its unary operator, `_*`
+          endComment = concatComments(commentsAfter(start), endComment)
+        else if (bodyIsBlock && (endComment eq null)) // an empty braceless block
+          endComment = trailingComments(start, endExcl, detached = true, pastBlank = true)
+      }
+      // no child takes a comment among the tokens that end the tree, such as `.type` or `: _*`
+      else if (bodyElems.isEmpty && bodyEndToken.end > maxChildEnd)
+        endComment = concatComments(commentsAmong(endOfComments(maxChild), endExcl - 1), endComment)
+    }
+
+    body.privateSetOrigin(
+      origin = origin,
+      begComment =
+        if (begComment eq begCommentSource.orNull) begCommentSource else Option(begComment),
+      endComment =
+        if (endComment eq endCommentSource.orNull) endCommentSource else Option(endComment),
+    )
     body
   }
 
   private val childSpan = new ScalametaParser.ChildSpan
 
   // the comments among the tokens in [from, until)
-  private def commentsAmong(from: Int, until: Int): Option[Tree.Comments] = {
+  private def commentsAmong(from: Int, until: Int): Tree.Comments = {
     trailingBuf.clear()
     var idx = from
     while (idx < until) idx = tokens(idx) match {
@@ -665,12 +669,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   }
 
   // the comments after the token at `idx`, attached and detached
-  private def commentsAfter(idx: Int): Option[Tree.Comments] = {
+  private def commentsAfter(idx: Int): Tree.Comments = {
     val inner = trailingComments(idx + 1)
-    val from = inner match {
-      case Some(c) => c.endTokenIdx
-      case None => idx + 1
-    }
+    val from = if (inner eq null) idx + 1 else inner.endTokenIdx
     concatComments(inner, trailingComments(from, detached = true, pastBlank = true))
   }
 
@@ -688,11 +689,11 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       pastBlank: Boolean = false,
   ): Int = {
     val start = if (from < 0) endOfComments(tree) else from
-    trailingComments(start, bound, detached = detached, pastBlank = pastBlank) match {
-      case Some(tc) =>
-        appendEndComment(tree, tc)
-        tc.endTokenIdx
-      case None => start
+    val tc = trailingComments(start, bound, detached = detached, pastBlank = pastBlank)
+    if (tc eq null) start
+    else {
+      appendEndComment(tree, tc)
+      tc.endTokenIdx
     }
   }
 
@@ -701,11 +702,13 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     prependBegComment(tree, leadingComments(tree, openPos, tree))
 
   // the comments before `refPos`, or before the comments that lead `refTree` if those start earlier
-  private def leadingComments(tree: Tree, refPos: Int, refTree: Tree): Option[Tree.Comments] =
-    leadingComments(tree, refTree.begComment.fold(refPos)(c => refPos.min(c.begTokenIdx)))
+  private def leadingComments(tree: Tree, refPos: Int, refTree: Tree): Tree.Comments = {
+    val c = refTree.begCommentOrNull
+    leadingComments(tree, if (c eq null) refPos else refPos.min(c.begTokenIdx))
+  }
 
   // the comments before the tree that starts at `start`, back to the statement before it
-  private def leadingComments(body: Tree, start: Int): Option[Tree.Comments] = {
+  private def leadingComments(body: Tree, start: Int): Tree.Comments = {
     // lazily allocated only if a comment is actually found (the scan runs
     // for most nodes but finds a leading comment only rarely)
     var begBuf: ListBuffer[Tree.Comment] = null
@@ -797,19 +800,18 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       val next = rest.head
       val bound = begOfComments(next)
       val from = appendTrailingComments(prev, bound = bound)
-      trailingComments(from, bound, detached = true, pastBlank = true) match {
-        case Some(tc) =>
-          // the first child that starts with the element shares its comments, as when parsed
-          val old = next.begComment
-          val group = Some(concatComments(tc, old))
-          val startsWithNext: Tree => Boolean = _.begTokenIdx == next.begTokenIdx
-          var tree = next
-          while ({
-            tree.privateSetBegComment(group)
-            tree = tree.findChild(startsWithNext)
-            (null ne tree) && tree.begComment == old
-          }) {}
-        case None =>
+      val tc = trailingComments(from, bound, detached = true, pastBlank = true)
+      if (tc ne null) {
+        // the first child that starts with the element shares its comments, as when parsed
+        val old = next.begCommentOrNull
+        val group = Some(concatComments(tc, old))
+        val startsWithNext: Tree => Boolean = _.begTokenIdx == next.begTokenIdx
+        var tree = next
+        while ({
+          tree.privateSetBegComment(group)
+          tree = tree.findChild(startsWithNext)
+          (null ne tree) && (tree.begCommentOrNull eq old)
+        }) {}
       }
       prev = next
       rest = rest.tail
@@ -879,7 +881,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       bound: Int = Int.MaxValue,
       detached: Boolean = false,
       pastBlank: Boolean = false,
-  ): Option[Tree.Comments] = {
+  ): Tree.Comments = {
     trailingBuf.clear()
     trailingCommentsEnd(from, trailingBuf, bound, detached = detached, pastBlank = pastBlank)
     asComments(trailingBuf)
@@ -2195,7 +2197,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     case t: Term.Match =>
       val res = t.fullCopy(mods = List(inlineMod))
       res.privateSetOrigin(asOrigin(inlineMod.begTokenIdx, t.endTokenIdx))
-      prependBegComment(res, inlineMod.begComment)
+      prependBegCommentFrom(res, inlineMod)
       res
     case other => syntaxError("`inline` must be followed by an `if` or a `match`", at = other.pos)
   }
@@ -2700,8 +2702,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
         // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
         case t @ Term.Tuple(arg :: Nil) if !dialect.allowNamedTuples || !arg.is[Term.Assign] =>
           // the parentheses make no tree: their comments go to the term inside, unless it has them
-          if (t.begComment ne arg.begComment) prependBegComment(arg, t.begComment)
-          if (t.endComment ne arg.endComment) appendEndComment(arg, t.endComment)
+          prependBegCommentFrom(arg, t)
+          appendEndCommentFrom(arg, t)
           arg
         case x => x
       }
@@ -2720,8 +2722,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
         // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
         case t @ Pat.Tuple(arg :: Nil) if !dialect.allowNamedTuples || !arg.is[Pat.Assign] =>
           // the parentheses make no tree: their comments go to the pattern inside, unless it has them
-          if (t.begComment ne arg.begComment) prependBegComment(arg, t.begComment)
-          if (t.endComment ne arg.endComment) appendEndComment(arg, t.endComment)
+          prependBegCommentFrom(arg, t)
+          appendEndCommentFrom(arg, t)
           arg
         case x => x
       }
