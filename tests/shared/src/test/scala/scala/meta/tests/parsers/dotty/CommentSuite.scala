@@ -551,13 +551,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a
+      """|def f = (a
          |  /* x
          |
          |     y */
-         |  + b
+         |  + b)
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.Name: /* x
          |
@@ -573,16 +572,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  + 1)
          |""".stripMargin
-    checkComments(
-      code,
-      """|val g: Int => Int = _
-         |  /* x
-         |
-         |     y */
-         |  + 1
-         |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
-    )(
+    checkComments(code)(
       """|beg Term.Name: /* x
          |
          |     y */""".stripMargin,
@@ -625,11 +615,11 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = foo
+      """|def f = (foo
          |/* x
          |
          |     y */
-         |  (z)
+         |  (z))
          |""".stripMargin,
     )(
       """|beg Term.ArgClause: /* x
@@ -670,13 +660,13 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = foo
+      """|def f = (foo
          |  /* x
          |
          |     y */
          |  {
          |    z
-         |  }
+         |  })
          |""".stripMargin,
     )(
       """|beg Term.ArgClause, Term.Block: /* x
@@ -716,13 +706,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = foo {
+      """|def f = foo({
          |  z
          |} /* x
          |
-         |   y */ + c
+         |   y */ ) + c
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|end Term.Block: /* x
          |
@@ -925,12 +914,11 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a /* x
+      """|def f = (a /* x
          |
          |     y */
-         |  + b
+         |) + b
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|end Term.Name: /* x
          |
@@ -949,12 +937,11 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a
+      """|def f = (a
          |  /* x
          |
-         |     y */ + b
+         |     y */ + b)
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.Name: /* x
          |
@@ -972,11 +959,10 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a /* x
+      """|def f = (a /* x
          |
-         |     y */ + b
+         |     y */ ) + b
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|end Term.Name: /* x
          |
@@ -995,12 +981,11 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a + /* x
+      """|def f = (a + /* x
          |
          |     y */
-         |  b
+         |  b)
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|end Term.Name: /* x
          |
@@ -1020,13 +1005,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a +
+      """|def f = (a +
          |  /* x
          |
          |     y */
-         |  b
+         |  b)
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.ArgClause, Term.Name: /* x
          |
@@ -1045,27 +1029,7 @@ class CommentSuite extends BaseDottySuite {
          |  )
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object A {
-         |  def f = a +
-         |    /* x
-         |
-         |       y */
-         |    b
-         |}
-         |""".stripMargin,
-      twice =
-        """|object A {
-           |  def f = a +
-           |
-           |  /* x
-           |
-           |       y */
-           |  b
-           |}
-           |""".stripMargin,
-    )(
+    checkComments(code)(
       """|beg Term.Name: /* x
          |
          |       y */""".stripMargin,
@@ -1081,11 +1045,10 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a + b /* x
+      """|def f = a + (b /* x
          |
-         |     y */ + c
+         |     y */ ) + c
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|end Term.Name: /* x
          |
@@ -1105,13 +1068,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|type T = A
+      """|type T = (A
          |  /* x
          |
          |     y */
-         |  | B
+         |  | B)
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Type.Name: /* x
          |
@@ -1131,13 +1093,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|type T = A |
+      """|type T = (A |
          |  /* x
          |
          |     y */
-         |  B
+         |  B)
          |""".stripMargin,
-      reprintError = "`identifier` expected but `\\n\\n` found",
     )(
       """|beg Type.Name: /* x
          |
@@ -1157,11 +1118,11 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = x match {
-         |  case a
+         |  case (a
          |    /* x
          |
          |       y */
-         |    :: b =>
+         |    :: b) =>
          |}
          |""".stripMargin,
     )(
@@ -1184,14 +1145,13 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = for {
-         |  x <- a
+         |  x <- (a
          |    /* x
          |
          |     y */
-         |    + b
+         |    + b)
          |} yield x
          |""".stripMargin,
-      reprintError = "illegal start of simple pattern",
     )(
       """|beg Term.Name: /* x
          |
@@ -1211,15 +1171,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = new A
+      """|def f = (new A
          |/* x
          |
          |     y */
          |{
          |  def g = 1
-         |}
+         |})
          |""".stripMargin,
-      reprintError = "illegal start of definition `{`",
     )(
       """|beg Template.Body: /* x
          |
@@ -1238,10 +1197,10 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = new A /* x
+      """|def f = (new A /* x
          |
          |     y */
-         |  { def g = 1 }
+         |  { def g = 1 })
          |""".stripMargin,
     )(
       """|end Init, Type.Name: /* x
@@ -1262,15 +1221,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|type T = A
+      """|type T = (A
          |  /* x
          |
          |     y */
          |  {
          |    def g: Int
-         |  }
+         |  })
          |""".stripMargin,
-      reprintError = "illegal start of definition `{`",
     )(
       """|beg Stat.Block: /* x
          |
@@ -1289,14 +1247,13 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|type T = A /* x
+      """|type T = (A /* x
          |
          |     y */
          |  {
          |    def g: Int
-         |  }
+         |  })
          |""".stripMargin,
-      reprintError = "illegal start of definition `{`",
     )(
       """|end Type.Name: /* x
          |
@@ -1409,13 +1366,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin.replace("~", "\r")
     checkComments(
       code,
-      """|def f = a
+      """|def f = (a
          |  /* x
          |
          |     y */
-         |  + b
+         |  + b)
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.Name: /* x
          |
@@ -1463,28 +1419,18 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f =
          |  // c
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b
+         |    + b)
          |""".stripMargin,
       reprinted = Seq(
-        """|beg Term.Name: // c""".stripMargin,
-        """|beg Term.ApplyUnary, Term.Name: /* x
+        """|beg Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.Name: /* x
            |
            |     y */""".stripMargin,
       ),
-      twice =
-        """|def f = {
-           |  // c
-           |  a
-           |  /* x
-           |
-           |     y */
-           |  +b
-           |}
-           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -1504,13 +1450,18 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = /* c */ a
+      """|def f = /* c */ (a
          |  /* x
          |
          |     y */
-         |  + b
+         |  + b)
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
+      reprinted = Seq(
+        """|beg Term.ApplyInfix: /* c */""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: /* c */""".stripMargin,
       """|beg Term.Name: /* x
@@ -1532,11 +1483,11 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = foo(
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b
+         |    + b)
          |)
          |""".stripMargin,
     )(
@@ -1561,13 +1512,19 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f = foo(
          |  // c
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b
+         |    + b)
          |)
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -1588,10 +1545,10 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = foo(
-         |  a + /* x
+         |  (a + /* x
          |
          |     y */
-         |    b
+         |    b)
          |)
          |""".stripMargin,
     )(
@@ -1615,11 +1572,11 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = (
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b, c
+         |    + b), c
          |)
          |""".stripMargin,
     )(
@@ -1642,11 +1599,11 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|type T = F[
-         |  A
+         |  (A
          |    /* x
          |
          |     y */
-         |    | B
+         |    | B)
          |]
          |""".stripMargin,
     )(
@@ -1669,11 +1626,11 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f(
-         |  x: A
+         |  x: (A
          |    /* x
          |
          |     y */
-         |    | B
+         |    | B)
          |) = x
          |""".stripMargin,
     )(
@@ -1696,13 +1653,13 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = foo(
-         |  bar
+         |  (bar
          |    /* x
          |
          |     y */
          |    {
          |      z
-         |    }
+         |    })
          |)
          |""".stripMargin,
     )(
@@ -1725,13 +1682,13 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = foo(
-         |  new A
+         |  (new A
          |  /* x
          |
          |     y */
          |  {
          |    def g = 1
-         |  }
+         |  })
          |)
          |""".stripMargin,
     )(
@@ -1755,13 +1712,13 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|type T = (
-         |  A
+         |  (A
          |    /* x
          |
          |     y */
          |    {
          |      def g: Int
-         |    }, B
+         |    }), B
          |)
          |""".stripMargin,
     )(
@@ -1783,11 +1740,11 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = if (a
+      """|def f = if ((a
          |  /* x
          |
          |     y */
-         |  + b) c else d
+         |  + b)) c else d
          |""".stripMargin,
     )(
       """|beg Term.Name: /* x
@@ -1808,11 +1765,11 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = x match {
-         |  case y if a
+         |  case y if (a
          |    /* x
          |
          |       y */
-         |    + b =>
+         |    + b) =>
          |}
          |""".stripMargin,
     )(
@@ -1839,14 +1796,13 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f = for {
          |  x <- y
-         |  if a
+         |  if (a
          |    /* x
          |
          |       y */
-         |    + b
+         |    + b)
          |} yield x
          |""".stripMargin,
-      reprintError = "illegal start of simple pattern",
     )(
       """|beg Term.Name: /* x
          |
@@ -1870,28 +1826,13 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f = x match {
          |  case y =>
-         |    a
+         |    (a
          |      /* x
          |
          |         y */
-         |      + b
+         |      + b)
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyUnary, Term.Name: /* x
-           |
-           |         y */""".stripMargin,
-      ),
-      twice =
-        """|def f = x match {
-           |  case y =>
-           |    a
-           |    /* x
-           |
-           |         y */
-           |    +b
-           |}
-           |""".stripMargin,
     )(
       """|beg Term.Name: /* x
          |
@@ -1911,13 +1852,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = a :: b
+      """|def f = a :: (b
          |  /* x
          |
          |     y */
-         |  :: c
+         |  :: c)
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.Name: /* x
          |
@@ -1940,28 +1880,18 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f = if (c) d else
          |  // e
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b
+         |    + b)
          |""".stripMargin,
       reprinted = Seq(
-        """|beg Term.Name: // e""".stripMargin,
-        """|beg Term.ApplyUnary, Term.Name: /* x
+        """|beg Term.ApplyInfix: // e""".stripMargin,
+        """|beg Term.Name: /* x
            |
            |     y */""".stripMargin,
       ),
-      twice =
-        """|def f = if (c) d else {
-           |  // e
-           |  a
-           |  /* x
-           |
-           |     y */
-           |  +b
-           |}
-           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -1981,13 +1911,18 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = if (c) d else /* e */ a
+      """|def f = if (c) d else /* e */ (a
          |  /* x
          |
          |     y */
-         |  + b
+         |  + b)
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
+      reprinted = Seq(
+        """|beg Term.ApplyInfix: /* e */""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: /* e */""".stripMargin,
       """|beg Term.Name: /* x
@@ -2013,13 +1948,12 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f = if (c) d
          |// e
-         |else a
+         |else (a
          |  /* x
          |
          |     y */
-         |  + b
+         |  + b)
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Term.ApplyInfix: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2043,28 +1977,18 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f = for (x <- y) yield
          |  // e
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b
+         |    + b)
          |""".stripMargin,
       reprinted = Seq(
-        """|beg Term.Name: // e""".stripMargin,
-        """|beg Term.ApplyUnary, Term.Name: /* x
+        """|beg Term.ApplyInfix: // e""".stripMargin,
+        """|beg Term.Name: /* x
            |
            |     y */""".stripMargin,
       ),
-      twice =
-        """|def f = for (x <- y) yield {
-           |  // e
-           |  a
-           |  /* x
-           |
-           |     y */
-           |  +b
-           |}
-           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2088,28 +2012,18 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f = try g finally
          |  // e
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b
+         |    + b)
          |""".stripMargin,
       reprinted = Seq(
-        """|beg Term.Name: // e""".stripMargin,
-        """|beg Term.ApplyUnary, Term.Name: /* x
+        """|beg Term.ApplyInfix: // e""".stripMargin,
+        """|beg Term.Name: /* x
            |
            |     y */""".stripMargin,
       ),
-      twice =
-        """|def f = try g finally {
-           |  // e
-           |  a
-           |  /* x
-           |
-           |     y */
-           |  +b
-           |}
-           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2133,13 +2047,18 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f = try g catch
          |  // e
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b
+         |    + b)
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
+      reprinted = Seq(
+        """|beg Term.ApplyInfix: // e""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2164,28 +2083,18 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f =
          |  // c
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b - c
+         |    + b) - c
          |""".stripMargin,
       reprinted = Seq(
-        """|beg Term.Name: // c""".stripMargin,
-        """|beg Term.ApplyInfix, Term.ApplyUnary, Term.Name: /* x
+        """|beg Term.ApplyInfix, Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.Name: /* x
            |
            |     y */""".stripMargin,
       ),
-      twice =
-        """|def f = {
-           |  // c
-           |  a
-           |  /* x
-           |
-           |     y */
-           |  +b - c
-           |}
-           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2213,39 +2122,25 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f =
          |  // c
-         |  a
+         |  ((a
          |    /* x
          |
          |     y */
-         |    + b
+         |    + b)
          |    /* x
          |
          |     y */
-         |    - c
+         |    - c)
          |""".stripMargin,
       reprinted = Seq(
-        """|beg Term.Name: // c""".stripMargin,
-        """|beg Term.ApplyUnary, Term.Name: /* x
+        """|beg Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.Name: /* x
            |
            |     y */""".stripMargin,
-        """|beg Term.ApplyUnary, Term.Name: /* x
+        """|beg Term.Name: /* x
            |
            |     y */""".stripMargin,
       ),
-      twice =
-        """|def f = {
-           |  // c
-           |  a
-           |  /* x
-           |
-           |     y */
-           |  +b
-           |  /* x
-           |
-           |     y */
-           |  -c
-           |}
-           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2273,28 +2168,18 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f = if (c) d else
          |  // e
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b - c
+         |    + b) - c
          |""".stripMargin,
       reprinted = Seq(
-        """|beg Term.Name: // e""".stripMargin,
-        """|beg Term.ApplyInfix, Term.ApplyUnary, Term.Name: /* x
+        """|beg Term.ApplyInfix, Term.ApplyInfix: // e""".stripMargin,
+        """|beg Term.Name: /* x
            |
            |     y */""".stripMargin,
       ),
-      twice =
-        """|def f = if (c) d else {
-           |  // e
-           |  a
-           |  /* x
-           |
-           |     y */
-           |  +b - c
-           |}
-           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2316,14 +2201,20 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = (
-         |// c
-         |a
-         |  /* x
+      """|def f =
+         |  // c
+         |  (a
+         |    /* x
          |
          |     y */
-         |  + b).g
+         |    + b).g
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Select, Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2345,14 +2236,20 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = (
-         |// c
-         |a
-         |  /* x
+      """|def f =
+         |  // c
+         |  (a
+         |    /* x
          |
          |     y */
-         |  + b)(x)
+         |    + b)(x)
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Apply, Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2376,28 +2273,18 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f =
          |  // c
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b: Int
+         |    + b): Int
          |""".stripMargin,
       reprinted = Seq(
-        """|beg Term.Name: // c""".stripMargin,
-        """|beg Term.Ascribe, Term.ApplyUnary, Term.Name: /* x
+        """|beg Term.Ascribe, Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.Name: /* x
            |
            |     y */""".stripMargin,
       ),
-      twice =
-        """|def f = {
-           |  // c
-           |  a
-           |  /* x
-           |
-           |     y */
-           |  +b: Int
-           |}
-           |""".stripMargin,
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2419,14 +2306,20 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = (
-         |// c
-         |a
-         |  /* x
+      """|def f =
+         |  // c
+         |  (a
+         |    /* x
          |
          |     y */
-         |  + b).g = 1
+         |    + b).g = 1
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Assign, Term.Select, Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2450,14 +2343,20 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f =
          |  // c
-         |  foo
+         |  (foo
          |    /* x
          |
          |     y */
          |    {
          |      z
-         |    }.g
+         |    }).g
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Select, Term.Apply: // c""".stripMargin,
+        """|beg Term.ArgClause, Term.Block: /* x
+           |
+           |     y */""".stripMargin,
+      ),
     )(
       """|beg Term.Select, Term.Apply, Term.Name: // c""".stripMargin,
       """|beg Term.ArgClause, Term.Block: /* x
@@ -2481,14 +2380,20 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f =
          |  // c
-         |  foo
+         |  (foo
          |    /* x
          |
          |     y */
          |    {
          |      z
-         |    }(x)
+         |    })(x)
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Apply, Term.Apply: // c""".stripMargin,
+        """|beg Term.ArgClause, Term.Block: /* x
+           |
+           |     y */""".stripMargin,
+      ),
     )(
       """|beg Term.Apply, Term.Apply, Term.Name: // c""".stripMargin,
       """|beg Term.ArgClause, Term.Block: /* x
@@ -2514,28 +2419,18 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f =
          |  // c
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b: Int
+         |    + b): Int
          |""".stripMargin,
       reprinted = Seq(
-        """|beg Term.Name: // c""".stripMargin,
-        """|beg Term.Ascribe, Term.ApplyUnary, Term.Name: /* x
+        """|beg Term.Ascribe, Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.Name: /* x
            |
            |     y */""".stripMargin,
       ),
-      twice =
-        """|def f = {
-           |  // c
-           |  a
-           |  /* x
-           |
-           |     y */
-           |  +b: Int
-           |}
-           |""".stripMargin,
     )(
       """|beg Term.Ascribe, Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2559,15 +2454,21 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f = (
          |  // c
-         |  foo
+         |  (foo
          |    /* x
          |
          |     y */
          |    {
          |      z
-         |    }.g = 1
+         |    }).g = 1
          |)
          |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Assign, Term.Select, Term.Apply: // c""".stripMargin,
+        """|beg Term.ArgClause, Term.Block: /* x
+           |
+           |     y */""".stripMargin,
+      ),
     )(
       """|beg Term.Assign, Term.Select, Term.Apply, Term.Name: // c""".stripMargin,
       """|beg Term.ArgClause, Term.Block: /* x
@@ -2596,14 +2497,13 @@ class CommentSuite extends BaseDottySuite {
          |  x <- y
          |  if
          |    // c
-         |    a
+         |    (a
          |      /* x
          |
          |     y */
-         |      + b
+         |      + b)
          |} yield x
          |""".stripMargin,
-      reprintError = "illegal start of simple pattern",
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2624,13 +2524,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|type T = A
+      """|type T = (A
          |  /* x
          |
          |     y */
-         |  | B => C
+         |  | B) => C
          |""".stripMargin,
-      reprintError = "illegal start of definition `identifier`",
     )(
       """|beg Type.Name: /* x
          |
@@ -2650,15 +2549,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|type T = A
+      """|type T = (A
          |  /* x
          |
          |     y */
          |  {
          |    def g: Int
-         |  } => C
+         |  }) => C
          |""".stripMargin,
-      reprintError = "illegal start of definition `{`",
     )(
       """|beg Stat.Block: /* x
          |
@@ -2674,16 +2572,7 @@ class CommentSuite extends BaseDottySuite {
          |     y */
          |  :: b) = x
          |""".stripMargin
-    checkComments(
-      code,
-      """|val a
-         |  /* x
-         |
-         |     y */
-         |  :: b = x
-         |""".stripMargin,
-      reprintError = "declaration requires a type",
-    )(
+    checkComments(code)(
       """|beg Term.Name: /* x
          |
          |     y */""".stripMargin,
@@ -2704,11 +2593,11 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|@ann(
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b
+         |    + b)
          |) def f = 1
          |""".stripMargin,
     )(
@@ -2733,27 +2622,13 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = foo {
-         |  x => a
+         |  x => (a
          |    /* x
          |
          |     y */
-         |    + b
+         |    + b)
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyUnary, Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
-      twice =
-        """|def f = foo { x =>
-           |  a
-           |  /* x
-           |
-           |     y */
-           |  +b
-           |}
-           |""".stripMargin,
     )(
       """|beg Term.Name: /* x
          |
@@ -2776,27 +2651,13 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = foo {
-         |  a
+         |  (a
          |    /* x
          |
          |     y */
-         |    + b
+         |    + b)
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyUnary, Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
-      twice =
-        """|def f = foo {
-           |  a
-           |  /* x
-           |
-           |     y */
-           |  +b
-           |}
-           |""".stripMargin,
     )(
       """|beg Term.Name: /* x
          |
