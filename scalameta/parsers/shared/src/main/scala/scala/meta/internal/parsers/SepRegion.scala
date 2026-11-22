@@ -27,7 +27,7 @@ sealed trait RegionDelimNonIndented extends SepRegionNonIndented with RegionDeli
 // this describes non-delimiters which are also non-indented (likely all of them)
 sealed trait RegionNonDelimNonIndented extends SepRegionNonIndented
 
-case class RegionIndent(override val indent: Int) extends SepRegionIndented with RegionDelim
+class RegionIndent(override val indent: Int) extends SepRegionIndented with RegionDelim
 
 /** The indented region of a `case` on the line of its `catch`. As in dotty, it holds one case. */
 final class RegionCatchSameLine(indent: Int) extends RegionIndent(indent)
@@ -51,6 +51,8 @@ final class RegionCaseExprPat(override val indent: Int) extends RegionCaseExpr
 final class RegionCaseGuard(override val indent: Int) extends RegionCaseExpr
 final class RegionCaseBody(override val indent: Int, val arrow: Token)
     extends SepRegionNonIndented with CanProduceLF with RegionDeferring
+// indented region within a case guard, such as a colon argument
+final class RegionCaseGuardIndent(indent: Int) extends RegionIndent(indent)
 
 case object RegionColonMaybeFewerBraces extends RegionNonDelimNonIndented with CanProduceLF
 

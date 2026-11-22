@@ -643,6 +643,8 @@ private[meta] final class ScannerTokens(
           dropRegionLine(sepRegions) match {
             // `case` follows the body of a previous case
             case (_: RegionCaseBody) :: rs => expr() :: rs
+            // `case` follows the sub-cases of a previous case
+            case (_: RegionCaseGuard) :: rs => expr() :: rs
             // head could be RegionIndent or RegionBrace
             case x :: RegionCaseMark :: rs => expr() :: x :: rs
             case (_: RegionDelim) :: (_: RegionFor | RegionTemplateBody) :: _ => sepRegions
@@ -693,13 +695,25 @@ private[meta] final class ScannerTokens(
           case _ :: rs => OutdentInfo(null, rs)
           case _ => null
         }
-      case _: RightArrow => currRef(regionsAfterArrow(sepRegions))
+      case _: RightArrow => dropDeferringRegions(sepRegions) match {
+          // spec: an indented region of a guard ends at an arrow directly in it
+          case (r: RegionCaseGuardIndent) :: rs
+              if !guardContinuesAfterIndent(currPos + 1, r.indent, rs) =>
+            mkOutdentTo(r, rs, beforeComment = false)
+          case _ => currRef(regionsAfterArrow(sepRegions))
+        }
+      case _: ContextArrow => currRef(sepRegions match {
+          case RegionColonMaybeFewerBraces :: rs => rs
+          case _ => sepRegions
+        })
       case _: KwFor if !isPrevEndMarker() => currRef(RegionFor(next) :: sepRegions)
       case _: KwWhile if dialect.allowQuietSyntax && !isPrevEndMarker() =>
         currRef(RegionWhile(next, inCondIndent(sepRegions)) :: sepRegions)
       case _: KwIf if dialect.allowQuietSyntax && !isPrevEndMarker() =>
         currRef(dropRegionLine(sepRegions) match {
-          case (r: RegionCaseExprPat) :: rs => new RegionCaseGuard(r.indent) :: rs
+          // spec: as in dotty 3.3, a guard on a line of its own takes the indent of that line
+          case (r: RegionCaseExprPat) :: rs =>
+            new RegionCaseGuard(math.max(r.indent, countIndent(currPos))) :: rs
           case rs @ (_: RegionFor) :: _ => rs
           case rs @ (_: RegionDelim) :: (_: RegionFor) :: _ => rs
           // a guard after a generator that left a region, such as that of `new` or `try`
@@ -1017,8 +1031,12 @@ private[meta] final class ScannerTokens(
             def exceedsIndent = isIndented(sepRegions, nextIndent)
             def emitIndentWith(ri: SepRegionIndented, rs: List[SepRegion], next: TokenRef) =
               Right(mkIndent(prevPos, indentPos, ri :: rs, next))
-            def emitIndent(regions: List[SepRegion], next: TokenRef = null) =
-              emitIndentWith(RegionIndent(nextIndent), regions, next)
+            def emitIndent(rs: List[SepRegion], next: TokenRef = null) = {
+              val cg = rs.headOrNull.isInstanceOf[RegionCaseGuard]
+              val ri =
+                if (cg) new RegionCaseGuardIndent(nextIndent) else new RegionIndent(nextIndent)
+              emitIndentWith(ri, rs, next)
+            }
             def emitIndentAndOutdent(regions: List[SepRegion]) =
               emitIndent(regions, mkOutdentAt(nextIndent, regions))
             // !next.is[RightBrace] - braces can sometimes have -1 and we can start indent on }
@@ -1370,6 +1388,65 @@ private[meta] final class ScannerTokens(
       case _ => true
     })
   }
+
+  /**
+   * Returns true if the guard continues past its indented region that holds `pos`, as the first
+   * line after the region shows
+   * @param indent
+   *   the indent of the region
+   * @param regions
+   *   the regions outside it, the guard's `RegionCaseGuard` first
+   */
+  @tailrec
+  private def guardContinuesAfterIndent(pos: Int, indent: Int, regions: List[SepRegion]): Boolean =
+    tokens(pos) match {
+      case _: EOF | _: CloseDelim => false
+      case _: OpenDelim =>
+        val close = findCloseDelim(pos)
+        close >= 0 && guardContinuesAfterIndent(close + 1, indent, regions)
+      case _: AtEOL =>
+        val packed = countIndentAndNonTriviaIndex(pos)
+        val linePos = Tokens.indexOf(packed)
+        val lineIndent = Tokens.countOf(packed)
+        if (lineIndent < 0) true // an unknown indent cannot end the guard
+        else if (lineIndent >= indent) guardContinuesAfterIndent(linePos, indent, regions)
+        else {
+          val cases = regions.drop(1) // the first is RegionCaseGuard
+          val tok = tokens(linePos)
+          // an enclosing guard ends here if it is deeper, or at this indent unless it continues
+          if (tok.is[RightArrow]) findGuardIndent(cases, lineIndent) match {
+            case (r: RegionCaseGuardIndent) :: rs => r.indent < lineIndent ||
+              r.indent == lineIndent && guardContinuesAfterIndent(linePos + 1, r.indent, rs)
+            case _ => true
+          }
+          else {
+            val casesIndent = findIndent(cases)
+            lineIndent >= casesIndent && {
+              tok.is[Dot] ||
+              // as in `getOutdentOnIndent`, a leading infix deeper than the guard stays in the region
+              tok.isSymbolicInfixOperator &&
+              (isLeadingInfixArg(linePos + 1, lineIndent) eq LeadingInfix.Yes) && {
+                val guard = regions.head
+                (if (guard.indent < 0) lineIndent == casesIndent else lineIndent <= guard.indent) ||
+                guardContinuesAfterIndent(linePos, indent, regions)
+              }
+            }
+          }
+        }
+      case _ => guardContinuesAfterIndent(pos + 1, indent, regions)
+    }
+
+  @tailrec // find guard indent if it comes before a region at given indent or less
+  private def findGuardIndent(regions: List[SepRegion], indent: Int): List[SepRegion] =
+    dropDeferringRegions(regions) match {
+      case rs @ r :: tail =>
+        if (r.isInstanceOf[RegionCaseGuardIndent]) rs
+        else if (r.indent <= indent &&
+          (if (r.isIndented) r.indent < indent || findIndent(tail) != indent else r.indent >= 0))
+          Nil
+        else findGuardIndent(tail, indent)
+      case _ => Nil
+    }
 
   /* the index of the token that ends `cond` if the condition continues to it from `pos`, or -1;
    * as dotty's `followedByToken`, the scan stops at a statement outside braces */

@@ -9244,11 +9244,41 @@ class FewerBracesSuite extends BaseDottySuite {
          |        z => 1
          |  case _ => 2
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `=>` expected but `outdent` found
-         |        z => 1
-         |              ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y =>
+         |    y match {
+         |      case w if ws.exists {
+         |        z => z
+         |      } => 1
+         |    }
+         |  case _ =>
+         |    2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          None,
+          tmatch(
+            tname("y"),
+            Case(
+              patvar("w"),
+              Some(tapply(tselect("ws", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+              int(1),
+            ),
+          ),
+        ),
+        Case(Pat.Wildcard(), None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after an extractor pattern, colon lambda, case arrow at a smaller indent") {
@@ -10058,11 +10088,30 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if a && xs.map: x =>
          |    x => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    x => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.map {
+         |    x => x
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(
+            tinfix(tname("a"), "&&", tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x"))))),
+          ),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, two lines, case arrow on the last line") {
@@ -10072,11 +10121,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |    val w = z
          |    w => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    w => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists { z =>
+         |    val w = z
+         |    w
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(blk(Defn.Val(Nil, List(patvar("w")), None, tname("z")), tname("w")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, name, colon at line end, case arrow on the argument's line") {
@@ -10085,11 +10155,21 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if p:
          |    Boolean => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    Boolean => 1
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if p {
+         |    Boolean
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(tname("x"), Case(patvar("y"), Some(tapply(tname("p"), blk(tname("Boolean")))), int(1))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, lambda, case arrow on the lambda's line") {
@@ -10098,11 +10178,29 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists:
          |    z => z => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => z => 1
-         |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z
+         |  } =>
+         |    z => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tname("z")))),
+          tfunc(tparam("z"))(int(1)),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, apply, colon at line end, case arrow on the argument's line") {
@@ -10111,11 +10209,24 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if f(a):
          |    b => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    b => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if f(a) {
+         |    b
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(patvar("y"), Some(tapply(tapply(tname("f"), tname("a")), blk(tname("b")))), int(1)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, infix operand, colon at line end, lambda, case arrow on the lambda's line") {
@@ -10124,11 +10235,29 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if a && xs.exists:
          |    z => z => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => z => 1
-         |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.exists {
+         |    z
+         |  } =>
+         |    z => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(tname("a"), "&&", tapply(tselect("xs", "exists"), blk(tname("z"))))),
+          tfunc(tparam("z"))(int(1)),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in a match with braces, colon lambda, case arrow on the body's line") {
@@ -10138,11 +10267,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `}` found
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
          |}
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -10154,11 +10300,29 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => z => 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `}` found
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z
+         |  } =>
+         |    z => 1
          |}
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tname("z")))),
+          tfunc(tparam("z"))(int(1)),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in partial function, colon lambda, case arrow on the body's line") {
@@ -10168,11 +10332,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `}` found
+    val layout =
+      """|def f = xs.collect {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
          |}
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "collect"),
+        Term.PartialFunction(List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in catch, colon lambda, case arrow on the body's line") {
@@ -10181,11 +10362,29 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if ys.exists: z =>
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = try g catch {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(
+        tname("g"),
+        List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        )),
+        None,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in colon argument of cases, colon lambda, case arrow on the body's line") {
@@ -10194,11 +10393,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if ys.exists: z =>
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.collect {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "collect"),
+        Term.PartialFunction(List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, case arrow at the end of the body's line") {
@@ -10208,11 +10424,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z =>
          |    1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    1
-         |     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, lambda, case arrow at the end of the lambda's line") {
@@ -10222,11 +10455,29 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => z =>
          |      1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      1
-         |       ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z
+         |  } =>
+         |    z => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tname("z")))),
+          tfunc(tparam("z"))(int(1)),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, case arrow on the body's line, another case") {
@@ -10236,11 +10487,30 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => 1
          |  case _ => 2
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `case` found
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
          |  case _ => 2
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+        Case(Pat.Wildcard(), None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda with a typed parameter, case arrow on the body's line") {
@@ -10249,11 +10519,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists: (z: Int) =>
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    (z: Int) => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z", pname("Int")))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case clause, case arrow on the clause's line") {
@@ -10262,11 +10549,31 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists:
          |    case b => b => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    case b => b => 1
-         |                    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b => b
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(patvar("b"), None, tname("b")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case clause with a try and a catch in braces, case arrow on the clause's line") {
@@ -10275,11 +10582,42 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists:
          |    case b => try g(b) catch { case _: Exception => false } => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `=>` found
-         |    case b => try g(b) catch { case _: Exception => false } => 1
-         |                                                            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b =>
+         |      try g(b) catch {
+         |        case _: Exception => false
+         |      }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(
+              patvar("b"),
+              None,
+              Term.Try(
+                tapply(tname("g"), tname("b")),
+                List(Case(Pat.Typed(Pat.Wildcard(), pname("Exception")), None, bool(false))),
+                None,
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case clause with a try and a catch in braces, case arrow on its own line") {
@@ -10289,11 +10627,42 @@ class FewerBracesSuite extends BaseDottySuite {
          |    case b => try g(b) catch { case _: Exception => false }
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `outdent` expected but `=>` found
-         |    => 1
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b =>
+         |      try g(b) catch {
+         |        case _: Exception => false
+         |      }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(
+              patvar("b"),
+              None,
+              Term.Try(
+                tapply(tname("g"), tname("b")),
+                List(Case(Pat.Typed(Pat.Wildcard(), pname("Exception")), None, bool(false))),
+                None,
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, val of a lambda, case arrow on the last line") {
@@ -10304,9 +10673,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |    g(z) => 1
          |""".stripMargin
     val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
+      """|<input>:4: error: `outdent` expected but `=>` found
+         |    g(z) => 1
+         |         ^""".stripMargin
     runTestError[Stat](code, error)
   }
 
@@ -10317,11 +10686,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |    val g = (a: Int) => a
          |    g => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    val g = a: Int
+         |  } =>
+         |    a
          |    g => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(Defn.Val(Nil, List(patvar("g")), None, Term.Ascribe(tname("a"), pname("Int")))),
+          )),
+          blk(tname("a"), tfunc(tparam("g"))(int(1))),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, lambda in parentheses, case arrow on the argument's line") {
@@ -10330,11 +10721,31 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists:
          |    ys.map(a => a).contains => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `=>` found
-         |    ys.map(a => a).contains => 1
-         |                            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    ys.map(a => a).contains
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tselect(tapply(tselect("ys", "map"), tfunc(tparam("a"))(tname("a"))), "contains")),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, lambda in parentheses, case arrow on the body's line") {
@@ -10343,11 +10754,34 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists: z =>
          |    ys.map(a => a).contains(z) => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => ys.map(a => a).contains(z)
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tapply(
+              tselect(tapply(tselect("ys", "map"), tfunc(tparam("a"))(tname("a"))), "contains"),
+              tname("z"),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, case arrow on the body's line, another body line") {
@@ -10357,11 +10791,30 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => 1
          |    2
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } =>
+         |    1
          |    2
-         |     ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          blk(int(1), int(2)),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case arrow on the argument's line, another body line") {
@@ -10371,11 +10824,30 @@ class FewerBracesSuite extends BaseDottySuite {
          |    y => 1
          |    2
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    y
+         |  } =>
+         |    1
          |    2
-         |     ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "contains"), blk(tname("y")))),
+          blk(int(1), int(2)),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda with a using parameter, case arrow on the body's line") {
@@ -10384,11 +10856,37 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists: (using z: Int) =>
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    (using z: Int) => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(Term.Function(
+              Term.ParamClause(
+                List(Term.Param(List(Mod.Using()), tname("z"), Some(pname("Int")), None)),
+                Some(Mod.Using()),
+              ),
+              tname("z"),
+            )),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda with a placeholder parameter, case arrow on the body's line") {
@@ -10397,11 +10895,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists: _ =>
          |    true => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: _ =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    _ => true
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("_"))(bool(true))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard on the catch line, colon lambda, case arrow on the body's line") {
@@ -10409,11 +10924,29 @@ class FewerBracesSuite extends BaseDottySuite {
       """|def f = try g catch case y if ys.exists: z =>
          |  z => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `outdent` found
-         |  z => 1
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = try g catch {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(
+        tname("g"),
+        List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        )),
+        None,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case arrow on its own line at the argument's indent") {
@@ -10423,11 +10956,24 @@ class FewerBracesSuite extends BaseDottySuite {
          |    y
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    => 1
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    y
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(patvar("y"), Some(tapply(tselect("xs", "contains"), blk(tname("y")))), int(1)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, backquoted name, colon at line end, case arrow on the argument's line") {
@@ -10436,11 +10982,21 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if `p`:
          |    Boolean => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    Boolean => 1
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if p {
+         |    Boolean
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(tname("x"), Case(patvar("y"), Some(tapply(tname("p"), blk(tname("Boolean")))), int(1))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, val with an indented lambda, case arrow on the last line") {
@@ -10451,11 +11007,35 @@ class FewerBracesSuite extends BaseDottySuite {
          |      (a: Int) => a
          |    g => 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `=>` expected but `outdent` found
-         |    g => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    val g = (a: Int) => a
+         |    g
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(
+              Defn.Val(Nil, List(patvar("g")), None, tfunc(tparam("a", pname("Int")))(tname("a"))),
+              tname("g"),
+            ),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, type apply, colon at line end, case arrow on the argument's line") {
@@ -10464,11 +11044,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if p[Int]:
          |    Boolean => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    Boolean => 1
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if p[Int] {
+         |    Boolean
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tapplytype(tname("p"), pname("Int")), blk(tname("Boolean")))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, leading infix line, colon lambda, case arrow on the body's line") {
@@ -10478,11 +11075,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |    && xs.exists: z =>
          |      z => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      z => 1
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard on the line after the pattern, colon lambda, case arrow on the body's line") {
@@ -10492,11 +11110,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    if xs.exists: z =>
          |      z => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      z => 1
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, case arrow on its own line at the body's indent") {
@@ -10506,11 +11141,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    => 1
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, try with a case on the catch line, case arrow on its own line at the body's indent") {
@@ -10521,11 +11173,37 @@ class FewerBracesSuite extends BaseDottySuite {
          |    catch case _: Exception => false
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => try z > 0 catch {
+         |      case _: Exception => false
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(Term.Try(
+              tinfix(tname("z"), ">", int(0)),
+              List(Case(Pat.Typed(Pat.Wildcard(), pname("Exception")), None, bool(false))),
+              None,
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, try with a case on the line after catch, case arrow on its own line at the body's indent") {
@@ -10537,11 +11215,37 @@ class FewerBracesSuite extends BaseDottySuite {
          |      case _: Exception => false
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => try z > 0 catch {
+         |      case _: Exception => false
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(Term.Try(
+              tinfix(tname("z"), ">", int(0)),
+              List(Case(Pat.Typed(Pat.Wildcard(), pname("Exception")), None, bool(false))),
+              None,
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, try with a catch in braces, case arrow after the closing brace") {
@@ -10551,11 +11255,37 @@ class FewerBracesSuite extends BaseDottySuite {
          |    try z > 0
          |    catch { case _: Exception => false } => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => try z > 0 catch {
+         |      case _: Exception => false
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(Term.Try(
+              tinfix(tname("z"), ">", int(0)),
+              List(Case(Pat.Typed(Pat.Wildcard(), pname("Exception")), None, bool(false))),
+              None,
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, try with a case on the catch line, case arrow on its own line at the argument's indent") {
@@ -10566,11 +11296,37 @@ class FewerBracesSuite extends BaseDottySuite {
          |    catch case _: Exception => false
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `outdent` expected but `=>` found
-         |    => 1
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if p {
+         |    try q catch {
+         |      case _: Exception => false
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tname("p"),
+            blk(Term.Try(
+              tname("q"),
+              List(Case(Pat.Typed(Pat.Wildcard(), pname("Exception")), None, bool(false))),
+              None,
+            )),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, case arrow on its own line deeper than the body") {
@@ -10580,11 +11336,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z
          |      => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, case arrow and a comment at the end of the body's line") {
@@ -10594,11 +11367,29 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => // c
          |    1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => // c
          |    1
-         |     ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1).toBuilder.begComment(Seq("// c")).result(),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, lambda in braces, case arrow on the body's line") {
@@ -10607,11 +11398,36 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists: z =>
          |    ys.map { a => a }.contains(z) => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => ys.map {
+         |      a => a
+         |    }.contains(z)
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tapply(
+              tselect(tapply(tselect("ys", "map"), blk(tfunc(tparam("a"))(tname("a")))), "contains"),
+              tname("z"),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda with two parameters, case arrow on the body's line") {
@@ -10620,11 +11436,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if m.exists: (k, v) =>
          |    v => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    v => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if m.exists {
+         |    (k, v) => v
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("m", "exists"), blk(tfunc(tparam("k"), tparam("v"))(tname("v"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, prefix operator, colon lambda, case arrow on the body's line") {
@@ -10633,11 +11466,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if !xs.exists: z =>
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if !xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(unary("!", tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in the second case of a match with braces, colon at line end, lambda, case arrow on the lambda's line") {
@@ -10648,11 +11498,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => z => 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `=>` expected but `}` found
+    val layout =
+      """|def f = x match {
+         |  case 0 =>
+         |    0
+         |  case y if xs.exists {
+         |    z
+         |  } =>
+         |    z => 1
          |}
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(int(0), None, int(0)),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tname("z")))),
+          tfunc(tparam("z"))(int(1)),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in the second case, colon lambda, case arrow on the body's line") {
@@ -10662,11 +11533,30 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists: z =>
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case 0 => 0
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(int(0), None, int(0)),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in catch with braces, colon lambda, case arrow on the body's line") {
@@ -10676,11 +11566,29 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `}` found
+    val layout =
+      """|def f = try g catch {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
          |}
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(
+        tname("g"),
+        List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        )),
+        None,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, no indents in match, colon lambda, case arrow on the body's line") {
@@ -10690,11 +11598,18 @@ class FewerBracesSuite extends BaseDottySuite {
          |if foo: b =>
          |  b => 2
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |  b => 2
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|a match {
+         |  case n if foo {
+         |    b => b
+         |  } => 2
+         |}
+         |""".stripMargin
+    val tree = tmatch(
+      tname("a"),
+      Case(patvar("n"), Some(tapply(tname("foo"), blk(tfunc(tparam("b"))(tname("b"))))), int(2)),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, no indents in match, colon at line end, case arrow on the argument's line") {
@@ -10704,11 +11619,16 @@ class FewerBracesSuite extends BaseDottySuite {
          |if foo:
          |  b => 2
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |  b => 2
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|a match {
+         |  case n if foo {
+         |    b
+         |  } => 2
+         |}
+         |""".stripMargin
+    val tree =
+      tmatch(tname("a"), Case(patvar("n"), Some(tapply(tname("foo"), blk(tname("b")))), int(2)))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, two lines, case arrow on the last line") {
@@ -10718,11 +11638,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |    val w = y
          |    w => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    w => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    val w = y
+         |    w
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "contains"),
+            blk(Defn.Val(Nil, List(patvar("w")), None, tname("y")), tname("w")),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, val of a match, case arrow on the last line") {
@@ -10734,11 +11675,47 @@ class FewerBracesSuite extends BaseDottySuite {
          |      case _ => false
          |    b => 1
          |""".stripMargin
-    val error =
-      """|<input>:6: error: `=>` expected but `outdent` found
-         |    b => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists { z =>
+         |    val b = z match {
+         |      case 1 => true
+         |      case _ => false
+         |    }
+         |    b
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(blk(
+              Defn.Val(
+                Nil,
+                List(patvar("b")),
+                None,
+                tmatch(
+                  tname("z"),
+                  Case(int(1), None, bool(true)),
+                  Case(Pat.Wildcard(), None, bool(false)),
+                ),
+              ),
+              tname("b"),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, infix line, case arrow on the infix line") {
@@ -10748,11 +11725,31 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z
          |    && b => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z && b
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tinfix(tname("z"), "&&", tname("b")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, block comment before the case arrow on the body's line") {
@@ -10761,11 +11758,31 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists: z =>
          |    z /* c */ => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z /* c */ => 1
-         |                  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z /* c */
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tname("z")).toBuilder.endComment(Seq("/* c */")).result()),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -10778,11 +11795,34 @@ class FewerBracesSuite extends BaseDottySuite {
          |  && ys.exists: z =>
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    y
+         |  } && ys.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tapply(tselect("xs", "contains"), blk(tname("y"))),
+            "&&",
+            tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, apply, colon lambda, case arrow on the body's line") {
@@ -10791,11 +11831,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if f(a): z =>
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if f(a) {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tapply(tname("f"), tname("a")), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, val with a context function type, case arrow on the last line") {
@@ -10805,11 +11862,35 @@ class FewerBracesSuite extends BaseDottySuite {
          |    val g: Int ?=> Int = 1
          |    g => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    g => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists { z =>
+         |    val g: Int ?=> Int = 1
+         |    g
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(blk(
+              Defn.Val(Nil, List(patvar("g")), Some(pctxfunc(pname("Int"))(pname("Int"))), int(1)),
+              tname("g"),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, match, case arrow on its own line at the body's indent") {
@@ -10821,11 +11902,38 @@ class FewerBracesSuite extends BaseDottySuite {
          |      case _ => false
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z match {
+         |      case 1 => true
+         |      case _ => false
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tmatch(
+              tname("z"),
+              Case(int(1), None, bool(true)),
+              Case(Pat.Wildcard(), None, bool(false)),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -10837,11 +11945,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => 1
          |    val h = (a: Int) => a
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } =>
+         |    1
          |    val h = (a: Int) => a
-         |                         ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          blk(
+            int(1),
+            Defn.Val(Nil, List(patvar("h")), None, tfunc(tparam("a", pname("Int")))(tname("a"))),
+          ),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, two lambda lines") {
@@ -10851,11 +11981,30 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => z
          |    w => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z
+         |  } =>
+         |    z
          |    w => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tname("z")))),
+          blk(tname("z"), tfunc(tparam("w"))(int(1))),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after if at line end, colon lambda, case arrow on the body's line") {
@@ -10865,11 +12014,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |      xs.exists: z =>
          |        z => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |        z => 1
-         |              ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case clause with a try and a case on the catch line, case arrow on its own line") {
@@ -10879,11 +12045,42 @@ class FewerBracesSuite extends BaseDottySuite {
          |    case b => try g(b) catch case _: Exception => false
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `outdent` expected but `=>` found
-         |    => 1
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b =>
+         |      try g(b) catch {
+         |        case _: Exception => false
+         |      }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(
+              patvar("b"),
+              None,
+              Term.Try(
+                tapply(tname("g"), tname("b")),
+                List(Case(Pat.Typed(Pat.Wildcard(), pname("Exception")), None, bool(false))),
+                None,
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, trailing infix operator, colon lambda, case arrow on the body's line") {
@@ -10893,11 +12090,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |      xs.exists: z =>
          |        z => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |        z => 1
-         |              ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(
+            tname("a"),
+            "&&",
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, if-then-else, case arrow on the body's line") {
@@ -10906,11 +12124,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists: z =>
          |    if z > 0 then z < 9 else false => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => if (z > 0) z < 9 else false
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(
+              tif(tinfix(tname("z"), ">", int(0)), tinfix(tname("z"), "<", int(9)), bool(false)),
+            )),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, if-then-else, case arrow on the argument's line") {
@@ -10919,11 +12159,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if p:
          |    if a then b else c => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    if a then b else c => 1
-         |                           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if p {
+         |    if (a) b else c
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tname("p"), blk(tif(tname("a"), tname("b"), tname("c"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, if-then-else over three lines, case arrow on the else line") {
@@ -10934,11 +12191,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |      z < 9
          |    else false => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => if (z > 0) z < 9 else false
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(
+              tif(tinfix(tname("z"), ">", int(0)), tinfix(tname("z"), "<", int(9)), bool(false)),
+            )),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard on the brace line, colon lambda, case arrow on the body's line") {
@@ -10947,11 +12226,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `}` found
+    val layout =
+      """|def f = xs.collect {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
          |}
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "collect"),
+        Term.PartialFunction(List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in catch with finally, colon lambda, case arrow on the body's line") {
@@ -10961,11 +12257,29 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => 1
          |finally h
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = try g catch {
+         |  case y if ys.exists {
+         |    z => z
+         |  } => 1
+         |} finally h
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(
+        tname("g"),
+        List(Case(
+          patvar("y"),
+          Some(tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        )),
+        Some(tname("h")),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in a match before a statement, colon lambda, case arrow on the body's line") {
@@ -10976,11 +12290,34 @@ class FewerBracesSuite extends BaseDottySuite {
          |      z => 1
          |  g
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      z => 1
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = {
+         |  x match {
+         |    case y if xs.exists {
+         |      z => z
+         |    } => 1
+         |  }
+         |  g
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+            int(1),
+          ),
+        ),
+        tname("g"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, argument in parentheses over three lines, case arrow after the closing parenthesis") {
@@ -10991,11 +12328,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |      z
          |    ) => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => g(z)
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tapply(tname("g"), tname("z")))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, nested colon lambda, case arrow on the nested body's line") {
@@ -11005,11 +12359,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z.ys.exists: w =>
          |      w => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      w => 1
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z.ys.exists: w
+         |  } =>
+         |    w => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(Term.Ascribe(tselect("z", "ys", "exists"), pname("w")))),
+          )),
+          tfunc(tparam("w"))(int(1)),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after if at line end, colon at line end, case arrow on the argument's line") {
@@ -11019,11 +12394,21 @@ class FewerBracesSuite extends BaseDottySuite {
          |      p:
          |        Boolean => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |        Boolean => 1
-         |                    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if p {
+         |    Boolean
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(tname("x"), Case(patvar("y"), Some(tapply(tname("p"), blk(tname("Boolean")))), int(1))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after a typed pattern, colon at line end, case arrow on the argument's line") {
@@ -11033,11 +12418,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |    s.length > 4 => s
          |  case x => x.toString
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `=>` found
-         |    s.length > 4 => s
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f(x: Any) = x match {
+         |  case s: String if g {
+         |    s.length > 4
+         |  } =>
+         |    s
+         |  case x =>
+         |    x.toString
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Any"))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Typed(patvar("s"), pname("String")),
+          Some(tapply(tname("g"), blk(tinfix(tselect("s", "length"), ">", int(4))))),
+          tname("s"),
+        ),
+        Case(patvar("x"), None, tselect("x", "toString")),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after a typed pattern, colon lambda, case arrow on the body's line") {
@@ -11047,11 +12453,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z == s => 1
          |  case _ => 2
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case s: String if xs.exists: z =>
-         |                             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case s: String if xs.exists {
+         |    z => z == s
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Typed(patvar("s"), pname("String")),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tinfix(tname("z"), "==", tname("s")))),
+          )),
+          int(1),
+        ),
+        Case(Pat.Wildcard(), None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after a typed pattern, no indents in match, colon at line end, case arrow on the argument's line") {
@@ -11062,11 +12490,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |    s.length > 4 => s
          |  case x => x.toString
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `outdent` expected but `=>` found
-         |    s.length > 4 => s
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f(x: Any) = x match {
+         |  case s: String if g {
+         |    s.length > 4
+         |  } =>
+         |    s
+         |  case x =>
+         |    x.toString
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Any"))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Typed(patvar("s"), pname("String")),
+          Some(tapply(tname("g"), blk(tinfix(tselect("s", "length"), ">", int(4))))),
+          tname("s"),
+        ),
+        Case(patvar("x"), None, tselect("x", "toString")),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after an extractor pattern, colon lambda, case arrow on the body's line") {
@@ -11076,11 +12525,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z == s => 1
          |  case _ => 2
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case Some(s) if xs.exists: z =>
-         |                           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case Some(s) if xs.exists {
+         |    z => z == s
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Extract(tname("Some"), List(patvar("s"))),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tinfix(tname("z"), "==", tname("s")))),
+          )),
+          int(1),
+        ),
+        Case(Pat.Wildcard(), None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, no indents in a nested match, colon lambda, case arrow on the body's line") {
@@ -11096,11 +12567,54 @@ class FewerBracesSuite extends BaseDottySuite {
          |      case _ => 2
          |    case _ => 3
          |""".stripMargin
-    val error =
-      """|<input>:6: error: `=>` expected but `:` found
-         |      if list.exists: k =>
-         |                    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def test = list.map {
+         |  case i: Int =>
+         |    n match {
+         |      case j: Int if list.exists {
+         |        k => list.exists(_ == j && j == k)
+         |      } => 1
+         |      case _ => 2
+         |    }
+         |  case _ => 3
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("test"),
+      Nil,
+      None,
+      tapply(
+        tselect("list", "map"),
+        Term.PartialFunction(List(
+          Case(
+            Pat.Typed(patvar("i"), pname("Int")),
+            None,
+            tmatch(
+              tname("n"),
+              Case(
+                Pat.Typed(patvar("j"), pname("Int")),
+                Some(tapply(
+                  tselect("list", "exists"),
+                  blk(tfunc(tparam("k"))(tapply(
+                    tselect("list", "exists"),
+                    Term.AnonymousFunction(tinfix(
+                      tinfix(Term.Placeholder(), "==", tname("j")),
+                      "&&",
+                      tinfix(tname("j"), "==", tname("k")),
+                    )),
+                  ))),
+                )),
+                int(1),
+              ),
+              Case(Pat.Wildcard(), None, int(2)),
+            ),
+          ),
+          Case(Pat.Wildcard(), None, int(3)),
+        )),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in a match with an end marker, colon lambda, case arrow on the body's line") {
@@ -11111,11 +12625,34 @@ class FewerBracesSuite extends BaseDottySuite {
          |      z => 1
          |  end match
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      z => 1
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = {
+         |  x match {
+         |    case y if xs.exists {
+         |      z => z
+         |    } => 1
+         |  }
+         |  end match
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+            int(1),
+          ),
+        ),
+        Term.EndMarker(tname("match")),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, leading-dot line, colon lambda, case arrow on the body's line") {
@@ -11125,11 +12662,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |      .exists: z =>
          |        z => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |        z => 1
-         |              ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, case arrow at the end of the body's line, deeper case body") {
@@ -11139,11 +12693,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z =>
          |      1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      1
-         |       ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -11155,11 +12726,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    s.length > 4 =>
          |      s
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `=>` found
-         |    s.length > 4 =>
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f(x: Any) = x match {
+         |  case s: String if g {
+         |    s.length > 4
+         |  } => s
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Any"))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Typed(patvar("s"), pname("String")),
+          Some(tapply(tname("g"), blk(tinfix(tselect("s", "length"), ">", int(4))))),
+          tname("s"),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, comment on the guard line, case arrow on the body's line") {
@@ -11168,11 +12756,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists: z => // c
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => // c
+         |      z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tname("z").toBuilder.begComment(Seq("// c")).result())),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, comment on the guard line, case arrow on the argument's line") {
@@ -11181,11 +12790,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case s: String if g: // c
          |    s.length > 4 => s
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `=>` found
-         |    s.length > 4 => s
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f(x: Any) = x match {
+         |  case s: String if g {
+         |    // c
+         |    s.length > 4
+         |  } => s
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Any"))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Typed(patvar("s"), pname("String")),
+          Some(tapply(
+            tname("g"),
+            blk(tinfix(tselect("s", "length"), ">", int(4)).toBuilder.begComment(Seq("// c")).result()),
+          )),
+          tname("s"),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -11200,11 +12830,44 @@ class FewerBracesSuite extends BaseDottySuite {
          |      case _ => false
          |  => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z match {
+         |      case w if ws.exists {
+         |        v => v
+         |      } => true
+         |      case _ => false
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tmatch(
+              tname("z"),
+              Case(
+                patvar("w"),
+                Some(tapply(tselect("ws", "exists"), blk(tfunc(tparam("v"))(tname("v"))))),
+                bool(true),
+              ),
+              Case(Pat.Wildcard(), None, bool(false)),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case clause with a guard colon lambda, inner case arrow on the inner body's line") {
@@ -11216,11 +12879,41 @@ class FewerBracesSuite extends BaseDottySuite {
          |    case _ => false
          |  => 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `=>` expected but `case` found
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b if bs.exists {
+         |      c => c
+         |    } => true
          |    case _ => false
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(
+              Case(
+                patvar("b"),
+                Some(tapply(tselect("bs", "exists"), blk(tfunc(tparam("c"))(tname("c"))))),
+                bool(true),
+              ),
+              Case(Pat.Wildcard(), None, bool(false)),
+            )),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -11235,11 +12928,44 @@ class FewerBracesSuite extends BaseDottySuite {
          |      case _ => false
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z match {
+         |      case w if ws.exists {
+         |        v => v
+         |      } => true
+         |      case _ => false
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tmatch(
+              tname("z"),
+              Case(
+                patvar("w"),
+                Some(tapply(tselect("ws", "exists"), blk(tfunc(tparam("v"))(tname("v"))))),
+                bool(true),
+              ),
+              Case(Pat.Wildcard(), None, bool(false)),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, last case clause with a guard colon lambda, inner case arrow on the inner body's line") {
@@ -11250,11 +12976,37 @@ class FewerBracesSuite extends BaseDottySuite {
          |      c => true
          |  => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      c => true
-         |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b if bs.exists {
+         |      c => c
+         |    } => true
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(
+              patvar("b"),
+              Some(tapply(tselect("bs", "exists"), blk(tfunc(tparam("c"))(tname("c"))))),
+              bool(true),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, last case clause with a guard colon lambda, inner case arrow on the inner body's line, outer case arrow at the body's indent") {
@@ -11265,11 +13017,37 @@ class FewerBracesSuite extends BaseDottySuite {
          |      c => true
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `=>` expected but `outdent` found
-         |    => 1
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b if bs.exists {
+         |      c => c
+         |    } => true
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(
+              patvar("b"),
+              Some(tapply(tselect("bs", "exists"), blk(tfunc(tparam("c"))(tname("c"))))),
+              bool(true),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case clause, then a case clause with a guard colon lambda, inner case arrow on the inner body's line") {
@@ -11281,11 +13059,41 @@ class FewerBracesSuite extends BaseDottySuite {
          |      c => true
          |  => 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `=>` expected but `outdent` found
-         |      c => true
-         |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case 0 => false
+         |    case b if bs.exists {
+         |      c => c
+         |    } => true
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(
+              Case(int(0), None, bool(false)),
+              Case(
+                patvar("b"),
+                Some(tapply(tselect("bs", "exists"), blk(tfunc(tparam("c"))(tname("c"))))),
+                bool(true),
+              ),
+            )),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, last case clause with a guard colon at line end, inner case arrow on the inner body's line") {
@@ -11296,11 +13104,35 @@ class FewerBracesSuite extends BaseDottySuite {
          |      b => true
          |  => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      b => true
-         |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b if bs.contains {
+         |      b
+         |    } => true
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(
+              Case(patvar("b"), Some(tapply(tselect("bs", "contains"), blk(tname("b")))), bool(true)),
+            )),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, last case clause with a guard colon lambda, try and catch lines, inner case arrow on its own line, outer case arrow at the body's indent") {
@@ -11313,11 +13145,46 @@ class FewerBracesSuite extends BaseDottySuite {
          |      => true
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `:` found
-         |    case b if b.ws.exists: w =>
-         |                         ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b if b.ws.exists {
+         |      w => try w > 0 catch {
+         |        case _: Exception => false
+         |      }
+         |    } => true
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(
+              patvar("b"),
+              Some(tapply(
+                tselect("b", "ws", "exists"),
+                blk(tfunc(tparam("w"))(Term.Try(
+                  tinfix(tname("w"), ">", int(0)),
+                  List(Case(Pat.Typed(Pat.Wildcard(), pname("Exception")), None, bool(false))),
+                  None,
+                ))),
+              )),
+              bool(true),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, last case clause with a guard colon lambda, inner case arrow on the inner body's line before a try, outer case arrow at the body's indent") {
@@ -11328,11 +13195,47 @@ class FewerBracesSuite extends BaseDottySuite {
          |      w > 0 => try g(b) catch case _: Exception => false
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `:` found
-         |    case b if b.ws.exists: w =>
-         |                         ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b if b.ws.exists {
+         |      w => w > 0
+         |    } =>
+         |      try g(b) catch {
+         |        case _: Exception => false
+         |      }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(
+              patvar("b"),
+              Some(tapply(
+                tselect("b", "ws", "exists"),
+                blk(tfunc(tparam("w"))(tinfix(tname("w"), ">", int(0)))),
+              )),
+              Term.Try(
+                tapply(tname("g"), tname("b")),
+                List(Case(Pat.Typed(Pat.Wildcard(), pname("Exception")), None, bool(false))),
+                None,
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, inner guard colon lambda in the last case, inner case arrow on the inner body's line") {
@@ -11344,11 +13247,42 @@ class FewerBracesSuite extends BaseDottySuite {
          |        v => true
          |  => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z match {
+         |      case w if ws.exists {
+         |        v => v
+         |      } => true
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tmatch(
+              tname("z"),
+              Case(
+                patvar("w"),
+                Some(tapply(tselect("ws", "exists"), blk(tfunc(tparam("v"))(tname("v"))))),
+                bool(true),
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, inner guard colon lambda in the last case, inner case arrow on the inner body's line, outer case arrow at the body's indent") {
@@ -11360,11 +13294,42 @@ class FewerBracesSuite extends BaseDottySuite {
          |        v => true
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z match {
+         |      case w if ws.exists {
+         |        v => v
+         |      } => true
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tmatch(
+              tname("z"),
+              Case(
+                patvar("w"),
+                Some(tapply(tselect("ws", "exists"), blk(tfunc(tparam("v"))(tname("v"))))),
+                bool(true),
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in a match with braces, colon lambda, inner guard colon lambda in the last case, inner case arrow on the inner body's line") {
@@ -11377,11 +13342,42 @@ class FewerBracesSuite extends BaseDottySuite {
          |  => 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z match {
+         |      case w if ws.exists {
+         |        v => v
+         |      } => true
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tmatch(
+              tname("z"),
+              Case(
+                patvar("w"),
+                Some(tapply(tselect("ws", "exists"), blk(tfunc(tparam("v"))(tname("v"))))),
+                bool(true),
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, last case clause whose body matches, with a guard colon lambda in its last case, inner case arrow on the inner body's line, outer case arrow at the body's indent") {
@@ -11393,11 +13389,47 @@ class FewerBracesSuite extends BaseDottySuite {
          |        d => true
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `=>` expected but `outdent` found
-         |        d => true
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b =>
+         |      b match {
+         |        case c if cs.exists {
+         |          d => d
+         |        } => true
+         |      }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(
+              patvar("b"),
+              None,
+              tmatch(
+                tname("b"),
+                Case(
+                  patvar("c"),
+                  Some(tapply(tselect("cs", "exists"), blk(tfunc(tparam("d"))(tname("d"))))),
+                  bool(true),
+                ),
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, last case clause whose body on the next line matches, with a guard colon lambda in its last case, inner case arrow on the inner body's line, outer case arrow at the body's indent") {
@@ -11410,11 +13442,47 @@ class FewerBracesSuite extends BaseDottySuite {
          |          d => true
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:6: error: `=>` expected but `outdent` found
-         |          d => true
-         |                   ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b =>
+         |      b match {
+         |        case c if cs.exists {
+         |          d => d
+         |        } => true
+         |      }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(
+              patvar("b"),
+              None,
+              tmatch(
+                tname("b"),
+                Case(
+                  patvar("c"),
+                  Some(tapply(tselect("cs", "exists"), blk(tfunc(tparam("d"))(tname("d"))))),
+                  bool(true),
+                ),
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in a match with braces, colon at line end, last case clause whose body matches, with a guard colon lambda in its last case, inner case arrow on the inner body's line, outer case arrow at the body's indent") {
@@ -11427,11 +13495,47 @@ class FewerBracesSuite extends BaseDottySuite {
          |    => 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `=>` expected but `outdent` found
-         |        d => true
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b =>
+         |      b match {
+         |        case c if cs.exists {
+         |          d => d
+         |        } => true
+         |      }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(
+              patvar("b"),
+              None,
+              tmatch(
+                tname("b"),
+                Case(
+                  patvar("c"),
+                  Some(tapply(tselect("cs", "exists"), blk(tfunc(tparam("d"))(tname("d"))))),
+                  bool(true),
+                ),
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, try with a case on the catch line, inline then with a match in the handler, case arrow on its own line at the body's indent") {
@@ -11442,11 +13546,44 @@ class FewerBracesSuite extends BaseDottySuite {
          |      case X => true
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => try g(z) catch {
+         |      case e =>
+         |        if (p) e match {
+         |          case X => true
+         |        }
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(Term.Try(
+              tapply(tname("g"), tname("z")),
+              List(Case(
+                patvar("e"),
+                None,
+                tif(tname("p"), tmatch(tname("e"), Case(tname("X"), None, bool(true)))),
+              )),
+              None,
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, try with a case on the catch line, try with catch at the line end in the handler, case arrow on its own line at the body's indent") {
@@ -11457,11 +13594,48 @@ class FewerBracesSuite extends BaseDottySuite {
          |      case X => true
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => try g(z) catch {
+         |      case e =>
+         |        try h(z) catch {
+         |          case X => true
+         |        }
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(Term.Try(
+              tapply(tname("g"), tname("z")),
+              List(Case(
+                patvar("e"),
+                None,
+                Term.Try(
+                  tapply(tname("h"), tname("z")),
+                  List(Case(tname("X"), None, bool(true))),
+                  None,
+                ),
+              )),
+              None,
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, try with a case on the catch line, try without catch in the handler, case arrow on its own line at the body's indent") {
@@ -11471,11 +13645,38 @@ class FewerBracesSuite extends BaseDottySuite {
          |    try g(z) catch case e => try h(z)
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => try g(z) catch {
+         |      case e =>
+         |        try h(z)
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(Term.Try(
+              tapply(tname("g"), tname("z")),
+              List(Case(patvar("e"), None, Term.Try(tapply(tname("h"), tname("z")), Nil, None))),
+              None,
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case clause with a try and a case on the catch line, inline then with a match in the handler, case arrow on its own line") {
@@ -11486,11 +13687,49 @@ class FewerBracesSuite extends BaseDottySuite {
          |        case X => true
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `outdent` expected but `=>` found
-         |    => 1
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b =>
+         |      try g(b) catch {
+         |        case e =>
+         |          if (p) e match {
+         |            case X => true
+         |          }
+         |      }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(
+              patvar("b"),
+              None,
+              Term.Try(
+                tapply(tname("g"), tname("b")),
+                List(Case(
+                  patvar("e"),
+                  None,
+                  tif(tname("p"), tmatch(tname("e"), Case(tname("X"), None, bool(true)))),
+                )),
+                None,
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case clause with a try and a case on the catch line, try with catch at the line end in the handler, case arrow on its own line") {
@@ -11501,11 +13740,53 @@ class FewerBracesSuite extends BaseDottySuite {
          |        case X => true
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `outdent` expected but `=>` found
-         |    => 1
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    case b =>
+         |      try g(b) catch {
+         |        case e =>
+         |          try h(b) catch {
+         |            case X => true
+         |          }
+         |      }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            Term.PartialFunction(List(Case(
+              patvar("b"),
+              None,
+              Term.Try(
+                tapply(tname("g"), tname("b")),
+                List(Case(
+                  patvar("e"),
+                  None,
+                  Term.Try(
+                    tapply(tname("h"), tname("b")),
+                    List(Case(tname("X"), None, bool(true))),
+                    None,
+                  ),
+                )),
+                None,
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, comment line first, case arrow on the body's line") {
@@ -11515,11 +13796,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |    // c
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z =>
+         |      // c
+         |      z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tname("z").toBuilder.begComment(detachedComments("// c")).result())),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, comment line first, case arrow on the argument's line") {
@@ -11529,11 +13832,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |    // c
          |    Boolean => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    Boolean => 1
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if p {
+         |    // c
+         |    Boolean
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tname("p"),
+            blk(tname("Boolean").toBuilder.begComment(detachedComments("// c")).result()),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, leading infix line, colon at line end, case arrow on the argument's line") {
@@ -11543,11 +13867,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    && p:
          |      Boolean => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      Boolean => 1
-         |                  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if a && p {
+         |    Boolean
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tinfix(tname("a"), "&&", tapply(tname("p"), blk(tname("Boolean"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, argument in braces over three lines, case arrow after the closing brace") {
@@ -11558,11 +13899,36 @@ class FewerBracesSuite extends BaseDottySuite {
          |      w == z
          |    } => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => ys.exists {
+         |      w => w == z
+         |    }
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tapply(
+              tselect("ys", "exists"),
+              blk(tfunc(tparam("w"))(tinfix(tname("w"), "==", tname("z")))),
+            ))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in a match in parentheses, colon lambda, case arrow on the body's line") {
@@ -11572,11 +13938,31 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => 1
          |)
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = g(x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |})
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tname("g"),
+        tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+            int(1),
+          ),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case arrow at the end of the argument's line, case body at the same indent") {
@@ -11586,11 +13972,24 @@ class FewerBracesSuite extends BaseDottySuite {
          |    y =>
          |    1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    1
-         |     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    y
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(patvar("y"), Some(tapply(tselect("xs", "contains"), blk(tname("y")))), int(1)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after an alternative pattern, colon lambda, case arrow on the body's line") {
@@ -11599,11 +13998,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case A | B if xs.exists: z =>
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case A | B if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Alternative(tname("A"), tname("B")),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, case arrow at the end of the body's line, shallower case body") {
@@ -11613,11 +14029,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |      z =>
          |    1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `integer constant` found
-         |    1
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after a binder pattern, colon lambda, case arrow on the body's line") {
@@ -11626,11 +14059,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case s @ Some(_) if xs.exists: z =>
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case s @ Some(_) if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Bind(patvar("s"), Pat.Extract(tname("Some"), List(Pat.Wildcard()))),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -11643,11 +14093,30 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case _ => 2
          |}
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `case` found
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
          |  case _ => 2
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+        Case(Pat.Wildcard(), None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after a pattern over two lines, colon lambda, case arrow on the body's line") {
@@ -11657,11 +14126,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |         y) if xs.exists: z =>
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case Some(y) if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Extract(tname("Some"), List(patvar("y"))),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after an alternative pattern over two lines, colon lambda, case arrow on the body's line") {
@@ -11671,11 +14157,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |     | B if xs.exists: z =>
          |         z => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |         z => 1
-         |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case A | B if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Alternative(tname("A"), tname("B")),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -11687,11 +14190,29 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => g
          |      .h
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      .h
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } =>
+         |    g.h
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          tselect("g", "h"),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, case arrow on the body's line, deeper infix line in the case body") {
@@ -11701,11 +14222,29 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => a +
          |      b
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      b
-         |       ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } =>
+         |    a + b
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          tinfix(tname("a"), "+", tname("b")),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -11717,11 +14256,29 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => g(
          |      1)
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      1)
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } =>
+         |    g(1)
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          tapply(tname("g"), int(1)),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, case arrow on the body's line, colon lambda in the case body") {
@@ -11731,11 +14288,31 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z => ys.foreach: w =>
          |      w
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      w
-         |       ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } =>
+         |    ys.foreach {
+         |      w => w
+         |    }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          tapply(tselect("ys", "foreach"), blk(tfunc(tparam("w"))(tname("w")))),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case arrow on the argument's line, deeper select line in the case body") {
@@ -11745,11 +14322,29 @@ class FewerBracesSuite extends BaseDottySuite {
          |    s.length > 4 => s
          |      .trim
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `=>` found
-         |    s.length > 4 => s
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f(x: Any) = x match {
+         |  case s: String if g {
+         |    s.length > 4
+         |  } =>
+         |    s.trim
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Any"))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Typed(patvar("s"), pname("String")),
+          Some(tapply(tname("g"), blk(tinfix(tselect("s", "length"), ">", int(4))))),
+          tselect("s", "trim"),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in a match with braces, colon lambda, case arrow on the body's line, deeper select line in the case body") {
@@ -11761,11 +14356,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case _ => 2
          |}
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `=>` expected but `case` found
-         |  case _ => 2
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } =>
+         |    g.h
+         |  case _ =>
+         |    2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          tselect("g", "h"),
+        ),
+        Case(Pat.Wildcard(), None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in a sub-case, colon lambda, case arrow on the body's line") {
@@ -11775,11 +14391,37 @@ class FewerBracesSuite extends BaseDottySuite {
          |    case w if ws.exists: z =>
          |      z => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |      z => 1
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case Some(v) if v match {
+         |    case w if ws.exists {
+         |      z => z
+         |    } => 1
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Extract(tname("Some"), List(patvar("v"))),
+          None,
+          tsubmatch(
+            tname("v"),
+            Case(
+              patvar("w"),
+              Some(tapply(tselect("ws", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+              int(1),
+            ),
+          ),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after a case with a sub-match, colon lambda, case arrow on the body's line") {
@@ -11790,11 +14432,37 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists: z =>
          |    z => 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `=>` expected but `outdent` found
-         |    z => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case Some(v) if v match {
+         |    case 1 => 1
+         |  }
+         |  case y if xs.exists {
+         |    z => z
+         |  } =>
+         |    1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Extract(tname("Some"), List(patvar("v"))),
+          None,
+          tsubmatch(tname("v"), Case(int(1), None, int(1))),
+        ),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, if with parentheses, case arrow on the body's line") {
@@ -11803,11 +14471,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists: z =>
          |    if (z > 0) z < 9 else false => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => if (z > 0) z < 9 else false
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(
+              tif(tinfix(tname("z"), ">", int(0)), tinfix(tname("z"), "<", int(9)), bool(false)),
+            )),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, blank line, case arrow on the last line") {
@@ -11818,11 +14508,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |
          |    w => 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `=>` expected but `outdent` found
-         |    w => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists { z =>
+         |    val w = z
+         |    w
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(blk(Defn.Val(Nil, List(patvar("w")), None, tname("z")), tname("w")))),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, function type in brackets, case arrow on the body's line") {
@@ -11831,11 +14542,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if fs.exists: f =>
          |    f.isInstanceOf[Int => Int] => 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if fs.exists: f =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if fs.exists {
+         |    f => f.isInstanceOf[Int => Int]
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("fs", "exists"),
+            blk(tfunc(tparam("f"))(
+              tapplytype(tselect("f", "isInstanceOf"), pfunc(pname("Int"))(pname("Int"))),
+            )),
+          )),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, case arrow at the end of the body's line, empty case body, another case") {
@@ -11845,11 +14578,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z > y =>
          |  case _ => g()
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z > y
+         |  } =>
+         |  case _ =>
+         |    g()
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+          ),
+          blk(),
+        ),
+        Case(Pat.Wildcard(), None, tapply(tname("g"))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, case arrow at the end of the argument's line, empty case body, another case") {
@@ -11859,11 +14614,27 @@ class FewerBracesSuite extends BaseDottySuite {
          |    y =>
          |  case _ => g()
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `case` found
-         |  case _ => g()
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    y
+         |  } =>
+         |  case _ =>
+         |    g()
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(patvar("y"), Some(tapply(tselect("xs", "contains"), blk(tname("y")))), blk()),
+        Case(Pat.Wildcard(), None, tapply(tname("g"))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in catch with braces, colon lambda, case arrow at the end of the body's line, empty case body") {
@@ -11873,11 +14644,32 @@ class FewerBracesSuite extends BaseDottySuite {
          |    c == e =>
          |}
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case e if ignored.exists: c =>
-         |                          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = try g() catch {
+         |  case e if ignored.exists {
+         |    c => c == e
+         |  } =>
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(
+        tapply(tname("g")),
+        List(Case(
+          patvar("e"),
+          Some(tapply(
+            tselect("ignored", "exists"),
+            blk(tfunc(tparam("c"))(tinfix(tname("c"), "==", tname("e")))),
+          )),
+          blk(),
+        )),
+        None,
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -11888,11 +14680,30 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if xs.exists: z =>
          |    z > y =>
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z > y
+         |  } =>
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(
+            tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+          ),
+          blk(),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in a match in a colon lambda, colon lambda, case arrow on the body's line") {
@@ -11903,11 +14714,40 @@ class FewerBracesSuite extends BaseDottySuite {
          |      z > y => g(y)
          |    case _ => g(0)
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `if` found
-         |    case y if ys.exists: z =>
-         |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.foreach {
+         |  x => x match {
+         |    case y if ys.exists {
+         |      z => z > y
+         |    } =>
+         |      g(y)
+         |    case _ =>
+         |      g(0)
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tapply(
+        tselect("xs", "foreach"),
+        blk(tfunc(tparam("x"))(tmatch(
+          tname("x"),
+          Case(
+            patvar("y"),
+            Some(tapply(
+              tselect("ys", "exists"),
+              blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y")))),
+            )),
+            tapply(tname("g"), tname("y")),
+          ),
+          Case(Pat.Wildcard(), None, tapply(tname("g"), int(0))),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in the last case of a match in a colon lambda, colon lambda, case arrow on the body's line, select line after the lambda") {
@@ -11919,11 +14759,41 @@ class FewerBracesSuite extends BaseDottySuite {
          |        z > y => 1
          |  .sum
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `if` found
-         |      case y if ys.exists: z =>
-         |             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map {
+         |  x => x match {
+         |    case 0 => 0
+         |    case y if ys.exists {
+         |      z => z > y
+         |    } => 1
+         |  }
+         |}.sum
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tselect(
+        tapply(
+          tselect("xs", "map"),
+          blk(tfunc(tparam("x"))(tmatch(
+            tname("x"),
+            Case(int(0), None, int(0)),
+            Case(
+              patvar("y"),
+              Some(tapply(
+                tselect("ys", "exists"),
+                blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y")))),
+              )),
+              int(1),
+            ),
+          ))),
+        ),
+        "sum",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in the last case of a match in a colon lambda, colon at line end, case arrow on the argument's line, select line after the lambda") {
@@ -11935,11 +14805,41 @@ class FewerBracesSuite extends BaseDottySuite {
          |        _ > y => 1
          |  .sum
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `if` found
-         |      case y if ys.exists:
-         |             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = xs.map {
+         |  x => x match {
+         |    case 0 => 0
+         |    case y if ys.exists {
+         |      _ > y
+         |    } => 1
+         |  }
+         |}.sum
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tselect(
+        tapply(
+          tselect("xs", "map"),
+          blk(tfunc(tparam("x"))(tmatch(
+            tname("x"),
+            Case(int(0), None, int(0)),
+            Case(
+              patvar("y"),
+              Some(tapply(
+                tselect("ys", "exists"),
+                blk(Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", tname("y")))),
+              )),
+              int(1),
+            ),
+          ))),
+        ),
+        "sum",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard in the last case of a match in a colon argument, colon lambda, case arrow on the body's line, select line after the argument") {
@@ -11951,11 +14851,41 @@ class FewerBracesSuite extends BaseDottySuite {
          |        z > y => 1
          |  .get
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `:` found
-         |      case y if ys.exists: z =>
-         |                         ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = Option {
+         |  x match {
+         |    case 0 => 0
+         |    case y if ys.exists {
+         |      z => z > y
+         |    } => 1
+         |  }
+         |}.get
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tselect(
+        tapply(
+          tname("Option"),
+          blk(tmatch(
+            tname("x"),
+            Case(int(0), None, int(0)),
+            Case(
+              patvar("y"),
+              Some(tapply(
+                tselect("ys", "exists"),
+                blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y")))),
+              )),
+              int(1),
+            ),
+          )),
+        ),
+        "get",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -11968,11 +14898,40 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if ys.exists: z =>
          |    z > y => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `:` found
-         |  case y if ys.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case 0 =>
+         |    xs.foreach {
+         |      z => g(z)
+         |    }
+         |  case y if ys.exists {
+         |    z => z > y
+         |  } =>
+         |    1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          int(0),
+          None,
+          tapply(tselect("xs", "foreach"), blk(tfunc(tparam("z"))(tapply(tname("g"), tname("z"))))),
+        ),
+        Case(
+          patvar("y"),
+          Some(
+            tapply(tselect("ys", "exists"), blk(tfunc(tparam("z"))(tinfix(tname("z"), ">", tname("y"))))),
+          ),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon at line end, placeholder function, case arrow on the argument's line") {
@@ -11982,11 +14941,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |    _ > y => 1
          |  case _ => 2
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `=>` found
-         |    _ > y => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if xs.exists {
+         |    _ > y
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", tname("y")))),
+          )),
+          int(1),
+        ),
+        Case(Pat.Wildcard(), None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon lambda, placeholder functions in the body, case arrow on the body's line") {
@@ -11996,11 +14977,46 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z.exists(_ > y) && z.forall(_ < 9) => 1
          |  case _ => 2
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if xs.exists: z =>
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f(x: Int, xs: List[List[Int]]) = x match {
+         |  case y if xs.exists {
+         |    z => z.exists(_ > y) && z.forall(_ < 9)
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(
+        tparam("x", pname("Int")),
+        tparam("xs", papply(pname("List"), papply(pname("List"), pname("Int")))),
+      ))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tselect("xs", "exists"),
+            blk(tfunc(tparam("z"))(tinfix(
+              tapply(
+                tselect("z", "exists"),
+                Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", tname("y"))),
+              ),
+              "&&",
+              tapply(
+                tselect("z", "forall"),
+                Term.AnonymousFunction(tinfix(Term.Placeholder(), "<", int(9))),
+              ),
+            ))),
+          )),
+          int(1),
+        ),
+        Case(Pat.Wildcard(), None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard, colon context lambda, case arrow on the body's line") {
@@ -12010,11 +15026,36 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z > y => 1
          |  case _ => 2
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case y if g: (z: Int) ?=>
-         |             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f(x: Int, g: (Int ?=> Boolean) => Boolean) = x match {
+         |  case y if g {
+         |    (z: Int) ?=> z > y
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(
+        tparam("x", pname("Int")),
+        tparam("g", pfunc(pctxfunc(pname("Int"))(pname("Boolean")))(pname("Boolean"))),
+      ))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(
+            tname("g"),
+            blk(tctxfunc(tparam("z", pname("Int")))(tinfix(tname("z"), ">", tname("y")))),
+          )),
+          int(1),
+        ),
+        Case(Pat.Wildcard(), None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala3Future: case guard, infix operand, colon lambda, case arrow on the body's line") {
@@ -12024,11 +15065,30 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if a && xs.map: x =>
          |    x => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    x => 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if a && xs.map {
+         |    x => x
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(
+            tinfix(tname("a"), "&&", tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x"))))),
+          ),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala3Future: case guard, colon lambda, case arrow at the end of the body's line") {
@@ -12039,11 +15099,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z =>
          |    1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    1
-         |     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala3Future: case guard, colon lambda, case arrow on its own line at the body's indent") {
@@ -12054,11 +15131,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    z
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    => 1
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.exists {
+         |    z => z
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
+          int(1),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala3Future: case guard, name, colon at line end, case arrow on the argument's line") {
@@ -12068,11 +15162,21 @@ class FewerBracesSuite extends BaseDottySuite {
          |  case y if p:
          |    Boolean => 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |    Boolean => 1
-         |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if p {
+         |    Boolean
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(tname("x"), Case(patvar("y"), Some(tapply(tname("p"), blk(tname("Boolean")))), int(1))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala3Future: case guard, colon at line end, case arrow at the end of the argument's line, deeper case body") {
@@ -12083,11 +15187,28 @@ class FewerBracesSuite extends BaseDottySuite {
          |    s.length > 4 =>
          |      s
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `=>` found
-         |    s.length > 4 =>
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f(x: Any) = x match {
+         |  case s: String if g {
+         |    s.length > 4
+         |  } => s
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Any"))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          Pat.Typed(patvar("s"), pname("String")),
+          Some(tapply(tname("g"), blk(tinfix(tselect("s", "length"), ">", int(4))))),
+          tname("s"),
+        ),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala3Future: case guard, colon at line end, case arrow on its own line at the argument's indent") {
@@ -12098,11 +15219,24 @@ class FewerBracesSuite extends BaseDottySuite {
          |    y
          |    => 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |    => 1
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = x match {
+         |  case y if xs.contains {
+         |    y
+         |  } => 1
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(patvar("y"), Some(tapply(tselect("xs", "contains"), blk(tname("y")))), int(1)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after an alternative pattern over two lines, colon lambda, case arrow at a smaller indent") {
