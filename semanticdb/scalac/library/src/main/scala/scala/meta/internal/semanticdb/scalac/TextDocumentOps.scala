@@ -2602,7 +2602,7 @@ trait TextDocumentOps {
         buildTarget = config.buildTarget,
         symbols = symbols.values.toIndexedSeq.sorted,
         occurrences = finalOccurrences.sorted,
-        diagnostics = unit.hijackedDiagnostics.toDiagnostics(mstart).toIndexedSeq.sorted,
+        diagnostics = unit.hijackedDiagnostics(skip = 0).toDiagnostics(mstart).toIndexedSeq.sorted,
         synthetics = synthetics.toIndexedSeq.sorted,
       )
     }
