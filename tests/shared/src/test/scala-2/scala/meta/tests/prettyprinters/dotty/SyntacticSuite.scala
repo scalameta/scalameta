@@ -2,8 +2,6 @@ package scala.meta.tests.prettyprinters.dotty
 
 import scala.meta._
 
-import scala.annotation.nowarn
-
 class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   private implicit val dialect: Dialect = dialects.Scala3
@@ -104,7 +102,6 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#4348 type pattern match without backquotes") {
-    @nowarn("cat=unused-locals") // the test parses `layout` only
     val code =
       """|Behaviors.receive {
          |  case (given ActorContext[t], _) => Behaviors.empty
@@ -124,7 +121,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         tselect("Behaviors", "empty"),
       ))),
     )
-    runTestAssert[Stat](layout, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
