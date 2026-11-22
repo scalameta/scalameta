@@ -1216,15 +1216,8 @@ private[meta] final class ScannerTokens(
 
   /** Returns true if the `)` at `pos` ends the header of an `if`, a `while` or a `for` */
   private def isControlHeaderEnd(pos: Int): Boolean = {
-    @tailrec
-    def iter(i: Int, depth: Int): Boolean = i > 0 &&
-      (tokens(i) match {
-        case _: CloseDelim => iter(i - 1, depth + 1)
-        case _: OpenDelim =>
-          if (depth == 0) prevNonTrivia(i).isAny[KwIf, KwWhile, KwFor] else iter(i - 1, depth - 1)
-        case _ => iter(i - 1, depth)
-      })
-    iter(pos - 1, 0)
+    val open = findOpenDelim(pos)
+    open > 0 && prevNonTrivia(open).isAny[KwIf, KwWhile, KwFor]
   }
 
   /** Returns true if `cond` continues past `)` to the token at `pos`, as dotty's `toBeContinued` */
@@ -1247,7 +1240,7 @@ private[meta] final class ScannerTokens(
       case _ => false
     }
 
-  // the index of the delimiter that closes the one around `pos`, or -1
+  /** the index of the delimiter that closes the one on or before `pos`, or -1 */
   private[parsers] def findCloseDelim(pos: Int): Int = {
     @tailrec
     def iter(i: Int, depth: Int): Int = tokens(i) match {
@@ -1256,7 +1249,20 @@ private[meta] final class ScannerTokens(
       case _: EOF => -1
       case _ => iter(i + 1, depth)
     }
-    iter(pos, 0)
+    iter(pos + 1, 0)
+  }
+
+  /** the index of the delimiter that opens the one on or after `pos`, or -1 */
+  private def findOpenDelim(pos: Int): Int = {
+    @tailrec
+    def iter(i: Int, depth: Int): Int =
+      if (i < 0) -1
+      else tokens(i) match {
+        case _: CloseDelim => iter(i - 1, depth + 1)
+        case _: OpenDelim => if (depth == 0) i else iter(i - 1, depth - 1)
+        case _ => iter(i - 1, depth)
+      }
+    iter(pos - 1, 0)
   }
 
   /** dotc: whether a colon after `token` might start a colon argument or a refinement */
@@ -1278,28 +1284,20 @@ private[meta] final class ScannerTokens(
   /** whether the line to `pos` declares a type outside delimiters, so a colon is a context bound */
   private def isInTypeDecl(pos: Int): Boolean = {
     @tailrec
-    def iter(i: Int, depth: Int): Boolean = i >= 0 &&
+    def iter(i: Int): Boolean = i >= 0 &&
       (tokens(i) match {
-        case _: CloseDelim => iter(i - 1, depth + 1)
-        case _: OpenDelim => depth > 0 && iter(i - 1, depth - 1)
-        case _ if depth > 0 => iter(i - 1, depth)
-        case _: AtEOLorF | _: Semicolon => false
+        case _: CloseDelim => iter(findOpenDelim(i) - 1)
+        case _: OpenDelim | _: AtEOLorF | _: Semicolon => false
         case _: KwType => !prevNonTrivia(i).is[Dot]
-        case _ => iter(i - 1, depth)
+        case _ => iter(i - 1)
       })
-    iter(pos, 0)
+    iter(pos)
   }
 
   /** the index after the delimiter that closes the one at `pos`, or -1 */
   private def skipDelims(pos: Int): Int = {
-    @tailrec
-    def iter(i: Int, depth: Int): Int = tokens(i) match {
-      case _: OpenDelim => iter(i + 1, depth + 1)
-      case _: CloseDelim => if (depth == 1) i + 1 else iter(i + 1, depth - 1)
-      case _: EOF => -1
-      case _ => iter(i + 1, depth)
-    }
-    iter(pos, 0)
+    val end = findCloseDelim(pos)
+    if (end < 0) end else end + 1
   }
 
   /** the index of the arrow after the parameters of a lambda at `pos`, or -1 */
