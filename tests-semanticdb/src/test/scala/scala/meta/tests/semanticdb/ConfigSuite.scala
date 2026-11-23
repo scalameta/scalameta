@@ -152,7 +152,7 @@ class ConfigSuite extends FunSuite {
        |  implicit class R(x: Int) { def r = x }
        |}
        |""".stripMargin,
-    doc => assertNoDiff(symbolsOf(doc), "_empty_/A.R()."),
+    doc => assertNoDiff(symbolsOf(doc), ""),
   )
 
   check(
@@ -188,7 +188,7 @@ class ConfigSuite extends FunSuite {
        |  implicit class R(x: Int) { def r = x }
        |}
        |""".stripMargin,
-    doc => assertNoDiff(symbolsOf(doc), "_empty_/A.R()."),
+    doc => assertNoDiff(symbolsOf(doc), ""),
   )
 
   check(
@@ -200,7 +200,7 @@ class ConfigSuite extends FunSuite {
        |  def f(a: Int = 1) = a
        |}
        |""".stripMargin,
-    doc => assertNoDiff(symbolsOf(doc), "_empty_/A.f$default$1()."),
+    doc => assertNoDiff(symbolsOf(doc), ""),
   )
 
   check(
@@ -212,7 +212,7 @@ class ConfigSuite extends FunSuite {
        |  def f(a: Int = 1) = a
        |}
        |""".stripMargin,
-    doc => assertNoDiff(symbolsOf(doc), "_empty_/A.f$default$1()."),
+    doc => assertNoDiff(symbolsOf(doc), ""),
   )
 
   check(
@@ -224,7 +224,7 @@ class ConfigSuite extends FunSuite {
        |  val (a, b) = (1, 2)
        |}
        |""".stripMargin,
-    doc => assertNoDiff(symbolsOf(doc), "_empty_/A.x$1."),
+    doc => assertNoDiff(symbolsOf(doc), ""),
   )
 
   check(
@@ -236,7 +236,7 @@ class ConfigSuite extends FunSuite {
        |  val (a, b) = (1, 2)
        |}
        |""".stripMargin,
-    doc => assertNoDiff(symbolsOf(doc), "_empty_/A.x$1."),
+    doc => assertNoDiff(symbolsOf(doc), ""),
   )
 
   check(
