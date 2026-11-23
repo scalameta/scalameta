@@ -4,7 +4,6 @@ package contrib
 import scala.meta.contrib.equality.{Equal, TreeEquality}
 
 import scala.annotation.tailrec
-import scala.language.higherKinds
 
 object TreeOps {
 

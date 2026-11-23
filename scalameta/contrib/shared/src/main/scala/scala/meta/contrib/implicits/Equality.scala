@@ -3,7 +3,7 @@ package scala.meta.contrib.implicits
 import scala.meta.Tree
 import scala.meta.contrib.equality.{Equal, Structurally, TreeEquality}
 
-import scala.language.{higherKinds, implicitConversions}
+import scala.language.implicitConversions
 
 trait Equality {
 
