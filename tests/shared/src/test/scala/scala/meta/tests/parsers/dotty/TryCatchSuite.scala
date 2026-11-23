@@ -1648,7 +1648,7 @@ class TryCatchSuite extends BaseDottySuite {
          |Indentation.Indent [55..55)
          |Ident(z) [66..67)
          |Indentation.Outdent [68..68)
-         |LFLF [68..69)
+         |InfixLF [68..69)
          |Ident(&&) [77..79)
          |Ident(w) [80..81)
          |Indentation.Outdent [81..81)
@@ -1667,8 +1667,7 @@ class TryCatchSuite extends BaseDottySuite {
          |      case _: E =>
          |        foo {
          |          z
-         |        }
-         |        &&w
+         |        } && w
          |    })
          |    h
          |  }
@@ -1690,7 +1689,7 @@ class TryCatchSuite extends BaseDottySuite {
               List(Case(
                 Pat.Typed(Pat.Wildcard(), pname("E")),
                 None,
-                blk(tapply(tname("foo"), blk(tname("z"))), tpostfix(tname("&&"), "w")),
+                tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")),
               )),
               None,
             ),
@@ -2076,11 +2075,15 @@ class TryCatchSuite extends BaseDottySuite {
          |  try a catch case e => if p then b else c
          |  .h
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `.` found
-         |  .h
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def g = try a catch {
+         |  case e =>
+         |    if (p) b else c.h
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tif(tname("p"), tname("b"), tselect("c", "h")))
+    val tree = Defn.Def(Nil, tname("g"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("same-line catch case with a parenthesized if body, a select on the next line") {
@@ -2106,11 +2109,15 @@ class TryCatchSuite extends BaseDottySuite {
          |  try a catch case e => while (p) b
          |  .h
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `.` found
-         |  .h
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def g = try a catch {
+         |  case e =>
+         |    while (p) b.h
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, Term.While(tname("p"), tselect("b", "h")))
+    val tree = Defn.Def(Nil, tname("g"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("then with try and catch, else on the next line") {
@@ -2481,17 +2488,21 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = {
          |  try a catch {
-         |    case e =>
-         |      b
-         |      c
-         |      d
+         |    case e => b
          |  }
+         |  c
+         |  d
          |  e
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c"), tname("d")))
-    val tree = Defn
-      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("e")))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tname("c"), tname("d"), tname("e")),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -2519,15 +2530,22 @@ class TryCatchSuite extends BaseDottySuite {
          |    c
          |""".stripMargin
     val layout =
-      """|def f = try a catch {
-         |  case e =>
-         |    b
-         |    // c
-         |    c
+      """|def f = {
+         |  try a catch {
+         |    case e => b
+         |  }
+         |  // c
+         |  c
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tnameComments("c")("// c")()))
-    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tnameComments("c")("// c")()),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -2565,14 +2583,19 @@ class TryCatchSuite extends BaseDottySuite {
          |  try a catch {
          |    case e =>
          |      a + b
-         |      c
          |  }
+         |  c
          |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tinfix(tname("a"), "+", tname("b")), tname("c")))
-    val tree = Defn
-      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("d")))
+    val handler = Case(patvar("e"), None, tinfix(tname("a"), "+", tname("b")))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tname("c"), tname("d")),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -2605,14 +2628,19 @@ class TryCatchSuite extends BaseDottySuite {
          |  try a catch {
          |    case e =>
          |      -b
-         |      c
          |  }
+         |  c
          |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(Term.ApplyUnary(tname("-"), tname("b")), tname("c")))
-    val tree = Defn
-      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("d")))
+    val handler = Case(patvar("e"), None, Term.ApplyUnary(tname("-"), tname("b")))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tname("c"), tname("d")),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -2645,14 +2673,19 @@ class TryCatchSuite extends BaseDottySuite {
          |  try a catch {
          |    case e =>
          |      xs map g
-         |      c
          |  }
+         |  c
          |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tinfix(tname("xs"), "map", tname("g")), tname("c")))
-    val tree = Defn
-      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("d")))
+    val handler = Case(patvar("e"), None, tinfix(tname("xs"), "map", tname("g")))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tname("c"), tname("d")),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -2683,15 +2716,14 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
-    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn, tname("c"))))
   }
 
   test("indented def body, a deeper argument in parentheses") {
@@ -2713,14 +2745,14 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = {
          |  try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("c")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -2763,13 +2795,13 @@ class TryCatchSuite extends BaseDottySuite {
          |  def f = try a catch {
          |    case e =>
          |      b.foo
-         |      c
          |  }
+         |  c
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tselect("b", "foo"), tname("c")))
+    val handler = Case(patvar("e"), None, tselect("b", "foo"))
     val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
-    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn, tname("c"))))
   }
 
   test("same-line catch case in an indented def body, finally at the try's indent") {
@@ -2800,16 +2832,20 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = {
          |  try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val tree = Defn
-      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("d")))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tname("c"), tname("d")),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -2841,15 +2877,14 @@ class TryCatchSuite extends BaseDottySuite {
       """|def f = x match {
          |  case 1 =>
          |    try a catch {
-         |      case e =>
-         |        b
-         |        c
+         |      case e => b
          |    }
+         |    c
          |  case 2 =>
          |    d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val tree = Defn.Def(
       Nil,
       tname("f"),
@@ -2857,7 +2892,7 @@ class TryCatchSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(int(1), None, Term.Try(tname("a"), List(handler), None)),
+        Case(int(1), None, blk(Term.Try(tname("a"), List(handler), None), tname("c"))),
         Case(int(2), None, tname("d")),
       ),
     )
@@ -2889,16 +2924,15 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = {
          |  if (p) try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val body = tif(tname("p"), Term.Try(tname("a"), List(handler), None))
-    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("d")))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("c"), tname("d")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -2929,16 +2963,15 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = {
          |  if (p) a else try b catch {
-         |    case e =>
-         |      c
-         |      d
+         |    case e => c
          |  }
+         |  d
          |  g
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("c"), tname("d")))
+    val handler = Case(patvar("e"), None, tname("c"))
     val body = tif(tname("p"), tname("a"), Term.Try(tname("b"), List(handler), None))
-    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("g")))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("d"), tname("g")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -2974,16 +3007,15 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = {
          |  while (p) try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val body = Term.While(tname("p"), Term.Try(tname("a"), List(handler), None))
-    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("d")))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("c"), tname("d")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3025,16 +3057,15 @@ class TryCatchSuite extends BaseDottySuite {
       """|def f = {
          |  foo {
          |    try a catch {
-         |      case e =>
-         |        b
-         |        c
+         |      case e => b
          |    }
+         |    c
          |  }
          |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val body = tapply(tname("foo"), blk(Term.Try(tname("a"), List(handler), None)))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val body = tapply(tname("foo"), blk(Term.Try(tname("a"), List(handler), None), tname("c")))
     val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("d")))
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -3068,16 +3099,15 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = {
          |  y = try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val body = Term.Assign(tname("y"), Term.Try(tname("a"), List(handler), None))
-    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("d")))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("c"), tname("d")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3112,19 +3142,22 @@ class TryCatchSuite extends BaseDottySuite {
          |  try a catch {
          |    case e =>
          |      try b catch {
-         |        case g =>
-         |          c
-         |          d
+         |        case g => c
          |      }
          |  }
+         |  d
          |  h
          |}
          |""".stripMargin
-    val inner = Term
-      .Try(tname("b"), List(Case(patvar("g"), None, blk(tname("c"), tname("d")))), None)
+    val inner = Term.Try(tname("b"), List(Case(patvar("g"), None, tname("c"))), None)
     val handler = Case(patvar("e"), None, inner)
-    val tree = Defn
-      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("h")))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tname("d"), tname("h")),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3159,16 +3192,16 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |  def g = 1
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
-    val tree = Defn.Object(Nil, tname("A"), tpl(defn, Defn.Def(Nil, tname("g"), Nil, None, int(1))))
+    val tree = Defn
+      .Object(Nil, tname("A"), tpl(defn, tname("c"), Defn.Def(Nil, tname("g"), Nil, None, int(1))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3203,14 +3236,13 @@ class TryCatchSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|try a catch {
-         |  case e =>
-         |    b
-         |    c
+         |  case e => b
          |}
+         |c
          |d
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val tree = Source(List(Term.Try(tname("a"), List(handler), None), tname("d")))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Source(List(Term.Try(tname("a"), List(handler), None), tname("c"), tname("d")))
     runTestAssert[Source](code, layout)(tree)
   }
 
@@ -3241,17 +3273,21 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = {
          |  try a catch {
-         |    case e =>
-         |      b
-         |      c
-         |      d
+         |    case e => b
          |  }
+         |  c
+         |  d
          |  e
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c"), tname("d")))
-    val tree = Defn
-      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("e")))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tname("c"), tname("d"), tname("e")),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3284,15 +3320,14 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
-    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn, tname("c"))))
   }
 
   test(
@@ -3338,10 +3373,13 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = try a catch {
          |  case e =>
-         |  case x => x
+         |    {
+         |      case x => x
+         |    }
          |}
          |""".stripMargin
-    val cases = List(Case(patvar("e"), None, blk()), Case(patvar("x"), None, tname("x")))
+    val cases =
+      List(Case(patvar("e"), None, Term.PartialFunction(List(Case(patvar("x"), None, tname("x"))))))
     runTestAssert[Stat](code, layout)(
       Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), cases, None)),
     )
@@ -3382,17 +3420,21 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = {
          |  try a catch {
-         |    case e =>
-         |      b
-         |      c
-         |      d
+         |    case e => b
          |  }
+         |  c
+         |  d
          |  e
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c"), tname("d")))
-    val tree = Defn
-      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("e")))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tname("c"), tname("d"), tname("e")),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3431,15 +3473,14 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
-    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn, tname("c"))))
   }
 
   test("without significant indentation: same-line catch case in braces, a deeper case") {
@@ -3465,10 +3506,13 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = try a catch {
          |  case e =>
-         |  case x => x
+         |    {
+         |      case x => x
+         |    }
          |}
          |""".stripMargin
-    val cases = List(Case(patvar("e"), None, blk()), Case(patvar("x"), None, tname("x")))
+    val cases =
+      List(Case(patvar("e"), None, Term.PartialFunction(List(Case(patvar("x"), None, tname("x"))))))
     runTestAssert[Stat](code, layout)(
       Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), cases, None)),
     )
@@ -3498,13 +3542,20 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = {
          |  try a catch {
-         |    case e =>
-         |      b c d
+         |    case e => b
          |  }
+         |  c
+         |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, tinfix(tname("b"), "c", tname("d")))
-    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tname("c"), tname("d")),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3521,12 +3572,14 @@ class TryCatchSuite extends BaseDottySuite {
       """|def f = {
          |  try a catch {
          |    case e =>
-         |      (b + c) d
+         |      b + c
          |  }
+         |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, tpostfix(tinfix(tname("b"), "+", tname("c")), "d"))
-    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "+", tname("c")))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("d")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3538,11 +3591,20 @@ class TryCatchSuite extends BaseDottySuite {
          |    case x => x
          |}
          |""".stripMargin
-    val error =
-      """|<input>:3: error: illegal start of simple expression
-         |    case x => x
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      {
+         |        case x => x
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val handler =
+      Case(patvar("e"), None, Term.PartialFunction(List(Case(patvar("x"), None, tname("x")))))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("without significant indentation: relaxed lambda: case expression in catch case body") {
@@ -3550,11 +3612,18 @@ class TryCatchSuite extends BaseDottySuite {
     val code =
       """|def f = try a catch case e => case x => x
          |""".stripMargin
-    val error =
-      """|<input>:1: error: illegal start of simple expression
-         |def f = try a catch case e => case x => x
-         |                              ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    {
+         |      case x => x
+         |    }
+         |}
+         |""".stripMargin
+    val handler =
+      Case(patvar("e"), None, Term.PartialFunction(List(Case(patvar("x"), None, tname("x")))))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("without significant indentation: same-line catch case in braces, a deeper argument in parentheses") {
@@ -3568,13 +3637,14 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = {
          |  try a catch {
-         |    case e =>
-         |      b(x)
+         |    case e => b
          |  }
+         |  x
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, tapply(tname("b"), tname("x")))
-    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("x")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3591,13 +3661,14 @@ class TryCatchSuite extends BaseDottySuite {
       """|object A {
          |  def f = try a catch {
          |    case e =>
-         |      b.foo c
+         |      b.foo
          |  }
+         |  c
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, tpostfix(tselect("b", "foo"), "c"))
+    val handler = Case(patvar("e"), None, tselect("b", "foo"))
     val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
-    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn, tname("c"))))
   }
 
   test(
@@ -3634,11 +3705,20 @@ class TryCatchSuite extends BaseDottySuite {
          |  def g = 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `;` expected but `def` found
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e => b
+         |  }
+         |  c
          |  def g = 1
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    val tree = Defn
+      .Object(Nil, tname("A"), tpl(defn, tname("c"), Defn.Def(Nil, tname("g"), Nil, None, int(1))))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("same-line catch case with a try body, try at the line end, a deeper body, a line at the try's indent") {
@@ -3681,13 +3761,20 @@ class TryCatchSuite extends BaseDottySuite {
       """|def g = {
          |  try a catch {
          |    case e =>
-         |      if (p) b else c h (())
+         |      if (p) b else c
          |  }
+         |  h()
          |}
          |""".stripMargin
-    val body = tif(tname("p"), tname("b"), tinfix(tname("c"), "h", lit()))
+    val body = tif(tname("p"), tname("b"), tname("c"))
     val handler = Case(patvar("e"), None, body)
-    val tree = Defn.Def(Nil, tname("g"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    val tree = Defn.Def(
+      Nil,
+      tname("g"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tapply(tname("h"))),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3731,13 +3818,20 @@ class TryCatchSuite extends BaseDottySuite {
       """|def g = {
          |  try a catch {
          |    case e =>
-         |      try b finally c h (())
+         |      try b finally c
          |  }
+         |  h()
          |}
          |""".stripMargin
-    val body = Term.Try(tname("b"), Nil, Some(tinfix(tname("c"), "h", lit())))
+    val body = Term.Try(tname("b"), Nil, Some(tname("c")))
     val handler = Case(patvar("e"), None, body)
-    val tree = Defn.Def(Nil, tname("g"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    val tree = Defn.Def(
+      Nil,
+      tname("g"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tapply(tname("h"))),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3773,13 +3867,20 @@ class TryCatchSuite extends BaseDottySuite {
       """|def g = {
          |  try a catch {
          |    case e =>
-         |      try b h (())
+         |      try b
          |  }
+         |  h()
          |}
          |""".stripMargin
-    val body = Term.Try(tinfix(tname("b"), "h", lit()), Nil, None)
+    val body = Term.Try(tname("b"), Nil, None)
     val handler = Case(patvar("e"), None, body)
-    val tree = Defn.Def(Nil, tname("g"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    val tree = Defn.Def(
+      Nil,
+      tname("g"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tapply(tname("h"))),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3795,14 +3896,17 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|def f = {
          |  while (p) try a catch {
-         |    case e =>
-         |      b c d
+         |    case e => b
          |  }
+         |  c
+         |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, tinfix(tname("b"), "c", tname("d")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val body = Term.While(tname("p"), Term.Try(tname("a"), List(handler), None))
-    runTestAssert[Stat](code, layout)(Defn.Def(Nil, tname("f"), Nil, None, blk(body)))
+    runTestAssert[Stat](code, layout)(
+      Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("c"), tname("d"))),
+    )
   }
 
   test("without significant indentation: same-line catch case in braces with a try body, finally at the line end, a deeper body, a statement") {
@@ -3818,13 +3922,20 @@ class TryCatchSuite extends BaseDottySuite {
       """|def g = {
          |  try a catch {
          |    case e =>
-         |      try b finally c h (())
+         |      try b finally c
          |  }
+         |  h()
          |}
          |""".stripMargin
-    val body = Term.Try(tname("b"), Nil, Some(tinfix(tname("c"), "h", lit())))
+    val body = Term.Try(tname("b"), Nil, Some(tname("c")))
     val handler = Case(patvar("e"), None, body)
-    val tree = Defn.Def(Nil, tname("g"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    val tree = Defn.Def(
+      Nil,
+      tname("g"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tapply(tname("h"))),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -3835,11 +3946,18 @@ class TryCatchSuite extends BaseDottySuite {
          |    y)
          |  def h = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `outdent` expected but `,` found
-         |  def g = f(try a catch case e => b,
-         |                                   ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object A {
+         |  def g = f(try a catch {
+         |    case e => b
+         |  }, y)
+         |  def h = 1
+         |}
+         |""".stripMargin
+    val arg = Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None)
+    val g = Defn.Def(Nil, tname("g"), Nil, None, tapply(tname("f"), arg, tname("y")))
+    val tree = Defn.Object(Nil, tname("A"), tpl(g, Defn.Def(Nil, tname("h"), Nil, None, int(1))))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("same-line catch case in an argument list in a def body, a comma at the line end, a deeper argument") {
@@ -3848,11 +3966,14 @@ class TryCatchSuite extends BaseDottySuite {
          |  f(try a catch case e => b,
          |    y)
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `outdent` expected but `,` found
-         |  f(try a catch case e => b,
-         |                           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def g = f(try a catch {
+         |  case e => b
+         |}, y)
+         |""".stripMargin
+    val arg = Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None)
+    val tree = Defn.Def(Nil, tname("g"), Nil, None, tapply(tname("f"), arg, tname("y")))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("same-line catch case, return at the line end, a deeper value, a statement") {
@@ -3942,11 +4063,23 @@ class TryCatchSuite extends BaseDottySuite {
          |    match
          |      case 1 => c
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `outdent` expected but `match` found
-         |    match
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      b match {
+         |        case 1 => c
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tmatch(tname("b"), Case(lit(1), None, tname("c"))))
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("same-line catch case, a trailing operator, its operand at the try's indent") {
@@ -3958,17 +4091,14 @@ class TryCatchSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def g = {
-         |    try a catch {
-         |      case e =>
-         |        b +
-         |    }
-         |    c
+         |  def g = try a catch {
+         |    case e =>
+         |      b + c
          |  }
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, tpostfix(tname("b"), "+"))
-    val body = blk(Term.Try(tname("a"), List(handler), None), tname("c"))
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "+", tname("c")))
+    val body = Term.Try(tname("a"), List(handler), None)
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("g"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -3978,11 +4108,21 @@ class TryCatchSuite extends BaseDottySuite {
       """|object A:
          |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `)` expected but `<-` found
-         |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- try a catch {
+         |    case e => b
+         |  }; y <- c) yield (x, y)
+         |}
+         |""".stripMargin
+    val x = Enumerator
+      .Generator(patvar("x"), Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None))
+    val body = Term.ForYield(
+      List(x, Enumerator.Generator(patvar("y"), tname("c"))),
+      Term.Tuple(List(tname("x"), tname("y"))),
+    )
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("match case on the match line in an argument list, a comma and an argument") {
@@ -4024,23 +4164,19 @@ class TryCatchSuite extends BaseDottySuite {
          |  def f = x match {
          |    case 1 =>
          |      try a catch {
-         |        case e =>
-         |          b
-         |          try c catch {
-         |            case g => d
-         |          }
+         |        case e => b
+         |      }
+         |      try c catch {
+         |        case g => d
          |      }
          |    case 2 =>
          |      h
          |  }
          |}
          |""".stripMargin
-    val handler = Case(
-      patvar("e"),
-      None,
-      blk(tname("b"), Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)),
-    )
-    val case1 = Case(lit(1), None, Term.Try(tname("a"), List(handler), None))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val try2 = Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)
+    val case1 = Case(lit(1), None, blk(Term.Try(tname("a"), List(handler), None), try2))
     val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
@@ -4058,22 +4194,27 @@ class TryCatchSuite extends BaseDottySuite {
          |  def f = x match {
          |    case 1 =>
          |      try a catch {
-         |        case e =>
-         |          b
-         |          xs.map {
-         |            y => try c catch {
-         |              case g => d
-         |              case 2 => h
-         |            }
-         |          }
+         |        case e => b
          |      }
+         |      xs.map {
+         |        y => try c catch {
+         |          case g => d
+         |        }
+         |      }
+         |    case 2 =>
+         |      h
          |  }
          |}
          |""".stripMargin
-    val cases = List(Case(patvar("g"), None, tname("d")), Case(lit(2), None, tname("h")))
+    val cases = List(Case(patvar("g"), None, tname("d")))
     val lambda = tfunc(tparam("y"))(Term.Try(tname("c"), cases, None))
-    val handler = Case(patvar("e"), None, blk(tname("b"), tapply(tselect("xs", "map"), blk(lambda))))
-    val body = tmatch(tname("x"), Case(lit(1), None, Term.Try(tname("a"), List(handler), None)))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val case1 = Case(
+      lit(1),
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tapply(tselect("xs", "map"), blk(lambda))),
+    )
+    val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4091,23 +4232,19 @@ class TryCatchSuite extends BaseDottySuite {
          |  def f = x match {
          |    case 1 =>
          |      try a catch {
-         |        case e =>
-         |          b
-         |          try c catch {
-         |            case g => d
-         |          }
+         |        case e => b
+         |      }
+         |      try c catch {
+         |        case g => d
          |      }
          |    case 2 =>
          |      h
          |  }
          |}
          |""".stripMargin
-    val handler = Case(
-      patvar("e"),
-      None,
-      blk(tname("b"), Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)),
-    )
-    val case1 = Case(lit(1), None, Term.Try(tname("a"), List(handler), None))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val try2 = Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)
+    val case1 = Case(lit(1), None, blk(Term.Try(tname("a"), List(handler), None), try2))
     val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
@@ -4118,19 +4255,11 @@ class TryCatchSuite extends BaseDottySuite {
       """|object A:
          |  def f = if p then try a catch case e => b; c else d
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = if (p) try a catch {
-         |    case e =>
-         |      b
-         |      c
-         |  } else d
-         |}
-         |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), tname("d"), Nil)
-    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `;` expected but `else` found
+         |  def f = if p then try a catch case e => b; c else d
+         |                                               ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("Scala 2: same-line catch case without braces, a deeper line, a statement") {
@@ -4148,14 +4277,15 @@ class TryCatchSuite extends BaseDottySuite {
       """|object A {
          |  def f = {
          |    try a catch {
-         |      case e =>
-         |        b c d
+         |      case e => b
          |    }
+         |    c
+         |    d
          |  }
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, tinfix(tname("b"), "c", tname("d")))
-    val body = blk(Term.Try(tname("a"), List(handler), None))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("c"), tname("d"))
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4185,11 +4315,27 @@ class TryCatchSuite extends BaseDottySuite {
          |  def safe = try compute() catch case e: Exception => 0
          |  case Red, Green
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `,` found
+    val layout =
+      """|enum Color {
+         |  def safe = try compute() catch {
+         |    case e: Exception => 0
+         |  }
          |  case Red, Green
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val handler = Case(Pat.Typed(patvar("e"), pname("Exception")), None, lit(0))
+    val body = Term.Try(tapply(tname("compute")), List(handler), None)
+    val tree = Defn.Enum(
+      Nil,
+      pname("Color"),
+      Nil,
+      EmptyCtor(),
+      tpl(
+        Defn.Def(Nil, tname("safe"), Nil, None, body),
+        Defn.RepeatedEnumCase(Nil, List(tname("Red"), tname("Green"))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("without significant indentation: same-line catch case in an enum body in braces, two enum cases") {
@@ -4201,11 +4347,29 @@ class TryCatchSuite extends BaseDottySuite {
          |  case Green
          |}
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `;` expected but `case` found
+    val layout =
+      """|enum Color {
+         |  def safe = try compute() catch {
+         |    case e: Exception => 0
+         |  }
          |  case Red
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+         |  case Green
+         |}
+         |""".stripMargin
+    val handler = Case(Pat.Typed(patvar("e"), pname("Exception")), None, lit(0))
+    val body = Term.Try(tapply(tname("compute")), List(handler), None)
+    val tree = Defn.Enum(
+      Nil,
+      pname("Color"),
+      Nil,
+      EmptyCtor(),
+      tpl(
+        Defn.Def(Nil, tname("safe"), Nil, None, body),
+        Defn.EnumCase(Nil, tname("Red"), Nil, EmptyCtor(), Nil),
+        Defn.EnumCase(Nil, tname("Green"), Nil, EmptyCtor(), Nil),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("without significant indentation: same-line catch case in an argument list, a deeper argument clause") {
@@ -4293,11 +4457,23 @@ class TryCatchSuite extends BaseDottySuite {
          |    match
          |      case 1 => c
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `outdent` expected but `match` found
-         |    match
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      b match {
+         |        case 1 => c
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tmatch(tname("b"), Case(lit(1), None, tname("c"))))
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala3Future: same-line catch case with an if body, return at the line end, a deeper value, a statement") {
@@ -4336,17 +4512,14 @@ class TryCatchSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def g = {
-         |    try a catch {
-         |      case e =>
-         |        b +
-         |    }
-         |    c
+         |  def g = try a catch {
+         |    case e =>
+         |      b + c
          |  }
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, tpostfix(tname("b"), "+"))
-    val body = blk(Term.Try(tname("a"), List(handler), None), tname("c"))
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "+", tname("c")))
+    val body = Term.Try(tname("a"), List(handler), None)
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("g"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4414,11 +4587,23 @@ class TryCatchSuite extends BaseDottySuite {
          |    match
          |      case 1 => c
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `outdent` expected but `match` found
-         |    match
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      b match {
+         |        case 1 => c
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tmatch(tname("b"), Case(lit(1), None, tname("c"))))
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala32: same-line catch case with an if body, return at the line end, a deeper value, a statement") {
@@ -4457,17 +4642,14 @@ class TryCatchSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def g = {
-         |    try a catch {
-         |      case e =>
-         |        b +
-         |    }
-         |    c
+         |  def g = try a catch {
+         |    case e =>
+         |      b + c
          |  }
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, tpostfix(tname("b"), "+"))
-    val body = blk(Term.Try(tname("a"), List(handler), None), tname("c"))
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "+", tname("c")))
+    val body = Term.Try(tname("a"), List(handler), None)
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("g"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4478,11 +4660,21 @@ class TryCatchSuite extends BaseDottySuite {
       """|object A:
          |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `)` expected but `<-` found
-         |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- try a catch {
+         |    case e => b
+         |  }; y <- c) yield (x, y)
+         |}
+         |""".stripMargin
+    val x = Enumerator
+      .Generator(patvar("x"), Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None))
+    val body = Term.ForYield(
+      List(x, Enumerator.Generator(patvar("y"), tname("c"))),
+      Term.Tuple(List(tname("x"), tname("y"))),
+    )
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala3Future: same-line catch case in an argument list, a comma at the line end, a deeper argument") {
@@ -4493,11 +4685,18 @@ class TryCatchSuite extends BaseDottySuite {
          |    y)
          |  def h = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `outdent` expected but `,` found
-         |  def g = f(try a catch case e => b,
-         |                                   ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object A {
+         |  def g = f(try a catch {
+         |    case e => b
+         |  }, y)
+         |  def h = 1
+         |}
+         |""".stripMargin
+    val arg = Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None)
+    val g = Defn.Def(Nil, tname("g"), Nil, None, tapply(tname("f"), arg, tname("y")))
+    val tree = Defn.Object(Nil, tname("A"), tpl(g, Defn.Def(Nil, tname("h"), Nil, None, int(1))))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala32: same-line catch case in an argument list in a def body, a comma at the line end, a deeper argument") {
@@ -4507,11 +4706,14 @@ class TryCatchSuite extends BaseDottySuite {
          |  f(try a catch case e => b,
          |    y)
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `outdent` expected but `,` found
-         |  f(try a catch case e => b,
-         |                           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def g = f(try a catch {
+         |  case e => b
+         |}, y)
+         |""".stripMargin
+    val arg = Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None)
+    val tree = Defn.Def(Nil, tname("g"), Nil, None, tapply(tname("f"), arg, tname("y")))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala3Future: same-line catch case in for parentheses, a semicolon and an enumerator") {
@@ -4520,11 +4722,21 @@ class TryCatchSuite extends BaseDottySuite {
       """|object A:
          |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `)` expected but `<-` found
-         |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- try a catch {
+         |    case e => b
+         |  }; y <- c) yield (x, y)
+         |}
+         |""".stripMargin
+    val x = Enumerator
+      .Generator(patvar("x"), Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None))
+    val body = Term.ForYield(
+      List(x, Enumerator.Generator(patvar("y"), tname("c"))),
+      Term.Tuple(List(tname("x"), tname("y"))),
+    )
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test(
@@ -4537,11 +4749,18 @@ class TryCatchSuite extends BaseDottySuite {
          |    y)
          |  def h = 1
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `outdent` expected but `,` found
-         |  def g = f(try a catch case e => b,
-         |                                   ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object A {
+         |  def g = f(try a catch {
+         |    case e => b
+         |  }, y)
+         |  def h = 1
+         |}
+         |""".stripMargin
+    val arg = Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None)
+    val g = Defn.Def(Nil, tname("g"), Nil, None, tapply(tname("f"), arg, tname("y")))
+    val tree = Defn.Object(Nil, tname("A"), tpl(g, Defn.Def(Nil, tname("h"), Nil, None, int(1))))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala3Future: same-line catch case in an argument list in a def body, a comma at the line end, a deeper argument") {
@@ -4551,11 +4770,14 @@ class TryCatchSuite extends BaseDottySuite {
          |  f(try a catch case e => b,
          |    y)
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `outdent` expected but `,` found
-         |  f(try a catch case e => b,
-         |                           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def g = f(try a catch {
+         |  case e => b
+         |}, y)
+         |""".stripMargin
+    val arg = Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None)
+    val tree = Defn.Def(Nil, tname("g"), Nil, None, tapply(tname("f"), arg, tname("y")))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala32: same-line catch case in a match case, a semicolon and a second try with a same-line catch, the next case") {
@@ -4571,23 +4793,19 @@ class TryCatchSuite extends BaseDottySuite {
          |  def f = x match {
          |    case 1 =>
          |      try a catch {
-         |        case e =>
-         |          b
-         |          try c catch {
-         |            case g => d
-         |          }
+         |        case e => b
+         |      }
+         |      try c catch {
+         |        case g => d
          |      }
          |    case 2 =>
          |      h
          |  }
          |}
          |""".stripMargin
-    val handler = Case(
-      patvar("e"),
-      None,
-      blk(tname("b"), Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)),
-    )
-    val case1 = Case(lit(1), None, Term.Try(tname("a"), List(handler), None))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val try2 = Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)
+    val case1 = Case(lit(1), None, blk(Term.Try(tname("a"), List(handler), None), try2))
     val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
@@ -4601,19 +4819,11 @@ class TryCatchSuite extends BaseDottySuite {
       """|object A:
          |  def f = if p then try a catch case e => b; c else d
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = if (p) try a catch {
-         |    case e =>
-         |      b
-         |      c
-         |  } else d
-         |}
-         |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), tname("d"), Nil)
-    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `;` expected but `else` found
+         |  def f = if p then try a catch case e => b; c else d
+         |                                               ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("Scala32: same-line catch case in a match case, a semicolon and a colon lambda with a try with a same-line catch, the next case") {
@@ -4645,23 +4855,19 @@ class TryCatchSuite extends BaseDottySuite {
          |  def f = x match {
          |    case 1 =>
          |      try a catch {
-         |        case e =>
-         |          b
-         |          try c catch {
-         |            case g => d
-         |          }
+         |        case e => b
+         |      }
+         |      try c catch {
+         |        case g => d
          |      }
          |    case 2 =>
          |      h
          |  }
          |}
          |""".stripMargin
-    val handler = Case(
-      patvar("e"),
-      None,
-      blk(tname("b"), Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)),
-    )
-    val case1 = Case(lit(1), None, Term.Try(tname("a"), List(handler), None))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val try2 = Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)
+    val case1 = Case(lit(1), None, blk(Term.Try(tname("a"), List(handler), None), try2))
     val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
@@ -4681,23 +4887,19 @@ class TryCatchSuite extends BaseDottySuite {
          |  def f = x match {
          |    case 1 =>
          |      try a catch {
-         |        case e =>
-         |          b
-         |          try c catch {
-         |            case g => d
-         |          }
+         |        case e => b
+         |      }
+         |      try c catch {
+         |        case g => d
          |      }
          |    case 2 =>
          |      h
          |  }
          |}
          |""".stripMargin
-    val handler = Case(
-      patvar("e"),
-      None,
-      blk(tname("b"), Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)),
-    )
-    val case1 = Case(lit(1), None, Term.Try(tname("a"), List(handler), None))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val try2 = Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)
+    val case1 = Case(lit(1), None, blk(Term.Try(tname("a"), List(handler), None), try2))
     val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
@@ -4716,22 +4918,27 @@ class TryCatchSuite extends BaseDottySuite {
          |  def f = x match {
          |    case 1 =>
          |      try a catch {
-         |        case e =>
-         |          b
-         |          xs.map {
-         |            y => try c catch {
-         |              case g => d
-         |              case 2 => h
-         |            }
-         |          }
+         |        case e => b
          |      }
+         |      xs.map {
+         |        y => try c catch {
+         |          case g => d
+         |        }
+         |      }
+         |    case 2 =>
+         |      h
          |  }
          |}
          |""".stripMargin
-    val cases = List(Case(patvar("g"), None, tname("d")), Case(lit(2), None, tname("h")))
+    val cases = List(Case(patvar("g"), None, tname("d")))
     val lambda = tfunc(tparam("y"))(Term.Try(tname("c"), cases, None))
-    val handler = Case(patvar("e"), None, blk(tname("b"), tapply(tselect("xs", "map"), blk(lambda))))
-    val body = tmatch(tname("x"), Case(lit(1), None, Term.Try(tname("a"), List(handler), None)))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val case1 = Case(
+      lit(1),
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tapply(tselect("xs", "map"), blk(lambda))),
+    )
+    val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -4742,19 +4949,11 @@ class TryCatchSuite extends BaseDottySuite {
       """|object A:
          |  def f = if p then try a catch case e => b; c else d
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = if (p) try a catch {
-         |    case e =>
-         |      b
-         |      c
-         |  } else d
-         |}
-         |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), tname("d"), Nil)
-    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `;` expected but `else` found
+         |  def f = if p then try a catch case e => b; c else d
+         |                                               ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("Scala3Future: same-line catch case in a match case, a semicolon and a second try with a same-line catch, the next case") {
@@ -4770,23 +4969,19 @@ class TryCatchSuite extends BaseDottySuite {
          |  def f = x match {
          |    case 1 =>
          |      try a catch {
-         |        case e =>
-         |          b
-         |          try c catch {
-         |            case g => d
-         |          }
+         |        case e => b
+         |      }
+         |      try c catch {
+         |        case g => d
          |      }
          |    case 2 =>
          |      h
          |  }
          |}
          |""".stripMargin
-    val handler = Case(
-      patvar("e"),
-      None,
-      blk(tname("b"), Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)),
-    )
-    val case1 = Case(lit(1), None, Term.Try(tname("a"), List(handler), None))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val try2 = Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)
+    val case1 = Case(lit(1), None, blk(Term.Try(tname("a"), List(handler), None), try2))
     val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
@@ -4800,11 +4995,27 @@ class TryCatchSuite extends BaseDottySuite {
          |  case Red, Green
          |}
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `;` expected but `case` found
+    val layout =
+      """|enum Color {
+         |  def safe = try compute() catch {
+         |    case e: Exception => 0
+         |  }
          |  case Red, Green
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val handler = Case(Pat.Typed(patvar("e"), pname("Exception")), None, lit(0))
+    val body = Term.Try(tapply(tname("compute")), List(handler), None)
+    val tree = Defn.Enum(
+      Nil,
+      pname("Color"),
+      Nil,
+      EmptyCtor(),
+      tpl(
+        Defn.Def(Nil, tname("safe"), Nil, None, body),
+        Defn.RepeatedEnumCase(Nil, List(tname("Red"), tname("Green"))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala3Future: same-line catch case after else, a semicolon and a term") {
@@ -4816,15 +5027,15 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = if (p) a else try b catch {
-         |    case e =>
-         |      c
-         |      d
+         |    case e => c
          |  }
+         |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("c"), tname("d")))
+    val handler = Case(patvar("e"), None, tname("c"))
     val body = Term.If(tname("p"), tname("a"), Term.Try(tname("b"), List(handler), None), Nil)
-    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    val tree = Defn
+      .Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body), tname("d")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -4858,24 +5069,11 @@ class TryCatchSuite extends BaseDottySuite {
       """|object A:
          |  def f = try a catch case e => if p then try b catch case g => c; d else h
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = try a catch {
-         |    case e =>
-         |      if (p) try b catch {
-         |        case g =>
-         |          c
-         |          d
-         |      } else h
-         |  }
-         |}
-         |""".stripMargin
-    val inner = Term
-      .Try(tname("b"), List(Case(patvar("g"), None, blk(tname("c"), tname("d")))), None)
-    val handler = Case(patvar("e"), None, Term.If(tname("p"), inner, tname("h"), Nil))
-    val body = Term.Try(tname("a"), List(handler), None)
-    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `;` expected but `else` found
+         |  def f = try a catch case e => if p then try b catch case g => c; d else h
+         |                                                                     ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("without significant indentation: same-line catch case after a condition in parentheses, a semicolon and a term") {
@@ -4886,11 +5084,27 @@ class TryCatchSuite extends BaseDottySuite {
          |  def g = 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `;` expected but `def` found
+    val layout =
+      """|object A {
+         |  def f = if (p) try a catch {
+         |    case e => b
+         |  }
+         |  c
          |  def g = 1
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), Lit.Unit(), Nil)
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, body),
+        tname("c"),
+        Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Scala3Future: same-line catch case after then in a handler, a semicolon and a term") {
@@ -4904,18 +5118,17 @@ class TryCatchSuite extends BaseDottySuite {
          |  def f = try a catch {
          |    case e =>
          |      if (p) try b catch {
-         |        case g =>
-         |          c
-         |          d
+         |        case g => c
          |      }
          |  }
+         |  d
          |}
          |""".stripMargin
-    val inner = Term
-      .Try(tname("b"), List(Case(patvar("g"), None, blk(tname("c"), tname("d")))), None)
+    val inner = Term.Try(tname("b"), List(Case(patvar("g"), None, tname("c"))), None)
     val handler = Case(patvar("e"), None, Term.If(tname("p"), inner, lit(), Nil))
     val body = Term.Try(tname("a"), List(handler), None)
-    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    val tree = Defn
+      .Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body), tname("d")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -4958,13 +5171,18 @@ class TryCatchSuite extends BaseDottySuite {
          |    case 1 =>
          |      try a catch {
          |        case e => b
-         |        case 2 => c
          |      }
+         |    case 2 =>
+         |      c
          |  }
          |}
          |""".stripMargin
-    val cases = List(Case(patvar("e"), None, tname("b")), Case(lit(2), None, tname("c")))
-    val body = tmatch(tname("x"), Case(lit(1), None, Term.Try(tname("a"), cases, None)))
+    val cases = List(Case(patvar("e"), None, tname("b")))
+    val body = tmatch(
+      tname("x"),
+      Case(lit(1), None, Term.Try(tname("a"), cases, None)),
+      Case(lit(2), None, tname("c")),
+    )
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -5000,19 +5218,11 @@ class TryCatchSuite extends BaseDottySuite {
          |      c
          |    else d
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = if (p) try a catch {
-         |    case e =>
-         |      b
-         |      c
-         |  } else d
-         |}
-         |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), tname("d"), Nil)
-    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:5: error: `outdent` expected but `else` found
+         |    else d
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("without significant indentation: same-line catch case in an argument list, a comma at the line end, a deeper argument") {
@@ -5057,14 +5267,15 @@ class TryCatchSuite extends BaseDottySuite {
          |    case 1 =>
          |      if (p) try a catch {
          |        case e => b
-         |        case 2 => c
          |      }
+         |    case 2 =>
+         |      c
          |  }
          |}
          |""".stripMargin
-    val cases = List(Case(patvar("e"), None, tname("b")), Case(lit(2), None, tname("c")))
+    val cases = List(Case(patvar("e"), None, tname("b")))
     val case1 = Case(lit(1), None, Term.If(tname("p"), Term.Try(tname("a"), cases, None), lit(), Nil))
-    val body = tmatch(tname("x"), case1)
+    val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("c")))
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -5096,33 +5307,26 @@ class TryCatchSuite extends BaseDottySuite {
          |    if p then try a catch case e => b; c
          |    else d
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = if (p) try a catch {
-         |    case e =>
-         |      b
-         |      c
-         |  } else d
-         |}
-         |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), tname("d"), Nil)
-    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:4: error: `outdent` expected but `else` found
+         |    else d
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("same-line catch case at the top level of a source, a semicolon and a definition") {
     val code = "def f = try a catch case e => b; def g = 1"
     val layout =
       """|def f = try a catch {
-         |  case e =>
-         |    b
-         |    def g = 1
+         |  case e => b
          |}
+         |def g = 1
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), Defn.Def(Nil, tname("g"), Nil, None, lit(1))))
-    val tree =
-      Source(List(Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Source(List(
+      Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None)),
+      Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
+    ))
     runTestAssert[Source](code, layout)(tree)
   }
 
@@ -5138,17 +5342,16 @@ class TryCatchSuite extends BaseDottySuite {
       """|object A {
          |  def f = {
          |    if (p) try a catch {
-         |      case e =>
-         |        b
-         |        c
+         |      case e => b
          |    }
+         |    c
          |    d
          |  }
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val stat = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), lit(), Nil)
-    val body = blk(stat, tname("d"))
+    val body = blk(stat, tname("c"), tname("d"))
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -5181,17 +5384,17 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = if (p) try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |  def g = 1
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), lit(), Nil)
     val f = Defn.Def(Nil, tname("f"), Nil, None, body)
-    val tree = Defn.Object(Nil, tname("A"), tpl(f, Defn.Def(Nil, tname("g"), Nil, None, lit(1))))
+    val tree = Defn
+      .Object(Nil, tname("A"), tpl(f, tname("c"), Defn.Def(Nil, tname("g"), Nil, None, lit(1))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -5205,16 +5408,16 @@ class TryCatchSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = xs.map {
-         |    x => try a catch {
-         |      case e =>
-         |        b c
+         |  def f = xs.map { x =>
+         |    try a catch {
+         |      case e => b
          |    }
+         |    c
          |  }
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, tpostfix(tname("b"), "c"))
-    val lambda = tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val lambda = tfunc(tparam("x"))(blk(Term.Try(tname("a"), List(handler), None), tname("c")))
     val body = tapply(tselect("xs", "map"), blk(lambda))
     val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
     runTestAssert[Stat](code, layout)(tree)
@@ -5226,22 +5429,11 @@ class TryCatchSuite extends BaseDottySuite {
       """|object A:
          |  def f = try try a catch case e => b; c catch case g => d
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = try try a catch {
-         |    case e =>
-         |      b
-         |      c
-         |  } catch {
-         |    case g => d
-         |  }
-         |}
-         |""".stripMargin
-    val inner = Term
-      .Try(tname("a"), List(Case(patvar("e"), None, blk(tname("b"), tname("c")))), None)
-    val body = Term.Try(inner, List(Case(patvar("g"), None, tname("d"))), None)
-    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:2: error: `;` expected but `catch` found
+         |  def f = try try a catch case e => b; c catch case g => d
+         |                                         ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("Scala3Future: same-line catch case in a try body, a semicolon and a term") {
@@ -5253,16 +5445,15 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = try try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |}
          |""".stripMargin
-    val inner = Term
-      .Try(tname("a"), List(Case(patvar("e"), None, blk(tname("b"), tname("c")))), None)
+    val inner = Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None)
     val body = Term.Try(inner, Nil, None)
-    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    val tree = Defn
+      .Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body), tname("c")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -5275,40 +5466,34 @@ class TryCatchSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = while (p) try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val body = Term.While(tname("p"), Term.Try(tname("a"), List(handler), None))
-    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    val tree = Defn
+      .Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body), tname("c")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("same-line catch case as a statement, a semicolon and a term") {
     val code = "try a catch case e => b; c"
-    val layout =
-      """|try a catch {
-         |  case e =>
-         |    b
-         |    c
-         |}""".stripMargin
-    val tree = Term.Try(tname("a"), List(Case(patvar("e"), None, blk(tname("b"), tname("c")))), None)
-    runTestAssert[Stat](code, layout)(tree)(implicitly[munit.Location], stat(_), dialect)
+    val error =
+      """|<input>:1: error: `end of file` expected but `identifier` found
+         |try a catch case e => b; c
+         |                         ^""".stripMargin
+    runTestError[Stat](code, error)(stat(_), implicitly[munit.Location])
   }
 
   test("same-line catch case as a term, a semicolon and a term") {
     val code = "try a catch case e => b; c"
-    val layout =
-      """|try a catch {
-         |  case e =>
-         |    b
-         |    c
-         |}""".stripMargin
-    val tree = Term.Try(tname("a"), List(Case(patvar("e"), None, blk(tname("b"), tname("c")))), None)
-    runTestAssert[Term](code, layout)(tree)(implicitly[munit.Location], term(_), dialect)
+    val error =
+      """|<input>:1: error: `end of file` expected but `;` found
+         |try a catch case e => b; c
+         |                       ^""".stripMargin
+    runTestError[Term](code, error)(term(_), implicitly[munit.Location])
   }
 
 }

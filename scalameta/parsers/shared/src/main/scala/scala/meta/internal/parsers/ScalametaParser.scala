@@ -507,8 +507,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
       endComment =
         if (bodyEndToken.end > maxChildEnd) body match {
-          case b: Case if b.body eq maxChild => // body in parens
-            appendTrailingComments(maxChild, endExcl, detached = false)
+          case b: Case if b.body eq maxChild => // body in parens, or before a `;`
+            // skip the comments already attached to the body's last descendants
+            appendTrailingComments(maxChild, endExcl.max(endOfComments(maxChild)), detached = false)
             null // printer may drop parens, so move comments to case body
           case _ => trailingComments(endExcl)
         }
@@ -2340,7 +2341,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
           def tryInDelims(
               catchPos: Int,
               f: (=> Either[Term, Term.CasesBlock]) => Either[Term, Term.CasesBlock],
-          ): Term = f(casesBlockIfAny() match {
+              catchSameLine: Boolean = false,
+          ): Term = f(casesBlockIfAny(catchSameLine) match {
             case null => Left(blockRaw())
             case x => Right(x)
           }).fold(
@@ -2351,9 +2353,10 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
           if (acceptIfAfterOptNL[KwCatch]) currToken match {
             case _: KwCase => tryWithCases(Some(autoPos {
                 next()
-                toCasesBlock(caseClause(true) :: Nil)
+                toCasesBlock(caseClause(forceSingleExpr = true, catchSameLine = true) :: Nil)
               }))
-            case _: Indentation.Indent => tryInDelims(AfterPrevPos.begIndex, indentedOnOpen)
+            case _: Indentation.Indent =>
+              tryInDelims(AfterPrevPos.begIndex, indentedOnOpen, isAtCatchSameLine(in.currRegions))
             case _: LeftBrace => tryInDelims(currIndex, inBracesOnOpen)
             case _ => tryWithHandler(expr())
           }
@@ -3279,12 +3282,18 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     }
   }
 
-  def caseClause(forceSingleExpr: Boolean = false): Case = {
+  /**
+   * @param catchSameLine
+   *   whether the case is in a same-line catch handler. If so, a `case` after the arrow starts a
+   *   partial function.
+   */
+  def caseClause(forceSingleExpr: Boolean = false, catchSameLine: Boolean = false): Case = {
     expectNot[KwCase]
     autoEndPos(prevIndex) {
       def caseBody() = {
         accept[RightArrow]
         if (at[Indentation.Indent]) blockExprOnIndent()
+        else if (catchSameLine && isCaseIntro()) autoPos(Term.PartialFunction(caseClauses()))
         else if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false)
         else blockOnOther()
       }
@@ -3319,16 +3328,17 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
   def toCasesBlock(cases: List[Case]): Term.CasesBlock = cases.reduceWith(Term.CasesBlock.apply)
   def casesBlock(): Term.CasesBlock = toCasesBlock(caseClauses())
-  def casesBlockIfAny(): Term.CasesBlock = caseClausesIfAny() match {
-    case null => null
-    case x => toCasesBlock(x)
-  }
+  def casesBlockIfAny(catchSameLine: Boolean = false): Term.CasesBlock =
+    caseClausesIfAny(catchSameLine) match {
+      case null => null
+      case x => toCasesBlock(x)
+    }
 
   def caseClauses(): List[Case] = caseClausesIfAny() match {
     case null => syntaxErrorExpected[KwCase]
     case x => x
   }
-  def caseClausesIfAny(): List[Case] = {
+  def caseClausesIfAny(catchSameLine: Boolean = false): List[Case] = {
     val cases = new ListBuffer[Case]
     @tailrec
     def iter(): Unit = currToken match {
@@ -3339,7 +3349,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       case _: KwCase if isCaseIntroOnKwCase() =>
         next()
         val quasiCase = unquoteOpt[Case]
-        cases += (if (quasiCase eq null) caseClause() else quasiCase)
+        cases += (if (quasiCase eq null) caseClause(catchSameLine = catchSameLine) else quasiCase)
         if (quasiCase ne null) skipAllStatSep()
         else if (currToken.is[StatDelim]) tryAhead(isCaseIntro())
         iter()

@@ -2417,7 +2417,9 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val layout =
       """|def f = try a catch {
          |  case e =>
-         |  case x => x
+         |    {
+         |      case x => x
+         |    }
          |}
          |""".stripMargin
     val tree = Defn.Def(
@@ -2427,7 +2429,7 @@ class RelaxedLambdaSuite extends BaseDottySuite {
       None,
       Term.Try(
         tname("a"),
-        List(Case(patvar("e"), None, blk()), Case(patvar("x"), None, tname("x"))),
+        List(Case(patvar("e"), None, Term.PartialFunction(List(Case(patvar("x"), None, tname("x")))))),
         None,
       ),
     )
@@ -2661,21 +2663,23 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val layout =
       """|def f = xs.map {
          |  x => try a catch {
-         |    case e =>
-         |      b.foo
+         |    case e => b
          |  }
-         |}
+         |}.foo
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
       Nil,
       None,
-      tapply(
-        tselect("xs", "map"),
-        blk(tfunc(tparam("x"))(
-          Term.Try(tname("a"), List(Case(patvar("e"), None, tselect("b", "foo"))), None),
-        )),
+      tselect(
+        tapply(
+          tselect("xs", "map"),
+          blk(
+            tfunc(tparam("x"))(Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None)),
+          ),
+        ),
+        "foo",
       ),
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -2723,25 +2727,26 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |  def f = try a catch {
          |    case e =>
          |      try b catch {
-         |        case g =>
-         |          c
-         |          d
+         |        case g => c
          |      }
          |  }
+         |  d
          |}
          |""".stripMargin
-    val inner = Term
-      .Try(tname("b"), List(Case(patvar("g"), None, blk(tname("c"), tname("d")))), None)
+    val inner = Term.Try(tname("b"), List(Case(patvar("g"), None, tname("c"))), None)
     val tree = Defn.Object(
       Nil,
       tname("A"),
-      tpl(Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        None,
-        Term.Try(tname("a"), List(Case(patvar("e"), None, inner)), None),
-      )),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(tname("a"), List(Case(patvar("e"), None, inner)), None),
+        ),
+        tname("d"),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2819,8 +2824,8 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |    try a catch {
          |      case e =>
          |        a max b
-         |        c
          |    }
+         |    c
          |    d
          |  }
          |}
@@ -2834,11 +2839,8 @@ class RelaxedLambdaSuite extends BaseDottySuite {
         Nil,
         None,
         blk(
-          Term.Try(
-            tname("a"),
-            List(Case(patvar("e"), None, blk(tinfix("a", "max", "b"), tname("c")))),
-            None,
-          ),
+          Term.Try(tname("a"), List(Case(patvar("e"), None, tinfix("a", "max", "b"))), None),
+          tname("c"),
           tname("d"),
         ),
       )),
@@ -3023,9 +3025,10 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |      xs.map {
          |        y => try a catch {
          |          case e => b
-         |          case 2 => 3
          |        }
          |      }
+         |    case 2 =>
+         |      3
          |  }
          |}
          |""".stripMargin
@@ -3044,13 +3047,10 @@ class RelaxedLambdaSuite extends BaseDottySuite {
             None,
             tapply(
               tselect("xs", "map"),
-              blk(tfunc(tparam("y"))(Term.Try(
-                tname("a"),
-                List(Case(patvar("e"), None, "b"), Case(lit(2), None, lit(3))),
-                None,
-              ))),
+              blk(tfunc(tparam("y"))(Term.Try(tname("a"), List(Case(patvar("e"), None, "b")), None))),
             ),
           ),
+          Case(lit(2), None, lit(3)),
         ),
       )),
     )
@@ -3716,11 +3716,10 @@ class RelaxedLambdaSuite extends BaseDottySuite {
       """|object A {
          |  def f = xs.map {
          |    x => try a catch {
-         |      case e =>
-         |        b
-         |        c
+         |      case e => b
          |    }
          |  }
+         |  c
          |  def g = 1
          |}
          |""".stripMargin
@@ -3736,10 +3735,11 @@ class RelaxedLambdaSuite extends BaseDottySuite {
           tapply(
             tselect("xs", "map"),
             blk(tfunc(tparam("x"))(
-              Term.Try(tname("a"), List(Case(patvar("e"), None, blk(tname("b"), tname("c")))), None),
+              Term.Try(tname("a"), List(Case(patvar("e"), None, tname("b"))), None),
             )),
           ),
         ),
+        tname("c"),
         Defn.Def(Nil, tname("g"), Nil, None, lit(1)),
       ),
     )))
@@ -4270,19 +4270,18 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |  def f = {
          |    xs.map {
          |      x => try a catch {
-         |        case e =>
-         |          b
-         |          c
+         |        case e => b
          |      }
          |    }
+         |    c
          |    d
          |  }
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val call =
       tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
-    val defn = Defn.Def(Nil, tname("f"), Nil, None, blk(call, tname("d")))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, blk(call, tname("c"), tname("d")))
     runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
   }
 
@@ -4322,15 +4321,16 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |      xs.map {
          |        x => x
          |      }
-         |      c
          |  }
+         |  c
          |  def g = 1
          |}
          |""".stripMargin
     val call = tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x"))))
-    val handler = Case(patvar("e"), None, blk(call, tname("c")))
+    val handler = Case(patvar("e"), None, call)
     val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
-    val tree = Defn.Object(Nil, tname("A"), tpl(defn, Defn.Def(Nil, tname("g"), Nil, None, int(1))))
+    val tree = Defn
+      .Object(Nil, tname("A"), tpl(defn, tname("c"), Defn.Def(Nil, tname("g"), Nil, None, int(1))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -4370,16 +4370,15 @@ class RelaxedLambdaSuite extends BaseDottySuite {
       """|object A {
          |  def f = xs.map {
          |    x => try a catch {
-         |      case e =>
-         |        b(y)
+         |      case e => b
          |    }
-         |  }
+         |  }(y)
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, tapply(tname("b"), tname("y")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val call =
       tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
-    val defn = Defn.Def(Nil, tname("f"), Nil, None, call)
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, tapply(call, tname("y")))
     runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
   }
 
@@ -4417,16 +4416,15 @@ class RelaxedLambdaSuite extends BaseDottySuite {
       """|object A {
          |  def f = xs.map {
          |    x => try a catch {
-         |      case e =>
-         |        b + 1
+         |      case e => b
          |    }
-         |  }
+         |  } + 1
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, tinfix(tname("b"), "+", lit(1)))
+    val handler = Case(patvar("e"), None, tname("b"))
     val call =
       tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
-    val defn = Defn.Def(Nil, tname("f"), Nil, None, call)
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, tinfix(call, "+", lit(1)))
     runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
   }
 
@@ -4467,15 +4465,14 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val layout =
       """|def f = xs.map { x =>
          |  try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |    case e => b
          |  }
+         |  c
          |  d
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val body = blk(Term.Try(tname("a"), List(handler), None), tname("d"))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("c"), tname("d"))
     val tree = Defn
       .Def(Nil, tname("f"), Nil, None, tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(body))))
     runTestAssert[Stat](code, layout)(tree)
@@ -4520,19 +4517,18 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |  def f = {
          |    xs.map {
          |      x => try a catch {
-         |        case e =>
-         |          b
-         |          c
+         |        case e => b
          |      }
          |    }
+         |    c
          |    d
          |  }
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val handler = Case(patvar("e"), None, tname("b"))
     val call =
       tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
-    val defn = Defn.Def(Nil, tname("f"), Nil, None, blk(call, tname("d")))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, blk(call, tname("c"), tname("d")))
     runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
   }
 
@@ -4546,20 +4542,21 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = {
-         |    xs.map {
-         |      x => try a catch {
-         |        case e =>
-         |          b
-         |          c
+         |    xs.map { x =>
+         |      try a catch {
+         |        case e => b
          |      }
+         |      c
          |    }
          |    d
          |  }
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val call =
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val call = tapply(
+      tselect("xs", "map"),
+      blk(tfunc(tparam("x"))(blk(Term.Try(tname("a"), List(handler), None), tname("c")))),
+    )
     val defn = Defn.Def(Nil, tname("f"), Nil, None, blk(call, tname("d")))
     runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
   }
@@ -4571,18 +4568,19 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = xs.map {
-         |    x => try a catch {
-         |      case e =>
-         |        b
-         |        c
+         |  def f = xs.map { x =>
+         |    try a catch {
+         |      case e => b
          |    }
+         |    c
          |  }
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val call =
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val call = tapply(
+      tselect("xs", "map"),
+      blk(tfunc(tparam("x"))(blk(Term.Try(tname("a"), List(handler), None), tname("c")))),
+    )
     val defn = Defn.Def(Nil, tname("f"), Nil, None, call)
     runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
   }
@@ -4592,17 +4590,18 @@ class RelaxedLambdaSuite extends BaseDottySuite {
       """|def f = xs.map: x => try a catch case e => b; c
          |""".stripMargin
     val layout =
-      """|def f = xs.map {
-         |  x => try a catch {
-         |    case e =>
-         |      b
-         |      c
+      """|def f = xs.map { x =>
+         |  try a catch {
+         |    case e => b
          |  }
+         |  c
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val call =
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val call = tapply(
+      tselect("xs", "map"),
+      blk(tfunc(tparam("x"))(blk(Term.Try(tname("a"), List(handler), None), tname("c")))),
+    )
     runTestAssert[Source](code, layout)(Source(List(Defn.Def(Nil, tname("f"), Nil, None, call))))
   }
 
@@ -4614,17 +4613,18 @@ class RelaxedLambdaSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|package p
-         |def f = xs.map {
-         |  x => try a catch {
-         |    case e =>
-         |      b
-         |      c
+         |def f = xs.map { x =>
+         |  try a catch {
+         |    case e => b
          |  }
+         |  c
          |}
          |""".stripMargin
-    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
-    val call =
-      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    val handler = Case(patvar("e"), None, tname("b"))
+    val call = tapply(
+      tselect("xs", "map"),
+      blk(tfunc(tparam("x"))(blk(Term.Try(tname("a"), List(handler), None), tname("c")))),
+    )
     val tree = Source(List(Pkg(tname("p"), List(Defn.Def(Nil, tname("f"), Nil, None, call)))))
     runTestAssert[Source](code, layout)(tree)
   }
