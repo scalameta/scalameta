@@ -3663,23 +3663,17 @@ class Scala3PositionSuite extends BasePositionSuite {
     """|def f = xs.map: x => try a catch case e => b
        |  .foo
        |""".stripMargin,
-    """|Term.Apply xs.map: x => try a catch case e => b
+    """|Term.Select xs.map: x => try a catch case e => b
        |  .foo [8:xs.map: x => try a catch case e => b...:51)
+       |Term.Apply xs.map: x => try a catch case e => b [8:xs.map: x => try a catch case e => b:44)
        |Term.Select xs.map [8:xs.map:14)
-       |Term.Block : x => try a catch case e => b
-       |  .foo [14<: x => try a catch case e => b...>51)
-       |Term.Function x => try a catch case e => b
-       |  .foo [16:x => try a catch case e => b...:51)
+       |Term.Block : x => try a catch case e => b [14<: x => try a catch case e => b>44)
+       |Term.Function x => try a catch case e => b [16:x => try a catch case e => b:44)
        |Term.ParamClause x [16:x:17)
        |Term.Param x [16:x:17)
-       |Term.Try try a catch case e => b
-       |  .foo [21:try a catch case e => b...:51)
-       |Term.CasesBlock case e => b
-       |  .foo [33:case e => b...:51)
-       |Case case e => b
-       |  .foo [33:case e => b...:51)
-       |Term.Select b
-       |  .foo [43:b...:51)
+       |Term.Try try a catch case e => b [21:try a catch case e => b:44)
+       |Term.CasesBlock case e => b [33:case e => b:44)
+       |Case case e => b [33:case e => b:44)
        |""".stripMargin,
     showPosition = true,
   )
@@ -3929,11 +3923,10 @@ class Scala3PositionSuite extends BasePositionSuite {
        |  def f = try a catch case e => b; c [8<:...>46)
        |Template.Body :
        |  def f = try a catch case e => b; c [8<:...>46)
-       |Defn.Def def f = try a catch case e => b; c [12:def f = try a catch case e => b; c:46)
-       |Term.Try try a catch case e => b; c [20:try a catch case e => b; c:46)
-       |Term.CasesBlock case e => b; c [32:case e => b; c:46)
-       |Case case e => b; c [32:case e => b; c:46)
-       |Term.Block b; c [42:b; c:46)
+       |Defn.Def def f = try a catch case e => b [12:def f = try a catch case e => b:43)
+       |Term.Try try a catch case e => b [20:try a catch case e => b:43)
+       |Term.CasesBlock case e => b [32:case e => b:43)
+       |Case case e => b [32:case e => b:43)
        |""".stripMargin,
     showPosition = true,
   )
@@ -3947,14 +3940,9 @@ class Scala3PositionSuite extends BasePositionSuite {
     """|Term.Block try a catch case e => b
        |    c
        |  d [10:try a catch case e => b...:43)
-       |Term.Try try a catch case e => b
-       |    c [10:try a catch case e => b...:39)
-       |Term.CasesBlock case e => b
-       |    c [22:case e => b...:39)
-       |Case case e => b
-       |    c [22:case e => b...:39)
-       |Term.Block b
-       |    c [32:b...:39)
+       |Term.Try try a catch case e => b [10:try a catch case e => b:33)
+       |Term.CasesBlock case e => b [22:case e => b:33)
+       |Case case e => b [22:case e => b:33)
        |""".stripMargin,
     showPosition = true,
   )

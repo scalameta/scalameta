@@ -379,6 +379,9 @@ private[meta] final class ScannerTokens(
       if (beforeComment) mkOutdentAt(Int.MaxValue, regions, prevPointPos)
       // end the lambda before a comment on a later line
       else if (region.isInstanceOf[RegionColonLambda]) mkOutdentAt(Int.MaxValue, regions)
+      // end a same-line catch handler before the comments above a deeper line
+      else if (isCatchSameLine(region) && nextIndent > region.indent)
+        mkOutdentAt(Int.MaxValue, regions)
       else mkOutdentAt(region.indent, regions)
 
     def mkOutdentAt(outdent: Int, regions: List[SepRegion], fromPos: Int = prevPos) = {
@@ -615,6 +618,8 @@ private[meta] final class ScannerTokens(
           } {
             case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)
             case (_: RegionNonDelimNonIndented) :: rs => OutdentInfo(null, rs)
+            // spec: a comma ends a case body only if the case is in a same-line catch handler
+            case (_: RegionCaseBody) :: (rs @ (_: RegionCatchSameLine) :: _) => OutdentInfo(null, rs)
             case _ => null
           }
         } else currRef(sepRegions)
@@ -647,6 +652,8 @@ private[meta] final class ScannerTokens(
             case (_: RegionCaseGuard) :: rs => expr() :: rs
             // head could be RegionIndent or RegionBrace
             case x :: RegionCaseMark :: rs => expr() :: x :: rs
+            // `case` follows `catch` without an indent
+            case RegionCaseMark :: rs if prev.is[KwCatch] => expr() :: rs
             case (_: RegionDelim) :: (_: RegionFor | _: RegionTemplateBody) :: _ => sepRegions
             // partial function
             case (_: RegionBrace) :: _ => expr() :: sepRegions
@@ -741,6 +748,16 @@ private[meta] final class ScannerTokens(
           case (_: RegionDefDecl | _: RegionGivenDecl) :: rs => currRef(rs)
           case _ => currRef(sepRegions)
         }
+      case _: Semicolon =>
+        /* spec: at a `;` before an outer statement, dotty ends a same-line catch handler, and each
+         * inline `then`, `try` body and same-line catch handler around it */
+        val outer = if (mightStartStat(next)) afterCatchSameLine(sepRegions) else null
+        val end =
+          if (outer eq null) null
+          else if (next.is[KwCase]) enclosingCaseOrEnumBody(outer)
+          else if (semicolonEndsStatIn(outer) && canStartStatIn(outer, nextPos)) outer
+          else null
+        if (end eq null) currRef(sepRegions) else mkOutdents(sepRegions)(outdentsUntil(_, end, end))
       case _: KwExtends => getTemplateInherit(sepRegions)
       case _: Ident => curr.text match {
           case soft.KwDerives() => getTemplateInherit(sepRegions)
@@ -869,6 +886,8 @@ private[meta] final class ScannerTokens(
           case (_: RegionTemplateInherit) :: xs =>
             if (blankBraceOr(!derives(next) && !derives(prev))) strip(xs) else null
           case (_: RegionGivenDecl) :: xs => strip(xs)
+          // a `catch case` body without an indent ends where the enclosing statement ends
+          case (_: RegionCaseBody) :: RegionTry :: xs => strip(xs)
           case _ => if (canProduceLF(rs)) rs else null
         }
         val ok = eolPos >= 0 && mightStartStat(next, closeDelimOK = true) &&
@@ -929,8 +948,7 @@ private[meta] final class ScannerTokens(
                 canEndStat(prev) && !isInfixOp(prevPos)) && canBeLeadingInfix != LeadingInfix.Yes
             if (next.is[KwCase]) dropDeferringRegions(sepRegions) match {
               case (r: RegionCatchSameLine) :: rs if isStatEnd =>
-                val outer = enclosingCaseBody(rs, next)
-                if (outer eq null) null else OutdentInfo(r, outer)
+                if (enclosingCaseOrEnumBody(rs) eq null) null else OutdentInfo(r, rs)
               case _ => null
             }
             else sepRegions match {
@@ -1015,6 +1033,17 @@ private[meta] final class ScannerTokens(
             else getOutdentOnIndent(r, rs, ctrlOnly = true)
 
           def getOutdentInfo(sepRegions: List[SepRegion]) = sepRegions match {
+            /* spec: dotty reads a same-line catch handler as one `expr()`, so the handler ends
+             * where the enclosing statement ends */
+            case (rc: RegionCaseBody) :: (r: RegionCatchSameLine) :: rs
+                if !next.is[KwCase] && canEndStat(prev) && canProduceLF(rs) =>
+              val infix = isInfixOp(prevPos)
+              // the expression continues, unless a one-line lambda around the handler ends here
+              if (nextIndent >= r.indent &&
+                (infix || next.isAny[Dot, KwMatch] || nextIndent > r.indent && next.is[OpenDelim] ||
+                  canBeLeadingInfix == LeadingInfix.Yes) && (closingColonLambda(rs) eq null)) null
+              else if (infix || !canStartStatIn(rs, nextPos)) getCaseBodyOutdent(rc, r, rs)
+              else OutdentInfo(r, rs)
             case (rc: RegionCaseBody) :: (r: RegionIndent) :: rs => getCaseBodyOutdent(rc, r, rs)
             case (_: RegionNonDelimNonIndented) :: rs if (prev match {
                   // [then]  else  do  [catch]  finally  yield  [match]
@@ -1146,8 +1175,9 @@ private[meta] final class ScannerTokens(
             if (prevToken.is[Indentation]) _ => null
             else rs => {
               val lambda = closingColonLambda(rs)
-              // if an indent opens here, keep the lambda open
-              val indent = if (lambda eq null) null else getIndentIfNeeded(rs)
+              // if an indent opens here, keep the lambda or the handler open
+              val indent =
+                if ((lambda eq null) && !isInCatchSameLine(rs)) null else getIndentIfNeeded(rs)
               if (null ne indent) indent
               else mkOutdentsT(rs, multiEOL)(getIndentIfNeeded)((x, _) => Right(x))(xs =>
                 getOutdentInfoWith(if (xs eq rs) lambda else closingColonLambda(xs), xs),
@@ -1212,9 +1242,22 @@ private[meta] final class ScannerTokens(
     case (_: RegionControlCond) :: _ => false
     // `try` and an inline `then` body defer to the enclosing region
     case (RegionTry | RegionThen) :: rs => canProduceLF(rs)
+    // dotty has no region for the case body of a same-line catch handler
+    case (_: RegionCaseBody) :: (_: RegionCatchSameLine) :: rs => canProduceLF(rs)
     case Nil | (_: CanProduceLF) :: _ => true
     case _ => false
   }
+
+  /** Returns true if a `;` in `regions` ends a statement, or an enumerator of a `for` in parens */
+  private def semicolonEndsStatIn(regions: List[SepRegion]): Boolean = regions match {
+    case (_: RegionParen) :: RegionForParens :: _ => true
+    case _ => canProduceLF(regions)
+  }
+
+  /** Returns true if a statement can start at `pos` after a statement in `regions`. */
+  private def canStartStatIn(regions: List[SepRegion], pos: Int): Boolean =
+    dialect.allowToplevelTerms || (treeType ne classOf[Source]) || dropDeferringRegions(regions)
+      .nonEmpty || isDefIntro(pos) || tokens(pos).isAny[KwImport, KwExport, KwPackage]
 
   /**
    * Returns true if the parser continues the expression past the line end between `prevPos` and
@@ -1600,6 +1643,38 @@ private[meta] object ScannerTokens {
         }
       case _ => null
     }
+
+  @tailrec
+  private def enclosingCaseOrEnumBody(regions: List[SepRegion]): List[SepRegion] = regions match {
+    case (_: RegionCaseBody) :: _ | (_: RegionDelim) :: RegionEnumBody :: _ => regions
+    case (_: RegionDeferring | _: RegionColonLambda) :: rs => enclosingCaseOrEnumBody(rs)
+    case _ => null
+  }
+
+  /** Returns regions for next statement after same-line catch handler, or null otherwise */
+  private def afterCatchSameLine(regions: List[SepRegion]): List[SepRegion] = {
+    @tailrec
+    def iter(rs: List[SepRegion]): List[SepRegion] = rs match {
+      case (RegionThen | RegionTry) :: xs => iter(xs)
+      case (_: RegionCaseBody) :: (_: RegionCatchSameLine) :: RegionTry :: xs => iter(xs)
+      case _ => rs
+    }
+    dropDeferringRegions(regions) match {
+      case (_: RegionCatchSameLine) :: RegionTry :: rs => iter(rs)
+      case _ => null
+    }
+  }
+
+  @inline
+  private def isInCatchSameLine(rs: List[SepRegion]): Boolean =
+    isAtCatchSameLine(dropDeferringRegions(rs))
+
+  /** Returns true if regions start with a same-line catch handler */
+  @inline
+  def isAtCatchSameLine(rs: List[SepRegion]): Boolean = isCatchSameLine(rs.headOrNull)
+
+  @inline
+  private def isCatchSameLine(region: SepRegion): Boolean = region.isInstanceOf[RegionCatchSameLine]
 
   /** Returns `regions` without their innermost deferring regions. */
   @tailrec

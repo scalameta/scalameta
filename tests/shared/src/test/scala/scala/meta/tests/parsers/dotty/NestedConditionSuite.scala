@@ -3090,9 +3090,9 @@ class NestedConditionSuite extends BaseDottySuite {
          |Ident(b) [59..60)
          |RightParen [60..61)
          |Ident(c) [62..63)
+         |Indentation.Outdent [63..63)
          |Semicolon [63..64)
          |Ident(d) [65..66)
-         |Indentation.Outdent [66..66)
          |Indentation.Outdent [66..66)
          |KwThen [67..71)
          |Ident(e) [72..73)
@@ -3108,10 +3108,12 @@ class NestedConditionSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = {
-         |    if (try a catch {
-         |      case _ =>
-         |        if (b) c
-         |        d
+         |    if ({
+         |      try a catch {
+         |        case _ =>
+         |          if (b) c
+         |      }
+         |      d
          |    }) e else g
          |    k
          |  }
@@ -3127,10 +3129,9 @@ class NestedConditionSuite extends BaseDottySuite {
         None,
         blk(
           tif(
-            Term.Try(
-              tname("a"),
-              List(Case(patwildcard, None, blk(tif(tname("b"), tname("c")), tname("d")))),
-              None,
+            blk(
+              Term.Try(tname("a"), List(Case(patwildcard, None, tif(tname("b"), tname("c")))), None),
+              tname("d"),
             ),
             tname("e"),
             tname("g"),
@@ -3170,9 +3171,9 @@ class NestedConditionSuite extends BaseDottySuite {
          |Underscore [50..51)
          |RightArrow [52..54)
          |Ident(c) [55..56)
+         |Indentation.Outdent [56..56)
          |Semicolon [56..57)
          |Ident(d) [58..59)
-         |Indentation.Outdent [59..59)
          |Indentation.Outdent [59..59)
          |KwThen [60..64)
          |Ident(e) [65..66)
@@ -3188,10 +3189,11 @@ class NestedConditionSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = {
-         |    if (try a catch {
-         |      case _ =>
-         |        c
-         |        d
+         |    if ({
+         |      try a catch {
+         |        case _ => c
+         |      }
+         |      d
          |    }) e else g
          |    k
          |  }
@@ -3207,7 +3209,7 @@ class NestedConditionSuite extends BaseDottySuite {
         None,
         blk(
           tif(
-            Term.Try(tname("a"), List(Case(patwildcard, None, blk(tname("c"), tname("d")))), None),
+            blk(Term.Try(tname("a"), List(Case(patwildcard, None, tname("c"))), None), tname("d")),
             tname("e"),
             tname("g"),
           ),
@@ -11449,7 +11451,7 @@ class NestedConditionSuite extends BaseDottySuite {
          |Indentation.Indent [56..56)
          |Ident(z) [69..70)
          |Indentation.Outdent [71..71)
-         |LFLF [71..72)
+         |InfixLF [71..72)
          |Ident(&&) [78..80)
          |Ident(w) [81..82)
          |Indentation.Outdent [82..82)
@@ -11471,8 +11473,7 @@ class NestedConditionSuite extends BaseDottySuite {
          |      case _: E =>
          |        foo {
          |          z
-         |        }
-         |        &&w
+         |        } && w
          |    }) c else d
          |    g
          |  }
@@ -11493,7 +11494,7 @@ class NestedConditionSuite extends BaseDottySuite {
               List(Case(
                 Pat.Typed(Pat.Wildcard(), pname("E")),
                 None,
-                blk(tapply(tname("foo"), blk(tname("z"))), tpostfix(tname("&&"), "w")),
+                tinfix(tapply(tname("foo"), blk(tname("z"))), "&&", tname("w")),
               )),
               None,
             ),
