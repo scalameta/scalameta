@@ -1470,6 +1470,81 @@ class CommentSuite extends BaseDottySuite {
     )
   }
 
+  test(
+    "type infix in parens: DSLC, operand, MLC with a blank line, leading operator on the next line",
+  ) {
+    val code =
+      """|type T = (
+         |  // c
+         |  A
+         |  /* x
+         |
+         |     y */
+         |  | B
+         |)
+         |""".stripMargin
+    checkComments(
+      code,
+      """|type T =
+         |  // c
+         |  (A
+         |    /* x
+         |
+         |     y */
+         |    | B)
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Type.ApplyInfix: // c""".stripMargin,
+        """|beg Type.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+    )(
+      """|beg Type.ApplyInfix, Type.Name: // c""".stripMargin,
+      """|beg Type.Name: /* x
+         |
+         |     y */""".stripMargin,
+    )
+  }
+
+  test("pattern infix in parens: DSLC, operand, MLC with a blank line, leading operator on the next line") {
+    val code =
+      """|def f = x match
+         |  case (
+         |    // c
+         |    a
+         |    /* x
+         |
+         |       y */
+         |    :: b
+         |  ) =>
+         |""".stripMargin
+    checkComments(
+      code,
+      """|def f = x match {
+         |  case
+         |    // c
+         |    (a
+         |      /* x
+         |
+         |       y */
+         |      :: b) =>
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Pat.ExtractInfix: // c""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+    )(
+      """|beg Pat.ExtractInfix, Pat.Var, Term.Name: // c""".stripMargin,
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
   test("infix in args: MLC with a blank line, leading operator on the next line") {
     val code =
       """|def f = foo(
@@ -1527,6 +1602,72 @@ class CommentSuite extends BaseDottySuite {
       ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
+      """|beg Term.Name: /* x
+         |
+         |     y */""".stripMargin,
+    )
+  }
+
+  test("infix in parens in the first arg: MLC, operand, MLC with a blank line, leading operator on the next line") {
+    val code =
+      """|def f = foo((/* c */ a
+         |  /* x
+         |
+         |     y */
+         |  + b
+         |))
+         |""".stripMargin
+    checkComments(
+      code,
+      """|def f = foo( /* c */
+         |  (a
+         |    /* x
+         |
+         |     y */
+         |    + b)
+         |)
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ApplyInfix: /* c */""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+    )(
+      """|beg Term.ApplyInfix, Term.Name: /* c */""".stripMargin,
+      """|beg Term.Name: /* x
+         |
+         |     y */""".stripMargin,
+    )
+  }
+
+  test("infix in parens in the second arg: MLC, operand, MLC with a blank line, leading operator on the next line") {
+    val code =
+      """|def f = foo(x, (/* c */ a
+         |  /* x
+         |
+         |     y */
+         |  + b
+         |))
+         |""".stripMargin
+    checkComments(
+      code,
+      """|def f = foo(
+         |  x, /* c */ (a
+         |    /* x
+         |
+         |     y */
+         |    + b)
+         |)
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ApplyInfix: /* c */""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+    )(
+      """|beg Term.ApplyInfix, Term.Name: /* c */""".stripMargin,
       """|beg Term.Name: /* x
          |
          |     y */""".stripMargin,
@@ -1693,6 +1834,80 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin,
     )(
       """|beg Template.Body: /* x
+         |
+         |     y */""".stripMargin,
+    )
+  }
+
+  test("apply in parens: DSLC, MLC with a blank line, brace on the next line") {
+    val code =
+      """|def f = (
+         |  // c
+         |  foo
+         |  /* x
+         |
+         |     y */
+         |  { z }
+         |)
+         |""".stripMargin
+    checkComments(
+      code,
+      """|def f =
+         |  // c
+         |  (foo
+         |    /* x
+         |
+         |     y */
+         |    {
+         |      z
+         |    })
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.Apply: // c""".stripMargin,
+        """|beg Term.ArgClause, Term.Block: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+    )(
+      """|beg Term.Apply, Term.Name: // c""".stripMargin,
+      """|beg Term.ArgClause, Term.Block: /* x
+         |
+         |     y */""".stripMargin,
+    )
+  }
+
+  test("refinement in parens: DSLC, MLC with a blank line, brace on the next line") {
+    val code =
+      """|type T = (
+         |  // c
+         |  A
+         |  /* x
+         |
+         |     y */
+         |  { def g: Int }
+         |)
+         |""".stripMargin
+    checkComments(
+      code,
+      """|type T =
+         |  // c
+         |  (A
+         |    /* x
+         |
+         |     y */
+         |    {
+         |      def g: Int
+         |    })
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Type.Refine: // c""".stripMargin,
+        """|beg Stat.Block: /* x
+           |
+           |     y */""".stripMargin,
+      ),
+    )(
+      """|beg Type.Refine, Type.Name: // c""".stripMargin,
+      """|beg Stat.Block: /* x
          |
          |     y */""".stripMargin,
     )
@@ -1959,6 +2174,44 @@ class CommentSuite extends BaseDottySuite {
       """|beg Term.Name: /* x
          |
          |     y */""".stripMargin,
+    )
+  }
+
+  test("infix after else in args: DSLC before else, operand, MLC with a blank line, leading operator on the next line") {
+    val code =
+      """|def f = foo(
+         |  if (c) d
+         |  // e
+         |  else a
+         |    /* x
+         |
+         |       y */
+         |    + b
+         |)
+         |""".stripMargin
+    checkComments(
+      code,
+      """|def f = foo(
+         |  if (c) d
+         |  // e
+         |  else (a
+         |    /* x
+         |
+         |       y */
+         |    + b)
+         |)
+         |""".stripMargin,
+      reprinted = Seq(
+        """|beg Term.ApplyInfix: // e""".stripMargin,
+        """|beg Term.Name: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+    )(
+      """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
+      """|beg Term.Name: /* x
+         |
+         |       y */""".stripMargin,
     )
   }
 
