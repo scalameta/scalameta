@@ -46,7 +46,7 @@ trait SemanticdbPipeline extends SemanticdbOps {
       config.failures match {
         case Error => global.reporter.error(g.NoPosition, msg)
         case Warning => global.reporter.warning(g.NoPosition, msg)
-        case Info => global.reporter.info(g.NoPosition, msg, force = true)
+        case Info => global.reporter.echo(g.NoPosition, msg)
         case Ignore => // do nothing.
       }
   }
