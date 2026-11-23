@@ -3,9 +3,7 @@ package scala.meta.internal.cli
 import java.io._
 import java.util.concurrent.atomic._
 
-import scala.collection.GenSeq
-
-case class Job[T](xs: GenSeq[T], stream: PrintStream) {
+case class Job[T](xs: collection.Seq[T], stream: PrintStream) {
   def foreach(fn: T => Unit): Unit = {
     val startStamp = System.nanoTime()
     val lastStamp = new AtomicLong(startStamp)

@@ -3,6 +3,7 @@ package internal
 package quasiquotes
 
 import org.scalameta._
+import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.parsers.Messages
 import scala.meta.internal.prettyprinters.TokensToString
@@ -14,7 +15,6 @@ import scala.meta.trees.Origin
 
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.compat.Platform.EOL
 import scala.language.implicitConversions
 import scala.quoted._
 import scala.runtime.ScalaRunTime

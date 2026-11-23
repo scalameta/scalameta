@@ -54,7 +54,7 @@ trait AnnotationOps {
 
   private def toTree(garg: g.ClassfileAnnotArg): s.Tree = garg match {
     case garg: g.LiteralAnnotArg => toTree(garg.const)
-    case garg: g.ArrayAnnotArg => s.ApplyTree(s.NoTree, garg.args.map(toTree))
+    case garg: g.ArrayAnnotArg => s.ApplyTree(s.NoTree, garg.args.map(toTree).toSeq)
     case garg: g.NestedAnnotArg => garg.annInfo.toSemantic
     case _ => s.NoTree
   }

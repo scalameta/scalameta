@@ -7,10 +7,10 @@ import java.nio.file.{Path, Paths}
 object ClasspathUtils {
 
   def getDefaultClassPathEntries: Seq[Path] = System.getProperty("java.class.path")
-    .split(File.pathSeparator).map(x => Paths.get(x))
+    .split(File.pathSeparator).map(x => Paths.get(x)).toSeq
 
   def getClassPathEntriesOpt(cl: ClassLoader): Option[Seq[Path]] = cl match {
-    case cl: URLClassLoader => Some(cl.getURLs.map(x => Paths.get(x.toURI)))
+    case cl: URLClassLoader => Some(cl.getURLs.map(x => Paths.get(x.toURI)).toSeq)
     case _ => None
   }
 
