@@ -2,11 +2,12 @@ package scala.meta.testkit
 
 import org.scalameta.collections.Conversions._
 import scala.meta._
+import scala.meta.testkit.ScalaCompat._
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
-import scala.collection.{GenIterable, GenTraversableOnce, mutable}
+import scala.collection.mutable
 import scala.util.control.NonFatal
 
 object SyntaxAnalysis {
@@ -52,7 +53,7 @@ object SyntaxAnalysis {
           )
       }
     }
-    corpus.foreach(analyze)
+    foreach(corpus)(analyze)
     results.toScalaBuffer
   }
 
