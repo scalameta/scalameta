@@ -535,4 +535,26 @@ class InteractiveSuite extends FunSuite {
        |""".stripMargin,
   )
 
+  private val unusedImport =
+    """|import scala.collection.mutable
+       |object A
+       |""".stripMargin
+
+  /** the diagnostics of a document that a compiler with `options` builds from `unusedImport` */
+  private def diagnostics(options: String*): List[String] = {
+    val pc = newCompiler(scalacOptions = option :: options.toList)
+    try toTextDocument(pc, unusedImport).diagnostics.map(_.message).toList
+    finally pc.askShutdown()
+  }
+
+  test("a compiler with -Xmaxwarns 0") {
+    val obtained = diagnostics("-Xmaxwarns", "0")
+    assertEquals(obtained, List("Unused import"))
+  }
+
+  test("a compiler with -nowarn") {
+    val obtained = diagnostics("-nowarn")
+    assertEquals(obtained, if (ScalaVersion.is213) Nil else List("Unused import"))
+  }
+
 }
