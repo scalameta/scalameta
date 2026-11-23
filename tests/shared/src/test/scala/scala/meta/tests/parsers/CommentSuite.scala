@@ -1641,21 +1641,15 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f =
+         |  def f = (
          |    // c
-         |    (a
+         |    a
          |      /* x
          |
          |       y */
          |      + b)
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: // c""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |       y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -1678,15 +1672,13 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f =
+         |  def f = (
          |    // c
-         |    (a
+         |    a
          |      // d
          |      + b)
          |}
          |""".stripMargin,
-      reprinted =
-        Seq("""|beg Term.ApplyInfix: // c""".stripMargin, """|beg Term.Name: // d""".stripMargin),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: // d""".stripMargin,
@@ -1706,13 +1698,12 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f = // c
-         |    (a
+         |  def f = ( // c
+         |    a
          |      // d
          |      + b)
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Term.ApplyInfix: // c", "beg Term.Name: // d"),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: // d""".stripMargin,
@@ -1749,14 +1740,13 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  type T =
+         |  type T = (
          |    // c
-         |    (A
+         |    A
          |      // d
          |      Either B)
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Type.ApplyInfix: // c", "beg Type.Name: // d"),
     )(
       """|beg Type.ApplyInfix, Type.Name: // c""".stripMargin,
       """|beg Type.Name: // d""".stripMargin,
@@ -1780,15 +1770,14 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  x match {
-         |    case
+         |    case (
          |      // c
-         |      (a
+         |      a
          |        // d
          |        :: b) =>
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Pat.ExtractInfix: // c", "beg Term.Name: // d"),
     )(
       """|beg Pat.ExtractInfix, Pat.Var, Term.Name: // c""".stripMargin,
       """|beg Term.Name: // d""".stripMargin,
@@ -1812,15 +1801,14 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  x match {
-         |    case 1 |
+         |    case 1 | (
          |      // c
-         |      (a
+         |      a
          |        // d
          |        :: b) =>
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Pat.ExtractInfix: // c", "beg Term.Name: // d"),
     )(
       """|beg Pat.ExtractInfix, Pat.Var, Term.Name: // c""".stripMargin,
       """|beg Term.Name: // d""".stripMargin,
@@ -1844,9 +1832,9 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  x match {
-         |    case y if
+         |    case y if (
          |      // c
-         |      (a
+         |      a
          |        // d
          |        + b) =>
          |  }
@@ -1870,14 +1858,13 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f = foo( /* c */
-         |    (a
+         |  def f = foo(
+         |    ( /* c */ a
          |      // d
          |      + b)
          |  )
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Term.ApplyInfix: /* c */", "beg Term.Name: // d"),
     )(
       """|beg Term.ApplyInfix, Term.Name: /* c */""".stripMargin,
       """|beg Term.Name: // d""".stripMargin,
@@ -1897,13 +1884,12 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  def f = foo(
-         |    x, /* c */ (a
+         |    x, ( /* c */ a
          |      // d
          |      + b)
          |  )
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Term.ApplyInfix: /* c */", "beg Term.Name: // d"),
     )(
       """|beg Term.ApplyInfix, Term.Name: /* c */""".stripMargin,
       """|beg Term.Name: // d""".stripMargin,
@@ -1924,8 +1910,8 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f = foo( /* c */
-         |    (bar
+         |  def f = foo(
+         |    ( /* c */ bar
          |      /* x
          |
          |       y */
@@ -1935,12 +1921,6 @@ class CommentSuite extends ParseSuite {
          |  )
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        "beg Term.Apply: /* c */",
-        """|beg Term.ArgClause, Term.Block: /* x
-           |
-           |       y */""".stripMargin,
-      ),
     )(
       """|beg Term.Apply, Term.Name: /* c */""".stripMargin,
       """|beg Term.ArgClause, Term.Block: /* x
@@ -2029,9 +2009,9 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f =
+         |  def f = (
          |    // c
-         |    (foo
+         |    foo
          |      /* x
          |
          |       y */
@@ -2040,12 +2020,6 @@ class CommentSuite extends ParseSuite {
          |      })
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.Apply: // c""".stripMargin,
-        """|beg Term.ArgClause, Term.Block: /* x
-           |
-           |       y */""".stripMargin,
-      ),
     )(
       """|beg Term.Apply, Term.Name: // c""".stripMargin,
       """|beg Term.ArgClause, Term.Block: /* x
@@ -2105,9 +2079,9 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  type T =
+         |  type T = (
          |    // c
-         |    (A
+         |    A
          |      /* x
          |
          |       y */
@@ -2116,12 +2090,6 @@ class CommentSuite extends ParseSuite {
          |      })
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Type.Refine: // c""".stripMargin,
-        """|beg Stat.Block: /* x
-           |
-           |       y */""".stripMargin,
-      ),
     )(
       """|beg Type.Refine, Type.Name: // c""".stripMargin,
       """|beg Stat.Block: /* x
@@ -2179,21 +2147,15 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f = if (c) d else
+         |  def f = if (c) d else (
          |    // e
-         |    (a
+         |    a
          |      /* x
          |
          |       y */
          |      + b)
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: // e""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |       y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2219,21 +2181,15 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f = if (c) d else
+         |  def f = if (c) d else (
          |    // e
-         |    (a
+         |    a
          |      /* x
          |
          |       y */
          |      + b)
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: // e""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |       y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2256,15 +2212,13 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f = if (c) d else
+         |  def f = if (c) d else (
          |    // e
-         |    (a
+         |    a
          |      // f
          |      + b)
          |}
          |""".stripMargin,
-      reprinted =
-        Seq("""|beg Term.ApplyInfix: // e""".stripMargin, """|beg Term.Name: // f""".stripMargin),
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: // f""".stripMargin,
@@ -2285,14 +2239,13 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f = do x while (
-         |  // c
-         |  (a
-         |    // d
-         |    + b))
+         |  def f = do x while ((
+         |    // c
+         |    a
+         |      // d
+         |      + b))
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Term.ApplyInfix: // c", "beg Term.Name: // d"),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: // d""".stripMargin,
@@ -2317,21 +2270,15 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f: Int = macro
+         |  def f: Int = macro (
          |    // e
-         |    (a
+         |    a
          |      /* x
          |
          |       y */
          |      + b)
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: // e""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |       y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2439,9 +2386,9 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f =
+         |  def f = (
          |    // c
-         |    ((a
+         |    (a
          |      // d
          |      + b)
          |      // e
@@ -2449,7 +2396,7 @@ class CommentSuite extends ParseSuite {
          |}
          |""".stripMargin,
       reprinted = Seq(
-        """|beg Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.ApplyInfix, Term.ApplyInfix: // c""".stripMargin,
         """|beg Term.Name: // d""".stripMargin,
         """|beg Term.Name: // e""".stripMargin,
       ),

@@ -1417,20 +1417,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f =
+      """|def f = (
          |  // c
-         |  (a
+         |  a
          |    /* x
          |
          |     y */
          |    + b)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: // c""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -1450,18 +1444,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = /* c */ (a
+      """|def f = ( /* c */ a
          |  /* x
          |
          |     y */
          |  + b)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: /* c */""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: /* c */""".stripMargin,
       """|beg Term.Name: /* x
@@ -1485,20 +1473,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|type T =
+      """|type T = (
          |  // c
-         |  (A
+         |  A
          |    /* x
          |
          |     y */
          |    | B)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Type.ApplyInfix: // c""".stripMargin,
-        """|beg Type.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Type.ApplyInfix, Type.Name: // c""".stripMargin,
       """|beg Type.Name: /* x
@@ -1522,21 +1504,15 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = x match {
-         |  case
+         |  case (
          |    // c
-         |    (a
+         |    a
          |      /* x
          |
          |       y */
          |      :: b) =>
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Pat.ExtractInfix: // c""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |       y */""".stripMargin,
-      ),
     )(
       """|beg Pat.ExtractInfix, Pat.Var, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -1586,20 +1562,15 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = foo(
-         |  // c
-         |  (a
-         |    /* x
+         |  (
+         |    // c
+         |    a
+         |      /* x
          |
          |     y */
-         |    + b)
+         |      + b)
          |)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: // c""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -1619,20 +1590,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = foo( /* c */
-         |  (a
+      """|def f = foo(
+         |  ( /* c */ a
          |    /* x
          |
          |     y */
          |    + b)
          |)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: /* c */""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: /* c */""".stripMargin,
       """|beg Term.Name: /* x
@@ -1653,19 +1618,13 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = foo(
-         |  x, /* c */ (a
+         |  x, ( /* c */ a
          |    /* x
          |
          |     y */
          |    + b)
          |)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: /* c */""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: /* c */""".stripMargin,
       """|beg Term.Name: /* x
@@ -1852,9 +1811,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f =
+      """|def f = (
          |  // c
-         |  (foo
+         |  foo
          |    /* x
          |
          |     y */
@@ -1862,12 +1821,6 @@ class CommentSuite extends BaseDottySuite {
          |      z
          |    })
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.Apply: // c""".stripMargin,
-        """|beg Term.ArgClause, Term.Block: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.Apply, Term.Name: // c""".stripMargin,
       """|beg Term.ArgClause, Term.Block: /* x
@@ -1889,9 +1842,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|type T =
+      """|type T = (
          |  // c
-         |  (A
+         |  A
          |    /* x
          |
          |     y */
@@ -1899,12 +1852,6 @@ class CommentSuite extends BaseDottySuite {
          |      def g: Int
          |    })
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Type.Refine: // c""".stripMargin,
-        """|beg Stat.Block: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Type.Refine, Type.Name: // c""".stripMargin,
       """|beg Stat.Block: /* x
@@ -2093,20 +2040,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = if (c) d else
+      """|def f = if (c) d else (
          |  // e
-         |  (a
+         |  a
          |    /* x
          |
          |     y */
          |    + b)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: // e""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2126,18 +2067,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = if (c) d else /* e */ (a
+      """|def f = if (c) d else ( /* e */ a
          |  /* x
          |
          |     y */
          |  + b)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: /* e */""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: /* e */""".stripMargin,
       """|beg Term.Name: /* x
@@ -2192,21 +2127,15 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f = foo(
-         |  if (c) d
-         |  // e
-         |  else (a
-         |    /* x
+         |  if (c) d else (
+         |    // e
+         |    a
+         |      /* x
          |
          |       y */
-         |    + b)
+         |      + b)
          |)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: // e""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |       y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2228,20 +2157,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = for (x <- y) yield
+      """|def f = for (x <- y) yield (
          |  // e
-         |  (a
+         |  a
          |    /* x
          |
          |     y */
          |    + b)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: // e""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2263,20 +2186,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = try g finally
+      """|def f = try g finally (
          |  // e
-         |  (a
+         |  a
          |    /* x
          |
          |     y */
          |    + b)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: // e""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2298,20 +2215,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = try g catch
+      """|def f = try g catch (
          |  // e
-         |  (a
+         |  a
          |    /* x
          |
          |     y */
          |    + b)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.ApplyInfix: // e""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: /* x
@@ -2373,9 +2284,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f =
+      """|def f = (
          |  // c
-         |  ((a
+         |  (a
          |    /* x
          |
          |     y */
@@ -2386,7 +2297,7 @@ class CommentSuite extends BaseDottySuite {
          |    - c)
          |""".stripMargin,
       reprinted = Seq(
-        """|beg Term.ApplyInfix: // c""".stripMargin,
+        """|beg Term.ApplyInfix, Term.ApplyInfix: // c""".stripMargin,
         """|beg Term.Name: /* x
            |
            |     y */""".stripMargin,
@@ -2454,20 +2365,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f =
+      """|def f = (
          |  // c
-         |  (a
+         |  a
          |    /* x
          |
          |     y */
          |    + b).g
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.Select, Term.ApplyInfix: // c""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2489,20 +2394,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f =
+      """|def f = (
          |  // c
-         |  (a
+         |  a
          |    /* x
          |
          |     y */
          |    + b)(x)
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.Apply, Term.ApplyInfix: // c""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2524,20 +2423,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f =
+      """|def f = (
          |  // c
-         |  (a
+         |  a
          |    /* x
          |
          |     y */
          |    + b): Int
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.Ascribe, Term.ApplyInfix: // c""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2559,20 +2452,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f =
+      """|def f = (
          |  // c
-         |  (a
+         |  a
          |    /* x
          |
          |     y */
          |    + b).g = 1
          |""".stripMargin,
-      reprinted = Seq(
-        """|beg Term.Assign, Term.Select, Term.ApplyInfix: // c""".stripMargin,
-        """|beg Term.Name: /* x
-           |
-           |     y */""".stripMargin,
-      ),
     )(
       """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
       """|beg Term.Name: /* x
@@ -2748,9 +2635,9 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f = for {
          |  x <- y
-         |  if
+         |  if (
          |    // c
-         |    (a
+         |    a
          |      /* x
          |
          |     y */

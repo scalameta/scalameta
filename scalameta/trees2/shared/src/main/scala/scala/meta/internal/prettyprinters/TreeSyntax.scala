@@ -327,7 +327,8 @@ object TreeSyntax {
         }
       case t: Term.Apply =>
         val res = s(pContinued(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " "))
-        m(SimpleExpr1, w("(", res, ")", hasBlankBegComment(t.argClause) && sameInParens(t)))
+        val out = ownParens(t, t.fun, res, hasBlankBegComment(t.argClause) && sameInParens(t))
+        m(SimpleExpr1, out)
       case t: Term.ApplyUsing =>
         val args = s("(", kw("using"), " ", rsep(t.argClause.values), ")")
         m(SimpleExpr1, s(pContinued(SimpleExpr1, t.fun), nosp(withComments(t.argClause)(args))))
@@ -444,7 +445,8 @@ object TreeSyntax {
       case t: Term.EndMarker => s(kw("end"), " ", withComments(t.name)(t.name.value))
       case t: Term.NewAnonymous =>
         val blank = hasBlankBegComment(t.templ.body) || hasBlankEndComment(t.templ.inits)
-        m(SimpleExpr, w("(", s(kw("new"), " ", alt(t.templ, "{}")), ")", blank))
+        val out = ownParens(t, t.templ, s(kw("new"), " ", alt(t.templ, "{}")), blank)
+        m(SimpleExpr, out)
       case _: Term.Placeholder => m(SimpleExpr1, kw("_"))
       case t: Term.Eta => m(PostfixExpr, s(pContinued(SimpleExpr1, t.expr), " ", kw("_")))
       case t: Term.Repeated =>
@@ -499,7 +501,8 @@ object TreeSyntax {
       case t: Type.Refine =>
         val res = s(t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), t.body)
         val blank = hasBlankBegComment(t.body) || t.tpe.isDefined && hasBlankEndComment(t.tpe.get)
-        m(RefineTyp, w("(", res, ")", blank))
+        val out = ownParens(t, t.tpe.getOrElse(t.body), res, blank)
+        m(RefineTyp, out)
       case t: Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " ", t.body))
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
       case t: Type.Lambda => m(Typ, s(t.tparamClause, " ", kw("=>>"), " ", p(Typ, t.tpe)))
@@ -1155,7 +1158,8 @@ object TreeSyntax {
         val res = s(pContinued(sg, t.lhs), rest)
         val needParens = (opBlank || opBeg.nnHas(_.hasNewlinesBeforeOrAfter)) &&
           (opBlank && t.parent.is[Term.AnonymousFunction] || sameInParens(t))
-        if (needParens) m(enclosed, s("(", res, ")")) else m(sg, res)
+        val out = ownParens(t, t.lhs, res, needParens)
+        m(if (needParens) enclosed else sg, out)
       }
     }
 
@@ -1263,6 +1267,28 @@ object TreeSyntax {
     private def hasKeywordOwner(tree: Tree): Boolean =
       (keywordOwners ne null) && keywordOwners.contains(tree)
 
+    // the trees that print their leading comments inside the parens around their own output
+    private var parensOwners: java.util.Set[Tree] = _
+    private def hasParensOwner(tree: Tree): Boolean =
+      (parensOwners ne null) && parensOwners.contains(tree)
+
+    /**
+     * The parens around the tree's output if `cond`, with its leading comments inside them if its
+     * first child holds them too. Call it outside `m`: `withComments` reads the owners first.
+     */
+    private def ownParens(t: Tree, first: Tree, res: Show.Result, cond: Boolean): Show.Result =
+      if (!cond) res
+      else {
+        val c = ownBegComments(t)
+        if ((c eq null) || first.begComment.isEmpty || (ownBegComments(first) ne null))
+          s("(", res, ")")
+        else {
+          if (parensOwners eq null) parensOwners = newIdentitySet()
+          parensOwners.add(t)
+          s("(", spi(s(printLeading(c.values, c.newlinesBefore), res), space = false), ")")
+        }
+      }
+
     private def beforeKeyword(body: Tree, keyword: String): Show.Result =
       beforeKeyword(body, keyword, reprint(body))
 
@@ -1276,16 +1302,19 @@ object TreeSyntax {
         indent: Boolean = false,
         owner: Tree = null, // holds the comments, if not the body
     ): Show.Result = {
+      val holder = if (owner eq null) body else owner
+      val begComments = ownBegComments(holder)
+      // record before the body prints, so it leaves its comments to us
+      if (null ne begComments) addKeywordOwner(holder)
+      // print the body now, so that the check below detects a parens owner
+      val bodyOut = bodyRes
       def withKeyword(bodyPre: Show.Result) =
-        s(kw(keyword), o(" ", keyword.last != '.'), s(wrapPre, bodyPre, bodyRes, wrapPost))
+        s(kw(keyword), o(" ", keyword.last != '.'), s(wrapPre, bodyPre, bodyOut, wrapPost))
       // a continuation of the same clause, such as `with`, indents when it starts a line
       def afterPrev(bodyPre: Show.Result = Show.None) =
         s(if (keyword.head == '.') s() else if (indent) " " else spn(), withKeyword(bodyPre))
-      val holder = if (owner eq null) body else owner
-      val begComments = ownBegComments(holder)
-      if (null eq begComments) afterPrev()
+      if ((null eq begComments) || hasParensOwner(holder)) afterPrev()
       else {
-        addKeywordOwner(holder) // record before the body prints, so it leaves its comments to us
         val (before, after) = commentsBeforeKeyword(begComments, body)
         if (before.isEmpty) afterPrev(printLeading(after, begComments.newlinesBefore))
         else {
@@ -1317,7 +1346,7 @@ object TreeSyntax {
         res: Show.Result,
     ): Show.Result =
       if (comments) {
-        def afterKW = hasKeywordOwner(tree)
+        def afterKW = hasKeywordOwner(tree) || hasParensOwner(tree)
         TreeSyntax.withComments(tree, after = after, indents = indents, afterKeyword = afterKW)(res)
       } else s(res, after)
 
@@ -1346,13 +1375,13 @@ object TreeSyntax {
       if (hasMultilineComments(t)) {
         // an attached comment stays after the opening delimiter
         val attached = if (xs.isEmpty) null else ownBegComments(xs.head).nnIf(!_.isDetached)
+        if (null ne attached) addKeywordOwner(xs.head)
+        // print the values now, so that the check below detects a parens owner
+        val values = i(s(pre, rsepWith(xs, multiline = true)(f)))
         val afterOpen =
-          if (null eq attached) s()
-          else {
-            addKeywordOwner(xs.head)
-            spi(printComments(attached), space = true)
-          }
-        s(open, afterOpen, i(s(pre, rsepWith(xs, multiline = true)(f))), n(close))
+          if ((null eq attached) || hasParensOwner(xs.head)) s()
+          else spi(printComments(attached), space = true)
+        s(open, afterOpen, values, n(close))
       } else {
         val res = s(open, pre, rsepWith(xs)(f), close)
         if (nosplit) nosp(res) else res
@@ -1376,7 +1405,7 @@ object TreeSyntax {
           else if (comments && x.endComment.hasNewlinesAfter)
             s(reprintWith(x, after = s(sep), indents = if (multiline) 0 else 2)(f), space)
           else s(reprintWith(x)(f), sep, space)
-        if (attached eq null) res else s(printComments(attached), res)
+        if ((attached eq null) || hasParensOwner(x)) res else s(printComments(attached), res)
       }
     }
 
