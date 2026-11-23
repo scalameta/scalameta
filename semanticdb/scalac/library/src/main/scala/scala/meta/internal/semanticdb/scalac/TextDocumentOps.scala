@@ -2611,7 +2611,11 @@ trait TextDocumentOps {
         md5 = unit.source.toMD5,
         language = s.Language.SCALA,
         buildTarget = config.buildTarget,
-        symbols = symbols.values.toIndexedSeq.sorted,
+        symbols = config.symbols match {
+          case SymbolMode.None => Nil
+          case SymbolMode.All => symbols.values.toIndexedSeq.sorted
+          case _ => symbols.valuesIterator.filter(_.symbol.isLocal).toIndexedSeq.sorted
+        },
         occurrences = finalOccurrences.sorted,
         diagnostics = unit.hijackedDiagnostics(skip = 0).toDiagnostics(mstart).toIndexedSeq.sorted,
         synthetics = synthetics.toIndexedSeq.sorted,
