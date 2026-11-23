@@ -1826,3 +1826,63 @@ r10_template_handler_then Scala3: object A {\n  try a catch {\n    case e =>\n  
 r10_template_handler_then Scala32: object A {\n  try a catch {\n    case e =>\n      if (p) b\n  }\n  val c = 1\n}
 r10_val_flat_then_stat Scala3: object A {\n  val r = x match {\n    case 1 =>\n      if (p) b\n  }\n  val c = 1\n}
 r10_val_flat_then_stat Scala32: object A {\n  val r = x match {\n    case 1 =>\n      if (p) b\n  }\n  val c = 1\n}
+R3_else_semi Scala3: object A {\n  def f = if (p) a else try b catch {\n    case e =>\n      c\n      d\n  }\n}
+R3_else_semi Scala32: object A {\n  def f = if (p) a else try b catch {\n    case e =>\n      c\n      d\n  }\n}
+R3_nested_then_semi_else Scala3: object A {\n  def f = try a catch {\n    case e =>\n      if (p) try b catch {\n        case g =>\n          c\n          d\n      } else h\n  }\n}
+R3_nested_then_semi_else Scala32: object A {\n  def f = try a catch {\n    case e =>\n      if (p) try b catch {\n        case g =>\n          c\n          d\n      } else h\n  }\n}
+R3_nested_then_semi Scala3: object A {\n  def f = try a catch {\n    case e =>\n      if (p) try b catch {\n        case g =>\n          c\n          d\n      }\n  }\n}
+R3_nested_then_semi Scala32: object A {\n  def f = try a catch {\n    case e =>\n      if (p) try b catch {\n        case g =>\n          c\n          d\n      }\n  }\n}
+R3_semi_case_same_line Scala3: object A {\n  def f = x match {\n    case 1 =>\n      try a catch {\n        case e => b\n        case 2 => c\n      }\n  }\n}
+R3_semi_case_same_line Scala32: object A {\n  def f = x match {\n    case 1 =>\n      try a catch {\n        case e => b\n        case 2 => c\n      }\n  }\n}
+R3_then_deeper_else Scala3: object A {\n  def f = if (p) try a catch {\n    case e =>\n      b\n      c\n  } else d\n}
+R3_then_deeper_else Scala32: object A {\n  def f = if (p) try a catch {\n    case e =>\n      b\n      c\n  } else d\n}
+R3_then_semi_case Scala3: object A {\n  def f = x match {\n    case 1 =>\n      if (p) try a catch {\n        case e => b\n        case 2 => c\n      }\n  }\n}
+R3_then_semi_case Scala32: object A {\n  def f = x match {\n    case 1 =>\n      if (p) try a catch {\n        case e => b\n        case 2 => c\n      }\n  }\n}
+R3_then_semi_nl_else Scala3: object A {\n  def f = if (p) try a catch {\n    case e =>\n      b\n      c\n  } else d\n}
+R3_then_semi_nl_else Scala32: object A {\n  def f = if (p) try a catch {\n    case e =>\n      b\n      c\n  } else d\n}
+R3_then_semi_nl_stat Scala3: object A {\n  def f = {\n    if (p) try a catch {\n      case e =>\n        b\n        c\n    }\n    d\n  }\n}
+R3_then_semi_nl_stat Scala32: object A {\n  def f = {\n    if (p) try a catch {\n      case e =>\n        b\n        c\n    }\n    d\n  }\n}
+R3_then_semi Scala3: object A {\n  def f = if (p) try a catch {\n    case e =>\n      b\n      c\n  }\n  def g = 1\n}
+R3_then_semi Scala32: object A {\n  def f = if (p) try a catch {\n    case e =>\n      b\n      c\n  }\n  def g = 1\n}
+R3_try_try_semi_catch Scala3: object A {\n  def f = try try a catch {\n    case e =>\n      b\n      c\n  } catch {\n    case g => d\n  }\n}
+R3_try_try_semi_catch Scala32: object A {\n  def f = try try a catch {\n    case e =>\n      b\n      c\n  } catch {\n    case g => d\n  }\n}
+R3_try_try_semi Scala3: object A {\n  def f = try try a catch {\n    case e =>\n      b\n      c\n  }\n}
+R3_try_try_semi Scala32: object A {\n  def f = try try a catch {\n    case e =>\n      b\n      c\n  }\n}
+R3_while_do_semi Scala3: object A {\n  def f = while (p) try a catch {\n    case e =>\n      b\n      c\n  }\n}
+R3_while_do_semi Scala32: object A {\n  def f = while (p) try a catch {\n    case e =>\n      b\n      c\n  }\n}
+R4_enum_braces_case Scala3: error 3:11: `=>` expected but `,` found
+R4_enum_braces_case Scala32: error 3:11: `=>` expected but `,` found
+R4_enum_case_deeper Scala3: error 3:13: `=>` expected but `,` found
+R4_enum_case_deeper Scala32: error 3:13: `=>` expected but `,` found
+R4_enum_case_params Scala3: error 3:19: `=>` expected but `outdent` found
+R4_enum_case_params Scala32: error 3:19: `=>` expected but `outdent` found
+R4_enum_lambda_case Scala3: error 3:11: `=>` expected but `,` found
+R4_enum_lambda_case Scala32: error 2:27: `identifier` expected but `try` found
+R4_enum_semi_case Scala3: error 2:66: `=>` expected but `,` found
+R4_enum_semi_case Scala32: error 2:66: `=>` expected but `,` found
+R4_enum_single_case Scala3: error 3:11: `=>` expected but `outdent` found
+R4_enum_single_case Scala32: error 3:11: `=>` expected but `outdent` found
+R4_nested_then_deeper_else Scala3: object A {\n  def f = try a catch {\n    case e =>\n      if (p) try b catch {\n        case g =>\n          c\n          d\n      } else h\n  }\n}
+R4_nested_then_deeper_else Scala32: object A {\n  def f = try a catch {\n    case e =>\n      if (p) try b catch {\n        case g =>\n          c\n          d\n      } else h\n  }\n}
+R4_nested_then_deeper Scala3: object A {\n  def f = try a catch {\n    case e =>\n      if (p) try b catch {\n        case g =>\n          c\n          d\n      }\n  }\n}
+R4_nested_then_deeper Scala32: object A {\n  def f = try a catch {\n    case e =>\n      if (p) try b catch {\n        case g =>\n          c\n          d\n      }\n  }\n}
+R4_object_second_clause Scala3: object A {\n  def f = try a catch {\n    case e: E1 => b\n    case e: E2 => c\n  }\n}
+R4_object_second_clause Scala32: object A {\n  def f = try a catch {\n    case e: E1 => b\n    case e: E2 => c\n  }\n}
+R4_paren_then_deeper Scala3: object A {\n  def f = {\n    if (p) try a catch {\n      case e =>\n        b\n        c\n    }\n    d\n  }\n}
+R4_paren_then_deeper Scala32: object A {\n  def f = {\n    if (p) try a catch {\n      case e =>\n        b\n        c\n    }\n    d\n  }\n}
+R4_paren_then_semi Scala3: object A {\n  def f = if (p) try a catch {\n    case e =>\n      b\n      c\n  }\n  def g = 1\n}
+R4_paren_then_semi Scala32: object A {\n  def f = if (p) try a catch {\n    case e =>\n      b\n      c\n  }\n  def g = 1\n}
+R4_try_try_deeper_catch Scala3: object A {\n  def f = try try a catch {\n    case e =>\n      b\n      c\n  } catch {\n    case g => d\n  }\n}
+R4_try_try_deeper_catch Scala32: object A {\n  def f = try try a catch {\n    case e =>\n      b\n      c\n  } catch {\n    case g => d\n  }\n}
+R4_try_try_deeper Scala3: object A {\n  def f = try try a catch {\n    case e =>\n      b\n      c\n  }\n}
+R4_try_try_deeper Scala32: object A {\n  def f = try try a catch {\n    case e =>\n      b\n      c\n  }\n}
+R4_enum_extends_case Scala3: error 3:11: `=>` expected but `,` found
+R4_enum_extends_case Scala32: error 3:11: `=>` expected but `,` found
+R4_enum_second_clause Scala3: enum Color {\n  def safe = try compute() catch {\n    case e: E1 => 0\n    case e: E2 => 1\n  }\n}
+R4_enum_second_clause Scala32: enum Color {\n  def safe = try compute() catch {\n    case e: E1 => 0\n    case e: E2 => 1\n  }\n}
+R5_for_paren_semi_guard Scala3: error 2:18: `)` expected but `<-` found
+R5_for_paren_semi_guard Scala32: error 2:18: `)` expected but `<-` found
+R5_for_paren_semi_val Scala3: object A {\n  def f = for (x <- try a catch {\n    case e =>\n      b\n      y = c\n  }) yield y\n}
+R5_for_paren_semi_val Scala32: object A {\n  def f = for (x <- try a catch {\n    case e =>\n      b\n      y = c\n  }) yield y\n}
+R5_then_semi_else Scala3: object A {\n  def f = if (p) try a catch {\n    case e => b\n  } else d\n}
+R5_then_semi_else Scala32: object A {\n  def f = if (p) try a catch {\n    case e => b\n  } else d\n}

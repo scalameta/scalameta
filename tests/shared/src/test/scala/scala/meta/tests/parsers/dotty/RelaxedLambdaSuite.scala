@@ -4257,4 +4257,376 @@ class RelaxedLambdaSuite extends BaseDottySuite {
     runTestAssert[Source](code, layout)(tree)
   }
 
+  test("SIP-75 single-line lambda: catch case in the body, deeper line, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    xs.map: x => try a catch case e => b
+         |      c
+         |    d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    xs.map {
+         |      x => try a catch {
+         |        case e =>
+         |          b
+         |          c
+         |      }
+         |    }
+         |    d
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val call =
+      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, blk(call, tname("d")))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test("SIP-75 single-line lambda in a catch case body, deeper leading select") {
+    val code =
+      """|object A:
+         |  def f = try a catch case e => xs.map: x => x
+         |    .foo
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      xs.map {
+         |        x => x
+         |      }.foo
+         |  }
+         |}
+         |""".stripMargin
+    val call = tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x"))))
+    val handler = Case(patvar("e"), None, tselect(call, "foo"))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test("SIP-75 single-line lambda in a catch case body, deeper line, next definition") {
+    val code =
+      """|object A:
+         |  def f = try a catch case e => xs.map: x => x
+         |    c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      xs.map {
+         |        x => x
+         |      }
+         |      c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val call = tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x"))))
+    val handler = Case(patvar("e"), None, blk(call, tname("c")))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    val tree = Defn.Object(Nil, tname("A"), tpl(defn, Defn.Def(Nil, tname("g"), Nil, None, int(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 relaxed lambda: case lambda in a catch case body, next definition") {
+    val code =
+      """|object A:
+         |  def f = try a catch case e => xs.map: case y => y
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      xs.map {
+         |        case y => y
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val call =
+      tapply(tselect("xs", "map"), Term.PartialFunction(List(Case(patvar("y"), None, tname("y")))))
+    val handler = Case(patvar("e"), None, call)
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    val tree = Defn.Object(Nil, tname("A"), tpl(defn, Defn.Def(Nil, tname("g"), Nil, None, int(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 single-line lambda: catch case in the body, deeper argument in parens") {
+    val code =
+      """|object A:
+         |  def f =
+         |    xs.map: x => try a catch case e => b
+         |      (y)
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => try a catch {
+         |      case e =>
+         |        b(y)
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tapply(tname("b"), tname("y")))
+    val call =
+      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, call)
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test("SIP-75 single-line lambda: catch case in the body, leading select at the def indent") {
+    val code =
+      """|object A:
+         |  def f = xs.map: x => try g(x) catch case _ => 0
+         |  .size
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => try g(x) catch {
+         |      case _ => 0
+         |    }
+         |  }.size
+         |}
+         |""".stripMargin
+    val handler = Case(Pat.Wildcard(), None, int(0))
+    val call = tapply(
+      tselect("xs", "map"),
+      blk(tfunc(tparam("x"))(Term.Try(tapply(tname("g"), tname("x")), List(handler), None))),
+    )
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, tselect(call, "size"))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test("SIP-75 single-line lambda: catch case in the body, deeper leading infix") {
+    val code =
+      """|object A:
+         |  def f = xs.map: x => try a catch case e => b
+         |    + 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => try a catch {
+         |      case e =>
+         |        b + 1
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "+", lit(1)))
+    val call =
+      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, call)
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test("SIP-75 single-line lambda: catch case in the body, trailing infix operator, deeper operand") {
+    val code =
+      """|object A:
+         |  def f =
+         |    xs.map: x => try a catch case e => b +
+         |      c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => try a catch {
+         |      case e =>
+         |        b + c
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "+", tname("c")))
+    val call =
+      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, call)
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test(
+    "SIP-75 multi-line lambda: catch case on the try line in the body, deeper line, next statement",
+  ) {
+    val code =
+      """|def f =
+         |  xs.map: x =>
+         |    try a catch case e => b
+         |      c
+         |    d
+         |""".stripMargin
+    val layout =
+      """|def f = xs.map { x =>
+         |  try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |  d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("d"))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(body))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 single-line lambda: catch case in the body, deeper case on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    xs.map: x => try a catch case e => b
+         |      case g => c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => try a catch {
+         |      case e => b
+         |      case g => c
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val cases = List(Case(patvar("e"), None, tname("b")), Case(patvar("g"), None, tname("c")))
+    val call = tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), cases, None))))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, call)
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test(
+    "Scala3Future: SIP-75 single-line lambda: catch case in the body, deeper line, next statement",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f =
+         |    xs.map: x => try a catch case e => b
+         |      c
+         |    d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    xs.map {
+         |      x => try a catch {
+         |        case e =>
+         |          b
+         |          c
+         |      }
+         |    }
+         |    d
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val call =
+      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, blk(call, tname("d")))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test("SIP-75 single-line lambda: catch case in the body, semicolon, next statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    xs.map: x => try a catch case e => b; c
+         |    d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    xs.map {
+         |      x => try a catch {
+         |        case e =>
+         |          b
+         |          c
+         |      }
+         |    }
+         |    d
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val call =
+      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, blk(call, tname("d")))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test("SIP-75 single-line lambda: catch case in the body, semicolon, object") {
+    val code =
+      """|object A:
+         |  def f = xs.map: x => try a catch case e => b; c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => try a catch {
+         |      case e =>
+         |        b
+         |        c
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val call =
+      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, call)
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test("SIP-75 single-line lambda: catch case in the body, top level, semicolon") {
+    val code =
+      """|def f = xs.map: x => try a catch case e => b; c
+         |""".stripMargin
+    val layout =
+      """|def f = xs.map {
+         |  x => try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val call =
+      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    runTestAssert[Source](code, layout)(Source(List(Defn.Def(Nil, tname("f"), Nil, None, call))))
+  }
+
+  test("SIP-75 single-line lambda: catch case in the body, package in braces, semicolon") {
+    val code =
+      """|package p {
+         |  def f = xs.map: x => try a catch case e => b; c
+         |}
+         |""".stripMargin
+    val layout =
+      """|package p
+         |def f = xs.map {
+         |  x => try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val call =
+      tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))))
+    val tree = Source(List(Pkg(tname("p"), List(Defn.Def(Nil, tname("f"), Nil, None, call)))))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
 }

@@ -76,6 +76,44 @@ class CommentSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("try: same-line catch case in a match case, semicolon, DSLC, next case") {
+    val code =
+      """|def f = x match
+         |  case 1 => try a catch case e => b; // c
+         |  case 2 => d
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    try a catch {
+         |      case e => b // c
+         |    }
+         |  case 2 =>
+         |    d
+         |}
+         |""".stripMargin
+    checkComments(code, layout)("end Term.Name: // c")
+  }
+
+  test("try: same-line catch case in a match case, semicolon, MLC, next case") {
+    val code =
+      """|def f = x match
+         |  case 1 => try a catch case e => b; /* c */
+         |  case 2 => d
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    try a catch {
+         |      case e => b /* c */
+         |    }
+         |  case 2 =>
+         |    d
+         |}
+         |""".stripMargin
+    checkComments(code, layout)("end Term.Name: /* c */")
+  }
+
   test("do: comment after body") {
     val code =
       """|do a // c
