@@ -24,12 +24,15 @@ trait SyntheticOps {
       case gTree: g.Literal => toTree(gTree.value)
       case AssignOrNamedArg(lhs, rhs) => s
           .AssignTree(lhs = lhs.toSemanticTree, rhs = rhs.toSemanticTree)
-      case gTree: g.Typed if gTree.hasAttachment[g.analyzer.MacroExpansionAttachment] =>
-        val expandeeTree = gTree.attachments.get[g.analyzer.MacroExpansionAttachment].get.expandee
-        val beforeExpansion =
-          if (expandeeTree.pos.isRange) expandeeTree.toSemanticOriginal
-          else expandeeTree.toSemanticTree
-        s.MacroExpansionTree(beforeExpansion = beforeExpansion, tpe = gTree.tpt.tpe.toSemanticTpe)
+      case gTree: g.Typed => gTree.attachments.get(MacroExpansionTag) match {
+          case Some(att) => s.MacroExpansionTree(
+              beforeExpansion =
+                if (att.expandee.pos.isRange) att.expandee.toSemanticOriginal
+                else att.expandee.toSemanticTree,
+              tpe = gTree.tpt.tpe.toSemanticTpe,
+            )
+          case _ => s.NoTree
+        }
       case _ => s.NoTree
     }
 
