@@ -77,17 +77,20 @@ trait TyperOps {
   private def key(pos: Position): Long = pos.start.toLong << 32 | pos.end
 
   private[scalac] object TyperRecorder extends AnalyzerPlugin {
+
     override def pluginsTyped(tpe: Type, typer: Typer, tree: Tree, mode: Mode, pt: Type): Type = {
+      if ((null eq currentRun) || isPastTyper) return tpe // we just need the typer phase
+
       recordBinding(typer, tree)
       try tree match {
-          case t: ValDef if (null ne currentRun) && !isPastTyper => // we just need the typer phase
+          case t: ValDef =>
             val gsym = t.symbol
             if (gsym.isSynthetic && !gsym.isParameter && gsym.isLocalToBlock) gsym
               .updateAttachment(new ValDefRhs(t.rhs))
           // mark a Java annotation once the typer has typed its constructor
           case t: Select if t.name eq nme.CONSTRUCTOR =>
             typer.context.tree match {
-              case ann: Apply if ann.args.nonEmpty && (null ne currentRun) && !isPastTyper =>
+              case ann: Apply if ann.args.nonEmpty =>
                 val ctor = t.symbol
                 if (ctor.isConstructor && isClassfileAnnotation(ctor.owner)) {
                   val pos = t.pos
@@ -99,7 +102,7 @@ trait TyperOps {
               case _ =>
             }
           case _ => typer.context.tree match {
-              case ann: Apply if !ann.attachments.isEmpty && (null ne currentRun) && !isPastTyper =>
+              case ann: Apply if !ann.attachments.isEmpty =>
                 ann.attachments.get(AnnotArgsTag) match {
                   case Some(args) => args.record(tree)
                   case _ =>
@@ -120,23 +123,19 @@ trait TyperOps {
     /** the bindings of `lastBody`, or `NoRenames` if its unit has no rename */
     private var bindings: RenameBindings = NoRenames
 
-    private def updateLastBody(body: Tree): Boolean = (body eq lastBody) || {
-      val ok = (null ne currentRun) && !isPastTyper
-      if (ok) {
-        bindings = // do this first, in case it throws
-          if (body eq EmptyTree) NoRenames // never attach to a shared tree
-          else body.attachments.get(RenameBindingsTag) match {
-            case Some(b) => b
-            case _ =>
-              val b =
-                try scanRenames(body)
-                catch { case ex if NonFatal(ex) => NoRenames }
-              body.updateAttachment(b)(RenameBindingsTag)
-              b
-          }
-        lastBody = body
-      }
-      ok
+    private def updateLastBody(body: Tree): Unit = if (body ne lastBody) {
+      bindings = // do this first, in case it throws
+        if (body eq EmptyTree) NoRenames // never attach to a shared tree
+        else body.attachments.get(RenameBindingsTag) match {
+          case Some(b) => b
+          case _ =>
+            val b =
+              try scanRenames(body)
+              catch { case ex if NonFatal(ex) => NoRenames }
+            body.updateAttachment(b)(RenameBindingsTag)
+            b
+        }
+      lastBody = body
     }
 
     /**
@@ -146,15 +145,15 @@ trait TyperOps {
     private def recordBinding(typer: Typer, tree: Tree): Unit =
       try { // keep the compile going if `exists` throws while it loads a class file
         val unit = typer.context.unit
-        if (updateLastBody(unit.body)) if (bindings ne NoRenames) tree match {
+        updateLastBody(unit.body)
+        if (bindings ne NoRenames) tree match {
           case t: RefTree =>
             val pos = t.pos
             /* skip a tree in a method that scalac adds to the companion, such as a constructor's
              * default getter: it has no range. Skip a tree of another source: its offsets are in
              * another text */
             if (t.name.isTermName && pos.isRange && hasNoWrittenQualifier(t) &&
-              (pos.source eq unit.source) && bindings.names(t.name) && (null ne currentRun) &&
-              !isPastTyper) {
+              (pos.source eq unit.source) && bindings.names(t.name)) {
               val sym = t.symbol
               if ((sym ne null) && sym.exists && !sym.isError) bindings.byStart(pos.start) = sym
             }
