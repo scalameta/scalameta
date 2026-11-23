@@ -1251,11 +1251,13 @@ object TreeSyntax {
         f: T => Show.Result,
     ): Show.Result = withComments(tree, after = after, indents = indents)(f(tree))
 
+    private def newIdentitySet(): java.util.Set[Tree] = java.util.Collections
+      .newSetFromMap(new java.util.IdentityHashMap[Tree, java.lang.Boolean])
+
     // the trees whose leading comments `beforeKeyword` prints around its keyword
     private var keywordOwners: java.util.Set[Tree] = _
     private def addKeywordOwner(tree: Tree): Unit = {
-      if (keywordOwners eq null) keywordOwners = java.util.Collections
-        .newSetFromMap(new java.util.IdentityHashMap[Tree, java.lang.Boolean])
+      if (keywordOwners eq null) keywordOwners = newIdentitySet()
       keywordOwners.add(tree)
     }
     private def hasKeywordOwner(tree: Tree): Boolean =
