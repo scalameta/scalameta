@@ -526,7 +526,7 @@ trait SymbolOps {
     }
     // an accessor of a constructor parameter, also of one whose name the source does not write
     if (sym.isParamAccessor) {
-      val name = g.nme.dropLocalSuffix(sym.name)
+      val name = g.TermName(sym.name.toString.stripSuffix(g.nme.LOCAL_SUFFIX_STRING))
       sym.owner.primaryConstructor.paramss.iterator.flatten.find(_.name == name) match {
         case Some(param) => return declarationOf(param)
         case _ =>
