@@ -733,7 +733,6 @@ def unusedOptions = Def.setting {
     "-Wunused:imports,privates,locals,patvars,params",
     s"-Wconf:cat=unused&$generated:s",
     // TODO: remove when 2.12 support is removed, as 2.12 needs these imports
-    "-Wconf:cat=unused-imports&origin=scala[.]language[.]higherKinds:s",
     "-Wconf:cat=unused-imports&origin=org[.]scalameta[.]collections[.]Conversions[.].*:s",
   )
   else if (isScala212.value) List(
@@ -781,6 +780,7 @@ lazy val sharedBaseSettings = Def.settings(
 lazy val sharedSettings = Def.settings(
   sharedBaseSettings,
   scalacOptions ++= { if (isScala212.value) Nil else List("-Xfatal-warnings") },
+  scalacOptions ++= { if (isScala212.value) List("-language:higherKinds") else Nil },
   scalacOptions ++= { if (isScala213.value) List("-Wconf:cat=deprecation:is") else Nil },
   scalacOptions ++= {
     val loader = scalaInstance.value.loader

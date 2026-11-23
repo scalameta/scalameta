@@ -4,8 +4,6 @@ import scala.meta.Tree
 import scala.meta.contrib.TreeOps
 import scala.meta.contrib.equality.{Equal, TreeEquality}
 
-import scala.language.higherKinds
-
 trait TreeExtensions {
   implicit final class XtensionTreeOps[A <: Tree](a: A) {
     @inline
