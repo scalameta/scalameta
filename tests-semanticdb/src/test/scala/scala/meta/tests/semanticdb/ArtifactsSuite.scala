@@ -1,5 +1,6 @@
 package scala.meta.tests.semanticdb
 
+import org.scalameta.collections.Conversions._
 import scala.meta.tests.BuildInfo
 
 import java.io.File
@@ -8,15 +9,13 @@ import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.xpath.XPathFactory
 
-import scala.collection.JavaConverters._
-
 import munit.FunSuite
 
 class ArtifactsSuite extends FunSuite {
 
   private def classes(jar: String): Set[String] = {
     val zip = new ZipFile(jar)
-    try zip.entries().asScala.map(_.getName).filter(_.endsWith(".class")).toSet
+    try zip.entries().toScala.map(_.getName).filter(_.endsWith(".class")).toSet
     finally zip.close()
   }
 

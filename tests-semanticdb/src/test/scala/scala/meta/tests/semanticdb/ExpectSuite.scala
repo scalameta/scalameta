@@ -1,6 +1,7 @@
 package scala.meta.tests
 package semanticdb
 
+import org.scalameta.collections.Conversions._
 import scala.meta.cli._
 import scala.meta.internal.io._
 import scala.meta.internal.semanticdb._
@@ -12,8 +13,8 @@ import java.io._
 import java.nio.charset.StandardCharsets._
 import java.nio.file._
 import java.util.jar._
+import java.{util => ju}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 import munit.FunSuite
@@ -81,8 +82,8 @@ trait ExpectHelpers extends munit.Assertions {
       original: String,
       revised: String,
   ): String = {
-    val originalLines = original.split("\n").toSeq.asJava
-    val revisedLines = revised.split("\n").toSeq.asJava
+    val originalLines = ju.Arrays.asList(original.split("\n"): _*)
+    val revisedLines = ju.Arrays.asList(revised.split("\n"): _*)
     val OnlyCurlyBrace = "\\s+}".r
     val diff = {
       val lines = DiffUtils.generateUnifiedDiff(
@@ -91,7 +92,7 @@ trait ExpectHelpers extends munit.Assertions {
         originalLines,
         DiffUtils.diff(originalLines, revisedLines),
         3,
-      ).asScala
+      ).toScalaBuffer
       if (lines.lengthCompare(2) > 0) lines.remove(2) // remove lines like "@@ -3,18 +3,16 @@"
       lines.filterNot(line => OnlyCurlyBrace.findFirstIn(line).isDefined)
         .filterNot(_.startsWith("@@")).mkString("\n")

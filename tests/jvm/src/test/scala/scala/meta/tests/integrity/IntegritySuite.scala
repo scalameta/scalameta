@@ -1,11 +1,11 @@
 package scala.meta.tests
 package integrity
 
+import org.scalameta.collections.Conversions._
+
 import java.io.File
 import java.io.File.{pathSeparator, separator}
 import java.util.zip.ZipFile
-
-import scala.collection.JavaConverters._
 
 import munit._
 
@@ -30,7 +30,7 @@ class IntegritySuite extends FunSuite {
         }
       else if (entry.getName.endsWith(".jar")) {
         val zip = new ZipFile(entry)
-        try zip.entries.asScala.map(_.getName).filter(_.endsWith(".class"))
+        try zip.entries.toScala.map(_.getName).filter(_.endsWith(".class"))
             .map(name => (name.replace("/", separator), s"$entry!$name")).toList
         finally zip.close()
       } else Nil
