@@ -71,7 +71,7 @@ private[meta] final class LegacyTokenData {
   def intVal(prevToken: Token): Either[String, Either[BigInt, BigInt]] =
     toBigInt(prevToken, java.lang.Integer.SIZE, "Int")
   def longVal(prevToken: Token): Either[String, BigInt] =
-    toBigInt(prevToken, java.lang.Long.SIZE, "Long").right.flatMap {
+    toBigInt(prevToken, java.lang.Long.SIZE, "Long").flatMap {
       case Right(v) => Right(v)
       case _ => Left("integer number out of range for Long")
     }

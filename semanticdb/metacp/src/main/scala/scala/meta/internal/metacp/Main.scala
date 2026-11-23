@@ -135,24 +135,22 @@ class Main(settings: Settings, reporter: Reporter) {
   private def withOutputEntry[T](entry: AbsolutePath)(f: OutputEntry => T): T = {
     val name = entry.toNIO.normalize().getFileName.toString
     if (PathIO.extension(entry.toNIO) == "jar") {
-      val freeJar = jarNameAlternatives(name, 0).filter(!_.isFile).head
+      val freeJar = jarNameAlternatives(name).filter(!_.isFile).next()
       PlatformFileIO
         .withJarFileSystem(freeJar, create = true)(jarRoot => f(OutputEntry(freeJar, jarRoot)))
     } else {
-      val freeDir = directoryNameAlternatives(name, 0).filter(!_.isDirectory).head
+      val freeDir = directoryNameAlternatives(name).filter(!_.isDirectory).next()
       Files.createDirectories(freeDir.toNIO)
       f(OutputEntry(freeDir, freeDir))
     }
   }
 
-  private def directoryNameAlternatives(filename: String, i: Int): Stream[AbsolutePath] = {
-    val name = if (i == 0) filename else filename + "-" + i
-    settings.out.resolve(name) #:: directoryNameAlternatives(filename, i + 1)
-  }
+  private def directoryNameAlternatives(filename: String): Iterator[AbsolutePath] = Iterator.from(0)
+    .map(i => settings.out.resolve(if (i == 0) filename else filename + "-" + i))
 
-  private def jarNameAlternatives(filename: String, i: Int): Stream[AbsolutePath] = {
-    val name = if (i == 0) filename else filename.stripSuffix(".jar") + "-" + i + ".jar"
-    settings.out.resolve(name) #:: jarNameAlternatives(filename, i + 1)
+  private def jarNameAlternatives(filename: String): Iterator[AbsolutePath] = {
+    val base = filename.stripSuffix(".jar")
+    Iterator.from(0).map(i => settings.out.resolve(if (i == 0) filename else base + "-" + i + ".jar"))
   }
 
   private def convertClasspathEntry(in: AbsolutePath, arg: String, out: AbsolutePath): Boolean = {
