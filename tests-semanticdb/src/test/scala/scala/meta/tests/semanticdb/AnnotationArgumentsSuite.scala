@@ -1,5 +1,6 @@
 package scala.meta.tests.semanticdb
 
+import org.scalameta.collections.Conversions._
 import scala.meta.cli.Metacp
 import scala.meta.internal.io.FileIO
 import scala.meta.internal.semanticdb.TextDocuments
@@ -11,7 +12,6 @@ import scala.meta.tests.metacp.Library
 
 import java.nio.file.{Files, Paths}
 
-import scala.collection.JavaConverters._
 import scala.tools.nsc.reporters.StoreReporter
 import scala.tools.nsc.{Global, Settings}
 
@@ -208,7 +208,7 @@ class AnnotationArgumentsSuite extends FunSuite {
     dir.toFile.deleteOnExit()
     val pkg = javaClasses.entries.head.toNIO.resolve("issue1672")
     Files.createDirectories(dir.resolve("issue1672"))
-    Files.list(pkg).iterator().asScala.map(_.getFileName.toString)
+    Files.list(pkg).iterator().toScala.map(_.getFileName.toString)
       .filterNot(x => x == "Color.class" || x == "Tint.class")
       .foreach(x => Files.copy(pkg.resolve(x), dir.resolve("issue1672").resolve(x)))
     Classpath(AbsolutePath(dir))
@@ -623,7 +623,7 @@ class AnnotationArgumentsSuite extends FunSuite {
   )
 
   test("implicit constant argument") {
-    val lines = Files.readAllLines(classdir.resolve("Issue1672.scala")).asScala
+    val lines = Files.readAllLines(classdir.resolve("Issue1672.scala")).toScalaBuffer
     val line = lines.indexWhere(_.contains("def implicitUse"))
     val synthetics = documents.flatMap(_.synthetics).filter(_.range.exists(_.startLine == line))
       .map(x => render(x.tree))

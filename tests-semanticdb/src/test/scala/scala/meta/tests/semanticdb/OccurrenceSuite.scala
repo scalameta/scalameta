@@ -57,7 +57,7 @@ object OccurrenceSuite {
         relpathstr,
       )
       new TestCase(relpath.toURI(false).toString)(
-        expectpathOpt.toRight(s"// missing expect file: $relpathstr\n").right.map { expectpath =>
+        expectpathOpt.toRight(s"// missing expect file: $relpathstr\n").map { expectpath =>
           val semanticdb = SemanticdbPaths.toSemanticdb(source.toRelative(sourceroot), targetroot)
           val textdocument = TextDocuments.parseFrom(semanticdb.readAllBytes).documents.head
           val obtained = OccurrenceSuite.printTextDocument(textdocument)
@@ -71,7 +71,7 @@ object OccurrenceSuite {
       )
     }
   }
-  def saveExpected(): Unit = testCases.foreach(_.body.right.foreach { body =>
+  def saveExpected(): Unit = testCases.foreach(_.body.foreach { body =>
     Files.createDirectories(body.expectpath.toNIO.getParent)
     Files.write(body.expectpath.toNIO, body.obtained.getBytes(StandardCharsets.UTF_8))
   })

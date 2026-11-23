@@ -25,7 +25,7 @@ class SignatureSuite extends SemanticdbSuite {
   private def javaPackage[A](code: String)(fn: g.Symbol => A): A = {
     val run = new g.Run
     run.compileSources(List(g.newSourceFile(code, "J.java")))
-    g.exitingTyper(fn(g.rootMirror.getRequiredPackage("j").moduleClass))
+    g.exitingTyper(fn(g.rootMirror.getPackage("j").moduleClass))
   }
 
   symbols(

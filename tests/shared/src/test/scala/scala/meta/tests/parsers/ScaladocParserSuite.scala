@@ -153,7 +153,7 @@ class ScaladocParserSuite extends FunSuite {
 
   test("paragraph parsing with complex references and parens") {
     val ref = "baz qux"
-    val link = new Link(ref.split("\\s+"))
+    val link = new Link(ref.split("\\s+").toSeq)
     assertEquals(link.syntax, "[[baz qux]]")
 
     val text1 = Seq[TextPartInfo](Word("(foo"), Word("bar"), link, Word(")") -> true)
@@ -184,7 +184,7 @@ class ScaladocParserSuite extends FunSuite {
       """|  ggmqwogmwogmqwomgq
          |    val x = 1 // sdfdfh
          |   // zzz
-         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n")
+         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n").toSeq
     val complexCodeBlockAsComment = complexCodeBlock.mkString("\n *")
 
     val comment =
@@ -330,7 +330,7 @@ class ScaladocParserSuite extends FunSuite {
       """|  ggmqwogmwogmqwomgq
          |    val x = 1 // sdfdfh
          |   // zzz
-         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n")
+         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n").toSeq
     val complexCodeBlockAsComment = complexCodeBlock.mkString("\n *")
 
     val comment =
@@ -408,7 +408,7 @@ class ScaladocParserSuite extends FunSuite {
       """|  object Foo {
          |    def bar(): String = "foobar"
          |  }
-         |""".stripMargin.split("\n")
+         |""".stripMargin.split("\n").toSeq
     val codeBlockAsComment = codeBlock.mkString("\n *  ")
 
     val comment =
@@ -1565,7 +1565,7 @@ class ScaladocParserSuite extends FunSuite {
       """|  ggmqwogmwogmqwomgq
          |    val x = 1 // sdfdfh
          |   // zzz
-         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n")
+         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n").toSeq
     val complexCodeBlockAsComment = complexCodeBlock.mkString("\n *")
 
     val comment =
@@ -1602,7 +1602,7 @@ class ScaladocParserSuite extends FunSuite {
       """|  ggmqwogmwogmqwomgq
          |    val x = 1 // sdfdfh
          |   // zzz
-         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n")
+         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n").toSeq
     val complexCodeBlockAsComment = complexCodeBlock.mkString(" ", "\n * ", "")
 
     val comment =

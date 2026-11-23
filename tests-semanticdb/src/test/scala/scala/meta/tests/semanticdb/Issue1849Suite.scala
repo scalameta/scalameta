@@ -1,5 +1,6 @@
 package scala.meta.tests.semanticdb
 
+import org.scalameta.collections.Conversions._
 import scala.meta.cli.Metac
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
 import scala.meta.internal.{semanticdb => s}
@@ -10,8 +11,6 @@ import scala.meta.tests.cli.CliTestUtils
 import scala.meta.tests.metacp.Library
 
 import java.nio.file.Files
-
-import scala.collection.JavaConverters._
 
 import munit.FunSuite
 
@@ -44,7 +43,7 @@ class Issue1849Suite extends FunSuite {
     }
     assert(metacIsSuccess, metacErr)
     val semanticdbroot = targetroot.resolve(SemanticdbPaths.semanticdbPrefix)
-    val uris = Files.list(semanticdbroot.toNIO).iterator().asScala.toList.flatMap(file =>
+    val uris = Files.list(semanticdbroot.toNIO).iterator().toScala.toList.flatMap(file =>
       s.TextDocuments.parseFrom(Files.readAllBytes(file)).documents
         .map(doc => file.getFileName.toString + " " + doc.uri),
     )

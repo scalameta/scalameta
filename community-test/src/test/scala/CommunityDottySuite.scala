@@ -117,8 +117,8 @@ class CommunityDottySuite extends FunSuite {
       val ds = Files.newDirectoryStream(path)
       val (dirs, files) =
         try {
-          import scala.collection.JavaConverters._
-          ds.iterator().asScala.toList.partition(Files.isDirectory(_))
+          import org.scalameta.collections.Conversions._
+          ds.iterator().toScala.toList.partition(Files.isDirectory(_))
         } finally ds.close()
       files.iterator.flatMap { x =>
         val fileStr = x.toString

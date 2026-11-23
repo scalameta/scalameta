@@ -1155,7 +1155,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("Interpolated with quote escape 2") {
-    val stringInterpolationWithUnicode = s"""check_success(s"${'\\' + "u0024"}")"""
+    val stringInterpolationWithUnicode = s"""check_success(s"${"\\" + "u0024"}")"""
 
     assertTokens(stringInterpolationWithUnicode, dialects.Scala3) {
       case Tokens(

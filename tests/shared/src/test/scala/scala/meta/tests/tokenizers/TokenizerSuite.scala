@@ -1124,7 +1124,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("Interpolated with quote escape 2") {
-    val stringInterpolationWithUnicode = s"""check_success(s"${'\\' + "u0024"}")"""
+    val stringInterpolationWithUnicode = s"""check_success(s"${"\\" + "u0024"}")"""
 
     assertTokenizedAsStructureLines(
       stringInterpolationWithUnicode,
