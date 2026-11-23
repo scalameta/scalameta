@@ -58,25 +58,30 @@ class DiagnosticSuite extends SemanticdbSuite {
 
   private val reporter = new StoreReporter()
 
-  // the uri and the diagnostics of each document of a run that compiles `sources` with the plugin
-  private lazy val documents: List[String] = {
+  /** the targetroot of a run that compiles `files` with the plugin and `options` */
+  private def compile(files: Map[String, String], store: StoreReporter, options: String) = {
     val root = Files.createTempDirectory("diagnostic_")
     val targetroot = Files.createDirectories(root.resolve("target"))
-    val paths = sources.map { case (name, code) =>
+    val paths = files.map { case (name, code) =>
       val path = root.resolve(name)
       Files.createDirectories(path.getParent)
       Files.write(path, code.getBytes("UTF-8")).toString
     }
-    val settings = new Settings(msg => fail(msg))
-    settings.classpath.value = sys.props("sbt.paths.tests.test.classes")
-    settings.outputDirs.setSingleOutput(targetroot.toString)
+    store.settings.classpath.value = sys.props("sbt.paths.tests.test.classes")
+    store.settings.outputDirs.setSingleOutput(targetroot.toString)
     val plugin = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
-    settings.processArgumentString(
-      s"-Yrangepos -Xplugin:$plugin -Xplugin-require:semanticdb -P:semanticdb:failures:warning " +
-        s"-P:semanticdb:sourceroot:${root.resolve("src")} $warnUnusedImports",
+    store.settings.processArgumentString(
+      s"-Yrangepos -Xplugin:$plugin -Xplugin-require:semanticdb $options " +
+        s"-P:semanticdb:sourceroot:${root.resolve("src")}",
     )
-    val compiler = new Global(settings, reporter)
+    val compiler = new Global(store.settings, store)
     new compiler.Run().compile(paths.toList.sorted)
+    targetroot
+  }
+
+  /** each document's uri and diagnostics, from compiling `sources` with the plugin */
+  private lazy val documents: List[String] = {
+    val targetroot = compile(sources, reporter, s"-P:semanticdb:failures:warning $warnUnusedImports")
     assertEquals(reporter.infos.filter(_.severity == reporter.ERROR).map(_.msg).toList, Nil)
     FileIO.listAllFilesRecursively(AbsolutePath(targetroot)).iterator
       .filter(_.toNIO.toString.endsWith(".semanticdb")).toList.sortBy(_.toNIO.toString)
@@ -123,6 +128,23 @@ class DiagnosticSuite extends SemanticdbSuite {
       .filter(_.startsWith("failed to generate semanticdb"))
       .map(msg => msg.substring(msg.lastIndexOf(File.separatorChar) + 1).stripSuffix(":"))
     assertEquals(failed, if (isScala213) List("Broken.scala", "NoParse.scala") else Nil)
+  }
+
+  test("failures:info: a targetroot that is a file") {
+    val store = new StoreReporter(new Settings(msg => fail(msg)))
+    val file = Files.createTempFile("targetroot_", "")
+    compile(
+      Map("src/Ok.scala" -> "object Ok"),
+      store,
+      s"-P:semanticdb:failures:info -P:semanticdb:targetroot:$file",
+    )
+    // the position, the severity and the first line of each message, with the file name only
+    val infos = store.infos.toList.map { info =>
+      val line = info.msg.linesIterator.next()
+      (info.pos, info.severity, line.substring(line.lastIndexOf(File.separatorChar) + 1))
+    }
+    assertEquals(infos, List((NoPosition, store.INFO, "Ok.scala:")))
+    assertEquals((store.errorCount, store.warningCount), (0, 0))
   }
 
   private class Wrapped extends StoreReporter() {
