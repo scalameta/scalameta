@@ -509,7 +509,7 @@ private[meta] final class ScannerTokens(
     }
 
     def getTemplateInherit(sepRegions: List[SepRegion]): TokenRef = currRef(sepRegions match {
-      case (_: RegionTemplateMark) :: rs => RegionTemplateInherit :: rs
+      case (r: RegionTemplateMark) :: rs => r.inherit :: rs
       case _ => sepRegions
     })
 
@@ -618,7 +618,7 @@ private[meta] final class ScannerTokens(
             case _ => null
           }
         } else currRef(sepRegions)
-      case _: KwEnum => currRef(RegionTemplateMark :: sepRegions)
+      case _: KwEnum => currRef(RegionEnumMark :: sepRegions)
       case _: KwGiven if !prevToken.isAny[Dot, KwCase] =>
         currRef(dropRegionLine(sepRegions) match {
           case rs @ (Nil | (_: RegionBrace | _: RegionIndent) :: _) => new RegionGivenDecl(curr) ::
@@ -647,7 +647,7 @@ private[meta] final class ScannerTokens(
             case (_: RegionCaseGuard) :: rs => expr() :: rs
             // head could be RegionIndent or RegionBrace
             case x :: RegionCaseMark :: rs => expr() :: x :: rs
-            case (_: RegionDelim) :: (_: RegionFor | RegionTemplateBody) :: _ => sepRegions
+            case (_: RegionDelim) :: (_: RegionFor | _: RegionTemplateBody) :: _ => sepRegions
             // partial function
             case (_: RegionBrace) :: _ => expr() :: sepRegions
             // partial function in assignment or fewer braces
@@ -666,8 +666,8 @@ private[meta] final class ScannerTokens(
       case _: LeftBrace =>
         val lbRegions = sepRegions match {
           case (r: RegionGivenDecl) :: rs if r.kw ne prevToken => RegionTemplateBody :: rs
-          case (_: RegionTemplateMark) :: rs => RegionTemplateBody :: rs
-          case RegionTemplateInherit :: rs if !prev.is[KwExtends] => RegionTemplateBody :: rs
+          case (r: RegionTemplateMark) :: rs => r.body :: rs
+          case (r: RegionTemplateInherit) :: rs if !prev.is[KwExtends] => r.body :: rs
           case _ => sepRegions
         }
         currRef(RegionBrace(nextIndent) :: lbRegions)
@@ -675,7 +675,7 @@ private[meta] final class ScannerTokens(
         // produce outdent for every indented region before RegionBrace|RegionEnum
         mkOutdents(sepRegions) {
           case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)
-          case (_: RegionBrace) :: (RegionTemplateBody | RegionCaseMark) :: rs =>
+          case (_: RegionBrace) :: (_: RegionTemplateBody | RegionCaseMark) :: rs =>
             OutdentInfo(null, rs, true)
           case (_: RegionBrace) :: rs => OutdentInfo(null, rs, true)
           case _ :: rs => OutdentInfo(null, rs)
@@ -866,7 +866,7 @@ private[meta] final class ScannerTokens(
           // `extends` and `with` are covered by canEndStat() and CantStartStat
           case (_: RegionTemplateMark) :: xs =>
             if (blankBraceOr(!derives(next))) strip(xs) else null
-          case RegionTemplateInherit :: xs =>
+          case (_: RegionTemplateInherit) :: xs =>
             if (blankBraceOr(!derives(next) && !derives(prev))) strip(xs) else null
           case (_: RegionGivenDecl) :: xs => strip(xs)
           case _ => if (canProduceLF(rs)) rs else null
@@ -977,7 +977,7 @@ private[meta] final class ScannerTokens(
             case (rc: RegionControl) :: xs =>
               OutdentInfo(r, if (rc.isTerminatingToken(next)) rs else xs)
             case _ if ctrlOnly => null // we stop here
-            case RegionTemplateBody :: xs => OutdentInfo(r, xs)
+            case (_: RegionTemplateBody) :: xs => OutdentInfo(r, xs)
             case xs if (prev match {
                   // then  [else]  [do]  catch  [finally]  [yield]  match
                   case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
@@ -1083,8 +1083,8 @@ private[meta] final class ScannerTokens(
                     })) && isFewerBracesPrefix(prevNonTrivia(prevPos), allowUnquote = maybeRefineDcl)
                 }
                 sepRegions match {
-                  case (_: RegionTemplateDecl) :: rs =>
-                    if (exceedsIndent) emitIndent(RegionTemplateBody :: rs)
+                  case (r: RegionTemplateDecl) :: rs =>
+                    if (exceedsIndent) emitIndent(r.body :: rs)
                     else if (soft.KwEnd(next)) emitIndentAndOutdent(rs)
                     else Right(lastWhitespaceToken(rs, nextIndent))
                   case (_: RegionDefDecl) :: _ => null
