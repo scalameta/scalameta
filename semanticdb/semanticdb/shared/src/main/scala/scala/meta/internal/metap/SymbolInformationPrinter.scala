@@ -313,6 +313,12 @@ trait SymbolInformationPrinter extends BasePrinter {
 
     private def printSignature(info: SymbolInformation): Unit = info.signature match {
       case NoSignature if info.isSelfParameter => ()
+      case sig: ValueSignature if info.isMethod || info.isMacro || info.isLocal =>
+        str(": ")
+        pprint(sig.tpe match {
+          case tpe: ByNameType => tpe.tpe
+          case tpe => tpe
+        })
       case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
     }
 
@@ -335,9 +341,8 @@ trait SymbolInformationPrinter extends BasePrinter {
 
     private implicit class InfoOps(info: SymbolInformation) {
       def prefixBeforeTpe: String = info.kind match {
-        case LOCAL | FIELD | PARAMETER | SELF_PARAMETER | UNKNOWN_KIND | _: Kind.Unrecognized =>
-          ": "
-        case METHOD | CONSTRUCTOR | MACRO | TYPE | TYPE_PARAMETER | OBJECT | PACKAGE |
+        case FIELD | PARAMETER | SELF_PARAMETER | UNKNOWN_KIND | _: Kind.Unrecognized => ": "
+        case LOCAL | METHOD | CONSTRUCTOR | MACRO | TYPE | TYPE_PARAMETER | OBJECT | PACKAGE |
             PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE => ""
         case _ => ""
       }

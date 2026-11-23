@@ -578,8 +578,8 @@ class InfoPrinterSuite extends FunSuite {
 
   test("dotc: def without parameter clauses")(assertMember(
     dotc("_empty_/C#f().", "f", s.SymbolInformation.Kind.METHOD, byName),
-    "_empty_/C#f(). => method f=> R",
-    "{ def f=> R }",
+    "_empty_/C#f(). => method f: R",
+    "{ def f: R }",
   ))
 
   test("dotc: val")(assertMember(
@@ -590,8 +590,8 @@ class InfoPrinterSuite extends FunSuite {
       s.ValueSignature(returnType),
       s.SymbolInformation.Property.VAL,
     ),
-    "_empty_/C#x. => val method xR",
-    "{ val def xR }",
+    "_empty_/C#x. => val method x: R",
+    "{ val def x: R }",
   ))
 
   test("dotc: inline def without parameter clauses")(assertMember(
@@ -602,13 +602,13 @@ class InfoPrinterSuite extends FunSuite {
       byName,
       s.SymbolInformation.Property.INLINE,
     ),
-    "_empty_/C#g(). => inline macro g=> R",
-    "{ macro g=> R }",
+    "_empty_/C#g(). => inline macro g: R",
+    "{ macro g: R }",
   ))
 
   test("dotc: local def without parameter clauses") {
     val info = dotc("local0", "f", s.SymbolInformation.Kind.LOCAL, byName)
-    assertInfo(info, "local0 => local f: => R")
+    assertInfo(info, "local0 => local f: R")
   }
 
   test("dotc: local def with a parameter") {
@@ -617,7 +617,7 @@ class InfoPrinterSuite extends FunSuite {
       returnType = returnType,
     )
     val info = dotc("local1", "g", s.SymbolInformation.Kind.LOCAL, sig)
-    assertInfo(info, "local1 => local g: (x: B): R")
+    assertInfo(info, "local1 => local g(x: B): R")
   }
 
   test("dotc: local val")(assertInfo(
@@ -634,7 +634,7 @@ class InfoPrinterSuite extends FunSuite {
   test("dotc: local def with a type parameter") {
     val sig = s.MethodSignature(Some(scope(typeParam("local5", "T"))), returnType = ref("local5"))
     val info = dotc("local4", "g", s.SymbolInformation.Kind.LOCAL, sig)
-    assertInfo(info, "local4 => local g: [T]: T")
+    assertInfo(info, "local4 => local g[T]: T")
   }
 
   test("by-name parameter") {
