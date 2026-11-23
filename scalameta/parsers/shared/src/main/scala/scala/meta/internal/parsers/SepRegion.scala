@@ -65,19 +65,36 @@ case object RegionDefMark extends RegionDefDecl with RegionHasParamMark
 case object RegionDefType extends RegionDefDecl
 
 /** region hierarchy to mark packages, classes, etc which can use `colon-eol` before template */
-sealed trait RegionTemplateDecl extends RegionNonDelimNonIndented
+sealed trait RegionTemplateDecl extends RegionNonDelimNonIndented {
+  val body: RegionTemplateBody = RegionTemplateBody
+}
 
 /** the initial part of declaration, before the template */
-sealed trait RegionTemplateMark extends RegionTemplateDecl with CanProduceLF
+sealed trait RegionTemplateMark extends RegionTemplateDecl with CanProduceLF {
+  val inherit: RegionTemplateInherit = RegionTemplateInherit
+}
 
 /** the initial part of declaration, before the template */
 case object RegionTemplateMark extends RegionTemplateMark with RegionHasParamMark
+
+/** the initial part of an enum declaration, before the template */
+case object RegionEnumMark extends RegionTemplateMark with RegionHasParamMark {
+  override val body: RegionTemplateBody = RegionEnumBody
+  override val inherit: RegionTemplateInherit = RegionEnumInherit
+}
 
 /** the initial part of declaration, before the template */
 case object RegionNewMark extends RegionTemplateMark
 
 /** the initial part of the template, containing any inherit clauses */
-case object RegionTemplateInherit extends RegionTemplateDecl
+sealed trait RegionTemplateInherit extends RegionTemplateDecl
+
+case object RegionTemplateInherit extends RegionTemplateInherit
+
+/** the initial part of the template of an enum, containing any inherit clauses */
+case object RegionEnumInherit extends RegionTemplateInherit {
+  override val body: RegionTemplateBody = RegionEnumBody
+}
 
 // the initial part of a given declaration or definition, before `=` or template
 final class RegionGivenDecl(val kw: Token) extends RegionHasParamMark with CanProduceLF
@@ -87,7 +104,12 @@ final class RegionGivenDecl(val kw: Token) extends RegionHasParamMark with CanPr
  * for instance, helps override handling of `case` designed for catch/match/partial function but
  * inappropriate for enum.
  */
-case object RegionTemplateBody extends RegionNonDelimNonIndented
+sealed trait RegionTemplateBody extends RegionNonDelimNonIndented
+
+case object RegionTemplateBody extends RegionTemplateBody
+
+/** the template body of an enum, where a `case` can start an enum case */
+case object RegionEnumBody extends RegionTemplateBody
 
 /** this marks the initial part of extension */
 case object RegionExtensionMark extends RegionHasParamMark
