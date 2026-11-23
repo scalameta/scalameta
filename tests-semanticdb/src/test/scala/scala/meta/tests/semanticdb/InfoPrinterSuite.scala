@@ -548,4 +548,99 @@ class InfoPrinterSuite extends FunSuite {
     assertType(s.StructuralType(declarations = Some(scope(f))), "{ implicit def f: A }")
   }
 
+  /**
+   * Returns the info of a symbol as dotc writes it: a term without parameter clauses has a value
+   * signature
+   */
+  private def dotc(
+      sym: String,
+      name: String,
+      kind: s.SymbolInformation.Kind,
+      sig: s.Signature,
+      props: s.SymbolInformation.Property*,
+  ) = s.SymbolInformation(
+    symbol = sym,
+    kind = kind,
+    properties = properties(props: _*),
+    displayName = name,
+    signature = sig,
+  )
+
+  private def assertInfo(info: s.SymbolInformation, expected: String): Unit =
+    assertEquals(Print.info(Format.Compact, info, emptyPrinterSymtab), expected)
+
+  private def assertMember(info: s.SymbolInformation, decl: String, defn: String): Unit = {
+    assertInfo(info, decl)
+    assertType(s.StructuralType(declarations = Some(scope(info))), defn)
+  }
+
+  private val byName = s.ValueSignature(s.ByNameType(returnType))
+
+  test("dotc: def without parameter clauses")(assertMember(
+    dotc("_empty_/C#f().", "f", s.SymbolInformation.Kind.METHOD, byName),
+    "_empty_/C#f(). => method f=> R",
+    "{ def f=> R }",
+  ))
+
+  test("dotc: val")(assertMember(
+    dotc(
+      "_empty_/C#x.",
+      "x",
+      s.SymbolInformation.Kind.METHOD,
+      s.ValueSignature(returnType),
+      s.SymbolInformation.Property.VAL,
+    ),
+    "_empty_/C#x. => val method xR",
+    "{ val def xR }",
+  ))
+
+  test("dotc: inline def without parameter clauses")(assertMember(
+    dotc(
+      "_empty_/C#g().",
+      "g",
+      s.SymbolInformation.Kind.MACRO,
+      byName,
+      s.SymbolInformation.Property.INLINE,
+    ),
+    "_empty_/C#g(). => inline macro g=> R",
+    "{ macro g=> R }",
+  ))
+
+  test("dotc: local def without parameter clauses") {
+    val info = dotc("local0", "f", s.SymbolInformation.Kind.LOCAL, byName)
+    assertInfo(info, "local0 => local f: => R")
+  }
+
+  test("dotc: local def with a parameter") {
+    val sig = s.MethodSignature(
+      parameterLists = List(scope(param("local2", "x", ref("_empty_/B#")))),
+      returnType = returnType,
+    )
+    val info = dotc("local1", "g", s.SymbolInformation.Kind.LOCAL, sig)
+    assertInfo(info, "local1 => local g: (x: B): R")
+  }
+
+  test("dotc: local val")(assertInfo(
+    dotc(
+      "local3",
+      "x",
+      s.SymbolInformation.Kind.LOCAL,
+      s.ValueSignature(returnType),
+      s.SymbolInformation.Property.VAL,
+    ),
+    "local3 => val local x: R",
+  ))
+
+  test("dotc: local def with a type parameter") {
+    val sig = s.MethodSignature(Some(scope(typeParam("local5", "T"))), returnType = ref("local5"))
+    val info = dotc("local4", "g", s.SymbolInformation.Kind.LOCAL, sig)
+    assertInfo(info, "local4 => local g: [T]: T")
+  }
+
+  test("by-name parameter") {
+    val x = param("_empty_/f().(x)", "x", s.ByNameType(returnType))
+    assertInfo(x, "_empty_/f().(x) => param x: => R")
+    assertSignature(s.MethodSignature(parameterLists = List(scope(x))), "(x: => R)")
+  }
+
 }
