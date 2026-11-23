@@ -3919,13 +3919,21 @@ class Scala3PositionSuite extends BasePositionSuite {
     showPosition = true,
   )
 
-  checkPositions[Stat](
-    """|def f = try a catch case e => b; c
+  checkPositions[Source](
+    """|object A:
+       |  def f = try a catch case e => b; c
        |""".stripMargin,
-    """|Term.Try try a catch case e => b; c [8:try a catch case e => b; c:34)
-       |Term.CasesBlock case e => b; c [20:case e => b; c:34)
-       |Case case e => b; c [20:case e => b; c:34)
-       |Term.Block b; c [30:b; c:34)
+    """|Defn.Object object A:
+       |  def f = try a catch case e => b; c [0:object A:...:46)
+       |Template :
+       |  def f = try a catch case e => b; c [8<:...>46)
+       |Template.Body :
+       |  def f = try a catch case e => b; c [8<:...>46)
+       |Defn.Def def f = try a catch case e => b; c [12:def f = try a catch case e => b; c:46)
+       |Term.Try try a catch case e => b; c [20:try a catch case e => b; c:46)
+       |Term.CasesBlock case e => b; c [32:case e => b; c:46)
+       |Case case e => b; c [32:case e => b; c:46)
+       |Term.Block b; c [42:b; c:46)
        |""".stripMargin,
     showPosition = true,
   )

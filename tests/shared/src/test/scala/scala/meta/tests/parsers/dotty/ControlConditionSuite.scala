@@ -13347,4 +13347,35 @@ class ControlConditionSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("same-line catch case with an if body, a colon argument in the condition, a leading infix, then at a line start") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val r = try a catch case _ => if x && foo:
+         |          z
+         |        && w
+         |      then c else d
+         |    r
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    val r = try a catch {
+         |      case _ =>
+         |        if (x && foo {
+         |          z && w
+         |        }) c else d
+         |    }
+         |    r
+         |  }
+         |}
+         |""".stripMargin
+    val cond = tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w")))))
+    val handler = Case(Pat.Wildcard(), None, Term.If(cond, tname("c"), tname("d"), Nil))
+    val r = Defn.Val(Nil, List(patvar("r")), None, Term.Try(tname("a"), List(handler), None))
+    val tree = Defn
+      .Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, blk(r, tname("r")))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }

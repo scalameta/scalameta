@@ -5489,3 +5489,126 @@ object A:
   val r = x match
   case 1 => if p then b
   val c = 1
+==== R3_else_semi
+object A:
+  def f = if p then a else try b catch case e => c; d
+==== R3_nested_then_semi_else
+object A:
+  def f = try a catch case e => if p then try b catch case g => c; d else h
+==== R3_nested_then_semi
+object A:
+  def f = try a catch case e => if p then try b catch case g => c; d
+==== R3_semi_case_same_line
+object A:
+  def f = x match
+    case 1 => try a catch case e => b; case 2 => c
+==== R3_then_deeper_else
+object A:
+  def f =
+    if p then try a catch case e => b
+      c
+    else d
+==== R3_then_semi_case
+object A:
+  def f = x match
+    case 1 => if p then try a catch case e => b; case 2 => c
+==== R3_then_semi_nl_else
+object A:
+  def f =
+    if p then try a catch case e => b; c
+    else d
+==== R3_then_semi_nl_stat
+object A:
+  def f =
+    if p then try a catch case e => b; c
+    d
+==== R3_then_semi
+object A:
+  def f = if p then try a catch case e => b; c
+  def g = 1
+==== R3_try_try_semi_catch
+object A:
+  def f = try try a catch case e => b; c catch case g => d
+==== R3_try_try_semi
+object A:
+  def f = try try a catch case e => b; c
+==== R3_while_do_semi
+object A:
+  def f = while p do try a catch case e => b; c
+==== R4_enum_braces_case
+enum Color {
+  def safe = try compute() catch case e: Exception => 0
+  case Red, Green
+}
+==== R4_enum_case_deeper
+enum Color:
+  def safe = try compute() catch case e: Exception => 0
+    case Red, Green
+==== R4_enum_case_params
+enum Color:
+  def safe = try compute() catch case e: Exception => 0
+  case Rgb(r: Int)
+==== R4_enum_lambda_case
+enum Color:
+  def safe = xs.map: x => try compute() catch case e: Exception => 0
+  case Red, Green
+==== R4_enum_semi_case
+enum Color:
+  def safe = try compute() catch case e: Exception => 0; case Red, Green
+==== R4_enum_single_case
+enum Color:
+  def safe = try compute() catch case e: Exception => 0
+  case Red
+==== R4_nested_then_deeper_else
+object A:
+  def f =
+    try a catch case e => if p then try b catch case g => c
+      d
+    else h
+==== R4_nested_then_deeper
+object A:
+  def f =
+    try a catch case e => if p then try b catch case g => c
+      d
+==== R4_object_second_clause
+object A:
+  def f = try a catch case e: E1 => b
+  case e: E2 => c
+==== R4_paren_then_deeper
+object A:
+  def f =
+    if (p) try a catch case e => b
+      c
+    d
+==== R4_paren_then_semi
+object A:
+  def f = if (p) try a catch case e => b; c
+  def g = 1
+==== R4_try_try_deeper_catch
+object A:
+  def f =
+    try try a catch case e => b
+      c
+    catch case g => d
+==== R4_try_try_deeper
+object A:
+  def f =
+    try try a catch case e => b
+      c
+==== R4_enum_extends_case
+enum Color extends Base:
+  def safe = try compute() catch case e: Exception => 0
+  case Red, Green
+==== R4_enum_second_clause
+enum Color:
+  def safe = try compute() catch case e: E1 => 0
+  case e: E2 => 1
+==== R5_for_paren_semi_guard
+object A:
+  def f = for (x <- try a catch case e => b; if p) yield x
+==== R5_for_paren_semi_val
+object A:
+  def f = for (x <- try a catch case e => b; y = c) yield y
+==== R5_then_semi_else
+object A:
+  def f = if p then try a catch case e => b; else d

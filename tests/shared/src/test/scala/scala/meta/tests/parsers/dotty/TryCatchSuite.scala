@@ -2470,4 +2470,2845 @@ class TryCatchSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("same-line catch case in an indented def body, two deeper lines, a line at the try's indent") {
+    val code =
+      """|def f =
+         |  try a catch case e => b
+         |    c
+         |    d
+         |  e
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |      d
+         |  }
+         |  e
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c"), tname("d")))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("e")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case on the def line, a deeper leading infix") {
+    val code =
+      """|def f = try a catch case e => b
+         |  + 1
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    b + 1
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "+", lit(1)))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in an indented def body, a deeper comment line, a deeper line") {
+    val code =
+      """|def f =
+         |  try a catch case e => b
+         |    // c
+         |    c
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    b
+         |    // c
+         |    c
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tnameComments("c")("// c")()))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case, a trailing symbolic operator, a deeper operand, a line at the try's indent") {
+    val code =
+      """|def f =
+         |  try a catch case e => b +
+         |    c
+         |  d
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      b + c
+         |  }
+         |  d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "+", tname("c")))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("d")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case with a symbolic infix body, a deeper line, a line at the try's indent") {
+    val code =
+      """|def f =
+         |  try a catch case e => a + b
+         |    c
+         |  d
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      a + b
+         |      c
+         |  }
+         |  d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tinfix(tname("a"), "+", tname("b")), tname("c")))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("d")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case, a trailing alphanumeric operator, a deeper operand") {
+    val code =
+      """|def f =
+         |  try a catch case e => b max
+         |    c
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    b max c
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "max", tname("c")))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case with a prefix operator body, a deeper line, a line at the try's indent") {
+    val code =
+      """|def f =
+         |  try a catch case e => -b
+         |    c
+         |  d
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      -b
+         |      c
+         |  }
+         |  d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(Term.ApplyUnary(tname("-"), tname("b")), tname("c")))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("d")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case, a deeper argument in parentheses") {
+    val code =
+      """|def f =
+         |  try a catch case e => b
+         |    (x)
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    b(x)
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tapply(tname("b"), tname("x")))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case with an alphanumeric infix body of names, a deeper line, a line at the try's indent") {
+    val code =
+      """|def f =
+         |  try a catch case e => xs map g
+         |    c
+         |  d
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      xs map g
+         |      c
+         |  }
+         |  d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tinfix(tname("xs"), "map", tname("g")), tname("c")))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("d")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case, a deeper argument in braces") {
+    val code =
+      """|def f =
+         |  try a catch case e => b
+         |    { x }
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    b {
+         |      x
+         |    }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tapply(tname("b"), blk(tname("x"))))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case on the def line in an object, a semicolon and a statement") {
+    val code =
+      """|object A:
+         |  def f = try a catch case e => b; c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test("indented def body, a deeper argument in parentheses") {
+    val code =
+      """|def f =
+         |  b
+         |    (x)
+         |""".stripMargin
+    val layout = "def f = b(x)"
+    runTestAssert[Stat](code, layout)(
+      Defn.Def(Nil, tname("f"), Nil, None, tapply(tname("b"), tname("x"))),
+    )
+  }
+
+  test("same-line catch case in braces, a semicolon and a statement") {
+    val code =
+      """|def f = { try a catch case e => b; c }
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case, the arrow at the line end, a deeper case") {
+    val code =
+      """|def f =
+         |  try a catch case e =>
+         |    case x => x
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    {
+         |      case x => x
+         |    }
+         |}
+         |""".stripMargin
+    val body = Term.PartialFunction(List(Case(patvar("x"), None, tname("x"))))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(tname("a"), List(Case(patvar("e"), None, body)), None),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "same-line catch case on the def line in an object, a deeper leading select, a deeper line",
+  ) {
+    val code =
+      """|object A:
+         |  def f = try a catch case e => b
+         |      .foo
+         |      c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      b.foo
+         |      c
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tselect("b", "foo"), tname("c")))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test("same-line catch case in an indented def body, finally at the try's indent") {
+    val code =
+      """|def f =
+         |  try a catch case e => b
+         |  finally c
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e => b
+         |} finally c
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), Some(tname("c"))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in a block in braces, a deeper line, a line at the try's indent") {
+    val code =
+      """|def f = {
+         |  try a catch case e => b
+         |    c
+         |  d
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |  d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("d")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case on the def line, a second case aligned with the first") {
+    val code =
+      """|def f = try a catch case e: E => 1
+         |                    case g => 2
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e: E => 1
+         |  case g => 2
+         |}
+         |""".stripMargin
+    val cases =
+      List(Case(Pat.Typed(patvar("e"), pname("E")), None, int(1)), Case(patvar("g"), None, int(2)))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), cases, None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in a match case body, a deeper line, the next case") {
+    val code =
+      """|def f = x match
+         |  case 1 => try a catch case e => b
+         |    c
+         |  case 2 => d
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    try a catch {
+         |      case e =>
+         |        b
+         |        c
+         |    }
+         |  case 2 =>
+         |    d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(int(1), None, Term.Try(tname("a"), List(handler), None)),
+        Case(int(2), None, tname("d")),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case, a second case on the same line") {
+    val code =
+      """|def f = try a catch case e => 1 case g => 2
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e => 1
+         |  case g => 2
+         |}
+         |""".stripMargin
+    val cases = List(Case(patvar("e"), None, int(1)), Case(patvar("g"), None, int(2)))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), cases, None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in a then branch, a deeper line, a line at the if's indent") {
+    val code =
+      """|def f =
+         |  if p then try a catch case e => b
+         |    c
+         |  d
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  if (p) try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |  d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val body = tif(tname("p"), Term.Try(tname("a"), List(handler), None))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("d")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in parentheses, a semicolon and a statement") {
+    val code =
+      """|def f = g(try a catch case e => b; c)
+         |""".stripMargin
+    val layout =
+      """|def f = g(try a catch {
+         |  case e =>
+         |    b
+         |    c
+         |})
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, tapply(tname("g"), Term.Try(tname("a"), List(handler), None)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in an else branch, a deeper line, a line at the if's indent") {
+    val code =
+      """|def f =
+         |  if p then a else try b catch case e => c
+         |    d
+         |  g
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  if (p) a else try b catch {
+         |    case e =>
+         |      c
+         |      d
+         |  }
+         |  g
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("c"), tname("d")))
+    val body = tif(tname("p"), tname("a"), Term.Try(tname("b"), List(handler), None))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("g")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in a for generator, the next generator") {
+    val code =
+      """|def f =
+         |  for
+         |    x <- try xs catch case e => ys
+         |    y <- zs
+         |  yield y
+         |""".stripMargin
+    val layout =
+      """|def f = for (x <- try xs catch {
+         |  case e => ys
+         |}; y <- zs) yield y
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("ys"))
+    val enums = List(
+      Enumerator.Generator(patvar("x"), Term.Try(tname("xs"), List(handler), None)),
+      Enumerator.Generator(patvar("y"), tname("zs")),
+    )
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.ForYield(enums, tname("y")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in a while body, a deeper line, a line at the while's indent") {
+    val code =
+      """|def f =
+         |  while p do try a catch case e => b
+         |    c
+         |  d
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  while (p) try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |  d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val body = Term.While(tname("p"), Term.Try(tname("a"), List(handler), None))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("d")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: same-line catch case, the arrow at the line end, a deeper case") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f =
+         |  try a catch case e =>
+         |    case x => x
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    {
+         |      case x => x
+         |    }
+         |}
+         |""".stripMargin
+    val body = Term.PartialFunction(List(Case(patvar("x"), None, tname("x"))))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      Term.Try(tname("a"), List(Case(patvar("e"), None, body)), None),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in a colon argument, a deeper line, a line at the argument's indent") {
+    val code =
+      """|def f =
+         |  foo:
+         |    try a catch case e => b
+         |      c
+         |  d
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  foo {
+         |    try a catch {
+         |      case e =>
+         |        b
+         |        c
+         |    }
+         |  }
+         |  d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val body = tapply(tname("foo"), blk(Term.Try(tname("a"), List(handler), None)))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("d")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "without significant indentation: same-line catch case on the def line, a deeper leading select",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = try a catch case e => b
+         |  .foo
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    b.foo
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tselect("b", "foo"))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in an assignment, a deeper line, a line at the assignment's indent") {
+    val code =
+      """|def f =
+         |  y = try a catch case e => b
+         |    c
+         |  d
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  y = try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |  d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val body = Term.Assign(tname("y"), Term.Try(tname("a"), List(handler), None))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(body, tname("d")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "without significant indentation: same-line catch case on the def line, a deeper leading infix",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = try a catch case e => b
+         |  + 1
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    b + 1
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "+", lit(1)))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in a nested handler, a deeper line, a line at the try's indent") {
+    val code =
+      """|def f =
+         |  try a catch case e => try b catch case g => c
+         |    d
+         |  h
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      try b catch {
+         |        case g =>
+         |          c
+         |          d
+         |      }
+         |  }
+         |  h
+         |}
+         |""".stripMargin
+    val inner = Term
+      .Try(tname("b"), List(Case(patvar("g"), None, blk(tname("c"), tname("d")))), None)
+    val handler = Case(patvar("e"), None, inner)
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("h")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "without significant indentation: same-line catch case in braces, a semicolon and a statement",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = { try a catch case e => b; c }
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e => b
+         |  }
+         |  c
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("c")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case on the def line in an object, a deeper line, the next definition") {
+    val code =
+      """|object A:
+         |  def f = try a catch case e => b
+         |    c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    val tree = Defn.Object(Nil, tname("A"), tpl(defn, Defn.Def(Nil, tname("g"), Nil, None, int(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case on the def line in an object, a semicolon and a statement") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|object A {
+         |  def f = try a catch case e => b; c
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e => b
+         |  }
+         |  c
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn, tname("c"))))
+  }
+
+  test(
+    "same-line catch case at the top level of a script, a deeper line, a line at the try's indent",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowToplevelTerms(true)
+    val code =
+      """|try a catch case e => b
+         |  c
+         |d
+         |""".stripMargin
+    val layout =
+      """|try a catch {
+         |  case e =>
+         |    b
+         |    c
+         |}
+         |d
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val tree = Source(List(Term.Try(tname("a"), List(handler), None), tname("d")))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case then on the def line, else on the same line") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = if c then try a catch case e => b else d
+         |""".stripMargin
+    val layout =
+      """|def f = if (c) try a catch {
+         |  case e => b
+         |} else d
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val body = tif(tname("c"), Term.Try(tname("a"), List(handler), None), tname("d"))
+    runTestAssert[Stat](code, layout)(Defn.Def(Nil, tname("f"), Nil, None, body))
+  }
+
+  test("Scala32: same-line catch case in an indented def body, two deeper lines, a line at the try's indent") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f =
+         |  try a catch case e => b
+         |    c
+         |    d
+         |  e
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |      d
+         |  }
+         |  e
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c"), tname("d")))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("e")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case after then in braces, a deeper else on the next line") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = {
+         |  if c then try a catch case e => b
+         |    else d
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  if (c) try a catch {
+         |    case e => b
+         |  } else d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val body = tif(tname("c"), Term.Try(tname("a"), List(handler), None), tname("d"))
+    runTestAssert[Stat](code, layout)(Defn.Def(Nil, tname("f"), Nil, None, blk(body)))
+  }
+
+  test("Scala32: same-line catch case on the def line in an object, a semicolon and a statement") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|object A:
+         |  def f = try a catch case e => b; c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test(
+    "without significant indentation: same-line catch case in a match case in braces, the next case",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = x match {
+         |  case 1 => try a catch case _: Exception => b
+         |  case 2 => c
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = x match {
+         |  case 1 =>
+         |    try a catch {
+         |      case _: Exception => b
+         |    }
+         |  case 2 =>
+         |    c
+         |}
+         |""".stripMargin
+    val handler = Case(Pat.Typed(Pat.Wildcard(), pname("Exception")), None, tname("b"))
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      tmatch(
+        tname("x"),
+        Case(int(1), None, Term.Try(tname("a"), List(handler), None)),
+        Case(int(2), None, tname("c")),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: relaxed lambda: case expression in catch case body") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def f = try a catch case e => case x => x
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |  case x => x
+         |}
+         |""".stripMargin
+    val cases = List(Case(patvar("e"), None, blk()), Case(patvar("x"), None, tname("x")))
+    runTestAssert[Stat](code, layout)(
+      Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), cases, None)),
+    )
+  }
+
+  test(
+    "without significant indentation: same-line catch case in braces, finally at the try's indent",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = {
+         |  try a catch case e => b
+         |  finally c
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e => b
+         |  } finally c
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), Some(tname("c")))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case in an indented def body, two deeper lines, a line at the try's indent") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f =
+         |  try a catch case e => b
+         |    c
+         |    d
+         |  e
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |      d
+         |  }
+         |  e
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c"), tname("d")))
+    val tree = Defn
+      .Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None), tname("e")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in a nested handler on the def line in an object, a semicolon and a statement") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|object A {
+         |  def f = try a catch case e => try b catch case g => c; d
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      try b catch {
+         |        case g => c
+         |      }
+         |  }
+         |  d
+         |}
+         |""".stripMargin
+    val inner = Term.Try(tname("b"), List(Case(patvar("g"), None, tname("c"))), None)
+    val handler = Case(patvar("e"), None, inner)
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn, tname("d"))))
+  }
+
+  test(
+    "Scala3Future: same-line catch case on the def line in an object, a semicolon and a statement",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = try a catch case e => b; c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test("without significant indentation: same-line catch case in braces, a deeper case") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = {
+         |  try a catch case e => b
+         |    case g => c
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `}` expected but `case` found
+         |    case g => c
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: relaxed lambda: case expression in catch case body") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def f = try a catch case e => case x => x
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |  case x => x
+         |}
+         |""".stripMargin
+    val cases = List(Case(patvar("e"), None, blk()), Case(patvar("x"), None, tname("x")))
+    runTestAssert[Stat](code, layout)(
+      Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), cases, None)),
+    )
+  }
+
+  test("without significant indentation: same-line catch case in parentheses, a semicolon and a statement") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = g(try a catch case e => b; c)
+         |""".stripMargin
+    val error =
+      """|<input>:1: error: `)` expected but `;` found
+         |def f = g(try a catch case e => b; c)
+         |                                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("without significant indentation: same-line catch case in braces, a deeper line, a line at the try's indent") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = {
+         |  try a catch case e => b
+         |    c
+         |  d
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      b c d
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "c", tname("d")))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in braces, a trailing symbolic operator, a deeper operand, a line at the try's indent") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = {
+         |  try a catch case e => b +
+         |    c
+         |  d
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      (b + c) d
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tpostfix(tinfix(tname("b"), "+", tname("c")), "d"))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in braces, the arrow at the line end, a deeper case") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = {
+         |  try a catch case e =>
+         |    case x => x
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: illegal start of simple expression
+         |    case x => x
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("without significant indentation: relaxed lambda: case expression in catch case body") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = try a catch case e => case x => x
+         |""".stripMargin
+    val error =
+      """|<input>:1: error: illegal start of simple expression
+         |def f = try a catch case e => case x => x
+         |                              ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("without significant indentation: same-line catch case in braces, a deeper argument in parentheses") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = {
+         |  try a catch case e => b
+         |    (x)
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      b(x)
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tapply(tname("b"), tname("x")))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case on the def line in an object, a deeper leading select, a deeper line") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|object A {
+         |  def f = try a catch case e => b
+         |      .foo
+         |      c
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      b.foo c
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tpostfix(tselect("b", "foo"), "c"))
+    val defn = Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(Defn.Object(Nil, tname("A"), tpl(defn)))
+  }
+
+  test(
+    "without significant indentation: same-line catch case in braces, a deeper argument in braces",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = {
+         |  try a catch case e => b
+         |    { x }
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  try a catch {
+         |    case e =>
+         |      b {
+         |        x
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tapply(tname("b"), blk(tname("x"))))
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case on the def line in an object, a deeper line, the next definition") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|object A {
+         |  def f = try a catch case e => b
+         |    c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `;` expected but `def` found
+         |  def g = 1
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("same-line catch case with a try body, try at the line end, a deeper body, a line at the try's indent") {
+    val code =
+      """|def g =
+         |  try a catch case e => try
+         |      b
+         |  h()
+         |""".stripMargin
+    val layout =
+      """|def g = {
+         |  try a catch {
+         |    case e =>
+         |      try b
+         |  }
+         |  h()
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, Term.Try(tname("b"), Nil, None))
+    val tree = Defn.Def(
+      Nil,
+      tname("g"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tapply(tname("h"))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in braces with a then body, else on the next line, a statement") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def g = {
+         |  try a catch case e => if p then b
+         |  else c
+         |  h()
+         |}
+         |""".stripMargin
+    val layout =
+      """|def g = {
+         |  try a catch {
+         |    case e =>
+         |      if (p) b else c h (())
+         |  }
+         |}
+         |""".stripMargin
+    val body = tif(tname("p"), tname("b"), tinfix(tname("c"), "h", lit()))
+    val handler = Case(patvar("e"), None, body)
+    val tree = Defn.Def(Nil, tname("g"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case with a try body, finally at the line end, a deeper body, a line at the try's indent") {
+    val code =
+      """|def g =
+         |  try a catch case e => try b finally
+         |      c
+         |  h()
+         |""".stripMargin
+    val layout =
+      """|def g = {
+         |  try a catch {
+         |    case e =>
+         |      try b finally c
+         |  }
+         |  h()
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, Term.Try(tname("b"), Nil, Some(tname("c"))))
+    val tree = Defn.Def(
+      Nil,
+      tname("g"),
+      Nil,
+      None,
+      blk(Term.Try(tname("a"), List(handler), None), tapply(tname("h"))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in braces with a try body, finally on the next line, a statement") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def g = {
+         |  try a catch case e => try b
+         |  finally c
+         |  h()
+         |}
+         |""".stripMargin
+    val layout =
+      """|def g = {
+         |  try a catch {
+         |    case e =>
+         |      try b finally c h (())
+         |  }
+         |}
+         |""".stripMargin
+    val body = Term.Try(tname("b"), Nil, Some(tinfix(tname("c"), "h", lit())))
+    val handler = Case(patvar("e"), None, body)
+    val tree = Defn.Def(Nil, tname("g"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in an argument list, a comma at the line end") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|val foo = test(
+         |  try 1
+         |  catch case _ => 2,
+         |  "bar"
+         |)
+         |""".stripMargin
+    val layout =
+      """|val foo = test(try 1 catch {
+         |  case _ => 2
+         |}, "bar")
+         |""".stripMargin
+    val body = Term.Try(lit(1), List(Case(Pat.Wildcard(), None, lit(2))), None)
+    val tree = Defn.Val(Nil, List(patvar("foo")), None, tapply(tname("test"), body, lit("bar")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in braces with a try body, try at the line end, a deeper body, a statement") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def g = {
+         |  try a catch case e => try
+         |      b
+         |  h()
+         |}
+         |""".stripMargin
+    val layout =
+      """|def g = {
+         |  try a catch {
+         |    case e =>
+         |      try b h (())
+         |  }
+         |}
+         |""".stripMargin
+    val body = Term.Try(tinfix(tname("b"), "h", lit()), Nil, None)
+    val handler = Case(patvar("e"), None, body)
+    val tree = Defn.Def(Nil, tname("g"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in a while body in braces, a deeper line, a statement") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def f = {
+         |  while p do try a catch case e => b
+         |    c
+         |  d
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  while (p) try a catch {
+         |    case e =>
+         |      b c d
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "c", tname("d")))
+    val body = Term.While(tname("p"), Term.Try(tname("a"), List(handler), None))
+    runTestAssert[Stat](code, layout)(Defn.Def(Nil, tname("f"), Nil, None, blk(body)))
+  }
+
+  test("without significant indentation: same-line catch case in braces with a try body, finally at the line end, a deeper body, a statement") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def g = {
+         |  try a catch case e => try b finally
+         |      c
+         |  h()
+         |}
+         |""".stripMargin
+    val layout =
+      """|def g = {
+         |  try a catch {
+         |    case e =>
+         |      try b finally c h (())
+         |  }
+         |}
+         |""".stripMargin
+    val body = Term.Try(tname("b"), Nil, Some(tinfix(tname("c"), "h", lit())))
+    val handler = Case(patvar("e"), None, body)
+    val tree = Defn.Def(Nil, tname("g"), Nil, None, blk(Term.Try(tname("a"), List(handler), None)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in an argument list, a comma at the line end, a deeper argument") {
+    val code =
+      """|object A:
+         |  def g = f(try a catch case e => b,
+         |    y)
+         |  def h = 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `,` found
+         |  def g = f(try a catch case e => b,
+         |                                   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("same-line catch case in an argument list in a def body, a comma at the line end, a deeper argument") {
+    val code =
+      """|def g =
+         |  f(try a catch case e => b,
+         |    y)
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `,` found
+         |  f(try a catch case e => b,
+         |                           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("same-line catch case, return at the line end, a deeper value, a statement") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => return
+         |      x
+         |    y
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    try a catch {
+         |      case e =>
+         |        return x
+         |    }
+         |    y
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, Term.Return(tname("x")))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("y"))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "same-line catch case with an if body, return at the line end, a deeper value, a statement",
+  ) {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => if p then return
+         |      x
+         |    y
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    try a catch {
+         |      case e =>
+         |        if (p) return x
+         |    }
+         |    y
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, Term.If(tname("p"), Term.Return(tname("x")), lit(), Nil))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("y"))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case, match on a deeper line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => b
+         |      match
+         |        case 1 => c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      b match {
+         |        case 1 => c
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tmatch(tname("b"), Case(lit(1), None, tname("c"))))
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case, match at the try's indent") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => b
+         |    match
+         |      case 1 => c
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `match` found
+         |    match
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("same-line catch case, a trailing operator, its operand at the try's indent") {
+    val code =
+      """|object A:
+         |  def g =
+         |    try a catch case e => b +
+         |    c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def g = {
+         |    try a catch {
+         |      case e =>
+         |        b +
+         |    }
+         |    c
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tpostfix(tname("b"), "+"))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("c"))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("g"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in for parentheses, a semicolon and an enumerator") {
+    val code =
+      """|object A:
+         |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `)` expected but `<-` found
+         |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("match case on the match line in an argument list, a comma and an argument") {
+    val code =
+      """|object A:
+         |  def g = f(x match case 1 => a, b)
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `,` found
+         |  def g = f(x match case 1 => a, b)
+         |                               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("same-line catch case at the top level of a source, a semicolon and a term") {
+    val code = "def f = try a catch case e => b; c"
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    b
+         |    c
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val tree =
+      Source(List(Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("same-line catch case in a match case, a semicolon and a second try with a same-line catch, the next case") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case 1 => try a catch case e => b; try c catch case g => d
+         |    case 2 => h
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      try a catch {
+         |        case e =>
+         |          b
+         |          try c catch {
+         |            case g => d
+         |          }
+         |      }
+         |    case 2 =>
+         |      h
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(
+      patvar("e"),
+      None,
+      blk(tname("b"), Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)),
+    )
+    val case1 = Case(lit(1), None, Term.Try(tname("a"), List(handler), None))
+    val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in a match case, a semicolon and a colon lambda with a try with a same-line catch, the next case") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case 1 => try a catch case e => b; xs.map: y => try c catch case g => d
+         |    case 2 => h
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      try a catch {
+         |        case e =>
+         |          b
+         |          xs.map {
+         |            y => try c catch {
+         |              case g => d
+         |              case 2 => h
+         |            }
+         |          }
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val cases = List(Case(patvar("g"), None, tname("d")), Case(lit(2), None, tname("h")))
+    val lambda = tfunc(tparam("y"))(Term.Try(tname("c"), cases, None))
+    val handler = Case(patvar("e"), None, blk(tname("b"), tapply(tselect("xs", "map"), blk(lambda))))
+    val body = tmatch(tname("x"), Case(lit(1), None, Term.Try(tname("a"), List(handler), None)))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in a match case in braces, a semicolon and a second try with a same-line catch, the next case") {
+    val code =
+      """|object A:
+         |  def f = x match {
+         |    case 1 => try a catch case e => b; try c catch case g => d
+         |    case 2 => h
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      try a catch {
+         |        case e =>
+         |          b
+         |          try c catch {
+         |            case g => d
+         |          }
+         |      }
+         |    case 2 =>
+         |      h
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(
+      patvar("e"),
+      None,
+      blk(tname("b"), Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)),
+    )
+    val case1 = Case(lit(1), None, Term.Try(tname("a"), List(handler), None))
+    val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case after then, a semicolon and a term, else on the same line") {
+    val code =
+      """|object A:
+         |  def f = if p then try a catch case e => b; c else d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (p) try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  } else d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), tname("d"), Nil)
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala 2: same-line catch case without braces, a deeper line, a statement") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|object A {
+         |  def f = {
+         |    try a catch case e => b
+         |      c
+         |    d
+         |  }
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    try a catch {
+         |      case e =>
+         |        b c d
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "c", tname("d")))
+    val body = blk(Term.Try(tname("a"), List(handler), None))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala 2: same-line catch case without braces in braces, a semicolon and a term") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|def g = { try a catch case e => b; c }
+         |""".stripMargin
+    val layout =
+      """|def g = {
+         |  try a catch {
+         |    case e => b
+         |  }
+         |  c
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("c"))
+    val tree = Defn.Def(Nil, tname("g"), Nil, None, body)
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case in an enum body, an enum case on the next line") {
+    val code =
+      """|enum Color:
+         |  def safe = try compute() catch case e: Exception => 0
+         |  case Red, Green
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `,` found
+         |  case Red, Green
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("without significant indentation: same-line catch case in an enum body in braces, two enum cases") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|enum Color {
+         |  def safe = try compute() catch case e: Exception => 0
+         |  case Red
+         |  case Green
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `;` expected but `case` found
+         |  case Red
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("without significant indentation: same-line catch case in an argument list, a deeper argument clause") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|object A {
+         |  def h = f(try a catch case e => g
+         |    (x))
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def h = f(try a catch {
+         |    case e =>
+         |      g(x)
+         |  })
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tapply(tname("g"), tname("x")))
+    val body = tapply(tname("f"), Term.Try(tname("a"), List(handler), None))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("h"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: same-line catch case, match on a deeper line") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => b
+         |      match
+         |        case 1 => c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      b match {
+         |        case 1 => c
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tmatch(tname("b"), Case(lit(1), None, tname("c"))))
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case, return at the line end, a deeper value, a statement") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => return
+         |      x
+         |    y
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    try a catch {
+         |      case e =>
+         |        return x
+         |    }
+         |    y
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, Term.Return(tname("x")))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("y"))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: same-line catch case, match at the try's indent") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => b
+         |    match
+         |      case 1 => c
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `match` found
+         |    match
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: same-line catch case with an if body, return at the line end, a deeper value, a statement") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => if p then return
+         |      x
+         |    y
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    try a catch {
+         |      case e =>
+         |        if (p) return x
+         |    }
+         |    y
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, Term.If(tname("p"), Term.Return(tname("x")), lit(), Nil))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("y"))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: same-line catch case, a trailing operator, its operand at the try's indent") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|object A:
+         |  def g =
+         |    try a catch case e => b +
+         |    c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def g = {
+         |    try a catch {
+         |      case e =>
+         |        b +
+         |    }
+         |    c
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tpostfix(tname("b"), "+"))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("c"))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("g"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case, match on a deeper line") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => b
+         |      match
+         |        case 1 => c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      b match {
+         |        case 1 => c
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tmatch(tname("b"), Case(lit(1), None, tname("c"))))
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: same-line catch case, return at the line end, a deeper value, a statement") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => return
+         |      x
+         |    y
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    try a catch {
+         |      case e =>
+         |        return x
+         |    }
+         |    y
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, Term.Return(tname("x")))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("y"))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case, match at the try's indent") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => b
+         |    match
+         |      case 1 => c
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `match` found
+         |    match
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala32: same-line catch case with an if body, return at the line end, a deeper value, a statement") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => if p then return
+         |      x
+         |    y
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    try a catch {
+         |      case e =>
+         |        if (p) return x
+         |    }
+         |    y
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, Term.If(tname("p"), Term.Return(tname("x")), lit(), Nil))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("y"))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case, a trailing operator, its operand at the try's indent") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def g =
+         |    try a catch case e => b +
+         |    c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def g = {
+         |    try a catch {
+         |      case e =>
+         |        b +
+         |    }
+         |    c
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tpostfix(tname("b"), "+"))
+    val body = blk(Term.Try(tname("a"), List(handler), None), tname("c"))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("g"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: same-line catch case in for parentheses, a semicolon and an enumerator") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|object A:
+         |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `)` expected but `<-` found
+         |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: same-line catch case in an argument list, a comma at the line end, a deeper argument") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def g = f(try a catch case e => b,
+         |    y)
+         |  def h = 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `,` found
+         |  def g = f(try a catch case e => b,
+         |                                   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala32: same-line catch case in an argument list in a def body, a comma at the line end, a deeper argument") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|def g =
+         |  f(try a catch case e => b,
+         |    y)
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `,` found
+         |  f(try a catch case e => b,
+         |                           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: same-line catch case in for parentheses, a semicolon and an enumerator") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `)` expected but `<-` found
+         |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test(
+    "Scala32: same-line catch case in an argument list, a comma at the line end, a deeper argument",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|object A:
+         |  def g = f(try a catch case e => b,
+         |    y)
+         |  def h = 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `,` found
+         |  def g = f(try a catch case e => b,
+         |                                   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: same-line catch case in an argument list in a def body, a comma at the line end, a deeper argument") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|def g =
+         |  f(try a catch case e => b,
+         |    y)
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `,` found
+         |  f(try a catch case e => b,
+         |                           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala32: same-line catch case in a match case, a semicolon and a second try with a same-line catch, the next case") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case 1 => try a catch case e => b; try c catch case g => d
+         |    case 2 => h
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      try a catch {
+         |        case e =>
+         |          b
+         |          try c catch {
+         |            case g => d
+         |          }
+         |      }
+         |    case 2 =>
+         |      h
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(
+      patvar("e"),
+      None,
+      blk(tname("b"), Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)),
+    )
+    val case1 = Case(lit(1), None, Term.Try(tname("a"), List(handler), None))
+    val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test(
+    "Scala3Future: same-line catch case after then, a semicolon and a term, else on the same line",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = if p then try a catch case e => b; c else d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (p) try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  } else d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), tname("d"), Nil)
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: same-line catch case in a match case, a semicolon and a colon lambda with a try with a same-line catch, the next case") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case 1 => try a catch case e => b; xs.map: y => try c catch case g => d
+         |    case 2 => h
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `=>` found
+         |    case 1 => try a catch case e => b; xs.map: y => try c catch case g => d
+         |                                                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: same-line catch case in a match case in braces, a semicolon and a second try with a same-line catch, the next case") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = x match {
+         |    case 1 => try a catch case e => b; try c catch case g => d
+         |    case 2 => h
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      try a catch {
+         |        case e =>
+         |          b
+         |          try c catch {
+         |            case g => d
+         |          }
+         |      }
+         |    case 2 =>
+         |      h
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(
+      patvar("e"),
+      None,
+      blk(tname("b"), Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)),
+    )
+    val case1 = Case(lit(1), None, Term.Try(tname("a"), List(handler), None))
+    val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: same-line catch case in a match case in braces, a semicolon and a second try with a same-line catch, the next case") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|object A:
+         |  def f = x match {
+         |    case 1 => try a catch case e => b; try c catch case g => d
+         |    case 2 => h
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      try a catch {
+         |        case e =>
+         |          b
+         |          try c catch {
+         |            case g => d
+         |          }
+         |      }
+         |    case 2 =>
+         |      h
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(
+      patvar("e"),
+      None,
+      blk(tname("b"), Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)),
+    )
+    val case1 = Case(lit(1), None, Term.Try(tname("a"), List(handler), None))
+    val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case in a match case, a semicolon and a colon lambda with a try with a same-line catch, the next case") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case 1 => try a catch case e => b; xs.map: y => try c catch case g => d
+         |    case 2 => h
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      try a catch {
+         |        case e =>
+         |          b
+         |          xs.map {
+         |            y => try c catch {
+         |              case g => d
+         |              case 2 => h
+         |            }
+         |          }
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val cases = List(Case(patvar("g"), None, tname("d")), Case(lit(2), None, tname("h")))
+    val lambda = tfunc(tparam("y"))(Term.Try(tname("c"), cases, None))
+    val handler = Case(patvar("e"), None, blk(tname("b"), tapply(tselect("xs", "map"), blk(lambda))))
+    val body = tmatch(tname("x"), Case(lit(1), None, Term.Try(tname("a"), List(handler), None)))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala32: same-line catch case after then, a semicolon and a term, else on the same line") {
+    implicit val dialect: Dialect = dialects.Scala32
+    val code =
+      """|object A:
+         |  def f = if p then try a catch case e => b; c else d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (p) try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  } else d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), tname("d"), Nil)
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case in a match case, a semicolon and a second try with a same-line catch, the next case") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case 1 => try a catch case e => b; try c catch case g => d
+         |    case 2 => h
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      try a catch {
+         |        case e =>
+         |          b
+         |          try c catch {
+         |            case g => d
+         |          }
+         |      }
+         |    case 2 =>
+         |      h
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(
+      patvar("e"),
+      None,
+      blk(tname("b"), Term.Try(tname("c"), List(Case(patvar("g"), None, tname("d"))), None)),
+    )
+    val case1 = Case(lit(1), None, Term.Try(tname("a"), List(handler), None))
+    val body = tmatch(tname("x"), case1, Case(lit(2), None, tname("h")))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in an enum body in braces, an enum case on the next line") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|enum Color {
+         |  def safe = try compute() catch case e: Exception => 0
+         |  case Red, Green
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `;` expected but `case` found
+         |  case Red, Green
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: same-line catch case after else, a semicolon and a term") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = if p then a else try b catch case e => c; d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (p) a else try b catch {
+         |    case e =>
+         |      c
+         |      d
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("c"), tname("d")))
+    val body = Term.If(tname("p"), tname("a"), Term.Try(tname("b"), List(handler), None), Nil)
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in for parentheses, a semicolon and an enumerator") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|object A {
+         |  def f = for (x <- try a catch case e => b; y <- c) yield (x, y)
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- try a catch {
+         |    case e => b
+         |  }; y <- c) yield (x, y)
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val enums = List(
+      Enumerator.Generator(patvar("x"), Term.Try(tname("a"), List(handler), None)),
+      Enumerator.Generator(patvar("y"), tname("c")),
+    )
+    val body = Term.ForYield(enums, Term.Tuple(List(tname("x"), tname("y"))))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case after then in a handler, a semicolon and a term, else on the same line") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = try a catch case e => if p then try b catch case g => c; d else h
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      if (p) try b catch {
+         |        case g =>
+         |          c
+         |          d
+         |      } else h
+         |  }
+         |}
+         |""".stripMargin
+    val inner = Term
+      .Try(tname("b"), List(Case(patvar("g"), None, blk(tname("c"), tname("d")))), None)
+    val handler = Case(patvar("e"), None, Term.If(tname("p"), inner, tname("h"), Nil))
+    val body = Term.Try(tname("a"), List(handler), None)
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case after a condition in parentheses, a semicolon and a term") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|object A {
+         |  def f = if (p) try a catch case e => b; c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `;` expected but `def` found
+         |  def g = 1
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Scala3Future: same-line catch case after then in a handler, a semicolon and a term") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = try a catch case e => if p then try b catch case g => c; d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      if (p) try b catch {
+         |        case g =>
+         |          c
+         |          d
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val inner = Term
+      .Try(tname("b"), List(Case(patvar("g"), None, blk(tname("c"), tname("d")))), None)
+    val handler = Case(patvar("e"), None, Term.If(tname("p"), inner, lit(), Nil))
+    val body = Term.Try(tname("a"), List(handler), None)
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in braces, a trailing operator, its operand at the try's indent") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|object A {
+         |  def g = {
+         |    try a catch case e => b +
+         |    c
+         |  }
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def g = {
+         |    try a catch {
+         |      case e =>
+         |        b + c
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tinfix(tname("b"), "+", tname("c")))
+    val body = blk(Term.Try(tname("a"), List(handler), None))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("g"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case in a match case, a semicolon and the next case on the same line") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case 1 => try a catch case e => b; case 2 => c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      try a catch {
+         |        case e => b
+         |        case 2 => c
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val cases = List(Case(patvar("e"), None, tname("b")), Case(lit(2), None, tname("c")))
+    val body = tmatch(tname("x"), Case(lit(1), None, Term.Try(tname("a"), cases, None)))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in a try body, a semicolon and a term") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|object A {
+         |  def f = try try a catch case e => b; c
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try try a catch {
+         |    case e => b
+         |  }
+         |  c
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val body = Term.Try(Term.Try(tname("a"), List(handler), None), Nil, None)
+    val tree = Defn
+      .Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body), tname("c")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case after then, a deeper line, else at the if's indent") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f =
+         |    if p then try a catch case e => b
+         |      c
+         |    else d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (p) try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  } else d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), tname("d"), Nil)
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in an argument list, a comma at the line end, a deeper argument") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|object A {
+         |  def g = f(try a catch case e => b,
+         |    y)
+         |  def h = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def g = f(try a catch {
+         |    case e => b
+         |  }, y)
+         |  def h = 1
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val g = Defn.Def(
+      Nil,
+      tname("g"),
+      Nil,
+      None,
+      tapply(tname("f"), Term.Try(tname("a"), List(handler), None), tname("y")),
+    )
+    val tree = Defn.Object(Nil, tname("A"), tpl(g, Defn.Def(Nil, tname("h"), Nil, None, lit(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case after then in a match case, a semicolon and the next case on the same line") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case 1 => if p then try a catch case e => b; case 2 => c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      if (p) try a catch {
+         |        case e => b
+         |        case 2 => c
+         |      }
+         |  }
+         |}
+         |""".stripMargin
+    val cases = List(Case(patvar("e"), None, tname("b")), Case(lit(2), None, tname("c")))
+    val case1 = Case(lit(1), None, Term.If(tname("p"), Term.Try(tname("a"), cases, None), lit(), Nil))
+    val body = tmatch(tname("x"), case1)
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("without significant indentation: same-line catch case in an argument list in a def body, a comma at the line end, a deeper argument") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code =
+      """|def g =
+         |  f(try a catch case e => b,
+         |    y)
+         |""".stripMargin
+    val layout =
+      """|def g = f(try a catch {
+         |  case e => b
+         |}, y)
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tname("b"))
+    val body = tapply(tname("f"), Term.Try(tname("a"), List(handler), None), tname("y"))
+    runTestAssert[Stat](code, layout)(Defn.Def(Nil, tname("g"), Nil, None, body))
+  }
+
+  test(
+    "Scala3Future: same-line catch case after then, a semicolon and a term, else on the next line",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f =
+         |    if p then try a catch case e => b; c
+         |    else d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (p) try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  } else d
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), tname("d"), Nil)
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case at the top level of a source, a semicolon and a definition") {
+    val code = "def f = try a catch case e => b; def g = 1"
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    b
+         |    def g = 1
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), Defn.Def(Nil, tname("g"), Nil, None, lit(1))))
+    val tree =
+      Source(List(Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case after then, a semicolon and a term, a statement on the next line") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f =
+         |    if p then try a catch case e => b; c
+         |    d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (p) try a catch {
+         |      case e =>
+         |        b
+         |        c
+         |    }
+         |    d
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val stat = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), lit(), Nil)
+    val body = blk(stat, tname("d"))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case at the top level of a source, a deeper line") {
+    val code =
+      """|def f = try a catch case e => b
+         |  c
+         |""".stripMargin
+    val layout =
+      """|def f = try a catch {
+         |  case e =>
+         |    b
+         |    c
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val tree =
+      Source(List(Defn.Def(Nil, tname("f"), Nil, None, Term.Try(tname("a"), List(handler), None))))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case after then, a semicolon and a term, the next definition") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = if p then try a catch case e => b; c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (p) try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val body = Term.If(tname("p"), Term.Try(tname("a"), List(handler), None), lit(), Nil)
+    val f = Defn.Def(Nil, tname("f"), Nil, None, body)
+    val tree = Defn.Object(Nil, tname("A"), tpl(f, Defn.Def(Nil, tname("g"), Nil, None, lit(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala 2: same-line catch case without braces in a lambda in braces, a deeper line") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|object A {
+         |  def f = xs.map { x => try a catch case e => b
+         |    c }
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => try a catch {
+         |      case e =>
+         |        b c
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, tpostfix(tname("b"), "c"))
+    val lambda = tfunc(tparam("x"))(Term.Try(tname("a"), List(handler), None))
+    val body = tapply(tselect("xs", "map"), blk(lambda))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case in a try body, a semicolon and a term, catch on the same line") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = try try a catch case e => b; c catch case g => d
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  } catch {
+         |    case g => d
+         |  }
+         |}
+         |""".stripMargin
+    val inner = Term
+      .Try(tname("a"), List(Case(patvar("e"), None, blk(tname("b"), tname("c")))), None)
+    val body = Term.Try(inner, List(Case(patvar("g"), None, tname("d"))), None)
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case in a try body, a semicolon and a term") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = try try a catch case e => b; c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |}
+         |""".stripMargin
+    val inner = Term
+      .Try(tname("a"), List(Case(patvar("e"), None, blk(tname("b"), tname("c")))), None)
+    val body = Term.Try(inner, Nil, None)
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala3Future: same-line catch case after do, a semicolon and a term") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object A:
+         |  def f = while p do try a catch case e => b; c
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = while (p) try a catch {
+         |    case e =>
+         |      b
+         |      c
+         |  }
+         |}
+         |""".stripMargin
+    val handler = Case(patvar("e"), None, blk(tname("b"), tname("c")))
+    val body = Term.While(tname("p"), Term.Try(tname("a"), List(handler), None))
+    val tree = Defn.Object(Nil, tname("A"), tpl(Defn.Def(Nil, tname("f"), Nil, None, body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("same-line catch case as a statement, a semicolon and a term") {
+    val code = "try a catch case e => b; c"
+    val layout =
+      """|try a catch {
+         |  case e =>
+         |    b
+         |    c
+         |}""".stripMargin
+    val tree = Term.Try(tname("a"), List(Case(patvar("e"), None, blk(tname("b"), tname("c")))), None)
+    runTestAssert[Stat](code, layout)(tree)(implicitly[munit.Location], stat(_), dialect)
+  }
+
+  test("same-line catch case as a term, a semicolon and a term") {
+    val code = "try a catch case e => b; c"
+    val layout =
+      """|try a catch {
+         |  case e =>
+         |    b
+         |    c
+         |}""".stripMargin
+    val tree = Term.Try(tname("a"), List(Case(patvar("e"), None, blk(tname("b"), tname("c")))), None)
+    runTestAssert[Term](code, layout)(tree)(implicitly[munit.Location], term(_), dialect)
+  }
+
 }
