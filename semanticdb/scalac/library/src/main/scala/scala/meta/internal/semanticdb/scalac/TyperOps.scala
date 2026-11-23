@@ -20,6 +20,8 @@ trait TyperOps {
   private[meta] final class TypedAnnotArg(val tree: Tree)
   private[scalac] val TypedAnnotArgTag = classTag[TypedAnnotArg]
 
+  private[scalac] val MacroExpansionTag = classTag[MacroExpansionAttachment]
+
   /**
    * the names that the imports of a unit rename to. `byStart` maps the start of each identifier
    * with one of these names to the symbol that the typer bound it to

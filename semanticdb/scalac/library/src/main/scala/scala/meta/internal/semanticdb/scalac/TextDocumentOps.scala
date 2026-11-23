@@ -67,8 +67,10 @@ trait TextDocumentOps {
 
     private def traverseUnvisited(gtree: g.Tree): Unit = {
       enter(gtree)
-      gtree.attachments.get[g.analyzer.MacroExpansionAttachment]
-        .foreach(att => traverse(att.expandee))
+      gtree.attachments.get(MacroExpansionTag) match {
+        case Some(att) => traverse(att.expandee)
+        case _ =>
+      }
       val hasOriginal = traverseOriginal(gtree)
       visit(gtree, hasOriginal)
       super.traverse(gtree)
@@ -484,7 +486,7 @@ trait TextDocumentOps {
         }
         @tailrec
         private def isMacroCallAt(gpoint: Int, gtrees: List[g.Tree]): Boolean = gtrees match {
-          case gtree :: rest => gtree.attachments.get[g.analyzer.MacroExpansionAttachment] match {
+          case gtree :: rest => gtree.attachments.get(MacroExpansionTag) match {
               case Some(att) if att.expandee.pos.pointOrElse(-1) == gpoint => true
               case _ => isMacroCallAt(gpoint, rest)
             }
