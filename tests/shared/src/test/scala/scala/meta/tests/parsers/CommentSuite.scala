@@ -1693,6 +1693,262 @@ class CommentSuite extends ParseSuite {
     )
   }
 
+  test("infix in parens: ASLC after the paren, operand, DSLC, operator on the next line") {
+    val code =
+      """|object A {
+         |  def f = ( // c
+         |    a
+         |    // d
+         |    + b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = // c
+         |    (a
+         |      // d
+         |      + b)
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Term.ApplyInfix: // c", "beg Term.Name: // d"),
+    )(
+      """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
+      """|beg Term.Name: // d""".stripMargin,
+    )
+  }
+
+  test("infix after parens: DSLC before the paren, operand, DSLC, operator on the next line") {
+    val code =
+      """|object A {
+         |  def f =
+         |    // c
+         |    (a
+         |      // d
+         |      + b)
+         |}
+         |""".stripMargin
+    checkComments(code)(
+      """|beg Term.ApplyInfix: // c""".stripMargin,
+      """|beg Term.Name: // d""".stripMargin,
+    )
+  }
+
+  test("type infix in parens: DSLC, operand, DSLC, operator on the next line") {
+    val code =
+      """|object A {
+         |  type T = (
+         |    // c
+         |    A
+         |    // d
+         |    Either B
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  type T =
+         |    // c
+         |    (A
+         |      // d
+         |      Either B)
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Type.ApplyInfix: // c", "beg Type.Name: // d"),
+    )(
+      """|beg Type.ApplyInfix, Type.Name: // c""".stripMargin,
+      """|beg Type.Name: // d""".stripMargin,
+    )
+  }
+
+  test("pattern infix in parens: DSLC, operand, DSLC, operator on the next line") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case (
+         |          // c
+         |          a
+         |          // d
+         |          :: b
+         |        ) =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case
+         |      // c
+         |      (a
+         |        // d
+         |        :: b) =>
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Pat.ExtractInfix: // c", "beg Term.Name: // d"),
+    )(
+      """|beg Pat.ExtractInfix, Pat.Var, Term.Name: // c""".stripMargin,
+      """|beg Term.Name: // d""".stripMargin,
+    )
+  }
+
+  test("pattern infix in parens after a bar: DSLC, operand, DSLC, operator on the next line") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case 1 | (
+         |          // c
+         |          a
+         |          // d
+         |          :: b
+         |        ) =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case 1 |
+         |      // c
+         |      (a
+         |        // d
+         |        :: b) =>
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Pat.ExtractInfix: // c", "beg Term.Name: // d"),
+    )(
+      """|beg Pat.ExtractInfix, Pat.Var, Term.Name: // c""".stripMargin,
+      """|beg Term.Name: // d""".stripMargin,
+    )
+  }
+
+  test("infix in parens in a case guard: DSLC, operand, DSLC, operator on the next line") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case y if (
+         |      // c
+         |      a
+         |      // d
+         |      + b
+         |    ) =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case y if
+         |      // c
+         |      (a
+         |        // d
+         |        + b) =>
+         |  }
+         |}
+         |""".stripMargin,
+    )(
+      """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
+      """|beg Term.Name: // d""".stripMargin,
+    )
+  }
+
+  test("infix in parens in the first arg: MLC, operand, DSLC, operator on the next line") {
+    val code =
+      """|object A {
+         |  def f = foo((/* c */ a
+         |    // d
+         |    + b
+         |  ))
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = foo( /* c */
+         |    (a
+         |      // d
+         |      + b)
+         |  )
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Term.ApplyInfix: /* c */", "beg Term.Name: // d"),
+    )(
+      """|beg Term.ApplyInfix, Term.Name: /* c */""".stripMargin,
+      """|beg Term.Name: // d""".stripMargin,
+    )
+  }
+
+  test("infix in parens in the second arg: MLC, operand, DSLC, operator on the next line") {
+    val code =
+      """|object A {
+         |  def f = foo(x, (/* c */ a
+         |    // d
+         |    + b
+         |  ))
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = foo(
+         |    x, /* c */ (a
+         |      // d
+         |      + b)
+         |  )
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Term.ApplyInfix: /* c */", "beg Term.Name: // d"),
+    )(
+      """|beg Term.ApplyInfix, Term.Name: /* c */""".stripMargin,
+      """|beg Term.Name: // d""".stripMargin,
+    )
+  }
+
+  test("apply in parens in the first arg: MLC, MLC with a blank line, brace on the next line") {
+    val code =
+      """|object A {
+         |  def f = foo((/* c */ bar
+         |    /* x
+         |
+         |       y */
+         |    { z }
+         |  ))
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = foo( /* c */
+         |    (bar
+         |      /* x
+         |
+         |       y */
+         |      {
+         |        z
+         |      })
+         |  )
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        "beg Term.Apply: /* c */",
+        """|beg Term.ArgClause, Term.Block: /* x
+           |
+           |       y */""".stripMargin,
+      ),
+    )(
+      """|beg Term.Apply, Term.Name: /* c */""".stripMargin,
+      """|beg Term.ArgClause, Term.Block: /* x
+         |
+         |       y */""".stripMargin,
+    )
+  }
+
   test("apply in args: MLC with a blank line, brace on the next line") {
     val code =
       """|object A {
@@ -2012,6 +2268,34 @@ class CommentSuite extends ParseSuite {
     )(
       """|beg Term.ApplyInfix, Term.Name: // e""".stripMargin,
       """|beg Term.Name: // f""".stripMargin,
+    )
+  }
+
+  test("infix in parens in a do-while condition: DSLC, operand, DSLC, operator on the next line") {
+    val code =
+      """|object A {
+         |  def f = do x while (
+         |    // c
+         |    a
+         |    // d
+         |    + b
+         |  )
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  def f = do x while (
+         |  // c
+         |  (a
+         |    // d
+         |    + b))
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Term.ApplyInfix: // c", "beg Term.Name: // d"),
+    )(
+      """|beg Term.ApplyInfix, Term.Name: // c""".stripMargin,
+      """|beg Term.Name: // d""".stripMargin,
     )
   }
 
