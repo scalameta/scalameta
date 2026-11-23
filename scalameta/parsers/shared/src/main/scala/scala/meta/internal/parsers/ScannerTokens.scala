@@ -531,9 +531,9 @@ private[meta] final class ScannerTokens(
         end: List[SepRegion],
         atEnd: List[SepRegion],
     ): OutdentInfo = regions match {
+      case _ if regions eq end => OutdentInfo(null, atEnd, done = true)
       case (r: SepRegionIndented) :: xs => OutdentInfo(r, xs)
-      case xs @ _ :: tail =>
-        if (xs eq end) OutdentInfo(null, atEnd, done = true) else OutdentInfo(null, tail)
+      case _ :: xs => OutdentInfo(null, xs)
       case _ => null
     }
 
@@ -1002,17 +1002,20 @@ private[meta] final class ScannerTokens(
             case r :: xs if !holdsColonLambda(r) => closingColonLambda(xs)
             case _ => null
           }
+
+          def getCaseBodyOutdent(rc: RegionCaseBody, r: RegionIndent, rs: List[SepRegion]) =
+            if (nextIndent > r.indent) null
+            else if (next.is[KwFinally]) OutdentInfo(r, rs, noOutdent(rs))
+            else if (nextIndent < r.indent ||
+              // only if outer is at the same indentation level
+              findIndent(rs) == nextIndent &&
+              // https://docs.scala-lang.org/scala3/reference/other-new-features/indentation.html#special-treatment-of-case-clauses
+              (rc.arrow.ne(prev) && !next.is[KwCase] || nextNonTrivia(nextPos).isClassOrObject))
+              OutdentInfo(r, dropRegionLine(nextIndent, rs))
+            else getOutdentOnIndent(r, rs, ctrlOnly = true)
+
           def getOutdentInfo(sepRegions: List[SepRegion]) = sepRegions match {
-            case (rc: RegionCaseBody) :: (r: RegionIndent) :: rs =>
-              if (nextIndent > r.indent) null
-              else if (next.is[KwFinally]) OutdentInfo(r, rs, noOutdent(rs))
-              else if (nextIndent < r.indent ||
-                // only if outer is at the same indentation level
-                findIndent(rs) == nextIndent &&
-                // https://docs.scala-lang.org/scala3/reference/other-new-features/indentation.html#special-treatment-of-case-clauses
-                (rc.arrow.ne(prev) && !next.is[KwCase] || nextNonTrivia(nextPos).isClassOrObject))
-                OutdentInfo(r, dropRegionLine(nextIndent, rs))
-              else getOutdentOnIndent(r, rs, ctrlOnly = true)
+            case (rc: RegionCaseBody) :: (r: RegionIndent) :: rs => getCaseBodyOutdent(rc, r, rs)
             case (_: RegionNonDelimNonIndented) :: rs if (prev match {
                   // [then]  else  do  [catch]  finally  yield  [match]
                   case _: KwThen | _: KwCatch | _: KwMatch => false
