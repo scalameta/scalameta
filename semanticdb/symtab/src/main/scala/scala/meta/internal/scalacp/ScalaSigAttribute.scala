@@ -14,8 +14,13 @@ object ScalaSigAttribute extends Attribute(Main.SCALA_SIG) {
       codeOff: Int,
       labels: Array[Label],
   ): Attribute = {
-    val bytecode = new ByteCode(cr.b, off, len)
-    val scalaSig = ScalaSigAttributeParsers.parse(bytecode)
+    val bytes = new Array[Byte](len)
+    var i = 0
+    while (i < len) {
+      bytes(i) = cr.readByte(off + i).toByte
+      i += 1
+    }
+    val scalaSig = ScalaSigAttributeParsers.parse(ByteCode(bytes))
     ScalaSigAttribute(scalaSig)
   }
 }
