@@ -124,6 +124,14 @@ class MetacpStatusSuite extends FunSuite {
     assertNoDiff(stderr, "")
   }
 
+  test("relative jar passed twice") {
+    val in = relative(jar("twice.jar"))
+    val out = tmp.resolve("out-twice-jar")
+    val (stdout, stderr) = metacp(parse(out, s"$in$pathSeparator$in"))
+    assertNoDiff(stdout, status(in -> s"$out/twice.jar", in -> s"$out/twice-1.jar"))
+    assertNoDiff(stderr, "")
+  }
+
   test("#1791: relative and absolute spelling of one entry") {
     val abs = dir("spelling")
     val in = relative(abs)
