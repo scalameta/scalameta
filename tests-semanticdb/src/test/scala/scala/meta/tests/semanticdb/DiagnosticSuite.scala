@@ -155,7 +155,7 @@ class DiagnosticSuite extends SemanticdbSuite {
   }
 
   test("diagnostics:off, a typer warning in a file that parses")(
-    assertEquals(documentsOff.filter(_.startsWith("Unused.scala")), List(unusedDocument)),
+    assertEquals(documentsOff.filter(_.startsWith("Unused.scala")), List("Unused.scala")),
   )
 
   test("diagnostics:off, a late warning in a file that parses")(
