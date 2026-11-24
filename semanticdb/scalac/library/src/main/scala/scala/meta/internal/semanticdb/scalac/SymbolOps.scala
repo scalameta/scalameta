@@ -48,8 +48,7 @@ trait SymbolOps {
   private var runSourcesRun: g.Run = _
   private var runSourcesSize = 0
 
-  private var documentSource: GSourceFile = GNoSourceFile
-  private var documentBody: g.Tree = _
+  private var documentUnit: g.CompilationUnit = _
   private var documentNamespace: Namespace = _
   private var documentAnnotations: mutable.HashMap[g.Position, g.Tree] = _
 
@@ -425,23 +424,21 @@ trait SymbolOps {
 
   private[meta] def startDocument(unit: g.CompilationUnit): Unit = {
     clearDocumentCaches()
-    documentSource = unit.source
-    documentBody = unit.body
+    documentUnit = unit
     documentNamespace = new Namespace
-    namespaces(documentSource) = documentNamespace
+    namespaces(unit.source) = documentNamespace
   }
   private[meta] def endDocument(): Unit = {
-    documentSource = GNoSourceFile
-    documentBody = null
+    documentUnit = null
     documentNamespace = null
     clearDocumentCaches()
   }
 
   private[scalac] def documentAnnotationOriginal(pos: g.Position): g.Tree = {
-    if (documentBody eq null) return g.EmptyTree
+    if (null eq documentUnit) return g.EmptyTree
     if (documentAnnotations eq null) {
       val annotations = new mutable.HashMap[g.Position, g.Tree]
-      documentBody.foreach {
+      documentUnit.body.foreach {
         case t: g.TypeTree if t.tpe ne null =>
           t.tpe.foreach {
             case at: g.AnnotatedType => at.annotations.foreach { a =>
@@ -731,13 +728,8 @@ trait SymbolOps {
 
   // the index of a unit of the run, or null; Metals can type a unit again into a new body
   private def sourceIndex(source: GSourceFile): SourceIndex = {
-    val body =
-      if (source eq documentSource) documentBody
-      else {
-        val unit = runSource(source)
-        if (null eq unit) null else unit.body
-      }
-    if (null eq body) return null
+    val body = unitOf(source).body
+    if (g.EmptyTree eq body) return null
     sourceIndexes.get(source) match {
       case Some(index) if index.body eq body => index
       case _ =>
@@ -747,6 +739,14 @@ trait SymbolOps {
     }
   }
   private def sourceIndex(sym: g.Symbol): SourceIndex = sourceIndex(sym.pos.source)
+
+  /** the unit that the compiler keeps for `source`, or `NoCompilationUnit` */
+  private def unitOf(source: GSourceFile): g.CompilationUnit =
+    if ((null ne documentUnit) && (source eq documentUnit.source)) documentUnit
+    else {
+      val unit = runSource(source)
+      if (null ne unit) unit else g.NoCompilationUnit
+    }
 
   // the unit of the run, or null; `compileLate` can add units to the run
   private def runSource(source: GSourceFile): g.CompilationUnit = {
