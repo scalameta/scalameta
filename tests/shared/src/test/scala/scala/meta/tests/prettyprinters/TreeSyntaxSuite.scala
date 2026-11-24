@@ -1215,9 +1215,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  val b = f(c)
+         |
          |  ++ max d: @e
          |}""".stripMargin.lf2nl
-    val second = "object A { val b = (f(c) ++ max) d: @e }"
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
   }
 
@@ -1232,9 +1233,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  val b = f(c)
+         |
          |  ++ max d: @e
          |}""".stripMargin.lf2nl
-    val second = "object A { val b = (f(c) ++ max) d: @e }"
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
 

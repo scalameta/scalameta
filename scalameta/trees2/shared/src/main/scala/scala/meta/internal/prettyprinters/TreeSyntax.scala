@@ -1062,6 +1062,7 @@ object TreeSyntax {
       case t: Term.Ascribe => t.expr
       case t: Term.Assign => t.lhs
       case t: Term.Eta => t.expr
+      case t: Term.Annotate => t.expr
       case _ => null
     }) match {
       case null => t
