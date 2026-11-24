@@ -88,7 +88,6 @@ trait SemanticdbPipeline extends SemanticdbOps {
           synchronizeSourcesAndSemanticdbFiles()
           timestampComputeFinished = System.nanoTime()
           clearSymbolCaches()
-          gSourceFileInputCache.clear()
         } catch handleCrash(None)
     }
   }

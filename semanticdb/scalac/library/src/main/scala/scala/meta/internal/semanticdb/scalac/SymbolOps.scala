@@ -12,8 +12,11 @@ import scala.collection.mutable
 import scala.reflect.NameTransformer
 import scala.reflect.internal.util.{NoSourceFile => GNoSourceFile, SourceFile => GSourceFile}
 import scala.reflect.internal.{Chars, Flags => gf}
+import scala.reflect.io.AbstractFile
 import scala.tools.nsc.backend.jvm.GenBCode
+import scala.tools.nsc.interactive.{Global => InteractiveGlobal}
 import scala.util.control.NonFatal
+import scala.{meta => m}
 
 trait SymbolOps {
   self: SemanticdbOps =>
@@ -23,6 +26,7 @@ trait SymbolOps {
   def clearSymbolCaches(): Unit = {
     clearRunCaches()
     sourceEntries.clear()
+    cachesRunId = 0
     clearDocumentCaches()
   }
 
@@ -35,20 +39,35 @@ trait SymbolOps {
   private def clearRunCaches(): Unit = {
     symbolCache.clear()
     declarationCache.clear()
+    localCache.clear()
     runSources.clear()
-    runSourcesRun = null
+    runSourcesSize = -1
+  }
+
+  /** clears the caches of an earlier run, and the entries of the dropped sources */
+  private def checkRun(): Unit = {
+    val runId = g.currentRunId
+    if (runId != cachesRunId) {
+      // first, because `unitOf` calls `runSource`, which calls this method
+      cachesRunId = runId
+      clearRunCaches()
+      sourceEntries.values.removeIf(entry => g.NoCompilationUnit eq unitOf(entry.source))
+    }
   }
 
   private lazy val symbolCache = new mutable.HashMap[g.Symbol, String]
   // the locals that we looked up since a document started or ended: either changes a namespace
   private lazy val localCache = new mutable.HashMap[g.Symbol, String]
 
-  private lazy val sourceEntries = new java.util.HashMap[GSourceFile, SourceEntry]
+  /** the entry of each file, for the source of the file that we met last */
+  private lazy val sourceEntries = new java.util.HashMap[AbstractFile, SourceEntry]
 
-  // the units of `runSourcesRun` by source, when it had `runSourcesSize` units
+  // the units of the current run by source, when it had `runSourcesSize` units
   private lazy val runSources = new java.util.IdentityHashMap[GSourceFile, g.CompilationUnit]
-  private var runSourcesRun: g.Run = _
   private var runSourcesSize = 0
+
+  /** the id of the run that filled the caches that `clearRunCaches` clears */
+  private var cachesRunId = 0
 
   private var documentUnit: g.CompilationUnit = _
   private var documentNamespace: Namespace = _
@@ -84,6 +103,7 @@ trait SymbolOps {
 
     def toSemantic: String = {
       def defaultValue = {
+        checkRun()
         val ssym = // see https://github.com/scalameta/scalameta/issues/1194
           try toSemanticUncached
           catch { case e if isInteractiveCompiler && NonFatal(e) => Symbols.None }
@@ -425,6 +445,7 @@ trait SymbolOps {
   }
 
   private[meta] def startDocument(unit: g.CompilationUnit): Unit = {
+    checkRun()
     clearDocumentCaches()
     documentUnit = unit
     documentNamespace = new Namespace
@@ -730,7 +751,7 @@ trait SymbolOps {
     pos.point < text.length && text(pos.point) == ':' && !sym.isParameter && !sym.isParamAccessor
   }
 
-  // the index of a unit of the run, or null; Metals can type a unit again into a new body
+  // the index of a kept unit, or null; Metals can type a unit again into a new body
   private def sourceIndex(source: GSourceFile): SourceIndex = {
     val body = unitOf(source).body
     if (g.EmptyTree eq body) return null
@@ -748,31 +769,47 @@ trait SymbolOps {
     if ((null ne documentUnit) && (source eq documentUnit.source)) documentUnit
     else {
       val unit = runSource(source)
-      if (null ne unit) unit else g.NoCompilationUnit
+      if (null ne unit) unit
+      else g match {
+        case ig: InteractiveGlobal =>
+          val file = source.file
+          val kept = if (null eq file) null else ig.unitOfFile.getOrElse(file, null)
+          if ((null ne kept) && (kept.source eq source)) kept.asInstanceOf[g.CompilationUnit]
+          else g.NoCompilationUnit
+        case _ => g.NoCompilationUnit
+      }
     }
 
-  /** the parts that we built from a source, each null until a lookup builds it */
-  private[scalac] final class SourceEntry {
+  /** the parts that we built from `source`, each null until a lookup builds it */
+  private[scalac] final class SourceEntry(val source: GSourceFile) {
     private[SymbolOps] var index: SourceIndex = _
     private[SymbolOps] var namespace: Namespace = _
+    var input: m.Input = _
   }
 
+  /** the entry of `source`, which replaces the entry of another source of its file */
   private[scalac] def sourceEntry(source: GSourceFile): SourceEntry = {
-    val entry = sourceEntries.get(source)
-    if (null ne entry) return entry
-    val newEntry = new SourceEntry
-    sourceEntries.put(source, newEntry)
+    val file = source.file
+    val entry = sourceEntries.get(file)
+    if (null ne entry) {
+      if (entry.source eq source) return entry
+      // remove the old key too: with the new key, a lookup matches by reference, not by path
+      sourceEntries.remove(file)
+    }
+    val newEntry = new SourceEntry(source)
+    sourceEntries.put(file, newEntry)
     newEntry
   }
 
   // the unit of the run, or null; `compileLate` can add units to the run
   private def runSource(source: GSourceFile): g.CompilationUnit = {
+    checkRun()
     val unit = runSources.get(source)
+    if (null ne unit) return unit
     val run = g.currentRun
-    if ((null ne unit) || (run eq runSourcesRun) && run.size == runSourcesSize) return unit
+    if (run.size == runSourcesSize) return null
     runSources.clear()
     run.units.foreach(unit => runSources.put(unit.source, unit))
-    runSourcesRun = run
     runSourcesSize = run.size
     runSources.get(source)
   }
