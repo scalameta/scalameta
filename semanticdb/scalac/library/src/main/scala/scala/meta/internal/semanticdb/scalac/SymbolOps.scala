@@ -21,12 +21,8 @@ trait SymbolOps {
   import SymbolOps._
 
   def clearSymbolCaches(): Unit = {
-    symbolCache.clear()
-    declarationCache.clear()
-    sourceIndexes.clear()
-    runSources.clear()
-    runSourcesRun = null
-    namespaces.clear()
+    clearRunCaches()
+    sourceEntries.clear()
     clearDocumentCaches()
   }
 
@@ -36,12 +32,18 @@ trait SymbolOps {
     documentAnnotations = null
   }
 
+  private def clearRunCaches(): Unit = {
+    symbolCache.clear()
+    declarationCache.clear()
+    runSources.clear()
+    runSourcesRun = null
+  }
+
   private lazy val symbolCache = new mutable.HashMap[g.Symbol, String]
   // the locals that we looked up since a document started or ended: either changes a namespace
   private lazy val localCache = new mutable.HashMap[g.Symbol, String]
 
-  private lazy val sourceIndexes = new mutable.HashMap[GSourceFile, SourceIndex]
-  private lazy val namespaces = new mutable.HashMap[GSourceFile, Namespace]
+  private lazy val sourceEntries = new java.util.HashMap[GSourceFile, SourceEntry]
 
   // the units of `runSourcesRun` by source, when it had `runSourcesSize` units
   private lazy val runSources = new java.util.IdentityHashMap[GSourceFile, g.CompilationUnit]
@@ -426,7 +428,7 @@ trait SymbolOps {
     clearDocumentCaches()
     documentUnit = unit
     documentNamespace = new Namespace
-    namespaces(unit.source) = documentNamespace
+    sourceEntry(unit.source).namespace = documentNamespace
   }
   private[meta] def endDocument(): Unit = {
     documentUnit = null
@@ -461,7 +463,9 @@ trait SymbolOps {
       else {
         val source = enclosingSource(decl)
         if (!source.hasInput) return Symbols.None
-        namespaces.getOrElseUpdate(source, new Namespace)
+        val entry = sourceEntry(source)
+        if (null eq entry.namespace) entry.namespace = new Namespace
+        entry.namespace
       }
     namespace.addDeclaration(decl, sym)
   }
@@ -730,13 +734,12 @@ trait SymbolOps {
   private def sourceIndex(source: GSourceFile): SourceIndex = {
     val body = unitOf(source).body
     if (g.EmptyTree eq body) return null
-    sourceIndexes.get(source) match {
-      case Some(index) if index.body eq body => index
-      case _ =>
-        val index = new SourceIndex(source, body)
-        sourceIndexes(source) = index
-        index
-    }
+    val entry = sourceEntry(source)
+    val index = entry.index
+    if ((null ne index) && (index.body eq body)) return index
+    val newIndex = new SourceIndex(source, body)
+    entry.index = newIndex
+    newIndex
   }
   private def sourceIndex(sym: g.Symbol): SourceIndex = sourceIndex(sym.pos.source)
 
@@ -747,6 +750,20 @@ trait SymbolOps {
       val unit = runSource(source)
       if (null ne unit) unit else g.NoCompilationUnit
     }
+
+  /** the parts that we built from a source, each null until a lookup builds it */
+  private[scalac] final class SourceEntry {
+    private[SymbolOps] var index: SourceIndex = _
+    private[SymbolOps] var namespace: Namespace = _
+  }
+
+  private[scalac] def sourceEntry(source: GSourceFile): SourceEntry = {
+    val entry = sourceEntries.get(source)
+    if (null ne entry) return entry
+    val newEntry = new SourceEntry
+    sourceEntries.put(source, newEntry)
+    newEntry
+  }
 
   // the unit of the run, or null; `compileLate` can add units to the run
   private def runSource(source: GSourceFile): g.CompilationUnit = {
