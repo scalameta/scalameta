@@ -11,7 +11,6 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Path
 import java.security.MessageDigest
 
-import scala.collection.mutable
 import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSourceFile}
 import scala.reflect.io.{PlainFile => GPlainFile, VirtualFile}
 import scala.{meta => m}
@@ -21,7 +20,6 @@ trait InputOps {
 
   import InputOps._
 
-  lazy val gSourceFileInputCache = mutable.Map[GSourceFile, m.Input]()
   implicit class XtensionGSourceFileInput(gsource: GSourceFile) {
     def isInSourceroot(): Boolean = gsource.file match {
       case gfile: GPlainFile =>
@@ -56,9 +54,9 @@ trait InputOps {
       case _ => false
     }
 
-    def toInput: m.Input = gSourceFileInputCache.getOrElseUpdate(
-      gsource,
-      gsource.file match {
+    def toInput: m.Input = {
+      val entry = sourceEntry(gsource)
+      if (null eq entry.input) entry.input = gsource.file match {
         case gfile: GPlainFile =>
           if (config.text.isOn) {
             val path = m.AbsolutePath(gfile.file)
@@ -71,8 +69,9 @@ trait InputOps {
           val uri = URLEncoder.encode(gfile.path, UTF_8.name)
           m.Input.VirtualFile(uri, gsource.content.mkString)
         case _ => m.Input.None
-      },
-    )
+      }
+      entry.input
+    }
   }
 
   implicit class XtensionGPositionMPosition(pos: GPosition) {

@@ -96,10 +96,6 @@ class DocumentBuildSuite extends SemanticdbSuite {
     def source: AnyRef = unit.source
     def input: AnyRef = unit.source.toInput
 
-    /** whether two sources of one file are equal, as scalac 2.12 has them */
-    val isSourceEqualByPath: Boolean = pc.newSourceFile("", "B.scala") ==
-      pc.newSourceFile("", "B.scala")
-
     /**
      * reads a tree of a file that has no unit, as Metals does at a symbol of a file that it
      * dropped: the compiler starts a new run
@@ -127,14 +123,8 @@ class DocumentBuildSuite extends SemanticdbSuite {
     def diagnostics: List[String] = unit.toTextDocument.diagnostics.map(_.message).toList
     def document: s.TextDocument = unit.toTextDocument
 
-    /** removes the unit's source from `gSourceFileInputCache`, as Metals does before a document */
-    def removeInput(): Unit = gSourceFileInputCache.remove(unit.source)
-
     /** clears every cache of `ops`, as the plugin does after a run */
-    def clearCaches(): Unit = {
-      ops.clearSymbolCaches()
-      ops.gSourceFileInputCache.clear()
-    }
+    def clearCaches(): Unit = ops.clearSymbolCaches()
 
     /** the symbols of the unit's local values, outside a document, as Metals asks at a hover */
     def localSymbols: List[String] = unit.body
@@ -317,7 +307,7 @@ class DocumentBuildSuite extends SemanticdbSuite {
       val second = p.localSymbols
       p.edit(localVal.replace("1", "3"))
       p.typeCheck()
-      val expected = if (p.isSourceEqualByPath) "local0 local1 local2" else "local0 local0 local0"
+      val expected = "local0 local0 local0"
       assertEquals((first ++ second ++ p.localSymbols).mkString(" "), expected)
     },
     localVal,
@@ -333,8 +323,7 @@ class DocumentBuildSuite extends SemanticdbSuite {
       p.edit(localVal.replace("object L", "\nobject L"))
       p.typeCheck()
       val second = p.document
-      val expected =
-        if (p.isSourceEqualByPath) (true, "0 1 1 2 3", "") else (false, "0 1 1 2 3", "1 2 2 3 4")
+      val expected = (false, "0 1 1 2 3", "1 2 2 3 4")
       assertEquals(
         (first.md5 == second.md5, occurrenceLines(first), occurrenceLines(second)),
         expected,
@@ -342,24 +331,6 @@ class DocumentBuildSuite extends SemanticdbSuite {
     },
     localVal,
   ))
-
-  test("a presentation compiler: a document after an edit, its input removed as Metals does")(
-    withPresentation(
-      { p =>
-        p.typeCheck()
-        val first = p.document
-        p.edit(localVal.replace("object L", "\nobject L"))
-        p.typeCheck()
-        p.removeInput()
-        val second = p.document
-        assertEquals(
-          (first.md5 == second.md5, occurrenceLines(first), occurrenceLines(second)),
-          (false, "0 1 1 2 3", "1 2 2 3 4"),
-        )
-      },
-      localVal,
-    ),
-  )
 
   test("a presentation compiler: an edit after a document build, a tree of a new file, a build")(
     withPresentation(
@@ -372,7 +343,7 @@ class DocumentBuildSuite extends SemanticdbSuite {
         p.diagnostics
         p.typedTreeOfNewFile()
         p.diagnostics
-        assertEquals(isCollected(old), false)
+        assertEquals(isCollected(old), !isScala213)
       },
       localVal,
     ),
@@ -389,7 +360,7 @@ class DocumentBuildSuite extends SemanticdbSuite {
         p.localSymbols
         p.typedTreeOfNewFile()
         p.methodSymbol
-        assertEquals(isCollected(old), false)
+        assertEquals(isCollected(old), !isScala213)
       },
       localVal,
     ),
@@ -406,7 +377,7 @@ class DocumentBuildSuite extends SemanticdbSuite {
         p.methodSymbol
         p.typedTreeOfNewFile()
         p.localSymbols
-        assertEquals(isCollected(old), false)
+        assertEquals(isCollected(old), !isScala213)
       },
       localVal,
     ),
@@ -434,7 +405,7 @@ class DocumentBuildSuite extends SemanticdbSuite {
           (first, p.binderSymbols),
           (
             "a=local0 a=local0 x=local1 y=local2 x$1=local3 x=local1 y=local2",
-            "a=local0 a=local4 x=local1 y=local2 x$1=local3 x=local1 y=local2",
+            "a=local0 a=local0 x=local1 y=local2 x$1=local3 x=local1 y=local2",
           ),
         )
       },
@@ -455,7 +426,7 @@ class DocumentBuildSuite extends SemanticdbSuite {
         p.methodSymbol
         val beforeClear = isCollected(old)
         p.clearCaches()
-        val expected = if (isScala213) (false, false) else (false, true)
+        val expected = if (isScala213) (false, false) else (true, true)
         assertEquals((beforeClear, isCollected(old)), expected)
       },
       localVal,
@@ -501,7 +472,7 @@ class DocumentBuildSuite extends SemanticdbSuite {
       p.edit(localVal.replace("1", "2"))
       p.typeCheck()
       p.diagnostics
-      assertEquals(isCollected(old), false)
+      assertEquals(isCollected(old), true)
     },
     localVal,
   ))
