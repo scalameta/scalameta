@@ -382,7 +382,7 @@ class ImportSuite extends ParseSuite {
       .begComment(Seq("// detached comment before", "// attached comment"))
       .endComment(Seq("// detached comment after")).result()
     val tree = Source(List(imp))
-    parseAndCheckTree[Source](code, layout)(tree)
+    runTestAssert[Source](code, layout)(tree)
   }
 
 }

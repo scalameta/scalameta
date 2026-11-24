@@ -197,7 +197,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     val body = blk(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2)))
     val tree = Defn.ExtensionGroup(Nil, cparamss, body).toBuilder.endComment(detachedComments("// c"))
       .result()
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("multiple-methods-indent") {
