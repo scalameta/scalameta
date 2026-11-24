@@ -2617,7 +2617,9 @@ trait TextDocumentOps {
           case _ => symbols.valuesIterator.filter(_.symbol.isLocal).toIndexedSeq.sorted
         },
         occurrences = finalOccurrences.sorted,
-        diagnostics = unit.hijackedDiagnostics(skip = 0).toDiagnostics(mstart).toIndexedSeq.sorted,
+        diagnostics =
+          if (config.diagnostics.isOff) Nil
+          else unit.hijackedDiagnostics(skip = 0).toDiagnostics(mstart).toIndexedSeq.sorted,
         synthetics = synthetics.toIndexedSeq.sorted,
       )
     }
