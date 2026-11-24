@@ -1204,6 +1204,40 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
   }
 
+  test("annotated symbolic name starts a statement") {
+    val code =
+      """|object A {
+         |  val b = f(c)
+         |
+         |  ++ max d: @e
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val b = f(c)
+         |  ++ max d: @e
+         |}""".stripMargin.lf2nl
+    val second = "object A { val b = (f(c) ++ max) d: @e }"
+    assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
+  }
+
+  test("annotated symbolic name starts a statement in Scala 3") {
+    val code =
+      """|object A {
+         |  val b = f(c)
+         |
+         |  ++ max d: @e
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val b = f(c)
+         |  ++ max d: @e
+         |}""".stripMargin.lf2nl
+    val second = "object A { val b = (f(c) ++ max) d: @e }"
+    assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
+  }
+
   private def reprintAfterA(stat: String, d: Dialect): String = {
     val quasiDialect = d.unquoteTerm(multiline = true)
     val block = term(s"{ a; $stat }")(quasiDialect).asInstanceOf[Term.Block]
