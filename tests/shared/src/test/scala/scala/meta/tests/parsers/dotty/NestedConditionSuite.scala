@@ -9788,29 +9788,22 @@ class NestedConditionSuite extends BaseDottySuite {
          |  def g = 1
          |}
          |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(
-        Defn.Def(
-          Nil,
-          tname("f"),
-          Nil,
-          None,
-          tif(
-            tinfix(
-              tapply(tname("x"), tname("y")),
-              "&&",
-              tapply(tname("foo"), blk(tinfix(tnameComments("z")()("// c"), "&&", tname("w")))),
-            ),
-            tname("c"),
-            tname("d"),
-          ),
+    def res(lhs: Term, op: Term.Name, rhs: Term) = {
+      val cond =
+        tinfix(tapply(tname("x"), tname("y")), "&&", tapply(tname("foo"), blk(tinfix(lhs, op, rhs))))
+      Source(List(Defn.Object(
+        Nil,
+        tname("A"),
+        tpl(
+          Defn.Def(Nil, tname("f"), Nil, None, tif(cond, tname("c"), tname("d"))),
+          Defn.Def(Nil, tname("g"), Nil, None, int(1)),
         ),
-        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
-      ),
-    )))
+      )))
+    }
+    val tree = res(tnameComments("z")()("// c"), "&&", tname("w"))
     parseAndCheckTree[Source](code, layout)(tree)
+    val reparsed = res(tname("z"), tnameComments(detachedComments("// c"))("&&")(), tname("w"))
+    runTestAssert[Source](layout)(reparsed)
   }
 
   test("nested condition: `&&` and a colon argument after the parentheses in braces, the argument on the next line, shallower leading `&&` on the next line, `then` and `else` on the next line at the column of the `if`, next statement") {

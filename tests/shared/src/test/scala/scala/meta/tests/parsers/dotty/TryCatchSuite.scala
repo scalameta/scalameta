@@ -1906,20 +1906,18 @@ class TryCatchSuite extends BaseDottySuite {
          |  /* note */
          |} finally c
          |""".stripMargin
-    val c = tname("c")
-    val tree = Defn.Def(
-      Nil,
-      "f",
-      Nil,
-      None,
-      Term.Try(
-        tname("a"),
-        List(Case.newBuilder(Pat.Wildcard(), None, tname("b")).endComment(Seq("/* note */")).result()),
-        Some(c),
-      ),
-    )
+    def res(treeCase: Case) = Defn
+      .Def(Nil, "f", Nil, None, Term.Try(tname("a"), List(treeCase), Some(tname("c"))))
     // parsing the reprint attaches the comment to `b`, not to the case
-    parseAndCheckTree[Stat](code, layout)(tree)
+    parseAndCheckTree[Stat](code, layout)(res(
+      Case.newBuilder(Pat.Wildcard(), None, tname("b")).endComment(Seq("/* note */")).result(),
+    ))
+    val reprinted =
+      """|def f = try a catch {
+         |  case _ => b /* note */
+         |} finally c
+         |""".stripMargin
+    runTestAssert[Stat](reprinted)(res(Case(Pat.Wildcard(), None, tnameComments("b")()("/* note */"))))
   }
 
   test("indented try body, a comment before finally at the body indent") {
