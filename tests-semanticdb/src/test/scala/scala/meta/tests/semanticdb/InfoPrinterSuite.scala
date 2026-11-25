@@ -606,6 +606,164 @@ class InfoPrinterSuite extends FunSuite {
     "{ macro g: R }",
   ))
 
+  test("dotc: var")(assertMember(
+    dotc(
+      "_empty_/C#v().",
+      "v",
+      s.SymbolInformation.Kind.METHOD,
+      s.ValueSignature(returnType),
+      s.SymbolInformation.Property.VAR,
+    ),
+    "_empty_/C#v(). => var method v: R",
+    "{ var def v: R }",
+  ))
+
+  test("dotc: inline def with a parameter")(assertMember(
+    dotc(
+      "_empty_/C#h().",
+      "h",
+      s.SymbolInformation.Kind.MACRO,
+      s.MethodSignature(
+        parameterLists = List(scope(param("_empty_/C#h().(y)", "y", ref("_empty_/B#")))),
+        returnType = returnType,
+      ),
+      s.SymbolInformation.Property.INLINE,
+    ),
+    "_empty_/C#h(). => inline macro h(y: B): R",
+    "{ macro h(y: B): R }",
+  ))
+
+  test("dotc: transparent inline def")(assertMember(
+    dotc(
+      "_empty_/C#t().",
+      "t",
+      s.SymbolInformation.Kind.MACRO,
+      byName,
+      s.SymbolInformation.Property.INLINE,
+      s.SymbolInformation.Property.TRANSPARENT,
+    ),
+    "_empty_/C#t(). => inline transparent macro t: R",
+    "{ macro t: R }",
+  ))
+
+  test("dotc: inline def with an inline parameter") {
+    assertMember(
+      dotc(
+        "_empty_/C#p().",
+        "p",
+        s.SymbolInformation.Kind.MACRO,
+        s.MethodSignature(
+          parameterLists = List(scope(
+            param("_empty_/C#p().(y)", "y", ref("_empty_/B#"))
+              .copy(properties = s.SymbolInformation.Property.INLINE.value),
+          )),
+          returnType = returnType,
+        ),
+        s.SymbolInformation.Property.INLINE,
+      ),
+      "_empty_/C#p(). => inline macro p(y: B): R",
+      "{ macro p(y: B): R }",
+    )
+  }
+
+  test("dotc: inline def with an inline using parameter") {
+    assertMember(
+      dotc(
+        "_empty_/C#u().",
+        "u",
+        s.SymbolInformation.Kind.MACRO,
+        s.MethodSignature(
+          parameterLists = List(
+            scope(param("_empty_/C#u().(y)", "y", ref("_empty_/B#")).copy(properties =
+              properties(
+                s.SymbolInformation.Property.GIVEN,
+                s.SymbolInformation.Property.IMPLICIT,
+                s.SymbolInformation.Property.INLINE,
+              ),
+            )),
+          ),
+          returnType = returnType,
+        ),
+        s.SymbolInformation.Property.INLINE,
+      ),
+      "_empty_/C#u(). => inline macro u(using y: B): R",
+      "{ macro u(using y: B): R }",
+    )
+  }
+
+  test("dotc: infix def")(assertMember(
+    dotc(
+      "_empty_/C#op().",
+      "op",
+      s.SymbolInformation.Kind.METHOD,
+      s.MethodSignature(
+        parameterLists = List(scope(param("_empty_/C#op().(y)", "y", ref("_empty_/B#")))),
+        returnType = returnType,
+      ),
+      s.SymbolInformation.Property.INFIX,
+    ),
+    "_empty_/C#op(). => infix method op(y: B): R",
+    "{ def op(y: B): R }",
+  ))
+
+  private def selfRefined(member: s.SymbolInformation) = s.SymbolInformation(
+    symbol = "_empty_/O.",
+    kind = s.SymbolInformation.Kind.OBJECT,
+    properties = properties(s.SymbolInformation.Property.FINAL),
+    displayName = "O",
+    signature = s.ClassSignature(self =
+      s.StructuralType(s.SingleType(s.NoType, "_empty_/O."), Some(scope(member))),
+    ),
+  )
+
+  test("dotc: opaque type in a self type")(assertInfo(
+    selfRefined(dotc(
+      "_empty_/O.A#",
+      "A",
+      s.SymbolInformation.Kind.TYPE,
+      s.TypeSignature(),
+      s.SymbolInformation.Property.OPAQUE,
+    )),
+    "_empty_/O. => final object O { self: O.type { type A } =>  }",
+  ))
+
+  test("dotc: opaque infix type in a self type")(assertInfo(
+    selfRefined(dotc(
+      "_empty_/O.Or#",
+      "Or",
+      s.SymbolInformation.Kind.TYPE,
+      s.TypeSignature(Some(
+        scope(typeParam("_empty_/O.Or#[A]", "A"), typeParam("_empty_/O.Or#[B]", "B")),
+      )),
+      s.SymbolInformation.Property.INFIX,
+      s.SymbolInformation.Property.OPAQUE,
+    )),
+    "_empty_/O. => final object O { self: O.type { type Or[A, B] } =>  }",
+  ))
+
+  test("scalac: implicit val") {
+    val info = s.SymbolInformation(
+      symbol = "_empty_/C#i().",
+      kind = s.SymbolInformation.Kind.METHOD,
+      properties =
+        properties(s.SymbolInformation.Property.IMPLICIT, s.SymbolInformation.Property.VAL),
+      displayName = "i",
+      signature = s.MethodSignature(returnType = returnType),
+    )
+    assertMember(info, "_empty_/C#i(). => implicit val method i: R", "{ implicit val def i: R }")
+  }
+
+  test("scalac: macro def")(assertMember(
+    s.SymbolInformation(
+      symbol = "_empty_/C#m().",
+      kind = s.SymbolInformation.Kind.MACRO,
+      displayName = "m",
+      signature = s.MethodSignature(returnType = returnType),
+    ),
+    "_empty_/C#m(). => macro m: R",
+    "{ macro m: R }",
+  ))
+
   test("dotc: local def without parameter clauses") {
     val info = dotc("local0", "f", s.SymbolInformation.Kind.LOCAL, byName)
     assertInfo(info, "local0 => local f: R")
@@ -618,6 +776,15 @@ class InfoPrinterSuite extends FunSuite {
     )
     val info = dotc("local1", "g", s.SymbolInformation.Kind.LOCAL, sig)
     assertInfo(info, "local1 => local g(x: B): R")
+  }
+
+  test("dotc: local inline def with an inline parameter") {
+    val x = param("local7", "x", ref("_empty_/B#"))
+      .copy(properties = s.SymbolInformation.Property.INLINE.value)
+    val sig = s.MethodSignature(parameterLists = List(scope(x)), returnType = returnType)
+    val info =
+      dotc("local6", "g", s.SymbolInformation.Kind.LOCAL, sig, s.SymbolInformation.Property.INLINE)
+    assertInfo(info, "local6 => inline local g(x: B): R")
   }
 
   test("dotc: local val")(assertInfo(
@@ -636,6 +803,46 @@ class InfoPrinterSuite extends FunSuite {
     val info = dotc("local4", "g", s.SymbolInformation.Kind.LOCAL, sig)
     assertInfo(info, "local4 => local g[T]: T")
   }
+
+  test("val with a type parameter")(assertMember(
+    dotc(
+      "_empty_/C#w().",
+      "w",
+      s.SymbolInformation.Kind.METHOD,
+      s.MethodSignature(Some(scope(typeParam("_empty_/C#w().[T]", "T"))), returnType = returnType),
+      s.SymbolInformation.Property.VAL,
+    ),
+    "_empty_/C#w(). => val method w[T]: R",
+    "{ val def w[T]: R }",
+  ))
+
+  test("val with an extended method signature")(assertMember(
+    dotc(
+      "_empty_/C#e().",
+      "e",
+      s.SymbolInformation.Kind.METHOD,
+      s.ExtendedMethodSignature(
+        List(s.ParamClauseGroup(None, List(scope(param("_empty_/C#e().(y)", "y", ref("_empty_/B#")))))),
+        returnType,
+      ),
+      s.SymbolInformation.Property.VAL,
+    ),
+    "_empty_/C#e(). => val method e(y: B): R",
+    "{ val def e(y: B): R }",
+  ))
+
+  test("dotc: inline val")(assertMember(
+    dotc(
+      "_empty_/C#n.",
+      "n",
+      s.SymbolInformation.Kind.METHOD,
+      s.ValueSignature(returnType),
+      s.SymbolInformation.Property.VAL,
+      s.SymbolInformation.Property.INLINE,
+    ),
+    "_empty_/C#n. => val inline method n: R",
+    "{ val def n: R }",
+  ))
 
   test("by-name parameter") {
     val x = param("_empty_/f().(x)", "x", s.ByNameType(returnType))
