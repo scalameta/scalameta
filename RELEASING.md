@@ -33,7 +33,7 @@
   * Alternatively:
     * Go to [Staging Repositories](https://oss.sonatype.org/#stagingRepositories).
     * Close the repositories that have been created by the Travis CI job.
-      There can be several respositories produced by the job.
+      There can be several repositories produced by the job.
     * Release the repositories.
 * Verify the Sonatype release:
   * Make sure that the release shows up at https://oss.sonatype.org/content/repositories/releases/org/scalameta/.
@@ -64,7 +64,7 @@
 
 Releasing for a specific existing version might be needed for example in case of new Scala version.
 
-To peform it on CI, create and push a tag with a special name: `semanticdb_v${existing-scalameta-version}_${scala_version}`.
+To perform it on CI, create and push a tag with a special name: `semanticdb_v${existing-scalameta-version}_${scala_version}`.
 You can also do it manually, at the root of the checkout. Every step from the start of sbt to the release runs in one sbt JVM, which keeps the version you set. The local flow is:
 
 - set the needed secrets (https://github.com/sbt/sbt-ci-release#secrets)
