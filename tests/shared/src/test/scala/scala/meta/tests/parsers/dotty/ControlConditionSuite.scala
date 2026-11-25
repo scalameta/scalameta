@@ -11165,8 +11165,8 @@ class ControlConditionSuite extends BaseDottySuite {
       """|def h: Int = throw try g catch {
          |  case _ =>
          |    if (c && foo {
-         |      z && w
-         |    }) 1 else 2
+         |      z
+         |    } && w) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Def(
@@ -11177,10 +11177,14 @@ class ControlConditionSuite extends BaseDottySuite {
       Term.Throw(Term.Try(
         tname("g"),
         List(Case(
-          Pat.Wildcard(),
+          patwildcard,
           None,
           tif(
-            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
+            tinfix(
+              tinfix(tname("c"), tname("&&"), tapply(tname("foo"), blk(tname("z")))),
+              tname("&&"),
+              tname("w"),
+            ),
             int(1),
             int(2),
           ),
@@ -11206,8 +11210,8 @@ class ControlConditionSuite extends BaseDottySuite {
       """|def h: Int = throw try g(a, b) catch {
          |  case _ =>
          |    if (c && foo {
-         |      z && w
-         |    }) 1 else 2
+         |      z
+         |    } && w) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Def(
@@ -11218,10 +11222,14 @@ class ControlConditionSuite extends BaseDottySuite {
       Term.Throw(Term.Try(
         tapply(tname("g"), tname("a"), tname("b")),
         List(Case(
-          Pat.Wildcard(),
+          patwildcard,
           None,
           tif(
-            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
+            tinfix(
+              tinfix(tname("c"), tname("&&"), tapply(tname("foo"), blk(tname("z")))),
+              tname("&&"),
+              tname("w"),
+            ),
             int(1),
             int(2),
           ),
@@ -11243,26 +11251,11 @@ class ControlConditionSuite extends BaseDottySuite {
          |      && w
          |    then 1 else 2
          |""".stripMargin
-    val layout =
-      """|def h: Unit = throw while (a && b) if (c && foo {
-         |  z && w
-         |}) 1 else 2
-         |""".stripMargin
-    val tree = Source(List(Defn.Def(
-      Nil,
-      tname("h"),
-      Nil,
-      Some(pname("Unit")),
-      Term.Throw(Term.While(
-        tinfix(tname("a"), "&&", tname("b")),
-        tif(
-          tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
-          int(1),
-          int(2),
-        ),
-      )),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:3: error: `do` expected but `outdent` found
+         |      while a &&
+         |                ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("leading infix after a colon argument: `throw` at a line end in braces, an argument list on a deeper next line, the list closing with `match` and a case in braces on a shallower line, the argument in a condition in the case, `&&` between the columns of that line and the list") {
@@ -11282,8 +11275,8 @@ class ControlConditionSuite extends BaseDottySuite {
          |  throw g(a, b) match {
          |    case _ =>
          |      if (c && foo {
-         |        z && w
-         |      }) 1 else 2
+         |        z
+         |      } && w) 1 else 2
          |  }
          |}
          |""".stripMargin
@@ -11292,17 +11285,21 @@ class ControlConditionSuite extends BaseDottySuite {
       tname("h"),
       Nil,
       Some(pname("Int")),
-      blk(Term.Throw(Term.Match(
+      blk(Term.Throw(tmatch(
         tapply(tname("g"), tname("a"), tname("b")),
-        List(Case(
-          Pat.Wildcard(),
+        Case(
+          patwildcard,
           None,
           tif(
-            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
+            tinfix(
+              tinfix(tname("c"), tname("&&"), tapply(tname("foo"), blk(tname("z")))),
+              tname("&&"),
+              tname("w"),
+            ),
             int(1),
             int(2),
           ),
-        )),
+        ),
       ))),
     )))
     runTestAssert[Source](code, layout)(tree)
@@ -11319,28 +11316,11 @@ class ControlConditionSuite extends BaseDottySuite {
          |       then 1 else 2
          |}
          |""".stripMargin
-    val layout =
-      """|def h: Int = {
-         |  throw if (a) if (c && foo {
-         |    z && w
-         |  }) 1 else 2
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Def(
-      Nil,
-      tname("h"),
-      Nil,
-      Some(pname("Int")),
-      blk(Term.Throw(tif(
-        tname("a"),
-        tif(
-          tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
-          int(1),
-          int(2),
-        ),
-      ))),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:3: error: `then` expected but `outdent` found
+         |      if a
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test {
@@ -11536,8 +11516,8 @@ class ControlConditionSuite extends BaseDottySuite {
       """|def h: Int = throw try g(a, b) catch {
          |  case _ =>
          |    if (c && foo {
-         |      z && w
-         |    }) 1 else 2
+         |      z
+         |    } && w) 1 else 2
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Def(
@@ -11548,10 +11528,14 @@ class ControlConditionSuite extends BaseDottySuite {
       Term.Throw(Term.Try(
         tapply(tname("g"), tname("a"), tname("b")),
         List(Case(
-          Pat.Wildcard(),
+          patwildcard,
           None,
           tif(
-            tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
+            tinfix(
+              tinfix(tname("c"), tname("&&"), tapply(tname("foo"), blk(tname("z")))),
+              tname("&&"),
+              tname("w"),
+            ),
             int(1),
             int(2),
           ),
@@ -11573,29 +11557,11 @@ class ControlConditionSuite extends BaseDottySuite {
          |    then 1 else 2
          |}
          |""".stripMargin
-    val layout =
-      """|def h: Int = {
-         |  throw if (a.b) if (c && foo {
-         |    z && w
-         |  }) 1 else 2
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Def(
-      Nil,
-      tname("h"),
-      Nil,
-      Some(pname("Int")),
-      blk(Term.Throw(Term.If(
-        tselect("a", "b"),
-        tif(
-          tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
-          int(1),
-          int(2),
-        ),
-        Lit.Unit(),
-      ))),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:3: error: `then` expected but `outdent` found
+         |      if a
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("leading infix after a colon argument: `throw` at a line end in braces, `for` and an enumerator on a deeper next line, a second enumerator and `do` on a shallower line, the argument in a condition after `do`, `&&` between the columns of that line and the `for`") {
@@ -11609,31 +11575,11 @@ class ControlConditionSuite extends BaseDottySuite {
          |    then 1 else 2
          |}
          |""".stripMargin
-    val layout =
-      """|def h: Int = {
-         |  throw for (x <- xs; y <- ys) if (c && foo {
-         |    z && w
-         |  }) 1 else 2
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Def(
-      Nil,
-      tname("h"),
-      Nil,
-      Some(pname("Int")),
-      blk(Term.Throw(Term.For(
-        List(
-          Enumerator.Generator(patvar("x"), tname("xs")),
-          Enumerator.Generator(patvar("y"), tname("ys")),
-        ),
-        tif(
-          tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
-          int(1),
-          int(2),
-        ),
-      ))),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:3: error: illegal start of simple expression
+         |      for x <- xs
+         |                 ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("leading infix after a colon argument: `throw` at a line end in braces, `for` and an enumerator on a deeper next line, a guard on a shallower line, `yield` and the argument in a condition at that column, `&&` between the columns of that line and the `for`") {
@@ -11648,28 +11594,11 @@ class ControlConditionSuite extends BaseDottySuite {
          |    then 1 else 2
          |}
          |""".stripMargin
-    val layout =
-      """|def h: Int = {
-         |  throw for (x <- xs; if p) yield if (c && foo {
-         |    z && w
-         |  }) 1 else 2
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Def(
-      Nil,
-      tname("h"),
-      Nil,
-      Some(pname("Int")),
-      blk(Term.Throw(Term.ForYield(
-        List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Guard(tname("p"))),
-        tif(
-          tinfix(tname("c"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
-          int(1),
-          int(2),
-        ),
-      ))),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:3: error: illegal start of simple expression
+         |      for x <- xs
+         |                 ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("leading infix after a colon argument: a lambda parameter at the end of the condition's line, its body on a deeper next line, `&&` four columns deeper than the `if`") {
@@ -11997,12 +11926,15 @@ class ControlConditionSuite extends BaseDottySuite {
          |KwCase [32..36)
          |Ident(y) [37..38)
          |KwIf [39..41)
+         |Indentation.Indent [41..41)
          |Ident(foo) [50..53)
          |Colon [53..54)
          |Indentation.Indent [54..54)
          |Ident(z) [65..66)
          |Indentation.Outdent [66..66)
+         |LF [66..67)
          |Ident(w) [75..76)
+         |Indentation.Outdent [76..76)
          |RightArrow [83..85)
          |Ident(c) [86..87)
          |Indentation.Outdent [87..87)
@@ -12018,9 +11950,12 @@ class ControlConditionSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = x match {
-         |    case y if foo {
-         |      z
-         |    } w => c
+         |    case y if {
+         |      foo {
+         |        z
+         |      }
+         |      w
+         |    } => c
          |  }
          |  def g = 1
          |}
@@ -12036,7 +11971,11 @@ class ControlConditionSuite extends BaseDottySuite {
           None,
           tmatch(
             tname("x"),
-            Case(patvar("y"), Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "w")), tname("c")),
+            Case(
+              patvar("y"),
+              Some(blk(tapply(tname("foo"), blk(tname("z"))), tname("w"))),
+              tname("c"),
+            ),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),

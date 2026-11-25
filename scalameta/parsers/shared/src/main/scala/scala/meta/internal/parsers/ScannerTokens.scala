@@ -720,7 +720,7 @@ private[meta] final class ScannerTokens(
           case rs @ (_: RegionFor) :: _ => rs
           case rs @ (_: RegionDelim) :: (_: RegionFor) :: _ => rs
           // a guard after a generator that left a region, such as that of `new` or `try`
-          case rs if canEndStat(prev) && isForGuard(rs) => rs
+          case rs if canEndStat(prev) && (getRegionFor(rs) ne null) => rs
           case _ => RegionIf(next, getLineIndent) :: sepRegions
         })
       case _: KwThen => afterControlRef(sepRegions, RegionThen :: _)
@@ -1091,8 +1091,8 @@ private[meta] final class ScannerTokens(
             // !next.is[RightBrace] - braces can sometimes have -1 and we can start indent on }
             prev match {
               case _ if nextIndent < 0 || next.is[RightBrace] => null
-              // if does not work with indentation in pattern matches
-              case _: KwIf if !sepRegions.headOrNull.isInstanceOf[RegionIf] => null
+              // a deeper line may hold the next enumerator
+              case _: KwIf if getRegionFor(sepRegions) eq RegionForOther => null
               case _: KwCatch | _: KwMatch =>
                 // always add indent for indented `match` block
                 // check the previous token to avoid infinity loop
@@ -1158,11 +1158,10 @@ private[meta] final class ScannerTokens(
                     emitIndent(RegionTemplateBody :: rs)
                   case _ =>
                     val ok = prev match {
-                      case _: KwYield | _: KwFinally | _: KwDo | _: KwFor | _: KwThen | _: KwElse |
-                          _: KwWhile | _: KwIf | _: KwReturn | _: LeftArrow | _: ContextArrow =>
-                        true
                       case _: Equals => !next.is[KwMacro]
                       case _: KwWith => isDefIntro(nextPos) || next.isAny[KwImport, KwExport]
+                      case _: LeftArrow | _: ContextArrow => true
+                      case t: CtrlKeyword => !t.isInstanceOf[KwNew]
                       case _ => false
                     }
                     if (ok) emitIndent(sepRegions) else null
@@ -1617,12 +1616,13 @@ private[meta] object ScannerTokens {
     iter(regions)
   }
 
-  // an `if` after `regions` is a guard: a `for` region comes before any delimiter or indented one
+  /** RegionFor (or its delim) if within enumerators, or null */
   @tailrec
-  private def isForGuard(regions: List[SepRegion]): Boolean = regions match {
-    case (_: RegionFor) :: _ | (_: RegionDelim) :: (_: RegionFor) :: _ => true
-    case Nil | (_: RegionDelim | _: SepRegionIndented) :: _ => false
-    case _ :: rs => isForGuard(rs)
+  private def getRegionFor(regions: List[SepRegion]): SepRegion = regions match {
+    case (r: RegionFor) :: _ => r
+    case (r: RegionDelim) :: rs => if (rs.headOrNull.isInstanceOf[RegionFor]) r else null
+    case Nil | (_: SepRegionIndented | _: RegionIf | _: RegionCaseExpr) :: _ => null
+    case _ :: rs => getRegionFor(rs)
   }
 
   @tailrec

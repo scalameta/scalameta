@@ -3597,12 +3597,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Ident(g) [24..25)
          |LeftParen [25..26)
          |KwThrow [26..31)
+         |Indentation.Indent [31..31)
          |Ident(foo) [40..43)
          |Colon [43..44)
          |Indentation.Indent [44..44)
          |Ident(z) [55..56)
          |Indentation.Outdent [56..56)
+         |LF [56..57)
          |Ident(b) [65..66)
+         |Indentation.Outdent [66..66)
          |RightParen [66..67)
          |LF [67..68)
          |Ident(h) [72..73)
@@ -3614,9 +3617,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = {
-         |    g(throw foo {
-         |      z
-         |    } b)
+         |    g(throw {
+         |      foo {
+         |        z
+         |      }
+         |      b
+         |    })
          |    h
          |  }
          |}
@@ -3630,7 +3636,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         None,
         blk(
-          tapply(tname("g"), Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b"))),
+          tapply(tname("g"), Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b")))),
           tname("h"),
         ),
       )),
@@ -3662,12 +3668,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Ident(g) [24..25)
          |LeftParen [25..26)
          |KwThrow [26..31)
+         |Indentation.Indent [31..31)
          |Ident(foo) [40..43)
          |Colon [43..44)
          |Indentation.Indent [44..44)
          |Ident(z) [55..56)
          |Indentation.Outdent [57..57)
+         |LFLF [57..58)
          |Ident(b) [66..67)
+         |Indentation.Outdent [67..67)
          |RightParen [67..68)
          |LF [68..69)
          |Ident(h) [73..74)
@@ -3679,9 +3688,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = {
-         |    g(throw foo {
-         |      z
-         |    } b)
+         |    g(throw {
+         |      foo {
+         |        z
+         |      }
+         |      b
+         |    })
          |    h
          |  }
          |}
@@ -3695,7 +3707,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         None,
         blk(
-          tapply(tname("g"), Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b"))),
+          tapply(tname("g"), Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b")))),
           tname("h"),
         ),
       )),
@@ -3728,16 +3740,20 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Ident(g) [24..25)
          |LeftParen [25..26)
          |KwThrow [26..31)
+         |Indentation.Indent [31..31)
          |Ident(foo) [40..43)
          |Colon [43..44)
          |Indentation.Indent [44..44)
          |Ident(z) [55..56)
          |Indentation.Outdent [57..57)
+         |LFLF [57..58)
          |KwVal [66..69)
          |Ident(c) [70..71)
          |Equals [72..73)
          |Constant.Int(1) [74..75)
+         |LF [75..76)
          |Ident(c) [84..85)
+         |Indentation.Outdent [85..85)
          |RightParen [85..86)
          |LF [86..87)
          |Ident(h) [91..92)
@@ -3746,11 +3762,42 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |EOF [93..93)
          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct, classOf[Source])
-    val error =
-      """|<input>:7: error: `)` expected but `val` found
-         |        val c = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    g(throw {
+         |      foo {
+         |        z
+         |      }
+         |      val c = 1
+         |      c
+         |    })
+         |    h
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          tapply(
+            tname("g"),
+            Term.Throw(blk(
+              tapply(tname("foo"), blk(tname("z"))),
+              Defn.Val(Nil, List(patvar("c")), None, int(1)),
+              tname("c"),
+            )),
+          ),
+          tname("h"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`throw` at the end of a line within a condition, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
@@ -3776,12 +3823,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Indentation.Indent [19..19)
          |KwIf [24..26)
          |KwThrow [27..32)
+         |Indentation.Indent [32..32)
          |Ident(foo) [41..44)
          |Colon [44..45)
          |Indentation.Indent [45..45)
          |Ident(z) [56..57)
          |Indentation.Outdent [57..57)
+         |LF [57..58)
          |Ident(b) [66..67)
+         |Indentation.Outdent [67..67)
          |KwThen [72..76)
          |Ident(c) [77..78)
          |KwElse [79..83)
@@ -3796,9 +3846,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = {
-         |    if (throw foo {
-         |      z
-         |    } b) c else d
+         |    if (throw {
+         |      foo {
+         |        z
+         |      }
+         |      b
+         |    }) c else d
          |    g
          |  }
          |}
@@ -3813,7 +3866,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         None,
         blk(
           tif(
-            Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+            Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
             tname("c"),
             tname("d"),
           ),
@@ -3848,12 +3901,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Indentation.Indent [19..19)
          |KwIf [24..26)
          |KwThrow [27..32)
+         |Indentation.Indent [32..32)
          |Ident(foo) [42..45)
          |Colon [45..46)
          |Indentation.Indent [46..46)
          |Ident(z) [58..59)
          |Indentation.Outdent [60..60)
+         |LFLF [60..61)
          |Ident(b) [70..71)
+         |Indentation.Outdent [71..71)
          |KwThen [76..80)
          |Ident(c) [81..82)
          |KwElse [83..87)
@@ -3868,9 +3924,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = {
-         |    if (throw foo {
-         |      z
-         |    } b) c else d
+         |    if (throw {
+         |      foo {
+         |        z
+         |      }
+         |      b
+         |    }) c else d
          |    g
          |  }
          |}
@@ -3885,7 +3944,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         None,
         blk(
           tif(
-            Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+            Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
             tname("c"),
             tname("d"),
           ),
@@ -3920,12 +3979,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Indentation.Indent [19..19)
          |KwIf [24..26)
          |KwThrow [27..32)
+         |Indentation.Indent [32..32)
          |Ident(foo) [41..44)
          |Colon [44..45)
          |Indentation.Indent [45..45)
          |Ident(z) [56..57)
          |Indentation.Outdent [57..57)
+         |LF [57..58)
          |Ident(b) [79..80)
+         |Indentation.Outdent [80..80)
          |KwThen [85..89)
          |Ident(c) [90..91)
          |KwElse [92..96)
@@ -3940,11 +4002,13 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = {
-         |    if (throw foo {
-         |      z
-         |    }
+         |    if (throw {
+         |      foo {
+         |        z
+         |      }
          |      // c
-         |      b) c else d
+         |      b
+         |    }) c else d
          |    g
          |  }
          |}
@@ -3959,7 +4023,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         None,
         blk(
           tif(
-            Term.Throw(Term.SelectPostfix(
+            Term.Throw(blk(
               tapply(tname("foo"), blk(tname("z"))),
               Term.Name.newBuilder("b").begComment(detachedComments("// c")).result(),
             )),
@@ -4000,12 +4064,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |Ident(a) [30..31)
          |KwThen [32..36)
          |KwThrow [37..42)
+         |Indentation.Indent [42..42)
          |Ident(foo) [53..56)
          |Colon [56..57)
          |Indentation.Indent [57..57)
          |Ident(z) [70..71)
          |Indentation.Outdent [71..71)
+         |LF [71..72)
          |Ident(b) [82..83)
+         |Indentation.Outdent [83..83)
          |KwElse [91..95)
          |Ident(d) [96..97)
          |KwThen [102..106)
@@ -4022,9 +4089,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = {
-         |    if (if (a) throw foo {
-         |      z
-         |    } b else d) c else e
+         |    if (if (a) throw {
+         |      foo {
+         |        z
+         |      }
+         |      b
+         |    } else d) c else e
          |    g
          |  }
          |}
@@ -4041,7 +4111,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tif(
             tif(
               tname("a"),
-              Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+              Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
               tname("d"),
             ),
             tname("c"),
@@ -4064,8 +4134,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = throw a
-         |  b
+         |  def f = throw {
+         |    a
+         |    b
+         |  }
          |  def g = 1
          |}
          |""".stripMargin
@@ -4073,8 +4145,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tname("A"),
       tpl(
-        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tname("a"))),
-        tname("b"),
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(blk(tname("a"), tname("b")))),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
     )))
@@ -4092,10 +4163,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = throw foo {
-         |    z
+         |  def f = throw {
+         |    foo {
+         |      z
+         |    }
+         |    b
          |  }
-         |  b
          |  def g = 1
          |}
          |""".stripMargin
@@ -4103,8 +4176,13 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tname("A"),
       tpl(
-        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tapply(tname("foo"), blk(tname("z"))))),
-        tname("b"),
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
+        ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
     )))
@@ -4119,11 +4197,30 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |      v
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: illegal start of simple expression
-         |      val v = 1
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = throw {
+         |    val v = 1
+         |    v
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Throw(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`throw` at the end of a line after the `=` of a `def`, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
@@ -4138,8 +4235,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = throw foo {
-         |    z && w
-         |  }
+         |    z
+         |  } && w
          |  def g = 1
          |}
          |""".stripMargin
@@ -4152,7 +4249,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+          Term.Throw(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
@@ -4196,8 +4293,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = {
-         |    throw a
+         |  def f = throw {
+         |    a
          |    b
          |  }
          |  def g = 1
@@ -4207,7 +4304,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tname("A"),
       tpl(
-        Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Throw(tname("a")), tname("b"))),
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(blk(tname("a"), tname("b")))),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
     )))
@@ -4226,8 +4323,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = {
-         |    throw foo {
+         |  def f = throw {
+         |    foo {
          |      z
          |    }
          |    b
@@ -4244,7 +4341,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          blk(Term.Throw(tapply(tname("foo"), blk(tname("z")))), tname("b")),
+          Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
@@ -4261,11 +4358,30 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |        v
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = throw {
+         |    val v = 1
+         |    v
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Throw(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`throw` at the end of a line on a line of its own in a `def` body, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
@@ -4281,8 +4397,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = throw foo {
-         |    z && w
-         |  }
+         |    z
+         |  } && w
          |  def g = 1
          |}
          |""".stripMargin
@@ -4295,7 +4411,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+          Term.Throw(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
@@ -4316,8 +4432,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = {
-         |    throw foo {
+         |  def f = throw {
+         |    foo {
          |      z
          |    }
          |    b
@@ -4334,7 +4450,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          blk(Term.Throw(tapply(tname("foo"), blk(tname("z")))), tname("b")),
+          Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
@@ -4355,8 +4471,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = {
-         |    throw foo {
+         |  def f = throw {
+         |    foo {
          |      z
          |    }
          |    // c
@@ -4374,10 +4490,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          blk(
-            Term.Throw(tapply(tname("foo"), blk(tname("z")))),
+          Term.Throw(blk(
+            tapply(tname("foo"), blk(tname("z"))),
             Term.Name.newBuilder("b").begComment(detachedComments("// c")).result(),
-          ),
+          )),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
@@ -4690,7 +4806,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = g(throw a b)
+         |  def f = g(throw {
+         |    a
+         |    b
+         |  })
          |  def g = 1
          |}
          |""".stripMargin
@@ -4698,7 +4817,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tname("A"),
       tpl(
-        Defn.Def(Nil, tname("f"), Nil, None, tapply(tname("g"), Term.Throw(tpostfix(tname("a"), "b")))),
+        Defn.Def(Nil, tname("f"), Nil, None, tapply(tname("g"), Term.Throw(blk(tname("a"), tname("b"))))),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
     )))
@@ -4718,9 +4837,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = g(throw foo {
-         |    z
-         |  } b)
+         |  def f = g(throw {
+         |    foo {
+         |      z
+         |    }
+         |    b
+         |  })
          |  def g = 1
          |}
          |""".stripMargin
@@ -4733,7 +4855,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(tname("g"), Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b"))),
+          tapply(tname("g"), Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b")))),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
@@ -4751,11 +4873,33 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    )
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = g(throw {
+         |    val v = 1
+         |    v
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            Term.Throw(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`throw` at the end of a line within parentheses closed on a line of their own, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
@@ -4772,8 +4916,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = g(throw foo {
-         |    z && w
-         |  })
+         |    z
+         |  } && w)
          |  def g = 1
          |}
          |""".stripMargin
@@ -4788,7 +4932,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           None,
           tapply(
             tname("g"),
-            Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+            Term.Throw(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
@@ -4811,9 +4955,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = g(throw foo {
-         |    z
-         |  } b)
+         |  def f = g(throw {
+         |    foo {
+         |      z
+         |    }
+         |    b
+         |  })
          |  def g = 1
          |}
          |""".stripMargin
@@ -4826,7 +4973,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tapply(tname("g"), Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b"))),
+          tapply(tname("g"), Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b")))),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
@@ -4848,13 +4995,13 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = g(
-         |    throw foo {
+         |  def f = g(throw {
+         |    foo {
          |      z
          |    }
-         |      // c
-         |      b
-         |  )
+         |    // c
+         |    b
+         |  })
          |  def g = 1
          |}
          |""".stripMargin
@@ -4869,7 +5016,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           None,
           tapply(
             tname("g"),
-            Term.Throw(Term.SelectPostfix(
+            Term.Throw(blk(
               tapply(tname("foo"), blk(tname("z"))),
               Term.Name.newBuilder("b").begComment(detachedComments("// c")).result(),
             )),
@@ -4895,8 +5042,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = g(throw foo {
-         |    z && w
-         |  })
+         |    z
+         |  } && w)
          |  def g = 1
          |}
          |""".stripMargin
@@ -4911,7 +5058,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           None,
           tapply(
             tname("g"),
-            Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+            Term.Throw(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
@@ -5184,8 +5331,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = {
-         |    throw a
-         |    b
+         |    throw {
+         |      a
+         |      b
+         |    }
          |  }
          |  def g = 1
          |}
@@ -5194,7 +5343,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tname("A"),
       tpl(
-        Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Throw(tname("a")), tname("b"))),
+        Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Throw(blk(tname("a"), tname("b"))))),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
     )))
@@ -5216,10 +5365,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = {
-         |    throw foo {
-         |      z
+         |    throw {
+         |      foo {
+         |        z
+         |      }
+         |      b
          |    }
-         |    b
          |  }
          |  def g = 1
          |}
@@ -5233,7 +5384,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          blk(Term.Throw(tapply(tname("foo"), blk(tname("z")))), tname("b")),
+          blk(Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b")))),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
@@ -5252,11 +5403,32 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  def g = 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw {
+         |      val v = 1
+         |      v
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(Term.Throw(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`throw` at the end of a line in a block in braces, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
@@ -5275,8 +5447,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A {
          |  def f = {
          |    throw foo {
-         |      z && w
-         |    }
+         |      z
+         |    } && w
          |  }
          |  def g = 1
          |}
@@ -5290,7 +5462,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          blk(Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w")))))),
+          blk(Term.Throw(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w")))),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
@@ -5339,11 +5511,30 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    else d
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:6: error: `outdent` expected but `else` found
-         |    else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (c) throw {
+         |    a
+         |    b
+         |  } else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(tname("c"), Term.Throw(blk(tname("a"), tname("b"))), tname("d")),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`throw` at the end of the line of `{` on the line of `def`, an expression on each of the two deeper next lines") {
@@ -5386,11 +5577,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    else d
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:7: error: `outdent` expected but `else` found
-         |    else d
-         |    ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (c) throw {
+         |    foo {
+         |      z
+         |    }
+         |    b
+         |  } else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tname("c"),
+            Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`throw` at the end of a line after an inline `then`, a definition and an expression on deeper next lines") {
@@ -5403,11 +5619,34 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    else d
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = if (c) throw {
+         |    val v = 1
+         |    v
+         |  } else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tname("c"),
+            Term.Throw(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`throw` at the end of a line after an inline `then`, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
@@ -5461,8 +5700,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = {
-         |    if (c) d else throw a
+         |  def f = if (c) d else throw {
+         |    a
          |    b
          |  }
          |  def g = 1
@@ -5477,7 +5716,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          blk(tif(tname("c"), tname("d"), Term.Throw(tname("a"))), tname("b")),
+          tif(tname("c"), tname("d"), Term.Throw(blk(tname("a"), tname("b")))),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
@@ -5497,8 +5736,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = {
-         |    if (c) d else throw foo {
+         |  def f = if (c) d else throw {
+         |    foo {
          |      z
          |    }
          |    b
@@ -5515,9 +5754,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          blk(
-            tif(tname("c"), tname("d"), Term.Throw(tapply(tname("foo"), blk(tname("z"))))),
-            tname("b"),
+          tif(
+            tname("c"),
+            tname("d"),
+            Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
@@ -5535,27 +5775,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |        v
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("`throw` at the end of a line after an inline `else`, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
-    val code =
-      """|object A:
-         |  def f =
-         |    if c then d else throw
-         |        foo:
-         |          z
-         |      && w
-         |  def g = 1
-         |""".stripMargin
     val layout =
       """|object A {
-         |  def f = if (c) d else throw foo {
-         |    z && w
+         |  def f = if (c) d else throw {
+         |    val v = 1
+         |    v
          |  }
          |  def g = 1
          |}
@@ -5572,7 +5796,46 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tif(
             tname("c"),
             tname("d"),
-            Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+            Term.Throw(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after an inline `else`, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if c then d else throw
+         |        foo:
+         |          z
+         |      && w
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (c) d else throw foo {
+         |    z
+         |  } && w
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tname("c"),
+            tname("d"),
+            Term.Throw(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
@@ -5672,8 +5935,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A {
          |  def f = x match {
          |    case y =>
-         |      throw a
-         |      b
+         |      throw {
+         |        a
+         |        b
+         |      }
          |    case _ =>
          |      d
          |  }
@@ -5691,7 +5956,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           None,
           tmatch(
             tname("x"),
-            Case(patvar("y"), None, blk(Term.Throw(tname("a")), tname("b"))),
+            Case(patvar("y"), None, Term.Throw(blk(tname("a"), tname("b")))),
             Case(patwildcard, None, tname("d")),
           ),
         ),
@@ -5716,10 +5981,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A {
          |  def f = x match {
          |    case y =>
-         |      throw foo {
-         |        z
+         |      throw {
+         |        foo {
+         |          z
+         |        }
+         |        b
          |      }
-         |      b
          |    case _ =>
          |      d
          |  }
@@ -5737,7 +6004,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           None,
           tmatch(
             tname("x"),
-            Case(patvar("y"), None, blk(Term.Throw(tapply(tname("foo"), blk(tname("z")))), tname("b"))),
+            Case(patvar("y"), None, Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b")))),
             Case(patwildcard, None, tname("d")),
           ),
         ),
@@ -5757,30 +6024,13 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    case _ => d
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("`throw` at the end of a line after the arrow of a case, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
-    val code =
-      """|object A:
-         |  def f = x match
-         |    case y => throw
-         |        foo:
-         |          z
-         |      && w
-         |    case _ => d
-         |  def g = 1
-         |""".stripMargin
     val layout =
       """|object A {
          |  def f = x match {
          |    case y =>
-         |      throw foo {
-         |        z && w
+         |      throw {
+         |        val v = 1
+         |        v
          |      }
          |    case _ =>
          |      d
@@ -5802,7 +6052,56 @@ class SignificantIndentationSuite extends BaseDottySuite {
             Case(
               patvar("y"),
               None,
-              Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Term.Throw(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+            ),
+            Case(patwildcard, None, tname("d")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the arrow of a case, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y => throw
+         |        foo:
+         |          z
+         |      && w
+         |    case _ => d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y =>
+         |      throw foo {
+         |        z
+         |      } && w
+         |    case _ =>
+         |      d
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("y"),
+              None,
+              Term.Throw(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
             ),
             Case(patwildcard, None, tname("d")),
           ),
@@ -5907,12 +6206,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = {
-         |    try a catch {
-         |      case e =>
-         |        throw a
-         |    }
-         |    b
+         |  def f = try a catch {
+         |    case e =>
+         |      throw {
+         |        a
+         |        b
+         |      }
          |  }
          |  def g = 1
          |}
@@ -5926,9 +6225,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          blk(
-            Term.Try(tname("a"), List(Case(patvar("e"), None, Term.Throw(tname("a")))), None),
-            tname("b"),
+          Term.Try(
+            tname("a"),
+            List(Case(patvar("e"), None, Term.Throw(blk(tname("a"), tname("b"))))),
+            None,
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
@@ -5949,74 +6249,13 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = {
-         |    try a catch {
-         |      case e =>
-         |        throw foo {
-         |          z
-         |        }
-         |    }
-         |    b
-         |  }
-         |  def g = 1
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(
-        Defn.Def(
-          Nil,
-          tname("f"),
-          Nil,
-          None,
-          blk(
-            Term.Try(
-              tname("a"),
-              List(Case(patvar("e"), None, Term.Throw(tapply(tname("foo"), blk(tname("z")))))),
-              None,
-            ),
-            tname("b"),
-          ),
-        ),
-        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
-      ),
-    )))
-    runTestAssert[Source](code, layout)(tree)
-  }
-
-  test("`throw` at the end of a line after the arrow of a same-line `catch` case, a definition and an expression on deeper next lines") {
-    val code =
-      """|object A:
-         |  def f =
-         |    try a catch case e => throw
-         |        val v = 1
-         |        v
-         |  def g = 1
-         |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("`throw` at the end of a line after the arrow of a same-line `catch` case, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
-    val code =
-      """|object A:
-         |  def f =
-         |    try a catch case e => throw
-         |        foo:
-         |          z
-         |      && w
-         |  def g = 1
-         |""".stripMargin
-    val layout =
-      """|object A {
          |  def f = try a catch {
          |    case e =>
-         |      throw foo {
-         |        z && w
+         |      throw {
+         |        foo {
+         |          z
+         |        }
+         |        b
          |      }
          |  }
          |  def g = 1
@@ -6036,7 +6275,99 @@ class SignificantIndentationSuite extends BaseDottySuite {
             List(Case(
               patvar("e"),
               None,
-              Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
+            )),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the arrow of a same-line `catch` case, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => throw
+         |        val v = 1
+         |        v
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      throw {
+         |        val v = 1
+         |        v
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(
+              patvar("e"),
+              None,
+              Term.Throw(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+            )),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the arrow of a same-line `catch` case, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => throw
+         |        foo:
+         |          z
+         |      && w
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      throw foo {
+         |        z
+         |      } && w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(
+              patvar("e"),
+              None,
+              Term.Throw(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
             )),
             None,
           ),
@@ -6059,7 +6390,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = for (x <- xs.getOrElse(throw a b)) c
+         |  def f = for (x <- xs.getOrElse(throw {
+         |    a
+         |    b
+         |  })) c
          |  def g = 1
          |}
          |""".stripMargin
@@ -6075,7 +6409,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           Term.For(
             List(Enumerator.Generator(
               patvar("x"),
-              tapply(tselect(tname("xs"), tname("getOrElse")), Term.Throw(tpostfix(tname("a"), "b"))),
+              tapply(tselect(tname("xs"), tname("getOrElse")), Term.Throw(blk(tname("a"), tname("b")))),
             )),
             tname("c"),
           ),
@@ -6099,9 +6433,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = for (x <- xs.getOrElse(throw foo {
-         |    z
-         |  } b)) c
+         |  def f = for (x <- xs.getOrElse(throw {
+         |    foo {
+         |      z
+         |    }
+         |    b
+         |  })) c
          |  def g = 1
          |}
          |""".stripMargin
@@ -6119,7 +6456,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
               patvar("x"),
               tapply(
                 tselect(tname("xs"), tname("getOrElse")),
-                Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+                Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
               ),
             )),
             tname("c"),
@@ -6145,8 +6482,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = for (x <- xs.getOrElse(throw foo {
-         |    z && w
-         |  })) c
+         |    z
+         |  } && w)) c
          |  def g = 1
          |}
          |""".stripMargin
@@ -6164,7 +6501,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
               patvar("x"),
               tapply(
                 tselect(tname("xs"), tname("getOrElse")),
-                Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+                Term.Throw(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               ),
             )),
             tname("c"),
@@ -6189,83 +6526,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = x match {
-         |    case y if foo {
-         |      z
-         |    } b => c
-         |  }
-         |  def g = 1
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(
-        Defn.Def(
-          Nil,
-          tname("f"),
-          Nil,
-          None,
-          tmatch(
-            tname("x"),
-            Case(patvar("y"), Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")), tname("c")),
-          ),
-        ),
-        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
-      ),
-    )))
-    runTestAssert[Source](code, layout)(tree)
-  }
-
-  test("`throw` at the end of a line within parentheses in a `for` generator, a definition and an expression on deeper next lines") {
-    val code =
-      """|object A:
-         |  def f =
-         |    for x <- xs.getOrElse(throw
-         |        val v = 1
-         |        v
-         |    ) do c
-         |  def g = 1
-         |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("case guard: `if` at the end of a line in a `match` after `=`, a definition and an expression on deeper next lines, `=>` on the next line") {
-    val code =
-      """|object A:
-         |  def f = x match
-         |    case y if
-         |        val v = 1
-         |        v
-         |      => c
-         |  def g = 1
-         |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("case guard: `if` at the end of a line in a `match` after `=`, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
-    val code =
-      """|object A:
-         |  def f = x match
-         |    case y if
-         |        foo:
-         |          z
-         |        && w
-         |      => c
-         |  def g = 1
-         |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = x match {
-         |    case y if foo {
-         |      z && w
+         |    case y if {
+         |      foo {
+         |        z
+         |      }
+         |      b
          |    } => c
          |  }
          |  def g = 1
@@ -6284,7 +6549,142 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tname("x"),
             Case(
               patvar("y"),
-              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Some(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses in a `for` generator, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs.getOrElse(throw
+         |        val v = 1
+         |        v
+         |    ) do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs.getOrElse(throw {
+         |    val v = 1
+         |    v
+         |  })) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(Enumerator.Generator(
+              patvar("x"),
+              tapply(
+                tselect(tname("xs"), tname("getOrElse")),
+                Term.Throw(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+              ),
+            )),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, a definition and an expression on deeper next lines, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        val v = 1
+         |        v
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if {
+         |      val v = 1
+         |      v
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("y"),
+              Some(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        foo:
+         |          z
+         |        && w
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z
+         |    } && w => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("y"),
+              Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               tname("c"),
             ),
           ),
@@ -6309,8 +6709,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A {
          |  def f = x match {
          |    case y if foo {
-         |      z && w
-         |    } => c
+         |      z
+         |    } && w => c
          |  }
          |  def g = 1
          |}
@@ -6328,7 +6728,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tname("x"),
             Case(
               patvar("y"),
-              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               tname("c"),
             ),
           ),
@@ -6352,7 +6752,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = x match {
-         |    case y if a b => c
+         |    case y if {
+         |      a
+         |      b
+         |    } => c
          |  }
          |  def g = 1
          |}
@@ -6366,7 +6769,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("f"),
           Nil,
           None,
-          tmatch(tname("x"), Case(patvar("y"), Some(tpostfix(tname("a"), "b")), tname("c"))),
+          tmatch(tname("x"), Case(patvar("y"), Some(blk(tname("a"), tname("b"))), tname("c"))),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
       ),
@@ -6389,9 +6792,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = x match {
-         |    case y if foo {
-         |      z
-         |    } b => c
+         |    case y if {
+         |      foo {
+         |        z
+         |      }
+         |      b
+         |    } => c
          |  }
          |  def g = 1
          |}
@@ -6407,7 +6813,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
           None,
           tmatch(
             tname("x"),
-            Case(patvar("y"), Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")), tname("c")),
+            Case(
+              patvar("y"),
+              Some(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
+              tname("c"),
+            ),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
@@ -6430,11 +6840,13 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = x match {
-         |    case y if foo {
-         |      z
-         |    }
+         |    case y if {
+         |      foo {
+         |        z
+         |      }
          |      // c
-         |      b => c
+         |      b
+         |    } => c
          |  }
          |  def g = 1
          |}
@@ -6452,7 +6864,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tname("x"),
             Case(
               patvar("y"),
-              Some(Term.SelectPostfix(
+              Some(blk(
                 tapply(tname("foo"), blk(tname("z"))),
                 Term.Name.newBuilder("b").begComment(detachedComments("// c")).result(),
               )),
@@ -6873,9 +7285,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = x match {
-         |    case y if foo {
-         |      z
-         |    } b => c
+         |    case y if {
+         |      foo {
+         |        z
+         |      }
+         |      b
+         |    } => c
          |  }
          |  def g = 1
          |}
@@ -6891,7 +7306,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
           None,
           tmatch(
             tname("x"),
-            Case(patvar("y"), Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")), tname("c")),
+            Case(
+              patvar("y"),
+              Some(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
+              tname("c"),
+            ),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
@@ -6912,11 +7331,39 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  def g = 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if {
+         |      val v = 1
+         |      v
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("y"),
+              Some(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("case guard: `if` at the end of a line in a `match` in braces, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
@@ -6936,8 +7383,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A {
          |  def f = x match {
          |    case y if foo {
-         |      z && w
-         |    } => c
+         |      z
+         |    } && w => c
          |  }
          |  def g = 1
          |}
@@ -6955,7 +7402,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tname("x"),
             Case(
               patvar("y"),
-              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               tname("c"),
             ),
           ),
@@ -6982,8 +7429,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A {
          |  def f = x match {
          |    case y if foo {
-         |      z && w
-         |    } => c
+         |      z
+         |    } && w => c
          |  }
          |  def g = 1
          |}
@@ -7001,7 +7448,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tname("x"),
             Case(
               patvar("y"),
-              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               tname("c"),
             ),
           ),
@@ -7066,9 +7513,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = g(x match {
-         |    case y if foo {
-         |      z
-         |    } b => c
+         |    case y if {
+         |      foo {
+         |        z
+         |      }
+         |      b
+         |    } => c
          |  })
          |  def g = 1
          |}
@@ -7088,7 +7538,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
               tname("x"),
               Case(
                 patvar("y"),
-                Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+                Some(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
                 tname("c"),
               ),
             ),
@@ -7112,31 +7562,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    )
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: illegal start of simple expression
-         |          val v = 1
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("case guard: `if` at the end of a line in a `match` within parentheses, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
-    val code =
-      """|object A:
-         |  def f =
-         |    g(x match
-         |      case y if
-         |          foo:
-         |            z
-         |          && w
-         |        => c
-         |    )
-         |  def g = 1
-         |""".stripMargin
     val layout =
       """|object A {
          |  def f = g(x match {
-         |    case y if foo {
-         |      z && w
+         |    case y if {
+         |      val v = 1
+         |      v
          |    } => c
          |  })
          |  def g = 1
@@ -7157,7 +7588,57 @@ class SignificantIndentationSuite extends BaseDottySuite {
               tname("x"),
               Case(
                 patvar("y"),
-                Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+                Some(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+                tname("c"),
+              ),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` within parentheses, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(x match
+         |      case y if
+         |          foo:
+         |            z
+         |          && w
+         |        => c
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(x match {
+         |    case y if foo {
+         |      z
+         |    } && w => c
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            tmatch(
+              tname("x"),
+              Case(
+                patvar("y"),
+                Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
                 tname("c"),
               ),
             ),
@@ -7185,8 +7666,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A {
          |  def f = g(x match {
          |    case y if foo {
-         |      z && w
-         |    } => c
+         |      z
+         |    } && w => c
          |  })
          |  def g = 1
          |}
@@ -7206,7 +7687,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
               tname("x"),
               Case(
                 patvar("y"),
-                Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+                Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
                 tname("c"),
               ),
             ),
@@ -7274,9 +7755,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.collect {
-         |    case y if foo {
-         |      z
-         |    } b => c
+         |    case y if {
+         |      foo {
+         |        z
+         |      }
+         |      b
+         |    } => c
          |  }
          |  def g = 1
          |}
@@ -7294,7 +7778,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tselect(tname("xs"), tname("collect")),
             Term.PartialFunction(List(Case(
               patvar("y"),
-              Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+              Some(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
               tname("c"),
             ))),
           ),
@@ -7316,30 +7800,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  }
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("case guard: `if` at the end of a line in a partial function in braces, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
-    val code =
-      """|object A:
-         |  def f = xs.collect {
-         |    case y if
-         |        foo:
-         |          z
-         |        && w
-         |      => c
-         |  }
-         |  def g = 1
-         |""".stripMargin
     val layout =
       """|object A {
          |  def f = xs.collect {
-         |    case y if foo {
-         |      z && w
+         |    case y if {
+         |      val v = 1
+         |      v
          |    } => c
          |  }
          |  def g = 1
@@ -7358,7 +7824,53 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tselect(tname("xs"), tname("collect")),
             Term.PartialFunction(List(Case(
               patvar("y"),
-              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Some(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a partial function in braces, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = xs.collect {
+         |    case y if
+         |        foo:
+         |          z
+         |        && w
+         |      => c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case y if foo {
+         |      z
+         |    } && w => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("collect")),
+            Term.PartialFunction(List(Case(
+              patvar("y"),
+              Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               tname("c"),
             ))),
           ),
@@ -7384,8 +7896,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A {
          |  def f = xs.collect {
          |    case y if foo {
-         |      z && w
-         |    } => c
+         |      z
+         |    } && w => c
          |  }
          |  def g = 1
          |}
@@ -7403,7 +7915,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tselect(tname("xs"), tname("collect")),
             Term.PartialFunction(List(Case(
               patvar("y"),
-              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               tname("c"),
             ))),
           ),
@@ -7466,7 +7978,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.collect {
-         |    case y if a b => c
+         |    case y if {
+         |      a
+         |      b
+         |    } => c
          |  }
          |  def g = 1
          |}
@@ -7482,7 +7997,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           None,
           tapply(
             tselect(tname("xs"), tname("collect")),
-            Term.PartialFunction(List(Case(patvar("y"), Some(tpostfix(tname("a"), "b")), tname("c")))),
+            Term.PartialFunction(List(Case(patvar("y"), Some(blk(tname("a"), tname("b"))), tname("c")))),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
@@ -7504,9 +8019,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = xs.collect {
-         |    case y if foo {
-         |      z
-         |    } b => c
+         |    case y if {
+         |      foo {
+         |        z
+         |      }
+         |      b
+         |    } => c
          |  }
          |  def g = 1
          |}
@@ -7524,7 +8042,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tselect(tname("xs"), tname("collect")),
             Term.PartialFunction(List(Case(
               patvar("y"),
-              Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+              Some(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
               tname("c"),
             ))),
           ),
@@ -7545,29 +8063,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |      => c
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("case guard: `if` at the end of a line in cases after a colon, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
-    val code =
-      """|object A:
-         |  def f = xs.collect:
-         |    case y if
-         |        foo:
-         |          z
-         |        && w
-         |      => c
-         |  def g = 1
-         |""".stripMargin
     val layout =
       """|object A {
          |  def f = xs.collect {
-         |    case y if foo {
-         |      z && w
+         |    case y if {
+         |      val v = 1
+         |      v
          |    } => c
          |  }
          |  def g = 1
@@ -7586,7 +8087,52 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tselect(tname("xs"), tname("collect")),
             Term.PartialFunction(List(Case(
               patvar("y"),
-              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Some(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in cases after a colon, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = xs.collect:
+         |    case y if
+         |        foo:
+         |          z
+         |        && w
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case y if foo {
+         |      z
+         |    } && w => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("collect")),
+            Term.PartialFunction(List(Case(
+              patvar("y"),
+              Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               tname("c"),
             ))),
           ),
@@ -7611,8 +8157,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A {
          |  def f = xs.collect {
          |    case y if foo {
-         |      z && w
-         |    } => c
+         |      z
+         |    } && w => c
          |  }
          |  def g = 1
          |}
@@ -7630,7 +8176,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tselect(tname("xs"), tname("collect")),
             Term.PartialFunction(List(Case(
               patvar("y"),
-              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               tname("c"),
             ))),
           ),
@@ -7656,9 +8202,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = try a catch {
-         |    case y if foo {
-         |      z
-         |    } b => c
+         |    case y if {
+         |      foo {
+         |        z
+         |      }
+         |      b
+         |    } => c
          |  }
          |  def g = 1
          |}
@@ -7676,7 +8225,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tname("a"),
             List(Case(
               patvar("y"),
-              Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+              Some(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
               tname("c"),
             )),
             None,
@@ -7700,11 +8249,40 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |        => c
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:6: error: illegal start of simple expression
-         |          val v = 1
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case y if {
+         |      val v = 1
+         |      v
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(
+              patvar("y"),
+              Some(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+              tname("c"),
+            )),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("case guard: `if` at the end of a line in a `catch` on a line of its own, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
@@ -7724,8 +8302,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A {
          |  def f = try a catch {
          |    case y if foo {
-         |      z && w
-         |    } => c
+         |      z
+         |    } && w => c
          |  }
          |  def g = 1
          |}
@@ -7743,7 +8321,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tname("a"),
             List(Case(
               patvar("y"),
-              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               tname("c"),
             )),
             None,
@@ -7771,8 +8349,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A {
          |  def f = try a catch {
          |    case y if foo {
-         |      z && w
-         |    } => c
+         |      z
+         |    } && w => c
          |  }
          |  def g = 1
          |}
@@ -7790,7 +8368,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tname("a"),
             List(Case(
               patvar("y"),
-              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               tname("c"),
             )),
             None,
@@ -7855,9 +8433,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = try a catch {
-         |    case y if foo {
-         |      z
-         |    } b => c
+         |    case y if {
+         |      foo {
+         |        z
+         |      }
+         |      b
+         |    } => c
          |  }
          |  def g = 1
          |}
@@ -7875,7 +8456,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tname("a"),
             List(Case(
               patvar("y"),
-              Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+              Some(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
               tname("c"),
             )),
             None,
@@ -7897,29 +8478,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |      => c
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:4: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("case guard: `if` at the end of a line in a same-line `catch` case, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
-    val code =
-      """|object A:
-         |  def f =
-         |    try a catch case y if
-         |        foo:
-         |          z
-         |        && w
-         |      => c
-         |  def g = 1
-         |""".stripMargin
     val layout =
       """|object A {
          |  def f = try a catch {
-         |    case y if foo {
-         |      z && w
+         |    case y if {
+         |      val v = 1
+         |      v
          |    } => c
          |  }
          |  def g = 1
@@ -7938,7 +8502,53 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tname("a"),
             List(Case(
               patvar("y"),
-              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Some(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+              tname("c"),
+            )),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a same-line `catch` case, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case y if
+         |        foo:
+         |          z
+         |        && w
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case y if foo {
+         |      z
+         |    } && w => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(
+              patvar("y"),
+              Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               tname("c"),
             )),
             None,
@@ -7964,8 +8574,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A {
          |  def f = try a catch {
          |    case y if foo {
-         |      z && w
-         |    } => c
+         |      z
+         |    } && w => c
          |  }
          |  def g = 1
          |}
@@ -7983,7 +8593,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tname("a"),
             List(Case(
               patvar("y"),
-              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               tname("c"),
             )),
             None,
@@ -8013,89 +8623,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  def f = x match {
          |    case u =>
          |      v match {
-         |        case y if foo {
-         |          z
-         |        } b => c
-         |      }
-         |    case _ =>
-         |      d
-         |  }
-         |  def g = 1
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(
-        Defn.Def(
-          Nil,
-          tname("f"),
-          Nil,
-          None,
-          tmatch(
-            tname("x"),
-            Case(
-              patvar("u"),
-              None,
-              tmatch(
-                tname("v"),
-                Case(
-                  patvar("y"),
-                  Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
-                  tname("c"),
-                ),
-              ),
-            ),
-            Case(patwildcard, None, tname("d")),
-          ),
-        ),
-        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
-      ),
-    )))
-    runTestAssert[Source](code, layout)(tree)
-  }
-
-  test("case guard: `if` at the end of a line in a `match` in a case body, a definition and an expression on deeper next lines, `=>` on the next line") {
-    val code =
-      """|object A:
-         |  def f = x match
-         |    case u =>
-         |      v match
-         |        case y if
-         |            val v = 1
-         |            v
-         |          => c
-         |    case _ => d
-         |  def g = 1
-         |""".stripMargin
-    val error =
-      """|<input>:6: error: illegal start of simple expression
-         |            val v = 1
-         |            ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("case guard: `if` at the end of a line in a `match` in a case body, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
-    val code =
-      """|object A:
-         |  def f = x match
-         |    case u =>
-         |      v match
-         |        case y if
-         |            foo:
-         |              z
-         |            && w
-         |          => c
-         |    case _ => d
-         |  def g = 1
-         |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = x match {
-         |    case u =>
-         |      v match {
-         |        case y if foo {
-         |          z && w
+         |        case y if {
+         |          foo {
+         |            z
+         |          }
+         |          b
          |        } => c
          |      }
          |    case _ =>
@@ -8122,7 +8654,129 @@ class SignificantIndentationSuite extends BaseDottySuite {
                 tname("v"),
                 Case(
                   patvar("y"),
-                  Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+                  Some(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
+                  tname("c"),
+                ),
+              ),
+            ),
+            Case(patwildcard, None, tname("d")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` in a case body, a definition and an expression on deeper next lines, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case u =>
+         |      v match
+         |        case y if
+         |            val v = 1
+         |            v
+         |          => c
+         |    case _ => d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case u =>
+         |      v match {
+         |        case y if {
+         |          val v = 1
+         |          v
+         |        } => c
+         |      }
+         |    case _ =>
+         |      d
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("u"),
+              None,
+              tmatch(
+                tname("v"),
+                Case(
+                  patvar("y"),
+                  Some(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+                  tname("c"),
+                ),
+              ),
+            ),
+            Case(patwildcard, None, tname("d")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` in a case body, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case u =>
+         |      v match
+         |        case y if
+         |            foo:
+         |              z
+         |            && w
+         |          => c
+         |    case _ => d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case u =>
+         |      v match {
+         |        case y if foo {
+         |          z
+         |        } && w => c
+         |      }
+         |    case _ =>
+         |      d
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("u"),
+              None,
+              tmatch(
+                tname("v"),
+                Case(
+                  patvar("y"),
+                  Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
                   tname("c"),
                 ),
               ),
@@ -8155,8 +8809,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    case u =>
          |      v match {
          |        case y if foo {
-         |          z && w
-         |        } => c
+         |          z
+         |        } && w => c
          |      }
          |    case _ =>
          |      d
@@ -8182,7 +8836,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                 tname("v"),
                 Case(
                   patvar("y"),
-                  Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+                  Some(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
                   tname("c"),
                 ),
               ),
@@ -8208,11 +8862,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    do c
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:7: error: `<-` expected but `outdent` found
-         |          b
-         |           ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if {
+         |    a
+         |    b
+         |  }) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(blk(tname("a"), tname("b"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, a definition and an expression on deeper next lines") {
@@ -8227,11 +8906,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    do c
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:6: error: illegal start of simple expression
-         |          val v = 1
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if {
+         |    val v = 1
+         |    v
+         |  }) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
@@ -8250,8 +8954,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = for (x <- xs; if foo {
-         |    z && w
-         |  }) c
+         |    z
+         |  } && w) c
          |  def g = 1
          |}
          |""".stripMargin
@@ -8267,7 +8971,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           Term.For(
             List(
               Enumerator.Generator(patvar("x"), tname("xs")),
-              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Enumerator.Guard(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
             ),
             tname("c"),
           ),
@@ -8291,11 +8995,38 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    do c
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:8: error: `<-` expected but `outdent` found
-         |          b
-         |           ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if {
+         |    foo {
+         |      z
+         |    }
+         |    b
+         |  }) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument") {
@@ -8675,11 +9406,37 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    do c
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:7: error: `<-` expected but `\n` found
-         |          b
-         |           ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if {
+         |    a
+         |    b
+         |  }; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(blk(tname("a"), tname("b"))),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` guard: `if` at the end of a line in indented enumerators, a generator after the guard, a definition and an expression on deeper next lines") {
@@ -8695,11 +9452,37 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    do c
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:6: error: illegal start of simple expression
-         |          val v = 1
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if {
+         |    val v = 1
+         |    v
+         |  }; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` guard: `if` at the end of a line in indented enumerators, a generator after the guard, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
@@ -8719,8 +9502,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = for (x <- xs; if foo {
-         |    z && w
-         |  }; y <- ys) c
+         |    z
+         |  } && w; y <- ys) c
          |  def g = 1
          |}
          |""".stripMargin
@@ -8736,7 +9519,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           Term.For(
             List(
               Enumerator.Generator(patvar("x"), tname("xs")),
-              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Enumerator.Guard(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               Enumerator.Generator(patvar("y"), tname("ys")),
             ),
             tname("c"),
@@ -8802,11 +9585,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    do c
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:6: error: `<-` expected but `outdent` found
-         |          b
-         |           ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if {
+         |    a
+         |    b
+         |  }) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(blk(tname("a"), tname("b"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` guard: `if` at the end of a line at the end of a generator line in indented enumerators, a definition and an expression on deeper next lines") {
@@ -8820,11 +9628,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    do c
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:5: error: illegal start of simple expression
-         |          val v = 1
-         |          ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if {
+         |    val v = 1
+         |    v
+         |  }) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` guard: `if` at the end of a line in enumerators in braces, an expression on each of the two deeper next lines") {
@@ -8839,11 +9672,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  def g = 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:6: error: `<-` expected but `\n` found
-         |        b
-         |         ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if {
+         |    a
+         |    b
+         |  }) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(blk(tname("a"), tname("b"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` guard: `if` at the end of a line at the end of a generator line in indented enumerators, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
@@ -8861,8 +9719,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = for (x <- xs; if foo {
-         |    z && w
-         |  }) c
+         |    z
+         |  } && w) c
          |  def g = 1
          |}
          |""".stripMargin
@@ -8878,7 +9736,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           Term.For(
             List(
               Enumerator.Generator(patvar("x"), tname("xs")),
-              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Enumerator.Guard(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
             ),
             tname("c"),
           ),
@@ -8941,11 +9799,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  def g = 1
          |}
          |""".stripMargin
-    val error =
-      """|<input>:5: error: illegal start of simple expression
-         |        val v = 1
-         |        ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if {
+         |    val v = 1
+         |    v
+         |  }) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` guard: `if` at the end of a line in enumerators in braces, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
@@ -8964,8 +9847,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = for (x <- xs; if foo {
-         |    z && w
-         |  }) yield c
+         |    z
+         |  } && w) yield c
          |  def g = 1
          |}
          |""".stripMargin
@@ -8981,7 +9864,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           Term.ForYield(
             List(
               Enumerator.Generator(patvar("x"), tname("xs")),
-              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Enumerator.Guard(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
             ),
             tname("c"),
           ),
@@ -9008,8 +9891,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = for (x <- xs; if foo {
-         |    z && w
-         |  }) yield c
+         |    z
+         |  } && w) yield c
          |  def g = 1
          |}
          |""".stripMargin
@@ -9025,7 +9908,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           Term.ForYield(
             List(
               Enumerator.Generator(patvar("x"), tname("xs")),
-              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Enumerator.Guard(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
             ),
             tname("c"),
           ),
@@ -9090,7 +9973,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = for (x <- xs; if a b) yield c
+         |  def f = for (x <- xs; if {
+         |    a
+         |    b
+         |  }) yield c
          |  def g = 1
          |}
          |""".stripMargin
@@ -9106,7 +9992,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           Term.ForYield(
             List(
               Enumerator.Generator(patvar("x"), tname("xs")),
-              Enumerator.Guard(tpostfix(tname("a"), "b")),
+              Enumerator.Guard(blk(tname("a"), tname("b"))),
             ),
             tname("c"),
           ),
@@ -9128,11 +10014,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  ) yield c
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `)` expected but `<-` found
-         |    x <- xs
-         |      ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if {
+         |    val v = 1
+         |    v
+         |  }) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` guard: `if` at the end of a line in enumerators in parentheses, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
@@ -9150,8 +10061,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = for (x <- xs; if foo {
-         |    z && w
-         |  }) yield c
+         |    z
+         |  } && w) yield c
          |  def g = 1
          |}
          |""".stripMargin
@@ -9167,7 +10078,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           Term.ForYield(
             List(
               Enumerator.Generator(patvar("x"), tname("xs")),
-              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Enumerator.Guard(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
             ),
             tname("c"),
           ),
@@ -9192,9 +10103,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = for (x <- xs; if foo {
-         |    z
-         |  } b) yield c
+         |  def f = for (x <- xs; if {
+         |    foo {
+         |      z
+         |    }
+         |    b
+         |  }) yield c
          |  def g = 1
          |}
          |""".stripMargin
@@ -9210,7 +10124,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           Term.ForYield(
             List(
               Enumerator.Generator(patvar("x"), tname("xs")),
-              Enumerator.Guard(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+              Enumerator.Guard(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))),
             ),
             tname("c"),
           ),
@@ -9236,8 +10150,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = for (x <- xs; if foo {
-         |    z && w
-         |  }) yield c
+         |    z
+         |  } && w) yield c
          |  def g = 1
          |}
          |""".stripMargin
@@ -9253,7 +10167,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           Term.ForYield(
             List(
               Enumerator.Generator(patvar("x"), tname("xs")),
-              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Enumerator.Guard(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
             ),
             tname("c"),
           ),
@@ -9316,49 +10230,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |      yield c)
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:7: error: `<-` expected but `outdent` found
-         |            b
-         |             ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("`for` guard: `if` at the end of a line in indented enumerators within parentheses, a definition and an expression on deeper next lines") {
-    val code =
-      """|object A:
-         |  def f =
-         |    g(for
-         |        x <- xs
-         |        if
-         |            val v = 1
-         |            v
-         |      yield c)
-         |  def g = 1
-         |""".stripMargin
-    val error =
-      """|<input>:6: error: illegal start of simple expression
-         |            val v = 1
-         |            ^""".stripMargin
-    runTestError[Source](code, error)
-  }
-
-  test("`for` guard: `if` at the end of a line in indented enumerators within parentheses, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
-    val code =
-      """|object A:
-         |  def f =
-         |    g(for
-         |        x <- xs
-         |        if
-         |            foo:
-         |              z
-         |          && w
-         |      yield c)
-         |  def g = 1
-         |""".stripMargin
     val layout =
       """|object A {
-         |  def f = g(for (x <- xs; if foo {
-         |    z && w
+         |  def f = g(for (x <- xs; if {
+         |    a
+         |    b
          |  }) yield c)
          |  def g = 1
          |}
@@ -9377,7 +10253,102 @@ class SignificantIndentationSuite extends BaseDottySuite {
             Term.ForYield(
               List(
                 Enumerator.Generator(patvar("x"), tname("xs")),
-                Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+                Enumerator.Guard(blk(tname("a"), tname("b"))),
+              ),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators within parentheses, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(for
+         |        x <- xs
+         |        if
+         |            val v = 1
+         |            v
+         |      yield c)
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(for (x <- xs; if {
+         |    val v = 1
+         |    v
+         |  }) yield c)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            Term.ForYield(
+              List(
+                Enumerator.Generator(patvar("x"), tname("xs")),
+                Enumerator.Guard(blk(Defn.Val(Nil, List(patvar("v")), None, int(1)), tname("v"))),
+              ),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators within parentheses, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(for
+         |        x <- xs
+         |        if
+         |            foo:
+         |              z
+         |          && w
+         |      yield c)
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(for (x <- xs; if foo {
+         |    z
+         |  } && w) yield c)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            Term.ForYield(
+              List(
+                Enumerator.Generator(patvar("x"), tname("xs")),
+                Enumerator
+                  .Guard(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
               ),
               tname("c"),
             ),
@@ -9886,34 +10857,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    yield c
          |  def g = 1
          |""".stripMargin
-    val layout =
-      """|object A {
-         |  def f = for (x <- xs; if a; if b) yield c
-         |  def g = 1
-         |}
-         |""".stripMargin
-    val tree = Source(List(Defn.Object(
-      Nil,
-      tname("A"),
-      tpl(
-        Defn.Def(
-          Nil,
-          tname("f"),
-          Nil,
-          None,
-          Term.ForYield(
-            List(
-              Enumerator.Generator(patvar("x"), tname("xs")),
-              Enumerator.Guard(tname("a")),
-              Enumerator.Guard(tname("b")),
-            ),
-            tname("c"),
-          ),
-        ),
-        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
-      ),
-    )))
-    runTestAssert[Source](code, layout)(tree)
+    val error =
+      """|<input>:3: error: `)` expected but `<-` found
+         |    for (x <- xs if
+         |           ^""".stripMargin
+    runTestError[Source](code, error)
   }
 
   test("`for` guard: `if` at the end of a line on the line of `for (`, an expression on a deeper next line, a generator at its column") {
@@ -9943,11 +10891,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    yield c
          |  def g = 1
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `)` expected but `<-` found
-         |    for (x <- xs if
-         |           ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if {
+         |    a
+         |    z = 1
+         |  }) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(blk(tname("a"), Term.Assign(tname("z"), int(1)))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("`for` guard: `if` alone on the line after a generator on the line of `for`, an expression on a deeper next line") {

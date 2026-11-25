@@ -7734,11 +7734,13 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = xs.map { x =>
-         |    throw foo {
-         |      z
+         |  def f = xs.map {
+         |    x => throw {
+         |      foo {
+         |        z
+         |      }
+         |      b
          |    }
-         |    b
          |  }
          |  def g = 1
          |}
@@ -7754,7 +7756,7 @@ class FewerBracesSuite extends BaseDottySuite {
           None,
           tapply(
             tselect(tname("xs"), tname("map")),
-            blk(tfunc(tparam("x"))(blk(Term.Throw(tapply(tname("foo"), blk(tname("z")))), tname("b")))),
+            blk(tfunc(tparam("x"))(Term.Throw(blk(tapply(tname("foo"), blk(tname("z"))), tname("b"))))),
           ),
         ),
         Defn.Def(Nil, tname("g"), Nil, None, int(1)),
@@ -15662,28 +15664,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |        z
          |      => 1
          |""".stripMargin
-    val layout =
-      """|def f = x match {
-         |  case y if xs.exists {
-         |    z => z
-         |  } => 1
-         |}
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tmatch(
-        tname("x"),
-        Case(
-          patvar("y"),
-          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
-          int(1),
-        ),
-      ),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:5: error: `outdent` expected but `=>` found
+         |      => 1
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("case guard after if at line end, lambda in parentheses, case arrow on the guard's line") {
@@ -17227,9 +17212,8 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = x match {
-         |  case y if xs.exists {
-         |    z => z
-         |  } => 1
+         |  case y if (xs.exists: z) =>
+         |    z => 1
          |}
          |""".stripMargin
     val tree = Defn.Def(
@@ -17241,8 +17225,8 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("x"),
         Case(
           patvar("y"),
-          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
-          int(1),
+          Some(Term.Ascribe(tselect(tname("xs"), tname("exists")), pname("z"))),
+          tfunc(tparam("z"))(int(1)),
         ),
       ),
     )
@@ -19625,9 +19609,8 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f = x match {
-         |  case y if xs.exists {
-         |    z => z
-         |  } => 1
+         |  case y if (xs.exists: z) =>
+         |    z => 1
          |}
          |""".stripMargin
     val tree = Defn.Def(
@@ -19639,8 +19622,8 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("x"),
         Case(
           patvar("y"),
-          Some(tapply(tselect("xs", "exists"), blk(tfunc(tparam("z"))(tname("z"))))),
-          int(1),
+          Some(Term.Ascribe(tselect(tname("xs"), tname("exists")), pname("z"))),
+          tfunc(tparam("z"))(int(1)),
         ),
       ),
     )
@@ -20003,21 +19986,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |      p:
          |        Boolean => 1
          |""".stripMargin
-    val layout =
-      """|def f = x match {
-         |  case y if p {
-         |    Boolean
-         |  } => 1
-         |}
-         |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      None,
-      tmatch(tname("x"), Case(patvar("y"), Some(tapply(tname("p"), blk(tname("Boolean")))), int(1))),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |        Boolean => 1
+         |                    ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("case guard after a typed pattern, colon at line end, case arrow on the argument's line") {
@@ -23792,7 +23765,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f(x: Int, a: Boolean, b: Boolean) = x match {
-         |  case y if a && b => 1
+         |  case y if (a &&) b => 1
          |  case _ => 2
          |}
          |""".stripMargin
@@ -23805,7 +23778,11 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(patvar("y"), Some(tinfix(tname("a"), "&&", tname("b"))), int(1)),
+        Case(
+          patvar("y"),
+          Some(Term.SelectPostfix(Term.SelectPostfix(tname("a"), tname("&&")), tname("b"))),
+          int(1),
+        ),
         Case(patwildcard, None, int(2)),
       ),
     )
@@ -23821,11 +23798,39 @@ class FewerBracesSuite extends BaseDottySuite {
          |  => 1
          |  case _ => 2
          |""".stripMargin
-    val error =
-      """|<input>:3: error: illegal start of simple expression
-         |      val p: Int => Boolean = _ > y
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if {
+         |    val p: Int => Boolean = _ > y
+         |    xs.exists(p)
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(blk(
+            Defn.Val(
+              Nil,
+              List(patvar("p")),
+              Some(pfunc(pname("Int"))(pname("Boolean"))),
+              Term.AnonymousFunction(tinfix(Term.Placeholder(), tname(">"), tname("y"))),
+            ),
+            tapply(tselect(tname("xs"), tname("exists")), tname("p")),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after if at line end without a colon, val of a lambda, case arrow at the case's indent") {
@@ -23837,11 +23842,39 @@ class FewerBracesSuite extends BaseDottySuite {
          |  => 1
          |  case _ => 2
          |""".stripMargin
-    val error =
-      """|<input>:3: error: illegal start of simple expression
-         |      val g = (z: Int) => z > y
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def f(x: Int, xs: List[Int]) = x match {
+         |  case y if {
+         |    val g = (z: Int) => z > y
+         |    xs.exists(g)
+         |  } => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(pcg(tpc(tparam("x", pname("Int")), tparam("xs", papply(pname("List"), pname("Int")))))),
+      None,
+      tmatch(
+        tname("x"),
+        Case(
+          patvar("y"),
+          Some(blk(
+            Defn.Val(
+              Nil,
+              List(patvar("g")),
+              None,
+              tfunc(tparam("z", pname("Int")))(tinfix(tname("z"), tname(">"), tname("y"))),
+            ),
+            tapply(tselect(tname("xs"), tname("exists")), tname("g")),
+          )),
+          int(1),
+        ),
+        Case(patwildcard, None, int(2)),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("case guard after if at line end without a colon, match, case arrow at the case's indent") {
@@ -25012,7 +25045,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f(x: Int, a: Boolean, b: Boolean) = x match {
-         |  case y if a && b => 1
+         |  case y if (a &&) b => 1
          |  case _ => 2
          |}
          |""".stripMargin
@@ -25025,7 +25058,11 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       tmatch(
         tname("x"),
-        Case(patvar("y"), Some(tinfix(tname("a"), "&&", tname("b"))), int(1)),
+        Case(
+          patvar("y"),
+          Some(Term.SelectPostfix(Term.SelectPostfix(tname("a"), tname("&&")), tname("b"))),
+          int(1),
+        ),
         Case(patwildcard, None, int(2)),
       ),
     )
