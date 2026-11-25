@@ -764,6 +764,51 @@ class InfoPrinterSuite extends FunSuite {
     "{ def m: R }",
   ))
 
+  test("dotc: inferred refinement val")(assertMember(
+    dotc(
+      "_empty_/o.x.",
+      "x",
+      s.SymbolInformation.Kind.FIELD,
+      s.ValueSignature(returnType),
+      s.SymbolInformation.Property.ABSTRACT,
+    ),
+    "_empty_/o.x. => abstract field x: R",
+    "{ x: R }",
+  ))
+
+  test("dotc: inferred refinement def")(assertMember(
+    dotc(
+      "_empty_/o.f.",
+      "f",
+      s.SymbolInformation.Kind.FIELD,
+      byName,
+      s.SymbolInformation.Property.ABSTRACT,
+    ),
+    "_empty_/o.f. => abstract field f: => R",
+    "{ f: => R }",
+  ))
+
+  test("dotc: inferred refinement var") {
+    val abstractProp = s.SymbolInformation.Property.ABSTRACT
+    val setterSig = s.MethodSignature(
+      parameterLists = List(scope(param("_empty_/o.`w_=`().(x$1)", "x$1", returnType))),
+      returnType = ref("scala/Unit#"),
+    )
+    val setter =
+      dotc("_empty_/o.`w_=`().", "w_=", s.SymbolInformation.Kind.METHOD, setterSig, abstractProp)
+    val getter = dotc(
+      "_empty_/o.w.",
+      "w",
+      s.SymbolInformation.Kind.FIELD,
+      s.ValueSignature(returnType),
+      abstractProp,
+    )
+    assertType(
+      s.StructuralType(declarations = Some(scope(setter, getter))),
+      "{ def w_=(x$1: R): Unit; w: R }",
+    )
+  }
+
   test("dotc: local def without parameter clauses") {
     val info = dotc("local0", "f", s.SymbolInformation.Kind.LOCAL, byName)
     assertInfo(info, "local0 => local f: R")
