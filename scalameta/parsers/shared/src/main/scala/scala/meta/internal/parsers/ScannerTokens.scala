@@ -585,14 +585,8 @@ private[meta] final class ScannerTokens(
       }) && !precedesTypedName(prevNonTrivia(prevPos)) &&
       isColonLambdaSameLine(nextNonHTriviaAt(currPos)) && !isInTypeDecl(prevPos)
 
-    /** computes [[RegionControlCond.inCondIndent]] for the condition after a keyword */
-    def inCondIndent(regions: List[SepRegion]): Int =
-      // without colon arguments or leading infix lines, the scanner never needs `inCondIndent`
-      if (!dialect.allowFewerBraces || !dialect.allowInfixOperatorAfterNL) Int.MaxValue
-      // if the condition starts with `{` or on the next line, it is a block with its own indent
-      else if (next.is[LeftBrace] || nextIndent >= 0) Int.MaxValue
-      else regions
-        .foldLeft(countIndent(currPos, skipNonTrivia = true))((x, r) => math.max(x, r.indent))
+    def getLineIndent: Int = // compute if curr is not followed by newline
+      if (nextIndent >= 0) -1 else countIndent(currPos, skipNonTrivia = true)
 
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
       case _: EOF => getAtEof(sepRegions)
@@ -715,7 +709,7 @@ private[meta] final class ScannerTokens(
         })
       case _: KwFor if !isPrevEndMarker() => currRef(RegionFor(next) :: sepRegions)
       case _: KwWhile if dialect.allowQuietSyntax && !isPrevEndMarker() =>
-        currRef(RegionWhile(next, inCondIndent(sepRegions)) :: sepRegions)
+        currRef(RegionWhile(next, getLineIndent) :: sepRegions)
       case _: KwIf if dialect.allowQuietSyntax && !isPrevEndMarker() =>
         currRef(dropRegionLine(sepRegions) match {
           // spec: as in dotty 3.3, a guard on a line of its own takes the indent of that line
@@ -725,7 +719,7 @@ private[meta] final class ScannerTokens(
           case rs @ (_: RegionDelim) :: (_: RegionFor) :: _ => rs
           // a guard after a generator that left a region, such as that of `new` or `try`
           case rs if canEndStat(prev) && isForGuard(rs) => rs
-          case _ => RegionIf(next, inCondIndent(sepRegions)) :: sepRegions
+          case _ => RegionIf(next, getLineIndent) :: sepRegions
         })
       case _: KwThen => afterControlRef(sepRegions, RegionThen :: _)
       case _: KwElse if dialect.allowQuietSyntax => afterControlRef(sepRegions, beforeComment = true)
@@ -984,18 +978,17 @@ private[meta] final class ScannerTokens(
                 OutdentInfo(r, if (done) rs else xs, done)
               } else null
             case _ if nextIndent >= r.indent => null // we stop here
-            // spec: keep `r` open at a leading infix deeper than the region of the condition
-            case xs if (dropRegionLine(xs) match {
-                  case (c: RegionControlCond) :: _ => nextIndent > c.inCondIndent &&
-                    canBeLeadingInfix == LeadingInfix.Yes
-                  case _ => false
-                }) => null
             // a condition continues to its `then` or `do`
-            case (_: RegionControlCond) :: _ => OutdentInfo(r, rs)
+            case (rc: RegionControlCond) :: xs =>
+              if (isLeadingInfixInCond(rc, xs)) null else OutdentInfo(r, rs)
             case (rc: RegionControl) :: xs =>
               OutdentInfo(r, if (rc.isTerminatingToken(next)) rs else xs)
             case _ if ctrlOnly => null // we stop here
             case (_: RegionTemplateBody) :: xs => OutdentInfo(r, xs)
+            case (_: RegionLine) :: xs if (dropRegionLine(xs) match {
+                  case (c: RegionControlCond) :: xs => isLeadingInfixInCond(c, xs)
+                  case _ => false
+                }) => null
             case xs if (prev match {
                   // then  [else]  [do]  catch  [finally]  [yield]  match
                   case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
@@ -1003,6 +996,13 @@ private[meta] final class ScannerTokens(
                   case _ => !isIndented(xs, nextIndent) || canBeLeadingInfix != LeadingInfix.Yes
                 }) => OutdentInfo(r, xs)
             case _ => null
+          }
+
+          // spec: keep `r` open at a leading infix deeper than the region of the condition
+          def isLeadingInfixInCond(rc: RegionControlCond, xs: List[SepRegion]): Boolean = {
+            val indent = rc.lineIndent
+            indent >= 0 && nextIndent > indent && canBeLeadingInfix == LeadingInfix.Yes &&
+            xs.forall(nextIndent > _.indent)
           }
 
           /** dotc: whether a line end inside `region` keeps the lambda open */
