@@ -4665,6 +4665,3607 @@ class Scala3PositionSuite extends BasePositionSuite {
   )
 
   checkPositions[Stat](
+    """|def f = g { (x: Int) ?=>
+       |    a
+       |    // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply g { (x: Int) ?=>
+       |    a
+       |    // c
+       |} [8:g { (x: Int) ?=>...:41)
+       |Term.Block { (x: Int) ?=>
+       |    a
+       |    // c
+       |} [10:{ (x: Int) ?=>...:41)
+       |Term.ContextFunction (x: Int) ?=>
+       |    a
+       |    // c [12:(x: Int) ?=>...:39)
+       |Term.ParamClause (x: Int) [12:(x: Int):20)
+       |Term.Block a
+       |    // c [29:a...:39)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(g) [8..9)
+       |LeftBrace [10..11)
+       |LeftParen [12..13)
+       |Ident(x) [13..14)
+       |Colon [14..15)
+       |Ident(Int) [16..19)
+       |RightParen [19..20)
+       |ContextArrow [21..24)
+       |Indentation.Indent [24..24)
+       |Ident(a) [29..30)
+       |Indentation.Outdent [39..39)
+       |RightBrace [40..41)
+       |EOF [42..42)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map { x =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply xs.map { x =>
+       |  a
+       |  // c
+       |} [8:xs.map { x =>...:34)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block { x =>
+       |  a
+       |  // c
+       |} [15:{ x =>...:34)
+       |Term.Function x =>
+       |  a
+       |  // c [17:x =>...:32)
+       |Term.ParamClause x [17:x:18)
+       |Term.Param x [17:x:18)
+       |Term.Block a
+       |  // c [24:a...:32)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(xs) [8..10)
+       |Dot [10..11)
+       |Ident(map) [11..14)
+       |LeftBrace [15..16)
+       |Ident(x) [17..18)
+       |RightArrow [19..21)
+       |Indentation.Indent [21..21)
+       |Ident(a) [24..25)
+       |Indentation.Outdent [32..32)
+       |RightBrace [33..34)
+       |EOF [35..35)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map { x =>
+       |  a
+       |  b
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply xs.map { x =>
+       |  a
+       |  b
+       |  // c
+       |} [8:xs.map { x =>...:38)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.Block { x =>
+       |  a
+       |  b
+       |  // c
+       |} [15:{ x =>...:38)
+       |Term.Function x =>
+       |  a
+       |  b
+       |  // c [17:x =>...:36)
+       |Term.ParamClause x [17:x:18)
+       |Term.Param x [17:x:18)
+       |Term.Block a
+       |  b
+       |  // c [24:a...:36)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(xs) [8..10)
+       |Dot [10..11)
+       |Ident(map) [11..14)
+       |LeftBrace [15..16)
+       |Ident(x) [17..18)
+       |RightArrow [19..21)
+       |Indentation.Indent [21..21)
+       |Ident(a) [24..25)
+       |LF [25..26)
+       |Ident(b) [28..29)
+       |Indentation.Outdent [36..36)
+       |RightBrace [37..38)
+       |EOF [39..39)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo(xs.map { x =>
+       |  a
+       |  // c
+       |})
+       |""".stripMargin,
+    """|Term.Apply foo(xs.map { x =>
+       |  a
+       |  // c
+       |}) [8:foo(xs.map { x =>...:39)
+       |Term.ArgClause (xs.map { x =>
+       |  a
+       |  // c
+       |}) [11:(xs.map { x =>...:39)
+       |Term.Apply xs.map { x =>
+       |  a
+       |  // c
+       |} [12:xs.map { x =>...:38)
+       |Term.Select xs.map [12:xs.map:18)
+       |Term.Block { x =>
+       |  a
+       |  // c
+       |} [19:{ x =>...:38)
+       |Term.Function x =>
+       |  a
+       |  // c [21:x =>...:36)
+       |Term.ParamClause x [21:x:22)
+       |Term.Param x [21:x:22)
+       |Term.Block a
+       |  // c [28:a...:36)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftParen [11..12)
+       |Ident(xs) [12..14)
+       |Dot [14..15)
+       |Ident(map) [15..18)
+       |LeftBrace [19..20)
+       |Ident(x) [21..22)
+       |RightArrow [23..25)
+       |Indentation.Indent [25..25)
+       |Ident(a) [28..29)
+       |Indentation.Outdent [36..36)
+       |RightBrace [37..38)
+       |RightParen [38..39)
+       |EOF [40..40)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.foreach { x =>
+       |  a
+       |
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply xs.foreach { x =>
+       |  a
+       |
+       |  // c
+       |} [8:xs.foreach { x =>...:39)
+       |Term.Select xs.foreach [8:xs.foreach:18)
+       |Term.Block { x =>
+       |  a
+       |
+       |  // c
+       |} [19:{ x =>...:39)
+       |Term.Function x =>
+       |  a
+       |
+       |  // c [21:x =>...:37)
+       |Term.ParamClause x [21:x:22)
+       |Term.Param x [21:x:22)
+       |Term.Block a
+       |
+       |  // c [28:a...:37)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(xs) [8..10)
+       |Dot [10..11)
+       |Ident(foreach) [11..18)
+       |LeftBrace [19..20)
+       |Ident(x) [21..22)
+       |RightArrow [23..25)
+       |Indentation.Indent [25..25)
+       |Ident(a) [28..29)
+       |Indentation.Outdent [37..37)
+       |RightBrace [38..39)
+       |EOF [40..40)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = g { (x: Int) ?=>
+       |  a
+       |
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply g { (x: Int) ?=>
+       |  a
+       |
+       |  // c
+       |} [8:g { (x: Int) ?=>...:38)
+       |Term.Block { (x: Int) ?=>
+       |  a
+       |
+       |  // c
+       |} [10:{ (x: Int) ?=>...:38)
+       |Term.ContextFunction (x: Int) ?=>
+       |  a
+       |
+       |  // c [12:(x: Int) ?=>...:36)
+       |Term.ParamClause (x: Int) [12:(x: Int):20)
+       |Term.Block a
+       |
+       |  // c [27:a...:36)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(g) [8..9)
+       |LeftBrace [10..11)
+       |LeftParen [12..13)
+       |Ident(x) [13..14)
+       |Colon [14..15)
+       |Ident(Int) [16..19)
+       |RightParen [19..20)
+       |ContextArrow [21..24)
+       |Indentation.Indent [24..24)
+       |Ident(a) [27..28)
+       |Indentation.Outdent [36..36)
+       |RightBrace [37..38)
+       |EOF [39..39)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map { case x =>
+       |  a
+       |
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply xs.map { case x =>
+       |  a
+       |
+       |  // c
+       |} [8:xs.map { case x =>...:40)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.PartialFunction { case x =>
+       |  a
+       |
+       |  // c
+       |} [15:{ case x =>...:40)
+       |Case case x =>
+       |  a [17:case x =>...:30)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(xs) [8..10)
+       |Dot [10..11)
+       |Ident(map) [11..14)
+       |LeftBrace [15..16)
+       |KwCase [17..21)
+       |Ident(x) [22..23)
+       |RightArrow [24..26)
+       |Ident(a) [29..30)
+       |LFLF [30..39)
+       |RightBrace [39..40)
+       |EOF [41..41)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.foreach { x => x match
+       |  case 1 => a
+       |  case _ => b
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply xs.foreach { x => x match
+       |  case 1 => a
+       |  case _ => b
+       |  // c
+       |} [8:xs.foreach { x => x match...:70)
+       |Term.Select xs.foreach [8:xs.foreach:18)
+       |Term.Block { x => x match
+       |  case 1 => a
+       |  case _ => b
+       |  // c
+       |} [19:{ x => x match...:70)
+       |Term.Function x => x match
+       |  case 1 => a
+       |  case _ => b
+       |  // c [21:x => x match...:68)
+       |Term.ParamClause x [21:x:22)
+       |Term.Param x [21:x:22)
+       |Term.Match x match
+       |  case 1 => a
+       |  case _ => b
+       |  // c [26:x match...:68)
+       |Term.CasesBlock case 1 => a
+       |  case _ => b
+       |  // c [36:case 1 => a...:68)
+       |Case case 1 => a [36:case 1 => a:47)
+       |Case case _ => b [50:case _ => b:61)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(xs) [8..10)
+       |Dot [10..11)
+       |Ident(foreach) [11..18)
+       |LeftBrace [19..20)
+       |Ident(x) [21..22)
+       |RightArrow [23..25)
+       |Ident(x) [26..27)
+       |KwMatch [28..33)
+       |Indentation.Indent [33..33)
+       |KwCase [36..40)
+       |Constant.Int(1) [41..42)
+       |RightArrow [43..45)
+       |Ident(a) [46..47)
+       |LF [47..48)
+       |KwCase [50..54)
+       |Underscore [55..56)
+       |RightArrow [57..59)
+       |Ident(b) [60..61)
+       |Indentation.Outdent [68..68)
+       |RightBrace [69..70)
+       |EOF [71..71)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.foreach { x => x match
+       |  case 1 => a
+       |  case _ => b
+       |
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply xs.foreach { x => x match
+       |  case 1 => a
+       |  case _ => b
+       |
+       |  // c
+       |} [8:xs.foreach { x => x match...:71)
+       |Term.Select xs.foreach [8:xs.foreach:18)
+       |Term.Block { x => x match
+       |  case 1 => a
+       |  case _ => b
+       |
+       |  // c
+       |} [19:{ x => x match...:71)
+       |Term.Function x => x match
+       |  case 1 => a
+       |  case _ => b
+       |
+       |  // c [21:x => x match...:69)
+       |Term.ParamClause x [21:x:22)
+       |Term.Param x [21:x:22)
+       |Term.Match x match
+       |  case 1 => a
+       |  case _ => b
+       |
+       |  // c [26:x match...:69)
+       |Term.CasesBlock case 1 => a
+       |  case _ => b
+       |
+       |  // c [36:case 1 => a...:69)
+       |Case case 1 => a [36:case 1 => a:47)
+       |Case case _ => b [50:case _ => b:61)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(xs) [8..10)
+       |Dot [10..11)
+       |Ident(foreach) [11..18)
+       |LeftBrace [19..20)
+       |Ident(x) [21..22)
+       |RightArrow [23..25)
+       |Ident(x) [26..27)
+       |KwMatch [28..33)
+       |Indentation.Indent [33..33)
+       |KwCase [36..40)
+       |Constant.Int(1) [41..42)
+       |RightArrow [43..45)
+       |Ident(a) [46..47)
+       |LF [47..48)
+       |KwCase [50..54)
+       |Underscore [55..56)
+       |RightArrow [57..59)
+       |Ident(b) [60..61)
+       |Indentation.Outdent [69..69)
+       |RightBrace [70..71)
+       |EOF [72..72)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { implicit ec: Ec =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { implicit ec: Ec =>
+       |  a
+       |  // c
+       |} [8:foo { implicit ec: Ec =>...:45)
+       |Term.Block { implicit ec: Ec =>
+       |  a
+       |  // c
+       |} [12:{ implicit ec: Ec =>...:45)
+       |Term.Function implicit ec: Ec =>
+       |  a
+       |  // c [14:implicit ec: Ec =>...:43)
+       |Term.ParamClause implicit ec: Ec [14:implicit ec: Ec:29)
+       |Term.Param implicit ec: Ec [14:implicit ec: Ec:29)
+       |Term.Block a
+       |  // c [35:a...:43)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwImplicit [14..22)
+       |Ident(ec) [23..25)
+       |Colon [25..26)
+       |Ident(Ec) [27..29)
+       |RightArrow [30..32)
+       |Indentation.Indent [32..32)
+       |Ident(a) [35..36)
+       |Indentation.Outdent [43..43)
+       |RightBrace [44..45)
+       |EOF [46..46)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = bar(foo { implicit ec: Ec =>
+       |  a
+       |  // c
+       |})
+       |""".stripMargin,
+    """|Term.Apply bar(foo { implicit ec: Ec =>
+       |  a
+       |  // c
+       |}) [8:bar(foo { implicit ec: Ec =>...:50)
+       |Term.ArgClause (foo { implicit ec: Ec =>
+       |  a
+       |  // c
+       |}) [11:(foo { implicit ec: Ec =>...:50)
+       |Term.Apply foo { implicit ec: Ec =>
+       |  a
+       |  // c
+       |} [12:foo { implicit ec: Ec =>...:49)
+       |Term.Block { implicit ec: Ec =>
+       |  a
+       |  // c
+       |} [16:{ implicit ec: Ec =>...:49)
+       |Term.Function implicit ec: Ec =>
+       |  a
+       |  // c [18:implicit ec: Ec =>...:47)
+       |Term.ParamClause implicit ec: Ec [18:implicit ec: Ec:33)
+       |Term.Param implicit ec: Ec [18:implicit ec: Ec:33)
+       |Term.Block a
+       |  // c [39:a...:47)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(bar) [8..11)
+       |LeftParen [11..12)
+       |Ident(foo) [12..15)
+       |LeftBrace [16..17)
+       |KwImplicit [18..26)
+       |Ident(ec) [27..29)
+       |Colon [29..30)
+       |Ident(Ec) [31..33)
+       |RightArrow [34..36)
+       |Indentation.Indent [36..36)
+       |Ident(a) [39..40)
+       |Indentation.Outdent [47..47)
+       |RightBrace [48..49)
+       |RightParen [49..50)
+       |EOF [51..51)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|trait B { self: C =>
+       |  def f = 1
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.ParamClause trait B @@{ self: C => [8::8)
+       |Ctor.Primary trait B @@{ self: C => [8::8)
+       |Template { self: C =>
+       |  def f = 1
+       |  // c
+       |} [8:{ self: C =>...:41)
+       |Template.Body { self: C =>
+       |  def f = 1
+       |  // c
+       |} [8:{ self: C =>...:41)
+       |Self self: C => [10:self: C =>:20)
+       |Defn.Def def f = 1 [23:def f = 1:32)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwTrait [0..5)
+       |Ident(B) [6..7)
+       |LeftBrace [8..9)
+       |Ident(self) [10..14)
+       |Colon [14..15)
+       |Ident(C) [16..17)
+       |RightArrow [18..20)
+       |Indentation.Indent [20..20)
+       |KwDef [23..26)
+       |Ident(f) [27..28)
+       |Equals [29..30)
+       |Constant.Int(1) [31..32)
+       |Indentation.Outdent [39..39)
+       |RightBrace [40..41)
+       |EOF [42..42)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|trait D { this: C =>
+       |  def f = 1
+       |
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.ParamClause trait D @@{ this: C => [8::8)
+       |Ctor.Primary trait D @@{ this: C => [8::8)
+       |Template { this: C =>
+       |  def f = 1
+       |
+       |  // c
+       |} [8:{ this: C =>...:42)
+       |Template.Body { this: C =>
+       |  def f = 1
+       |
+       |  // c
+       |} [8:{ this: C =>...:42)
+       |Self this: C => [10:this: C =>:20)
+       |Defn.Def def f = 1 [23:def f = 1:32)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwTrait [0..5)
+       |Ident(D) [6..7)
+       |LeftBrace [8..9)
+       |KwThis [10..14)
+       |Colon [14..15)
+       |Ident(C) [16..17)
+       |RightArrow [18..20)
+       |Indentation.Indent [20..20)
+       |KwDef [23..26)
+       |Ident(f) [27..28)
+       |Equals [29..30)
+       |Constant.Int(1) [31..32)
+       |Indentation.Outdent [40..40)
+       |RightBrace [41..42)
+       |EOF [43..43)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo(new B { self: C =>
+       |  def h = 1
+       |  // c
+       |})
+       |""".stripMargin,
+    """|Term.Apply foo(new B { self: C =>
+       |  def h = 1
+       |  // c
+       |}) [8:foo(new B { self: C =>...:52)
+       |Term.ArgClause (new B { self: C =>
+       |  def h = 1
+       |  // c
+       |}) [11:(new B { self: C =>...:52)
+       |Term.NewAnonymous new B { self: C =>
+       |  def h = 1
+       |  // c
+       |} [12:new B { self: C =>...:51)
+       |Template B { self: C =>
+       |  def h = 1
+       |  // c
+       |} [16:B { self: C =>...:51)
+       |Template.Body { self: C =>
+       |  def h = 1
+       |  // c
+       |} [18:{ self: C =>...:51)
+       |Self self: C => [20:self: C =>:30)
+       |Defn.Def def h = 1 [33:def h = 1:42)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftParen [11..12)
+       |KwNew [12..15)
+       |Ident(B) [16..17)
+       |LeftBrace [18..19)
+       |Ident(self) [20..24)
+       |Colon [24..25)
+       |Ident(C) [26..27)
+       |RightArrow [28..30)
+       |Indentation.Indent [30..30)
+       |KwDef [33..36)
+       |Ident(h) [37..38)
+       |Equals [39..40)
+       |Constant.Int(1) [41..42)
+       |Indentation.Outdent [49..49)
+       |RightBrace [50..51)
+       |RightParen [51..52)
+       |EOF [53..53)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { implicit ec =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { implicit ec =>
+       |  a
+       |  // c
+       |} [8:foo { implicit ec =>...:41)
+       |Term.Block { implicit ec =>
+       |  a
+       |  // c
+       |} [12:{ implicit ec =>...:41)
+       |Term.Function implicit ec =>
+       |  a
+       |  // c [14:implicit ec =>...:39)
+       |Term.ParamClause implicit ec [14:implicit ec:25)
+       |Term.Param implicit ec [14:implicit ec:25)
+       |Term.Block a
+       |  // c [31:a...:39)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwImplicit [14..22)
+       |Ident(ec) [23..25)
+       |RightArrow [26..28)
+       |Indentation.Indent [28..28)
+       |Ident(a) [31..32)
+       |Indentation.Outdent [39..39)
+       |RightBrace [40..41)
+       |EOF [42..42)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = { a
+       |  b
+       |
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Block { a
+       |  b
+       |
+       |  // c
+       |} [8:{ a...:25)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |LeftBrace [8..9)
+       |Ident(a) [10..11)
+       |LF [11..12)
+       |Ident(b) [14..15)
+       |LFLF [15..24)
+       |RightBrace [24..25)
+       |EOF [26..26)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { implicit request: Request[?] =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { implicit request: Request[?] =>
+       |  a
+       |  // c
+       |} [8:foo { implicit request: Request[?] =>...:58)
+       |Term.Block { implicit request: Request[?] =>
+       |  a
+       |  // c
+       |} [12:{ implicit request: Request[?] =>...:58)
+       |Term.Function implicit request: Request[?] =>
+       |  a
+       |  // c [14:implicit request: Request[?] =>...:56)
+       |Term.ParamClause implicit request: Request[?] [14:implicit request: Request[?]:42)
+       |Term.Param implicit request: Request[?] [14:implicit request: Request[?]:42)
+       |Type.Apply Request[?] [32:Request[?]:42)
+       |Type.ArgClause [?] [39:[?]:42)
+       |Type.Wildcard ? [40:?:41)
+       |Type.Bounds def f = foo { implicit request: Request[?@@] => [41::41)
+       |Term.Block a
+       |  // c [48:a...:56)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwImplicit [14..22)
+       |Ident(request) [23..30)
+       |Colon [30..31)
+       |Ident(Request) [32..39)
+       |LeftBracket [39..40)
+       |Ident(?) [40..41)
+       |RightBracket [41..42)
+       |RightArrow [43..45)
+       |Indentation.Indent [45..45)
+       |Ident(a) [48..49)
+       |Indentation.Outdent [56..56)
+       |RightBrace [57..58)
+       |EOF [59..59)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.foldLeft(0) { (acc, x) =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply xs.foldLeft(0) { (acc, x) =>
+       |  a
+       |  // c
+       |} [8:xs.foldLeft(0) { (acc, x) =>...:49)
+       |Term.Apply xs.foldLeft(0) [8:xs.foldLeft(0):22)
+       |Term.Select xs.foldLeft [8:xs.foldLeft:19)
+       |Term.ArgClause (0) [19:(0):22)
+       |Term.Block { (acc, x) =>
+       |  a
+       |  // c
+       |} [23:{ (acc, x) =>...:49)
+       |Term.Function (acc, x) =>
+       |  a
+       |  // c [25:(acc, x) =>...:47)
+       |Term.ParamClause (acc, x) [25:(acc, x):33)
+       |Term.Param acc [26:acc:29)
+       |Term.Param x [31:x:32)
+       |Term.Block a
+       |  // c [39:a...:47)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(xs) [8..10)
+       |Dot [10..11)
+       |Ident(foldLeft) [11..19)
+       |LeftParen [19..20)
+       |Constant.Int(0) [20..21)
+       |RightParen [21..22)
+       |LeftBrace [23..24)
+       |LeftParen [25..26)
+       |Ident(acc) [26..29)
+       |Comma [29..30)
+       |Ident(x) [31..32)
+       |RightParen [32..33)
+       |RightArrow [34..36)
+       |Indentation.Indent [36..36)
+       |Ident(a) [39..40)
+       |Indentation.Outdent [47..47)
+       |RightBrace [48..49)
+       |EOF [50..50)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.foldLeft(0) { (acc,
+       |    x) =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply xs.foldLeft(0) { (acc,
+       |    x) =>
+       |  a
+       |  // c
+       |} [8:xs.foldLeft(0) { (acc,...:53)
+       |Term.Apply xs.foldLeft(0) [8:xs.foldLeft(0):22)
+       |Term.Select xs.foldLeft [8:xs.foldLeft:19)
+       |Term.ArgClause (0) [19:(0):22)
+       |Term.Block { (acc,
+       |    x) =>
+       |  a
+       |  // c
+       |} [23:{ (acc,...:53)
+       |Term.Function (acc,
+       |    x) =>
+       |  a
+       |  // c [25:(acc,...:51)
+       |Term.ParamClause (acc,
+       |    x) [25:(acc,...:37)
+       |Term.Param acc [26:acc:29)
+       |Term.Param x [35:x:36)
+       |Term.Block a
+       |  // c [43:a...:51)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(xs) [8..10)
+       |Dot [10..11)
+       |Ident(foldLeft) [11..19)
+       |LeftParen [19..20)
+       |Constant.Int(0) [20..21)
+       |RightParen [21..22)
+       |LeftBrace [23..24)
+       |LeftParen [25..26)
+       |Ident(acc) [26..29)
+       |Comma [29..30)
+       |Ident(x) [35..36)
+       |RightParen [36..37)
+       |RightArrow [38..40)
+       |Indentation.Indent [40..40)
+       |Ident(a) [43..44)
+       |Indentation.Outdent [51..51)
+       |RightBrace [52..53)
+       |EOF [54..54)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|trait B { self: C & D =>
+       |  def f = 1
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.ParamClause trait B @@{ self: C & D => [8::8)
+       |Ctor.Primary trait B @@{ self: C & D => [8::8)
+       |Template { self: C & D =>
+       |  def f = 1
+       |  // c
+       |} [8:{ self: C & D =>...:45)
+       |Template.Body { self: C & D =>
+       |  def f = 1
+       |  // c
+       |} [8:{ self: C & D =>...:45)
+       |Self self: C & D => [10:self: C & D =>:24)
+       |Type.ApplyInfix C & D [16:C & D:21)
+       |Defn.Def def f = 1 [27:def f = 1:36)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwTrait [0..5)
+       |Ident(B) [6..7)
+       |LeftBrace [8..9)
+       |Ident(self) [10..14)
+       |Colon [14..15)
+       |Ident(C) [16..17)
+       |Ident(&) [18..19)
+       |Ident(D) [20..21)
+       |RightArrow [22..24)
+       |Indentation.Indent [24..24)
+       |KwDef [27..30)
+       |Ident(f) [31..32)
+       |Equals [33..34)
+       |Constant.Int(1) [35..36)
+       |Indentation.Outdent [43..43)
+       |RightBrace [44..45)
+       |EOF [46..46)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|trait B { self: C[Int] =>
+       |  def f = 1
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.ParamClause trait B @@{ self: C[Int] => [8::8)
+       |Ctor.Primary trait B @@{ self: C[Int] => [8::8)
+       |Template { self: C[Int] =>
+       |  def f = 1
+       |  // c
+       |} [8:{ self: C[Int] =>...:46)
+       |Template.Body { self: C[Int] =>
+       |  def f = 1
+       |  // c
+       |} [8:{ self: C[Int] =>...:46)
+       |Self self: C[Int] => [10:self: C[Int] =>:25)
+       |Type.Apply C[Int] [16:C[Int]:22)
+       |Type.ArgClause [Int] [17:[Int]:22)
+       |Defn.Def def f = 1 [28:def f = 1:37)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwTrait [0..5)
+       |Ident(B) [6..7)
+       |LeftBrace [8..9)
+       |Ident(self) [10..14)
+       |Colon [14..15)
+       |Ident(C) [16..17)
+       |LeftBracket [17..18)
+       |Ident(Int) [18..21)
+       |RightBracket [21..22)
+       |RightArrow [23..25)
+       |Indentation.Indent [25..25)
+       |KwDef [28..31)
+       |Ident(f) [32..33)
+       |Equals [34..35)
+       |Constant.Int(1) [36..37)
+       |Indentation.Outdent [44..44)
+       |RightBrace [45..46)
+       |EOF [47..47)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = new B { self: C =>
+       |  def h = 1
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.NewAnonymous new B { self: C =>
+       |  def h = 1
+       |  // c
+       |} [8:new B { self: C =>...:47)
+       |Template B { self: C =>
+       |  def h = 1
+       |  // c
+       |} [12:B { self: C =>...:47)
+       |Template.Body { self: C =>
+       |  def h = 1
+       |  // c
+       |} [14:{ self: C =>...:47)
+       |Self self: C => [16:self: C =>:26)
+       |Defn.Def def h = 1 [29:def h = 1:38)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |KwNew [8..11)
+       |Ident(B) [12..13)
+       |LeftBrace [14..15)
+       |Ident(self) [16..20)
+       |Colon [20..21)
+       |Ident(C) [22..23)
+       |RightArrow [24..26)
+       |Indentation.Indent [26..26)
+       |KwDef [29..32)
+       |Ident(h) [33..34)
+       |Equals [35..36)
+       |Constant.Int(1) [37..38)
+       |Indentation.Outdent [45..45)
+       |RightBrace [46..47)
+       |EOF [48..48)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { x => y =>
+       |  a
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { x => y =>
+       |  a
+       |} [8:foo { x => y =>...:29)
+       |Term.Block { x => y =>
+       |  a
+       |} [12:{ x => y =>...:29)
+       |Term.Function x => y =>
+       |  a [14:x => y =>...:27)
+       |Term.ParamClause x [14:x:15)
+       |Term.Param x [14:x:15)
+       |Term.Function y =>
+       |  a [19:y =>...:27)
+       |Term.ParamClause y [19:y:20)
+       |Term.Param y [19:y:20)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |Ident(x) [14..15)
+       |RightArrow [16..18)
+       |Ident(y) [19..20)
+       |RightArrow [21..23)
+       |Indentation.Indent [23..23)
+       |Ident(a) [26..27)
+       |Indentation.Outdent [27..27)
+       |LF [27..28)
+       |RightBrace [28..29)
+       |EOF [30..30)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { x => y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { x => y =>
+       |  a
+       |  // c
+       |} [8:foo { x => y =>...:36)
+       |Term.Block { x => y =>
+       |  a
+       |  // c
+       |} [12:{ x => y =>...:36)
+       |Term.Function x => y =>
+       |  a
+       |  // c [14:x => y =>...:34)
+       |Term.ParamClause x [14:x:15)
+       |Term.Param x [14:x:15)
+       |Term.Function y =>
+       |  a
+       |  // c [19:y =>...:34)
+       |Term.ParamClause y [19:y:20)
+       |Term.Param y [19:y:20)
+       |Term.Block a
+       |  // c [26:a...:34)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |Ident(x) [14..15)
+       |RightArrow [16..18)
+       |Ident(y) [19..20)
+       |RightArrow [21..23)
+       |Indentation.Indent [23..23)
+       |Ident(a) [26..27)
+       |Indentation.Outdent [34..34)
+       |RightBrace [35..36)
+       |EOF [37..37)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { x => y =>
+       |  a
+       |
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { x => y =>
+       |  a
+       |
+       |  // c
+       |} [8:foo { x => y =>...:37)
+       |Term.Block { x => y =>
+       |  a
+       |
+       |  // c
+       |} [12:{ x => y =>...:37)
+       |Term.Function x => y =>
+       |  a
+       |
+       |  // c [14:x => y =>...:35)
+       |Term.ParamClause x [14:x:15)
+       |Term.Param x [14:x:15)
+       |Term.Function y =>
+       |  a
+       |
+       |  // c [19:y =>...:35)
+       |Term.ParamClause y [19:y:20)
+       |Term.Param y [19:y:20)
+       |Term.Block a
+       |
+       |  // c [26:a...:35)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |Ident(x) [14..15)
+       |RightArrow [16..18)
+       |Ident(y) [19..20)
+       |RightArrow [21..23)
+       |Indentation.Indent [23..23)
+       |Ident(a) [26..27)
+       |Indentation.Outdent [35..35)
+       |RightBrace [36..37)
+       |EOF [38..38)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { x => y ?=>
+       |  a
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { x => y ?=>
+       |  a
+       |} [8:foo { x => y ?=>...:30)
+       |Term.Block { x => y ?=>
+       |  a
+       |} [12:{ x => y ?=>...:30)
+       |Term.Function x => y ?=>
+       |  a [14:x => y ?=>...:28)
+       |Term.ParamClause x [14:x:15)
+       |Term.Param x [14:x:15)
+       |Term.ContextFunction y ?=>
+       |  a [19:y ?=>...:28)
+       |Term.ParamClause y [19:y:20)
+       |Term.Param y [19:y:20)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |Ident(x) [14..15)
+       |RightArrow [16..18)
+       |Ident(y) [19..20)
+       |ContextArrow [21..24)
+       |Indentation.Indent [24..24)
+       |Ident(a) [27..28)
+       |Indentation.Outdent [28..28)
+       |LF [28..29)
+       |RightBrace [29..30)
+       |EOF [31..31)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { x => y ?=>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { x => y ?=>
+       |  a
+       |  // c
+       |} [8:foo { x => y ?=>...:37)
+       |Term.Block { x => y ?=>
+       |  a
+       |  // c
+       |} [12:{ x => y ?=>...:37)
+       |Term.Function x => y ?=>
+       |  a
+       |  // c [14:x => y ?=>...:35)
+       |Term.ParamClause x [14:x:15)
+       |Term.Param x [14:x:15)
+       |Term.ContextFunction y ?=>
+       |  a
+       |  // c [19:y ?=>...:35)
+       |Term.ParamClause y [19:y:20)
+       |Term.Param y [19:y:20)
+       |Term.Block a
+       |  // c [27:a...:35)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |Ident(x) [14..15)
+       |RightArrow [16..18)
+       |Ident(y) [19..20)
+       |ContextArrow [21..24)
+       |Indentation.Indent [24..24)
+       |Ident(a) [27..28)
+       |Indentation.Outdent [35..35)
+       |RightBrace [36..37)
+       |EOF [38..38)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { x => (y: Int) =>
+       |  a
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { x => (y: Int) =>
+       |  a
+       |} [8:foo { x => (y: Int) =>...:36)
+       |Term.Block { x => (y: Int) =>
+       |  a
+       |} [12:{ x => (y: Int) =>...:36)
+       |Term.Function x => (y: Int) =>
+       |  a [14:x => (y: Int) =>...:34)
+       |Term.ParamClause x [14:x:15)
+       |Term.Param x [14:x:15)
+       |Term.Function (y: Int) =>
+       |  a [19:(y: Int) =>...:34)
+       |Term.ParamClause (y: Int) [19:(y: Int):27)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |Ident(x) [14..15)
+       |RightArrow [16..18)
+       |LeftParen [19..20)
+       |Ident(y) [20..21)
+       |Colon [21..22)
+       |Ident(Int) [23..26)
+       |RightParen [26..27)
+       |RightArrow [28..30)
+       |Indentation.Indent [30..30)
+       |Ident(a) [33..34)
+       |Indentation.Outdent [34..34)
+       |LF [34..35)
+       |RightBrace [35..36)
+       |EOF [37..37)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { x => (y: Int) =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { x => (y: Int) =>
+       |  a
+       |  // c
+       |} [8:foo { x => (y: Int) =>...:43)
+       |Term.Block { x => (y: Int) =>
+       |  a
+       |  // c
+       |} [12:{ x => (y: Int) =>...:43)
+       |Term.Function x => (y: Int) =>
+       |  a
+       |  // c [14:x => (y: Int) =>...:41)
+       |Term.ParamClause x [14:x:15)
+       |Term.Param x [14:x:15)
+       |Term.Function (y: Int) =>
+       |  a
+       |  // c [19:(y: Int) =>...:41)
+       |Term.ParamClause (y: Int) [19:(y: Int):27)
+       |Term.Block a
+       |  // c [33:a...:41)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |Ident(x) [14..15)
+       |RightArrow [16..18)
+       |LeftParen [19..20)
+       |Ident(y) [20..21)
+       |Colon [21..22)
+       |Ident(Int) [23..26)
+       |RightParen [26..27)
+       |RightArrow [28..30)
+       |Indentation.Indent [30..30)
+       |Ident(a) [33..34)
+       |Indentation.Outdent [41..41)
+       |RightBrace [42..43)
+       |EOF [44..44)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int => Int = { x => y =>
+       |  x + y
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int => Int [9:Int => Int => Int:26)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.Function Int => Int [16:Int => Int:26)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Term.Block { x => y =>
+       |  x + y
+       |} [29:{ x => y =>...:50)
+       |Term.Function x => y =>
+       |  x + y [31:x => y =>...:48)
+       |Term.ParamClause x [31:x:32)
+       |Term.Param x [31:x:32)
+       |Term.Function y =>
+       |  x + y [36:y =>...:48)
+       |Term.ParamClause y [36:y:37)
+       |Term.Param y [36:y:37)
+       |Term.ApplyInfix x + y [43:x + y:48)
+       |Type.ArgClause   x + @@y [47::47)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |RightArrow [20..22)
+       |Ident(Int) [23..26)
+       |Equals [27..28)
+       |LeftBrace [29..30)
+       |Ident(x) [31..32)
+       |RightArrow [33..35)
+       |Ident(y) [36..37)
+       |RightArrow [38..40)
+       |Indentation.Indent [40..40)
+       |Ident(x) [43..44)
+       |Ident(+) [45..46)
+       |Ident(y) [47..48)
+       |Indentation.Outdent [48..48)
+       |LF [48..49)
+       |RightBrace [49..50)
+       |EOF [51..51)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int => Int = { x => y =>
+       |  x + y
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int => Int [9:Int => Int => Int:26)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.Function Int => Int [16:Int => Int:26)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Term.Block { x => y =>
+       |  x + y
+       |  // c
+       |} [29:{ x => y =>...:57)
+       |Term.Function x => y =>
+       |  x + y
+       |  // c [31:x => y =>...:55)
+       |Term.ParamClause x [31:x:32)
+       |Term.Param x [31:x:32)
+       |Term.Function y =>
+       |  x + y
+       |  // c [36:y =>...:55)
+       |Term.ParamClause y [36:y:37)
+       |Term.Param y [36:y:37)
+       |Term.Block x + y
+       |  // c [43:x + y...:55)
+       |Term.ApplyInfix x + y [43:x + y:48)
+       |Type.ArgClause   x + @@y [47::47)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |RightArrow [20..22)
+       |Ident(Int) [23..26)
+       |Equals [27..28)
+       |LeftBrace [29..30)
+       |Ident(x) [31..32)
+       |RightArrow [33..35)
+       |Ident(y) [36..37)
+       |RightArrow [38..40)
+       |Indentation.Indent [40..40)
+       |Ident(x) [43..44)
+       |Ident(+) [45..46)
+       |Ident(y) [47..48)
+       |Indentation.Outdent [55..55)
+       |RightBrace [56..57)
+       |EOF [58..58)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int ?=> Int = { x => y ?=>
+       |  x + y
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int ?=> Int [9:Int => Int ?=> Int:27)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.ContextFunction Int ?=> Int [16:Int ?=> Int:27)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Term.Block { x => y ?=>
+       |  x + y
+       |} [30:{ x => y ?=>...:52)
+       |Term.Function x => y ?=>
+       |  x + y [32:x => y ?=>...:50)
+       |Term.ParamClause x [32:x:33)
+       |Term.Param x [32:x:33)
+       |Term.ContextFunction y ?=>
+       |  x + y [37:y ?=>...:50)
+       |Term.ParamClause y [37:y:38)
+       |Term.Param y [37:y:38)
+       |Term.ApplyInfix x + y [45:x + y:50)
+       |Type.ArgClause   x + @@y [49::49)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |ContextArrow [20..23)
+       |Ident(Int) [24..27)
+       |Equals [28..29)
+       |LeftBrace [30..31)
+       |Ident(x) [32..33)
+       |RightArrow [34..36)
+       |Ident(y) [37..38)
+       |ContextArrow [39..42)
+       |Indentation.Indent [42..42)
+       |Ident(x) [45..46)
+       |Ident(+) [47..48)
+       |Ident(y) [49..50)
+       |Indentation.Outdent [50..50)
+       |LF [50..51)
+       |RightBrace [51..52)
+       |EOF [53..53)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int ?=> Int = { x => y ?=>
+       |  x + y
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int ?=> Int [9:Int => Int ?=> Int:27)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.ContextFunction Int ?=> Int [16:Int ?=> Int:27)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Term.Block { x => y ?=>
+       |  x + y
+       |  // c
+       |} [30:{ x => y ?=>...:59)
+       |Term.Function x => y ?=>
+       |  x + y
+       |  // c [32:x => y ?=>...:57)
+       |Term.ParamClause x [32:x:33)
+       |Term.Param x [32:x:33)
+       |Term.ContextFunction y ?=>
+       |  x + y
+       |  // c [37:y ?=>...:57)
+       |Term.ParamClause y [37:y:38)
+       |Term.Param y [37:y:38)
+       |Term.Block x + y
+       |  // c [45:x + y...:57)
+       |Term.ApplyInfix x + y [45:x + y:50)
+       |Type.ArgClause   x + @@y [49::49)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |ContextArrow [20..23)
+       |Ident(Int) [24..27)
+       |Equals [28..29)
+       |LeftBrace [30..31)
+       |Ident(x) [32..33)
+       |RightArrow [34..36)
+       |Ident(y) [37..38)
+       |ContextArrow [39..42)
+       |Indentation.Indent [42..42)
+       |Ident(x) [45..46)
+       |Ident(+) [47..48)
+       |Ident(y) [49..50)
+       |Indentation.Outdent [57..57)
+       |RightBrace [58..59)
+       |EOF [60..60)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int => Int = { x => (y: Int) =>
+       |  x + y
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int => Int [9:Int => Int => Int:26)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.Function Int => Int [16:Int => Int:26)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Term.Block { x => (y: Int) =>
+       |  x + y
+       |} [29:{ x => (y: Int) =>...:57)
+       |Term.Function x => (y: Int) =>
+       |  x + y [31:x => (y: Int) =>...:55)
+       |Term.ParamClause x [31:x:32)
+       |Term.Param x [31:x:32)
+       |Term.Function (y: Int) =>
+       |  x + y [36:(y: Int) =>...:55)
+       |Term.ParamClause (y: Int) [36:(y: Int):44)
+       |Term.ApplyInfix x + y [50:x + y:55)
+       |Type.ArgClause   x + @@y [54::54)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |RightArrow [20..22)
+       |Ident(Int) [23..26)
+       |Equals [27..28)
+       |LeftBrace [29..30)
+       |Ident(x) [31..32)
+       |RightArrow [33..35)
+       |LeftParen [36..37)
+       |Ident(y) [37..38)
+       |Colon [38..39)
+       |Ident(Int) [40..43)
+       |RightParen [43..44)
+       |RightArrow [45..47)
+       |Indentation.Indent [47..47)
+       |Ident(x) [50..51)
+       |Ident(+) [52..53)
+       |Ident(y) [54..55)
+       |Indentation.Outdent [55..55)
+       |LF [55..56)
+       |RightBrace [56..57)
+       |EOF [58..58)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int => Int = { x => (y: Int) =>
+       |  x + y
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int => Int [9:Int => Int => Int:26)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.Function Int => Int [16:Int => Int:26)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Term.Block { x => (y: Int) =>
+       |  x + y
+       |  // c
+       |} [29:{ x => (y: Int) =>...:64)
+       |Term.Function x => (y: Int) =>
+       |  x + y
+       |  // c [31:x => (y: Int) =>...:62)
+       |Term.ParamClause x [31:x:32)
+       |Term.Param x [31:x:32)
+       |Term.Function (y: Int) =>
+       |  x + y
+       |  // c [36:(y: Int) =>...:62)
+       |Term.ParamClause (y: Int) [36:(y: Int):44)
+       |Term.Block x + y
+       |  // c [50:x + y...:62)
+       |Term.ApplyInfix x + y [50:x + y:55)
+       |Type.ArgClause   x + @@y [54::54)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |RightArrow [20..22)
+       |Ident(Int) [23..26)
+       |Equals [27..28)
+       |LeftBrace [29..30)
+       |Ident(x) [31..32)
+       |RightArrow [33..35)
+       |LeftParen [36..37)
+       |Ident(y) [37..38)
+       |Colon [38..39)
+       |Ident(Int) [40..43)
+       |RightParen [43..44)
+       |RightArrow [45..47)
+       |Indentation.Indent [47..47)
+       |Ident(x) [50..51)
+       |Ident(+) [52..53)
+       |Ident(y) [54..55)
+       |Indentation.Outdent [62..62)
+       |RightBrace [63..64)
+       |EOF [65..65)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { implicit ec => implicit mat =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { implicit ec => implicit mat =>
+       |  a
+       |  // c
+       |} [8:foo { implicit ec => implicit mat =>...:57)
+       |Term.Block { implicit ec => implicit mat =>
+       |  a
+       |  // c
+       |} [12:{ implicit ec => implicit mat =>...:57)
+       |Term.Function implicit ec => implicit mat =>
+       |  a
+       |  // c [14:implicit ec => implicit mat =>...:55)
+       |Term.ParamClause implicit ec [14:implicit ec:25)
+       |Term.Param implicit ec [14:implicit ec:25)
+       |Term.Function implicit mat =>
+       |  a
+       |  // c [29:implicit mat =>...:55)
+       |Term.ParamClause implicit mat [29:implicit mat:41)
+       |Term.Param implicit mat [29:implicit mat:41)
+       |Term.Block a
+       |  // c [47:a...:55)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwImplicit [14..22)
+       |Ident(ec) [23..25)
+       |RightArrow [26..28)
+       |KwImplicit [29..37)
+       |Ident(mat) [38..41)
+       |RightArrow [42..44)
+       |Indentation.Indent [44..44)
+       |Ident(a) [47..48)
+       |Indentation.Outdent [55..55)
+       |RightBrace [56..57)
+       |EOF [58..58)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { x => y => z =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { x => y => z =>
+       |  a
+       |  // c
+       |} [8:foo { x => y => z =>...:41)
+       |Term.Block { x => y => z =>
+       |  a
+       |  // c
+       |} [12:{ x => y => z =>...:41)
+       |Term.Function x => y => z =>
+       |  a
+       |  // c [14:x => y => z =>...:39)
+       |Term.ParamClause x [14:x:15)
+       |Term.Param x [14:x:15)
+       |Term.Function y => z =>
+       |  a
+       |  // c [19:y => z =>...:39)
+       |Term.ParamClause y [19:y:20)
+       |Term.Param y [19:y:20)
+       |Term.Function z =>
+       |  a
+       |  // c [24:z =>...:39)
+       |Term.ParamClause z [24:z:25)
+       |Term.Param z [24:z:25)
+       |Term.Block a
+       |  // c [31:a...:39)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |Ident(x) [14..15)
+       |RightArrow [16..18)
+       |Ident(y) [19..20)
+       |RightArrow [21..23)
+       |Ident(z) [24..25)
+       |RightArrow [26..28)
+       |Indentation.Indent [28..28)
+       |Ident(a) [31..32)
+       |Indentation.Outdent [39..39)
+       |RightBrace [40..41)
+       |EOF [42..42)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { x => implicit y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { x => implicit y =>
+       |  a
+       |  // c
+       |} [8:foo { x => implicit y =>...:45)
+       |Term.Block { x => implicit y =>
+       |  a
+       |  // c
+       |} [12:{ x => implicit y =>...:45)
+       |Term.Function x => implicit y =>
+       |  a
+       |  // c [14:x => implicit y =>...:43)
+       |Term.ParamClause x [14:x:15)
+       |Term.Param x [14:x:15)
+       |Term.Function implicit y =>
+       |  a
+       |  // c [19:implicit y =>...:43)
+       |Term.ParamClause implicit y [19:implicit y:29)
+       |Term.Param implicit y [19:implicit y:29)
+       |Term.Block a
+       |  // c [35:a...:43)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |Ident(x) [14..15)
+       |RightArrow [16..18)
+       |KwImplicit [19..27)
+       |Ident(y) [28..29)
+       |RightArrow [30..32)
+       |Indentation.Indent [32..32)
+       |Ident(a) [35..36)
+       |Indentation.Outdent [43..43)
+       |RightBrace [44..45)
+       |EOF [46..46)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { implicit x: Int => y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { implicit x: Int => y =>
+       |  a
+       |  // c
+       |} [8:foo { implicit x: Int => y =>...:50)
+       |Term.Block { implicit x: Int => y =>
+       |  a
+       |  // c
+       |} [12:{ implicit x: Int => y =>...:50)
+       |Term.Function implicit x: Int => y =>
+       |  a
+       |  // c [14:implicit x: Int => y =>...:48)
+       |Term.ParamClause implicit x: Int [14:implicit x: Int:29)
+       |Term.Param implicit x: Int [14:implicit x: Int:29)
+       |Term.Function y =>
+       |  a
+       |  // c [33:y =>...:48)
+       |Term.ParamClause y [33:y:34)
+       |Term.Param y [33:y:34)
+       |Term.Block a
+       |  // c [40:a...:48)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwImplicit [14..22)
+       |Ident(x) [23..24)
+       |Colon [24..25)
+       |Ident(Int) [26..29)
+       |RightArrow [30..32)
+       |Ident(y) [33..34)
+       |RightArrow [35..37)
+       |Indentation.Indent [37..37)
+       |Ident(a) [40..41)
+       |Indentation.Outdent [48..48)
+       |RightBrace [49..50)
+       |EOF [51..51)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { (x, y) => z =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { (x, y) => z =>
+       |  a
+       |  // c
+       |} [8:foo { (x, y) => z =>...:41)
+       |Term.Block { (x, y) => z =>
+       |  a
+       |  // c
+       |} [12:{ (x, y) => z =>...:41)
+       |Term.Function (x, y) => z =>
+       |  a
+       |  // c [14:(x, y) => z =>...:39)
+       |Term.ParamClause (x, y) [14:(x, y):20)
+       |Term.Param x [15:x:16)
+       |Term.Param y [18:y:19)
+       |Term.Function z =>
+       |  a
+       |  // c [24:z =>...:39)
+       |Term.ParamClause z [24:z:25)
+       |Term.Param z [24:z:25)
+       |Term.Block a
+       |  // c [31:a...:39)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |LeftParen [14..15)
+       |Ident(x) [15..16)
+       |Comma [16..17)
+       |Ident(y) [18..19)
+       |RightParen [19..20)
+       |RightArrow [21..23)
+       |Ident(z) [24..25)
+       |RightArrow [26..28)
+       |Indentation.Indent [28..28)
+       |Ident(a) [31..32)
+       |Indentation.Outdent [39..39)
+       |RightBrace [40..41)
+       |EOF [42..42)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val f = { [T] => (x: T) =>
+       |  x
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Block { [T] => (x: T) =>
+       |  x
+       |  // c
+       |} [8:{ [T] => (x: T) =>...:39)
+       |Term.PolyFunction [T] => (x: T) =>
+       |  x
+       |  // c [10:[T] => (x: T) =>...:37)
+       |Type.ParamClause [T] [10:[T]:13)
+       |Type.ParamClause val f = { [T@@] => (x: T) => [12::12)
+       |Type.Bounds val f = { [T@@] => (x: T) => [12::12)
+       |Term.Function (x: T) =>
+       |  x
+       |  // c [17:(x: T) =>...:37)
+       |Term.ParamClause (x: T) [17:(x: T):23)
+       |Term.Block x
+       |  // c [29:x...:37)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |LeftBrace [8..9)
+       |LeftBracket [10..11)
+       |Ident(T) [11..12)
+       |RightBracket [12..13)
+       |RightArrow [14..16)
+       |LeftParen [17..18)
+       |Ident(x) [18..19)
+       |Colon [19..20)
+       |Ident(T) [21..22)
+       |RightParen [22..23)
+       |RightArrow [24..26)
+       |Indentation.Indent [26..26)
+       |Ident(x) [29..30)
+       |Indentation.Outdent [37..37)
+       |RightBrace [38..39)
+       |EOF [40..40)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo({ x => y =>
+       |  a
+       |  // c
+       |})
+       |""".stripMargin,
+    """|Term.Apply foo({ x => y =>
+       |  a
+       |  // c
+       |}) [8:foo({ x => y =>...:37)
+       |Term.ArgClause ({ x => y =>
+       |  a
+       |  // c
+       |}) [11:({ x => y =>...:37)
+       |Term.Block { x => y =>
+       |  a
+       |  // c
+       |} [12:{ x => y =>...:36)
+       |Term.Function x => y =>
+       |  a
+       |  // c [14:x => y =>...:34)
+       |Term.ParamClause x [14:x:15)
+       |Term.Param x [14:x:15)
+       |Term.Function y =>
+       |  a
+       |  // c [19:y =>...:34)
+       |Term.ParamClause y [19:y:20)
+       |Term.Param y [19:y:20)
+       |Term.Block a
+       |  // c [26:a...:34)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftParen [11..12)
+       |LeftBrace [12..13)
+       |Ident(x) [14..15)
+       |RightArrow [16..18)
+       |Ident(y) [19..20)
+       |RightArrow [21..23)
+       |Indentation.Indent [23..23)
+       |Ident(a) [26..27)
+       |Indentation.Outdent [34..34)
+       |RightBrace [35..36)
+       |RightParen [36..37)
+       |EOF [38..38)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case x => y =>
+       |  a
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { case x => y =>
+       |  a
+       |} [8:foo { case x => y =>...:34)
+       |Term.PartialFunction { case x => y =>
+       |  a
+       |} [12:{ case x => y =>...:34)
+       |Case case x => y =>
+       |  a [14:case x => y =>...:32)
+       |Term.Function y =>
+       |  a [24:y =>...:32)
+       |Term.ParamClause y [24:y:25)
+       |Term.Param y [24:y:25)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Ident(x) [19..20)
+       |RightArrow [21..23)
+       |Ident(y) [24..25)
+       |RightArrow [26..28)
+       |Indentation.Indent [28..28)
+       |Ident(a) [31..32)
+       |Indentation.Outdent [32..32)
+       |LF [32..33)
+       |RightBrace [33..34)
+       |EOF [35..35)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case x => y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { case x => y =>
+       |  a
+       |  // c
+       |} [8:foo { case x => y =>...:41)
+       |Term.PartialFunction { case x => y =>
+       |  a
+       |  // c
+       |} [12:{ case x => y =>...:41)
+       |Case case x => y =>
+       |  a
+       |  // c [14:case x => y =>...:39)
+       |Term.Function y =>
+       |  a
+       |  // c [24:y =>...:39)
+       |Term.ParamClause y [24:y:25)
+       |Term.Param y [24:y:25)
+       |Term.Block a
+       |  // c [31:a...:39)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Ident(x) [19..20)
+       |RightArrow [21..23)
+       |Ident(y) [24..25)
+       |RightArrow [26..28)
+       |Indentation.Indent [28..28)
+       |Ident(a) [31..32)
+       |Indentation.Outdent [39..39)
+       |RightBrace [40..41)
+       |EOF [42..42)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case x => y ?=>
+       |  a
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { case x => y ?=>
+       |  a
+       |} [8:foo { case x => y ?=>...:35)
+       |Term.PartialFunction { case x => y ?=>
+       |  a
+       |} [12:{ case x => y ?=>...:35)
+       |Case case x => y ?=>
+       |  a [14:case x => y ?=>...:33)
+       |Term.ContextFunction y ?=>
+       |  a [24:y ?=>...:33)
+       |Term.ParamClause y [24:y:25)
+       |Term.Param y [24:y:25)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Ident(x) [19..20)
+       |RightArrow [21..23)
+       |Ident(y) [24..25)
+       |ContextArrow [26..29)
+       |Indentation.Indent [29..29)
+       |Ident(a) [32..33)
+       |Indentation.Outdent [33..33)
+       |LF [33..34)
+       |RightBrace [34..35)
+       |EOF [36..36)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case x => y ?=>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { case x => y ?=>
+       |  a
+       |  // c
+       |} [8:foo { case x => y ?=>...:42)
+       |Term.PartialFunction { case x => y ?=>
+       |  a
+       |  // c
+       |} [12:{ case x => y ?=>...:42)
+       |Case case x => y ?=>
+       |  a
+       |  // c [14:case x => y ?=>...:40)
+       |Term.ContextFunction y ?=>
+       |  a
+       |  // c [24:y ?=>...:40)
+       |Term.ParamClause y [24:y:25)
+       |Term.Param y [24:y:25)
+       |Term.Block a
+       |  // c [32:a...:40)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Ident(x) [19..20)
+       |RightArrow [21..23)
+       |Ident(y) [24..25)
+       |ContextArrow [26..29)
+       |Indentation.Indent [29..29)
+       |Ident(a) [32..33)
+       |Indentation.Outdent [40..40)
+       |RightBrace [41..42)
+       |EOF [43..43)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case x => implicit y =>
+       |  a
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { case x => implicit y =>
+       |  a
+       |} [8:foo { case x => implicit y =>...:43)
+       |Term.PartialFunction { case x => implicit y =>
+       |  a
+       |} [12:{ case x => implicit y =>...:43)
+       |Case case x => implicit y =>
+       |  a [14:case x => implicit y =>...:41)
+       |Term.Function implicit y =>
+       |  a [24:implicit y =>...:41)
+       |Term.ParamClause implicit y [24:implicit y:34)
+       |Term.Param implicit y [24:implicit y:34)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Ident(x) [19..20)
+       |RightArrow [21..23)
+       |KwImplicit [24..32)
+       |Ident(y) [33..34)
+       |RightArrow [35..37)
+       |Indentation.Indent [37..37)
+       |Ident(a) [40..41)
+       |Indentation.Outdent [41..41)
+       |LF [41..42)
+       |RightBrace [42..43)
+       |EOF [44..44)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case x => implicit y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { case x => implicit y =>
+       |  a
+       |  // c
+       |} [8:foo { case x => implicit y =>...:50)
+       |Term.PartialFunction { case x => implicit y =>
+       |  a
+       |  // c
+       |} [12:{ case x => implicit y =>...:50)
+       |Case case x => implicit y =>
+       |  a
+       |  // c [14:case x => implicit y =>...:48)
+       |Term.Function implicit y =>
+       |  a
+       |  // c [24:implicit y =>...:48)
+       |Term.ParamClause implicit y [24:implicit y:34)
+       |Term.Param implicit y [24:implicit y:34)
+       |Term.Block a
+       |  // c [40:a...:48)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Ident(x) [19..20)
+       |RightArrow [21..23)
+       |KwImplicit [24..32)
+       |Ident(y) [33..34)
+       |RightArrow [35..37)
+       |Indentation.Indent [37..37)
+       |Ident(a) [40..41)
+       |Indentation.Outdent [48..48)
+       |RightBrace [49..50)
+       |EOF [51..51)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case x => y => z =>
+       |  a
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { case x => y => z =>
+       |  a
+       |} [8:foo { case x => y => z =>...:39)
+       |Term.PartialFunction { case x => y => z =>
+       |  a
+       |} [12:{ case x => y => z =>...:39)
+       |Case case x => y => z =>
+       |  a [14:case x => y => z =>...:37)
+       |Term.Function y => z =>
+       |  a [24:y => z =>...:37)
+       |Term.ParamClause y [24:y:25)
+       |Term.Param y [24:y:25)
+       |Term.Function z =>
+       |  a [29:z =>...:37)
+       |Term.ParamClause z [29:z:30)
+       |Term.Param z [29:z:30)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Ident(x) [19..20)
+       |RightArrow [21..23)
+       |Ident(y) [24..25)
+       |RightArrow [26..28)
+       |Ident(z) [29..30)
+       |RightArrow [31..33)
+       |Indentation.Indent [33..33)
+       |Ident(a) [36..37)
+       |Indentation.Outdent [37..37)
+       |LF [37..38)
+       |RightBrace [38..39)
+       |EOF [40..40)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case x => y => z =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { case x => y => z =>
+       |  a
+       |  // c
+       |} [8:foo { case x => y => z =>...:46)
+       |Term.PartialFunction { case x => y => z =>
+       |  a
+       |  // c
+       |} [12:{ case x => y => z =>...:46)
+       |Case case x => y => z =>
+       |  a
+       |  // c [14:case x => y => z =>...:44)
+       |Term.Function y => z =>
+       |  a
+       |  // c [24:y => z =>...:44)
+       |Term.ParamClause y [24:y:25)
+       |Term.Param y [24:y:25)
+       |Term.Function z =>
+       |  a
+       |  // c [29:z =>...:44)
+       |Term.ParamClause z [29:z:30)
+       |Term.Param z [29:z:30)
+       |Term.Block a
+       |  // c [36:a...:44)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Ident(x) [19..20)
+       |RightArrow [21..23)
+       |Ident(y) [24..25)
+       |RightArrow [26..28)
+       |Ident(z) [29..30)
+       |RightArrow [31..33)
+       |Indentation.Indent [33..33)
+       |Ident(a) [36..37)
+       |Indentation.Outdent [44..44)
+       |RightBrace [45..46)
+       |EOF [47..47)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = xs.map { case (k, v) => implicit ctx =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply xs.map { case (k, v) => implicit ctx =>
+       |  a
+       |  // c
+       |} [8:xs.map { case (k, v) => implicit ctx =>...:60)
+       |Term.Select xs.map [8:xs.map:14)
+       |Term.PartialFunction { case (k, v) => implicit ctx =>
+       |  a
+       |  // c
+       |} [15:{ case (k, v) => implicit ctx =>...:60)
+       |Case case (k, v) => implicit ctx =>
+       |  a
+       |  // c [17:case (k, v) => implicit ctx =>...:58)
+       |Pat.Tuple (k, v) [22:(k, v):28)
+       |Term.Function implicit ctx =>
+       |  a
+       |  // c [32:implicit ctx =>...:58)
+       |Term.ParamClause implicit ctx [32:implicit ctx:44)
+       |Term.Param implicit ctx [32:implicit ctx:44)
+       |Term.Block a
+       |  // c [50:a...:58)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(xs) [8..10)
+       |Dot [10..11)
+       |Ident(map) [11..14)
+       |LeftBrace [15..16)
+       |KwCase [17..21)
+       |LeftParen [22..23)
+       |Ident(k) [23..24)
+       |Comma [24..25)
+       |Ident(v) [26..27)
+       |RightParen [27..28)
+       |RightArrow [29..31)
+       |KwImplicit [32..40)
+       |Ident(ctx) [41..44)
+       |RightArrow [45..47)
+       |Indentation.Indent [47..47)
+       |Ident(a) [50..51)
+       |Indentation.Outdent [58..58)
+       |RightBrace [59..60)
+       |EOF [61..61)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = x match { case 1 => y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Match x match { case 1 => y =>
+       |  a
+       |  // c
+       |} [8:x match { case 1 => y =>...:45)
+       |Term.CasesBlock { case 1 => y =>
+       |  a
+       |  // c
+       |} [16:{ case 1 => y =>...:45)
+       |Case case 1 => y =>
+       |  a
+       |  // c [18:case 1 => y =>...:43)
+       |Term.Function y =>
+       |  a
+       |  // c [28:y =>...:43)
+       |Term.ParamClause y [28:y:29)
+       |Term.Param y [28:y:29)
+       |Term.Block a
+       |  // c [35:a...:43)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(x) [8..9)
+       |KwMatch [10..15)
+       |LeftBrace [16..17)
+       |KwCase [18..22)
+       |Constant.Int(1) [23..24)
+       |RightArrow [25..27)
+       |Ident(y) [28..29)
+       |RightArrow [30..32)
+       |Indentation.Indent [32..32)
+       |Ident(a) [35..36)
+       |Indentation.Outdent [43..43)
+       |RightBrace [44..45)
+       |EOF [46..46)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int => Int = { case x => y =>
+       |  x + y
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int => Int [9:Int => Int => Int:26)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.Function Int => Int [16:Int => Int:26)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Term.PartialFunction { case x => y =>
+       |  x + y
+       |} [29:{ case x => y =>...:55)
+       |Case case x => y =>
+       |  x + y [31:case x => y =>...:53)
+       |Term.Function y =>
+       |  x + y [41:y =>...:53)
+       |Term.ParamClause y [41:y:42)
+       |Term.Param y [41:y:42)
+       |Term.ApplyInfix x + y [48:x + y:53)
+       |Type.ArgClause   x + @@y [52::52)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |RightArrow [20..22)
+       |Ident(Int) [23..26)
+       |Equals [27..28)
+       |LeftBrace [29..30)
+       |KwCase [31..35)
+       |Ident(x) [36..37)
+       |RightArrow [38..40)
+       |Ident(y) [41..42)
+       |RightArrow [43..45)
+       |Indentation.Indent [45..45)
+       |Ident(x) [48..49)
+       |Ident(+) [50..51)
+       |Ident(y) [52..53)
+       |Indentation.Outdent [53..53)
+       |LF [53..54)
+       |RightBrace [54..55)
+       |EOF [56..56)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int => Int = { case x => y =>
+       |  x + y
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int => Int [9:Int => Int => Int:26)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.Function Int => Int [16:Int => Int:26)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Term.PartialFunction { case x => y =>
+       |  x + y
+       |  // c
+       |} [29:{ case x => y =>...:62)
+       |Case case x => y =>
+       |  x + y
+       |  // c [31:case x => y =>...:60)
+       |Term.Function y =>
+       |  x + y
+       |  // c [41:y =>...:60)
+       |Term.ParamClause y [41:y:42)
+       |Term.Param y [41:y:42)
+       |Term.Block x + y
+       |  // c [48:x + y...:60)
+       |Term.ApplyInfix x + y [48:x + y:53)
+       |Type.ArgClause   x + @@y [52::52)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |RightArrow [20..22)
+       |Ident(Int) [23..26)
+       |Equals [27..28)
+       |LeftBrace [29..30)
+       |KwCase [31..35)
+       |Ident(x) [36..37)
+       |RightArrow [38..40)
+       |Ident(y) [41..42)
+       |RightArrow [43..45)
+       |Indentation.Indent [45..45)
+       |Ident(x) [48..49)
+       |Ident(+) [50..51)
+       |Ident(y) [52..53)
+       |Indentation.Outdent [60..60)
+       |RightBrace [61..62)
+       |EOF [63..63)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int ?=> Int = { case x => y ?=>
+       |  x + y
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int ?=> Int [9:Int => Int ?=> Int:27)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.ContextFunction Int ?=> Int [16:Int ?=> Int:27)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Term.PartialFunction { case x => y ?=>
+       |  x + y
+       |} [30:{ case x => y ?=>...:57)
+       |Case case x => y ?=>
+       |  x + y [32:case x => y ?=>...:55)
+       |Term.ContextFunction y ?=>
+       |  x + y [42:y ?=>...:55)
+       |Term.ParamClause y [42:y:43)
+       |Term.Param y [42:y:43)
+       |Term.ApplyInfix x + y [50:x + y:55)
+       |Type.ArgClause   x + @@y [54::54)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |ContextArrow [20..23)
+       |Ident(Int) [24..27)
+       |Equals [28..29)
+       |LeftBrace [30..31)
+       |KwCase [32..36)
+       |Ident(x) [37..38)
+       |RightArrow [39..41)
+       |Ident(y) [42..43)
+       |ContextArrow [44..47)
+       |Indentation.Indent [47..47)
+       |Ident(x) [50..51)
+       |Ident(+) [52..53)
+       |Ident(y) [54..55)
+       |Indentation.Outdent [55..55)
+       |LF [55..56)
+       |RightBrace [56..57)
+       |EOF [58..58)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int ?=> Int = { case x => y ?=>
+       |  x + y
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int ?=> Int [9:Int => Int ?=> Int:27)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.ContextFunction Int ?=> Int [16:Int ?=> Int:27)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Term.PartialFunction { case x => y ?=>
+       |  x + y
+       |  // c
+       |} [30:{ case x => y ?=>...:64)
+       |Case case x => y ?=>
+       |  x + y
+       |  // c [32:case x => y ?=>...:62)
+       |Term.ContextFunction y ?=>
+       |  x + y
+       |  // c [42:y ?=>...:62)
+       |Term.ParamClause y [42:y:43)
+       |Term.Param y [42:y:43)
+       |Term.Block x + y
+       |  // c [50:x + y...:62)
+       |Term.ApplyInfix x + y [50:x + y:55)
+       |Type.ArgClause   x + @@y [54::54)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |ContextArrow [20..23)
+       |Ident(Int) [24..27)
+       |Equals [28..29)
+       |LeftBrace [30..31)
+       |KwCase [32..36)
+       |Ident(x) [37..38)
+       |RightArrow [39..41)
+       |Ident(y) [42..43)
+       |ContextArrow [44..47)
+       |Indentation.Indent [47..47)
+       |Ident(x) [50..51)
+       |Ident(+) [52..53)
+       |Ident(y) [54..55)
+       |Indentation.Outdent [62..62)
+       |RightBrace [63..64)
+       |EOF [65..65)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int => Int = { case x => implicit y =>
+       |  x + y
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int => Int [9:Int => Int => Int:26)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.Function Int => Int [16:Int => Int:26)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Term.PartialFunction { case x => implicit y =>
+       |  x + y
+       |} [29:{ case x => implicit y =>...:64)
+       |Case case x => implicit y =>
+       |  x + y [31:case x => implicit y =>...:62)
+       |Term.Function implicit y =>
+       |  x + y [41:implicit y =>...:62)
+       |Term.ParamClause implicit y [41:implicit y:51)
+       |Term.Param implicit y [41:implicit y:51)
+       |Term.ApplyInfix x + y [57:x + y:62)
+       |Type.ArgClause   x + @@y [61::61)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |RightArrow [20..22)
+       |Ident(Int) [23..26)
+       |Equals [27..28)
+       |LeftBrace [29..30)
+       |KwCase [31..35)
+       |Ident(x) [36..37)
+       |RightArrow [38..40)
+       |KwImplicit [41..49)
+       |Ident(y) [50..51)
+       |RightArrow [52..54)
+       |Indentation.Indent [54..54)
+       |Ident(x) [57..58)
+       |Ident(+) [59..60)
+       |Ident(y) [61..62)
+       |Indentation.Outdent [62..62)
+       |LF [62..63)
+       |RightBrace [63..64)
+       |EOF [65..65)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int => Int = { case x => implicit y =>
+       |  x + y
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int => Int [9:Int => Int => Int:26)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.Function Int => Int [16:Int => Int:26)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Term.PartialFunction { case x => implicit y =>
+       |  x + y
+       |  // c
+       |} [29:{ case x => implicit y =>...:71)
+       |Case case x => implicit y =>
+       |  x + y
+       |  // c [31:case x => implicit y =>...:69)
+       |Term.Function implicit y =>
+       |  x + y
+       |  // c [41:implicit y =>...:69)
+       |Term.ParamClause implicit y [41:implicit y:51)
+       |Term.Param implicit y [41:implicit y:51)
+       |Term.Block x + y
+       |  // c [57:x + y...:69)
+       |Term.ApplyInfix x + y [57:x + y:62)
+       |Type.ArgClause   x + @@y [61::61)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |RightArrow [20..22)
+       |Ident(Int) [23..26)
+       |Equals [27..28)
+       |LeftBrace [29..30)
+       |KwCase [31..35)
+       |Ident(x) [36..37)
+       |RightArrow [38..40)
+       |KwImplicit [41..49)
+       |Ident(y) [50..51)
+       |RightArrow [52..54)
+       |Indentation.Indent [54..54)
+       |Ident(x) [57..58)
+       |Ident(+) [59..60)
+       |Ident(y) [61..62)
+       |Indentation.Outdent [69..69)
+       |RightBrace [70..71)
+       |EOF [72..72)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int => Int => Int = { case x => y => z =>
+       |  x + y
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int => Int => Int [9:Int => Int => Int => Int:33)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.Function Int => Int => Int [16:Int => Int => Int:33)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Type.Function Int => Int [23:Int => Int:33)
+       |Type.FuncParamClause Int [23:Int:26)
+       |Term.PartialFunction { case x => y => z =>
+       |  x + y
+       |} [36:{ case x => y => z =>...:67)
+       |Case case x => y => z =>
+       |  x + y [38:case x => y => z =>...:65)
+       |Term.Function y => z =>
+       |  x + y [48:y => z =>...:65)
+       |Term.ParamClause y [48:y:49)
+       |Term.Param y [48:y:49)
+       |Term.Function z =>
+       |  x + y [53:z =>...:65)
+       |Term.ParamClause z [53:z:54)
+       |Term.Param z [53:z:54)
+       |Term.ApplyInfix x + y [60:x + y:65)
+       |Type.ArgClause   x + @@y [64::64)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |RightArrow [20..22)
+       |Ident(Int) [23..26)
+       |RightArrow [27..29)
+       |Ident(Int) [30..33)
+       |Equals [34..35)
+       |LeftBrace [36..37)
+       |KwCase [38..42)
+       |Ident(x) [43..44)
+       |RightArrow [45..47)
+       |Ident(y) [48..49)
+       |RightArrow [50..52)
+       |Ident(z) [53..54)
+       |RightArrow [55..57)
+       |Indentation.Indent [57..57)
+       |Ident(x) [60..61)
+       |Ident(+) [62..63)
+       |Ident(y) [64..65)
+       |Indentation.Outdent [65..65)
+       |LF [65..66)
+       |RightBrace [66..67)
+       |EOF [68..68)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|val add: Int => Int => Int => Int = { case x => y => z =>
+       |  x + y
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int => Int => Int [9:Int => Int => Int => Int:33)
+       |Type.FuncParamClause Int [9:Int:12)
+       |Type.Function Int => Int => Int [16:Int => Int => Int:33)
+       |Type.FuncParamClause Int [16:Int:19)
+       |Type.Function Int => Int [23:Int => Int:33)
+       |Type.FuncParamClause Int [23:Int:26)
+       |Term.PartialFunction { case x => y => z =>
+       |  x + y
+       |  // c
+       |} [36:{ case x => y => z =>...:74)
+       |Case case x => y => z =>
+       |  x + y
+       |  // c [38:case x => y => z =>...:72)
+       |Term.Function y => z =>
+       |  x + y
+       |  // c [48:y => z =>...:72)
+       |Term.ParamClause y [48:y:49)
+       |Term.Param y [48:y:49)
+       |Term.Function z =>
+       |  x + y
+       |  // c [53:z =>...:72)
+       |Term.ParamClause z [53:z:54)
+       |Term.Param z [53:z:54)
+       |Term.Block x + y
+       |  // c [60:x + y...:72)
+       |Term.ApplyInfix x + y [60:x + y:65)
+       |Type.ArgClause   x + @@y [64::64)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Ident(add) [4..7)
+       |Colon [7..8)
+       |Ident(Int) [9..12)
+       |RightArrow [13..15)
+       |Ident(Int) [16..19)
+       |RightArrow [20..22)
+       |Ident(Int) [23..26)
+       |RightArrow [27..29)
+       |Ident(Int) [30..33)
+       |Equals [34..35)
+       |LeftBrace [36..37)
+       |KwCase [38..42)
+       |Ident(x) [43..44)
+       |RightArrow [45..47)
+       |Ident(y) [48..49)
+       |RightArrow [50..52)
+       |Ident(z) [53..54)
+       |RightArrow [55..57)
+       |Indentation.Indent [57..57)
+       |Ident(x) [60..61)
+       |Ident(+) [62..63)
+       |Ident(y) [64..65)
+       |Indentation.Outdent [72..72)
+       |RightBrace [73..74)
+       |EOF [75..75)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case x if p => y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { case x if p => y =>
+       |  a
+       |  // c
+       |} [8:foo { case x if p => y =>...:46)
+       |Term.PartialFunction { case x if p => y =>
+       |  a
+       |  // c
+       |} [12:{ case x if p => y =>...:46)
+       |Case case x if p => y =>
+       |  a
+       |  // c [14:case x if p => y =>...:44)
+       |Term.Function y =>
+       |  a
+       |  // c [29:y =>...:44)
+       |Term.ParamClause y [29:y:30)
+       |Term.Param y [29:y:30)
+       |Term.Block a
+       |  // c [36:a...:44)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Ident(x) [19..20)
+       |KwIf [21..23)
+       |Ident(p) [24..25)
+       |RightArrow [26..28)
+       |Ident(y) [29..30)
+       |RightArrow [31..33)
+       |Indentation.Indent [33..33)
+       |Ident(a) [36..37)
+       |Indentation.Outdent [44..44)
+       |RightBrace [45..46)
+       |EOF [47..47)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case x if p(z => z) => y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { case x if p(z => z) => y =>
+       |  a
+       |  // c
+       |} [8:foo { case x if p(z => z) => y =>...:54)
+       |Term.PartialFunction { case x if p(z => z) => y =>
+       |  a
+       |  // c
+       |} [12:{ case x if p(z => z) => y =>...:54)
+       |Case case x if p(z => z) => y =>
+       |  a
+       |  // c [14:case x if p(z => z) => y =>...:52)
+       |Term.Apply p(z => z) [24:p(z => z):33)
+       |Term.ArgClause (z => z) [25:(z => z):33)
+       |Term.Function z => z [26:z => z:32)
+       |Term.ParamClause z [26:z:27)
+       |Term.Param z [26:z:27)
+       |Term.Function y =>
+       |  a
+       |  // c [37:y =>...:52)
+       |Term.ParamClause y [37:y:38)
+       |Term.Param y [37:y:38)
+       |Term.Block a
+       |  // c [44:a...:52)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Ident(x) [19..20)
+       |KwIf [21..23)
+       |Ident(p) [24..25)
+       |LeftParen [25..26)
+       |Ident(z) [26..27)
+       |RightArrow [28..30)
+       |Ident(z) [31..32)
+       |RightParen [32..33)
+       |RightArrow [34..36)
+       |Ident(y) [37..38)
+       |RightArrow [39..41)
+       |Indentation.Indent [41..41)
+       |Ident(a) [44..45)
+       |Indentation.Outdent [52..52)
+       |RightBrace [53..54)
+       |EOF [55..55)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = try a catch { case e => y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Try try a catch { case e => y =>
+       |  a
+       |  // c
+       |} [8:try a catch { case e => y =>...:49)
+       |Term.CasesBlock { case e => y =>
+       |  a
+       |  // c
+       |} [20:{ case e => y =>...:49)
+       |Case case e => y =>
+       |  a
+       |  // c [22:case e => y =>...:47)
+       |Term.Function y =>
+       |  a
+       |  // c [32:y =>...:47)
+       |Term.ParamClause y [32:y:33)
+       |Term.Param y [32:y:33)
+       |Term.Block a
+       |  // c [39:a...:47)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |KwTry [8..11)
+       |Ident(a) [12..13)
+       |KwCatch [14..19)
+       |LeftBrace [20..21)
+       |KwCase [22..26)
+       |Ident(e) [27..28)
+       |RightArrow [29..31)
+       |Ident(y) [32..33)
+       |RightArrow [34..36)
+       |Indentation.Indent [36..36)
+       |Ident(a) [39..40)
+       |Indentation.Outdent [47..47)
+       |RightBrace [48..49)
+       |EOF [50..50)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case x => bar { case z => y =>
+       |  a
+       |  // c
+       |}}
+       |""".stripMargin,
+    """|Term.Apply foo { case x => bar { case z => y =>
+       |  a
+       |  // c
+       |}} [8:foo { case x => bar { case z => y =>...:58)
+       |Term.PartialFunction { case x => bar { case z => y =>
+       |  a
+       |  // c
+       |}} [12:{ case x => bar { case z => y =>...:58)
+       |Case case x => bar { case z => y =>
+       |  a
+       |  // c
+       |} [14:case x => bar { case z => y =>...:57)
+       |Term.Apply bar { case z => y =>
+       |  a
+       |  // c
+       |} [24:bar { case z => y =>...:57)
+       |Term.PartialFunction { case z => y =>
+       |  a
+       |  // c
+       |} [28:{ case z => y =>...:57)
+       |Case case z => y =>
+       |  a
+       |  // c [30:case z => y =>...:55)
+       |Term.Function y =>
+       |  a
+       |  // c [40:y =>...:55)
+       |Term.ParamClause y [40:y:41)
+       |Term.Param y [40:y:41)
+       |Term.Block a
+       |  // c [47:a...:55)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Ident(x) [19..20)
+       |RightArrow [21..23)
+       |Ident(bar) [24..27)
+       |LeftBrace [28..29)
+       |KwCase [30..34)
+       |Ident(z) [35..36)
+       |RightArrow [37..39)
+       |Ident(y) [40..41)
+       |RightArrow [42..44)
+       |Indentation.Indent [44..44)
+       |Ident(a) [47..48)
+       |Indentation.Outdent [55..55)
+       |RightBrace [56..57)
+       |RightBrace [57..58)
+       |EOF [59..59)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case x => implicit y: Int =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { case x => implicit y: Int =>
+       |  a
+       |  // c
+       |} [8:foo { case x => implicit y: Int =>...:55)
+       |Term.PartialFunction { case x => implicit y: Int =>
+       |  a
+       |  // c
+       |} [12:{ case x => implicit y: Int =>...:55)
+       |Case case x => implicit y: Int =>
+       |  a
+       |  // c [14:case x => implicit y: Int =>...:53)
+       |Term.Function implicit y: Int =>
+       |  a
+       |  // c [24:implicit y: Int =>...:53)
+       |Term.ParamClause implicit y: Int [24:implicit y: Int:39)
+       |Term.Param implicit y: Int [24:implicit y: Int:39)
+       |Term.Block a
+       |  // c [45:a...:53)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Ident(x) [19..20)
+       |RightArrow [21..23)
+       |KwImplicit [24..32)
+       |Ident(y) [33..34)
+       |Colon [34..35)
+       |Ident(Int) [36..39)
+       |RightArrow [40..42)
+       |Indentation.Indent [42..42)
+       |Ident(a) [45..46)
+       |Indentation.Outdent [53..53)
+       |RightBrace [54..55)
+       |EOF [56..56)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { case 1 => a; case x => y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { case 1 => a; case x => y =>
+       |  a
+       |  // c
+       |} [8:foo { case 1 => a; case x => y =>...:54)
+       |Term.PartialFunction { case 1 => a; case x => y =>
+       |  a
+       |  // c
+       |} [12:{ case 1 => a; case x => y =>...:54)
+       |Case case 1 => a; [14:case 1 => a;:26)
+       |Case case x => y =>
+       |  a
+       |  // c [27:case x => y =>...:52)
+       |Term.Function y =>
+       |  a
+       |  // c [37:y =>...:52)
+       |Term.ParamClause y [37:y:38)
+       |Term.Param y [37:y:38)
+       |Term.Block a
+       |  // c [44:a...:52)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |KwCase [14..18)
+       |Constant.Int(1) [19..20)
+       |RightArrow [21..23)
+       |Ident(a) [24..25)
+       |Semicolon [25..26)
+       |KwCase [27..31)
+       |Ident(x) [32..33)
+       |RightArrow [34..36)
+       |Ident(y) [37..38)
+       |RightArrow [39..41)
+       |Indentation.Indent [41..41)
+       |Ident(a) [44..45)
+       |Indentation.Outdent [52..52)
+       |RightBrace [53..54)
+       |EOF [55..55)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { x => implicit y: Int =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { x => implicit y: Int =>
+       |  a
+       |  // c
+       |} [8:foo { x => implicit y: Int =>...:50)
+       |Term.Block { x => implicit y: Int =>
+       |  a
+       |  // c
+       |} [12:{ x => implicit y: Int =>...:50)
+       |Term.Function x => implicit y: Int =>
+       |  a
+       |  // c [14:x => implicit y: Int =>...:48)
+       |Term.ParamClause x [14:x:15)
+       |Term.Param x [14:x:15)
+       |Term.Function implicit y: Int =>
+       |  a
+       |  // c [19:implicit y: Int =>...:48)
+       |Term.ParamClause implicit y: Int [19:implicit y: Int:34)
+       |Term.Param implicit y: Int [19:implicit y: Int:34)
+       |Term.Block a
+       |  // c [40:a...:48)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |Ident(x) [14..15)
+       |RightArrow [16..18)
+       |KwImplicit [19..27)
+       |Ident(y) [28..29)
+       |Colon [29..30)
+       |Ident(Int) [31..34)
+       |RightArrow [35..37)
+       |Indentation.Indent [37..37)
+       |Ident(a) [40..41)
+       |Indentation.Outdent [48..48)
+       |RightBrace [49..50)
+       |EOF [51..51)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { _ => y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { _ => y =>
+       |  a
+       |  // c
+       |} [8:foo { _ => y =>...:36)
+       |Term.Block { _ => y =>
+       |  a
+       |  // c
+       |} [12:{ _ => y =>...:36)
+       |Term.Function _ => y =>
+       |  a
+       |  // c [14:_ => y =>...:34)
+       |Term.ParamClause _ [14:_:15)
+       |Term.Param _ [14:_:15)
+       |Term.Function y =>
+       |  a
+       |  // c [19:y =>...:34)
+       |Term.ParamClause y [19:y:20)
+       |Term.Param y [19:y:20)
+       |Term.Block a
+       |  // c [26:a...:34)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |Underscore [14..15)
+       |RightArrow [16..18)
+       |Ident(y) [19..20)
+       |RightArrow [21..23)
+       |Indentation.Indent [23..23)
+       |Ident(a) [26..27)
+       |Indentation.Outdent [34..34)
+       |RightBrace [35..36)
+       |EOF [37..37)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { (x: Int) ?=> y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { (x: Int) ?=> y =>
+       |  a
+       |  // c
+       |} [8:foo { (x: Int) ?=> y =>...:44)
+       |Term.Block { (x: Int) ?=> y =>
+       |  a
+       |  // c
+       |} [12:{ (x: Int) ?=> y =>...:44)
+       |Term.ContextFunction (x: Int) ?=> y =>
+       |  a
+       |  // c [14:(x: Int) ?=> y =>...:42)
+       |Term.ParamClause (x: Int) [14:(x: Int):22)
+       |Term.Function y =>
+       |  a
+       |  // c [27:y =>...:42)
+       |Term.ParamClause y [27:y:28)
+       |Term.Param y [27:y:28)
+       |Term.Block a
+       |  // c [34:a...:42)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |LeftParen [14..15)
+       |Ident(x) [15..16)
+       |Colon [16..17)
+       |Ident(Int) [18..21)
+       |RightParen [21..22)
+       |ContextArrow [23..26)
+       |Ident(y) [27..28)
+       |RightArrow [29..31)
+       |Indentation.Indent [31..31)
+       |Ident(a) [34..35)
+       |Indentation.Outdent [42..42)
+       |RightBrace [43..44)
+       |EOF [45..45)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f = foo { /* p */ x => y =>
+       |  a
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Term.Apply foo { /* p */ x => y =>
+       |  a
+       |  // c
+       |} [8:foo { /* p */ x => y =>...:44)
+       |Term.Block { /* p */ x => y =>
+       |  a
+       |  // c
+       |} [12:{ /* p */ x => y =>...:44)
+       |Term.Function x => y =>
+       |  a
+       |  // c [22:x => y =>...:42)
+       |Term.ParamClause x [22:x:23)
+       |Term.Param x [22:x:23)
+       |Term.Function y =>
+       |  a
+       |  // c [27:y =>...:42)
+       |Term.ParamClause y [27:y:28)
+       |Term.Param y [27:y:28)
+       |Term.Block a
+       |  // c [34:a...:42)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Ident(foo) [8..11)
+       |LeftBrace [12..13)
+       |Ident(x) [22..23)
+       |RightArrow [24..26)
+       |Ident(y) [27..28)
+       |RightArrow [29..31)
+       |Indentation.Indent [31..31)
+       |Ident(a) [34..35)
+       |Indentation.Outdent [42..42)
+       |RightBrace [43..44)
+       |EOF [45..45)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|trait B { this: C =>
+       |  def f = 1
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.ParamClause trait B @@{ this: C => [8::8)
+       |Ctor.Primary trait B @@{ this: C => [8::8)
+       |Template { this: C =>
+       |  def f = 1
+       |  // c
+       |} [8:{ this: C =>...:41)
+       |Template.Body { this: C =>
+       |  def f = 1
+       |  // c
+       |} [8:{ this: C =>...:41)
+       |Self this: C => [10:this: C =>:20)
+       |Defn.Def def f = 1 [23:def f = 1:32)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwTrait [0..5)
+       |Ident(B) [6..7)
+       |LeftBrace [8..9)
+       |KwThis [10..14)
+       |Colon [14..15)
+       |Ident(C) [16..17)
+       |RightArrow [18..20)
+       |Indentation.Indent [20..20)
+       |KwDef [23..26)
+       |Ident(f) [27..28)
+       |Equals [29..30)
+       |Constant.Int(1) [31..32)
+       |Indentation.Outdent [39..39)
+       |RightBrace [40..41)
+       |EOF [42..42)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|trait B { self =>
+       |  def f = 1
+       |  // c
+       |}
+       |""".stripMargin,
+    """|Type.ParamClause trait B @@{ self => [8::8)
+       |Ctor.Primary trait B @@{ self => [8::8)
+       |Template { self =>
+       |  def f = 1
+       |  // c
+       |} [8:{ self =>...:38)
+       |Template.Body { self =>
+       |  def f = 1
+       |  // c
+       |} [8:{ self =>...:38)
+       |Self self => [10:self =>:17)
+       |Defn.Def def f = 1 [20:def f = 1:29)
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwTrait [0..5)
+       |Ident(B) [6..7)
+       |LeftBrace [8..9)
+       |Ident(self) [10..14)
+       |RightArrow [15..17)
+       |Indentation.Indent [17..17)
+       |KwDef [20..23)
+       |Ident(f) [24..25)
+       |Equals [26..27)
+       |Constant.Int(1) [28..29)
+       |Indentation.Outdent [36..36)
+       |RightBrace [37..38)
+       |EOF [39..39)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  throw
+       |    new E
+       |    // c
+       |""".stripMargin,
+    """|Term.Block throw
+       |    new E
+       |    // c [10:throw...:34)
+       |Term.Throw throw
+       |    new E [10:throw...:25)
+       |Term.New new E [20:new E:25)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |KwThrow [10..15)
+       |KwNew [20..23)
+       |Ident(E) [24..25)
+       |Indentation.Outdent [34..34)
+       |EOF [35..35)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
+    """|def f =
+       |  return
+       |    new E
+       |    // c
+       |""".stripMargin,
+    """|Term.Return return
+       |    new E
+       |    // c [10:return...:35)
+       |Term.Block new E
+       |    // c [21:new E...:35)
+       |Term.New new E [21:new E:26)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(f) [4..5)
+       |Equals [6..7)
+       |Indentation.Indent [7..7)
+       |KwReturn [10..16)
+       |Indentation.Indent [16..16)
+       |KwNew [21..24)
+       |Ident(E) [25..26)
+       |Indentation.Outdent [35..35)
+       |Indentation.Outdent [35..35)
+       |EOF [36..36)
+       |""".stripMargin,
+    showPosition = true,
+  )
+
+  checkPositions[Stat](
     """|def f =
        |  g(xs.map: x =>
        |    x /* c */, 2)

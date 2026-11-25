@@ -5418,6 +5418,7618 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("`=>` of a lambda at the end of the line of the `{` of an argument, an expression and `}` on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    xs.map { x =>
+         |      x }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("x"))(tname("x")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda at the end of the line of the `{` of an argument, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    xs.map { x =>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(tname("a"), tname("b")))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda at the end of the line of the `{` of an argument, a definition and an expression on deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    xs.map { x =>
+         |        val y = x
+         |        y
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    val y = x
+         |    y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tname("y")))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda at the end of the line of the `{` of a block, an expression and `}` on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { x =>
+         |      x }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    x => x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(tfunc(tparam("x"))(tname("x")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda at the end of the line of the `{` of a block, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { x =>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = { x =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(tfunc(tparam("x"))(blk(tname("a"), tname("b"))))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda at the end of the line of the `{` of a block, a definition and an expression on deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { x =>
+         |        val y = x
+         |        y
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = { x =>
+         |    val y = x
+         |    y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tfunc(tparam("x"))(blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tname("y")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda at the end of the line of the `{` of an argument, an expression and `}` on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g { (x: Int) ?=>
+         |      x }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    (x: Int) ?=> x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("g"), blk(tctxfunc(tparam("x", pname("Int")))(tname("x")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda at the end of the line of the `{` of an argument, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g { (x: Int) ?=>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    (x: Int) ?=> {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("g"), blk(tctxfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda at the end of the line of the `{` of an argument, a definition and an expression on deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g { (x: Int) ?=>
+         |        val y = x
+         |        y
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    (x: Int) ?=> {
+         |      val y = x
+         |      y
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            blk(tctxfunc(tparam("x", pname("Int")))(
+              blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tname("y")),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda at the end of the line of the `{` of a block, an expression and `}` on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { (x: Int) ?=>
+         |      x }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    (x: Int) ?=> x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(tctxfunc(tparam("x", pname("Int")))(tname("x")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda at the end of the line of the `{` of a block, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { (x: Int) ?=>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    (x: Int) ?=> {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tctxfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda at the end of the line of the `{` of a block, a definition and an expression on deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { (x: Int) ?=>
+         |        val y = x
+         |        y
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    (x: Int) ?=> {
+         |      val y = x
+         |      y
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tctxfunc(tparam("x", pname("Int")))(
+            blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tname("y")),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda at the end of the line of the `{` of an argument, an expression and `}` on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g { xs.map: x =>
+         |      x }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    xs.map {
+         |      x => x
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            blk(tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("x"))(tname("x"))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda at the end of the line of the `{` of an argument, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g { xs.map: x =>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    xs.map { x =>
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            blk(tapply(
+              tselect(tname("xs"), tname("map")),
+              blk(tfunc(tparam("x"))(blk(tname("a"), tname("b")))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda at the end of the line of the `{` of an argument, an expression on each of the two deeper next lines, an expression and `}` between their column and that of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g { xs.map: x =>
+         |        a
+         |        b
+         |      c }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    xs.map { x =>
+         |      a
+         |      b
+         |    }
+         |    c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            blk(
+              tapply(
+                tselect(tname("xs"), tname("map")),
+                blk(tfunc(tparam("x"))(blk(tname("a"), tname("b")))),
+              ),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda at the end of the line of the `{` of an argument, a definition and an expression on deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g { xs.map: x =>
+         |        val y = x
+         |        y
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    xs.map { x =>
+         |      val y = x
+         |      y
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            blk(tapply(
+              tselect(tname("xs"), tname("map")),
+              blk(
+                tfunc(tparam("x"))(blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tname("y"))),
+              ),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda at the end of the line of the `{` of a block, an expression and `}` on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { xs.map: x =>
+         |      x }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    xs.map {
+         |      x => x
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("x"))(tname("x"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda at the end of the line of the `{` of a block, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { xs.map: x =>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    xs.map { x =>
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(tname("a"), tname("b")))),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda at the end of the line of the `{` of a block, an expression on each of the two deeper next lines, an expression and `}` between their column and that of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { xs.map: x =>
+         |        a
+         |        b
+         |      c }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    xs.map { x =>
+         |      a
+         |      b
+         |    }
+         |    c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(
+            tapply(
+              tselect(tname("xs"), tname("map")),
+              blk(tfunc(tparam("x"))(blk(tname("a"), tname("b")))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda at the end of the line of the `{` of a block, a definition and an expression on deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { xs.map: x =>
+         |        val y = x
+         |        y
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    xs.map { x =>
+         |      val y = x
+         |      y
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tname("y")))),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a colon context lambda at the end of the line of the `{` of an argument, an expression and `}` on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g { h: (x: Int) ?=>
+         |      x }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    h {
+         |      (x: Int) ?=> x
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            blk(tapply(tname("h"), blk(tctxfunc(tparam("x", pname("Int")))(tname("x"))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a colon context lambda at the end of the line of the `{` of an argument, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g { h: (x: Int) ?=>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    h {
+         |      (x: Int) ?=> {
+         |        a
+         |        b
+         |      }
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            blk(tapply(tname("h"), blk(tctxfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b")))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a colon context lambda at the end of the line of the `{` of an argument, an expression on each of the two deeper next lines, an expression and `}` between their column and that of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g { h: (x: Int) ?=>
+         |        a
+         |        b
+         |      c }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    h {
+         |      (x: Int) ?=> {
+         |        a
+         |        b
+         |      }
+         |    }
+         |    c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            blk(
+              tapply(tname("h"), blk(tctxfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b"))))),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a colon context lambda at the end of the line of the `{` of an argument, a definition and an expression on deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g { h: (x: Int) ?=>
+         |        val y = x
+         |        y
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    h {
+         |      (x: Int) ?=> {
+         |        val y = x
+         |        y
+         |      }
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            blk(tapply(
+              tname("h"),
+              blk(tctxfunc(tparam("x", pname("Int")))(
+                blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tname("y")),
+              )),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a colon context lambda at the end of the line of the `{` of a block, an expression and `}` on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { h: (x: Int) ?=>
+         |      x }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    h {
+         |      (x: Int) ?=> x
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tapply(tname("h"), blk(tctxfunc(tparam("x", pname("Int")))(tname("x"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a colon context lambda at the end of the line of the `{` of a block, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { h: (x: Int) ?=>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    h {
+         |      (x: Int) ?=> {
+         |        a
+         |        b
+         |      }
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tapply(tname("h"), blk(tctxfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b")))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a colon context lambda at the end of the line of the `{` of a block, an expression on each of the two deeper next lines, an expression and `}` between their column and that of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { h: (x: Int) ?=>
+         |        a
+         |        b
+         |      c }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    h {
+         |      (x: Int) ?=> {
+         |        a
+         |        b
+         |      }
+         |    }
+         |    c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(
+            tapply(tname("h"), blk(tctxfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b"))))),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a colon context lambda at the end of the line of the `{` of a block, a definition and an expression on deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { h: (x: Int) ?=>
+         |        val y = x
+         |        y
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    h {
+         |      (x: Int) ?=> {
+         |        val y = x
+         |        y
+         |      }
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tapply(
+            tname("h"),
+            blk(tctxfunc(tparam("x", pname("Int")))(
+              blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tname("y")),
+            )),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of an argument, an expression and `}` on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    foo { x: Int =>
+         |      x }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x {
+         |      Int => x
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("foo"), blk(tapply(tname("x"), blk(tfunc(tparam("Int"))(tname("x")))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of an argument, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    foo { x: Int =>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x { Int =>
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tapply(tname("x"), blk(tfunc(tparam("Int"))(blk(tname("a"), tname("b")))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of an argument, an expression on each of the two deeper next lines, an expression and `}` between their column and that of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    foo { x: Int =>
+         |        a
+         |        b
+         |      c }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x { Int =>
+         |      a
+         |      b
+         |    }
+         |    c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(
+              tapply(tname("x"), blk(tfunc(tparam("Int"))(blk(tname("a"), tname("b"))))),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of an argument, a definition and an expression on deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    foo { x: Int =>
+         |        val y = x
+         |        y
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x { Int =>
+         |      val y = x
+         |      y
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tapply(
+              tname("x"),
+              blk(tfunc(tparam("Int"))(
+                blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tname("y")),
+              )),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of a block, an expression and `}` on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { x: Int =>
+         |      x }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    x {
+         |      Int => x
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn
+          .Def(Nil, tname("f"), Nil, None, blk(tapply(tname("x"), blk(tfunc(tparam("Int"))(tname("x")))))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of a block, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { x: Int =>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    x { Int =>
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tapply(tname("x"), blk(tfunc(tparam("Int"))(blk(tname("a"), tname("b")))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of a block, an expression on each of the two deeper next lines, an expression and `}` between their column and that of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { x: Int =>
+         |        a
+         |        b
+         |      c }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    x { Int =>
+         |      a
+         |      b
+         |    }
+         |    c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tapply(tname("x"), blk(tfunc(tparam("Int"))(blk(tname("a"), tname("b"))))), tname("c")),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of a block, a definition and an expression on deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    { x: Int =>
+         |        val y = x
+         |        y
+         |    }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    x { Int =>
+         |      val y = x
+         |      y
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tapply(
+            tname("x"),
+            blk(
+              tfunc(tparam("Int"))(blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tname("y"))),
+            ),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of an argument within an object in braces, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A {
+         |  def f =
+         |    foo { x: Int =>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x { Int =>
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tapply(tname("x"), blk(tfunc(tparam("Int"))(blk(tname("a"), tname("b")))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of a block within an object in braces, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    val code =
+      """|object A {
+         |  def f =
+         |    { x: Int =>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    x { Int =>
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tapply(tname("x"), blk(tfunc(tparam("Int"))(blk(tname("a"), tname("b")))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2: `=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of an argument within an object in braces, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|object A {
+         |  def f =
+         |    foo { x: Int =>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo { (x: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("foo"), blk(tfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2 with `-Xsource:3`: `=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of an argument within an object in braces, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f =
+         |    foo { x: Int =>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo { (x: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("foo"), blk(tfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2: `=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of a block within an object in braces, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|object A {
+         |  def f =
+         |    { x: Int =>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = { (x: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2 with `-Xsource:3`: `=>` of a lambda with a typed parameter without parentheses at the end of the line of the `{` of a block within an object in braces, an expression on each of the two deeper next lines, `}` at the column of `{`") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f =
+         |    { x: Int =>
+         |        a
+         |        b
+         |    }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = { (x: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(tname("a"), tname("b")))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = g { (x: Int) ?=>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    (x: Int) ?=> {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("g"), blk(tctxfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, an expression on each of the two next lines, four columns deeper than `def`") {
+    val code =
+      """|object A:
+         |  def f = foo { x =>
+         |      a
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo { x =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("foo"), blk(tfunc(tparam("x"))(blk(tname("a"), tname("b"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, an expression on a deeper next line, an expression at a shallower column on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |      a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("x"))(tname("a")), tname("b"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    parseAndCheckTree[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, a call on a deeper next line, a call at a shallower column on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x =>
+         |      println(x)
+         |    println(2)
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => println(x)
+         |    println(2)
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(
+              tfunc(tparam("x"))(tapply(tname("println"), tname("x"))),
+              tapply(tname("println"), int(2)),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    parseAndCheckTree[Source](code, layout)(tree)
+  }
+
+  test("`match` at the end of the line of `def` after the arrow of a lambda in braces, the cases on the next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x => x match
+         |    case 1 => a
+         |    case _ => b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => x match {
+         |      case 1 => a
+         |      case _ => b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(
+              tmatch(tname("x"), Case(int(1), None, tname("a")), Case(patwildcard, None, tname("b"))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, `=` of a `val` at the end of the next line, an expression on a deeper line, an expression") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    val y =
+         |      x + 1
+         |    y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    val y = x + 1
+         |    y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(
+              Defn.Val(Nil, List(patvar("y")), None, tinfix(tname("x"), tname("+"), int(1))),
+              tname("y"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, `if` with `then` and `else` at the end of their lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    if x > 0 then
+         |      a
+         |    else
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => if (x > 0) a else b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(tif(tinfix(tname("x"), tname(">"), int(0)), tname("a"), tname("b")))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, `match` at the end of the next line, the cases on deeper lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    x match
+         |      case 1 => a
+         |      case _ => b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => x match {
+         |      case 1 => a
+         |      case _ => b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(
+              tmatch(tname("x"), Case(int(1), None, tname("a")), Case(patwildcard, None, tname("b"))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    foo:
+         |      x
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    foo {
+         |      x
+         |    }
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(tapply(tname("foo"), blk(tname("x"))), tname("b")))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, an expression on the next line, a leading infix operator on a deeper line, an expression") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    a
+         |      && b
+         |    c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    a && b
+         |    c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(tinfix(tname("a"), tname("&&"), tname("b")), tname("c")))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, a lambda in braces with two expressions on the next lines, an expression after its `}`") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    ys.map { y =>
+         |      a
+         |      b
+         |    }
+         |    c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    ys.map { y =>
+         |      a
+         |      b
+         |    }
+         |    c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(
+              tapply(
+                tselect(tname("ys"), tname("map")),
+                blk(tfunc(tparam("y"))(blk(tname("a"), tname("b")))),
+              ),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, a colon lambda on the next line, its body on a deeper line, an expression") {
+    val code =
+      """|object A:
+         |  def f = foo { a =>
+         |    xs.map: u =>
+         |      u
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo { a =>
+         |    xs.map {
+         |      u => u
+         |    }
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("a"))(blk(
+              tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("u"))(tname("u")))),
+              tname("b"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, a colon lambda on the next line, its body at its column, an expression") {
+    val code =
+      """|object A:
+         |  def f = foo { a =>
+         |    xs.map: u =>
+         |    u
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo { a =>
+         |    xs.map {
+         |      u => u
+         |    }
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("a"))(blk(
+              tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("u"))(tname("u")))),
+              tname("b"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, a colon lambda in an argument clause on the next line, its body and `)` on a deeper line") {
+    val code =
+      """|object A:
+         |  def f = foo { a =>
+         |    bar(b, xs.map: u =>
+         |      u)
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    a => bar(b, xs.map {
+         |      u => u
+         |    })
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("a"))(tapply(
+              tname("bar"),
+              tname("b"),
+              tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("u"))(tname("u")))),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, `=` of a `val` at the end of the next line, an expression at the column of `val`, an expression") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    val y =
+         |    x
+         |    y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    val y = x
+         |    y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(Defn.Val(Nil, List(patvar("y")), None, tname("x")), tname("y")))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, `throw` at the end of the next line, a colon argument on a deeper line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    throw
+         |      foo:
+         |        z
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    throw foo {
+         |      z
+         |    }
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(Term.Throw(tapply(tname("foo"), blk(tname("z")))), tname("b")))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, a comment line, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    // first
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    // first
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(
+              Term.Name.newBuilder("a").begComment(detachedComments("// first")).result(),
+              tname("b"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda in braces at the end of the line of `def`, an expression and a comment line on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f = g { (x: Int) ?=>
+         |      a
+         |      // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    (x: Int) ?=> {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            blk(tctxfunc(tparam("x", pname("Int")))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a case in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { case x =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case x =>
+         |      a
+         |      b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            Term.PartialFunction(List(Case(patvar("x"), None, blk(tname("a"), tname("b"))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { (x: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach { (x: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b")))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed wildcard parameter without parentheses in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { _: Int =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `}` expected but `=>` found
+         |  def f = xs.foreach { _: Int =>
+         |                              ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("lambda with a typed parameter without parentheses in braces on one line") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x: Int => a }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x {
+         |      Int => a
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tapply(tname("x"), blk(tfunc(tparam("Int"))(tname("a"))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses at the end of the line after `{`, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach {
+         |    x: Int =>
+         |      a
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x { Int =>
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tapply(tname("x"), blk(tfunc(tparam("Int"))(blk(tname("a"), tname("b")))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses in braces at the end of the line of `def`, a definition and an expression on the next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x: Int =>
+         |    val y = x + 1
+         |    y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x { Int =>
+         |      val y = x + 1
+         |      y
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tapply(
+              tname("x"),
+              blk(tfunc(tparam("Int"))(blk(
+                Defn.Val(Nil, List(patvar("y")), None, tinfix(tname("x"), tname("+"), int(1))),
+                tname("y"),
+              ))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda in a generator at the end of the line of `for`, an expression on each of the two deeper next lines, `yield` at the column of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for y <- xs.map: x =>
+         |        a
+         |        b
+         |    yield y
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (y <- xs.map { x =>
+         |    a
+         |    b
+         |  }) yield y
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(Enumerator.Generator(
+              patvar("y"),
+              tapply(
+                tselect(tname("xs"), tname("map")),
+                blk(tfunc(tparam("x"))(blk(tname("a"), tname("b")))),
+              ),
+            )),
+            tname("y"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda in a generator at the end of the line of `for`, an expression on a deeper next line, `yield` at the column of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for y <- xs.map: x =>
+         |        x + 1
+         |    yield y
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (y <- xs.map {
+         |    x => x + 1
+         |  }) yield y
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.ForYield(
+          List(Enumerator.Generator(
+            patvar("y"),
+            tapply(
+              tselect(tname("xs"), tname("map")),
+              blk(tfunc(tparam("x"))(tinfix(tname("x"), tname("+"), int(1)))),
+            ),
+          )),
+          tname("y"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("colon argument in a generator at the end of the line of `for`, the argument on a deeper next line, `yield` at the column of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs.filter:
+         |        _ > 0
+         |    yield x
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs.filter {
+         |    _ > 0
+         |  }) yield x
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.ForYield(
+          List(Enumerator.Generator(
+            patvar("x"),
+            tapply(
+              tselect("xs", "filter"),
+              blk(Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", int(0)))),
+            ),
+          )),
+          tname("x"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("colon argument in a second generator at the end of its line, the argument on a deeper next line, `yield` at the column of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs
+         |        y <- xs.filter:
+         |          _ > 0
+         |    yield x + y
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; y <- xs.filter {
+         |    _ > 0
+         |  }) yield x + y
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.ForYield(
+          List(
+            Enumerator.Generator(patvar("x"), tname("xs")),
+            Enumerator.Generator(
+              patvar("y"),
+              tapply(
+                tselect("xs", "filter"),
+                blk(Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", int(0)))),
+              ),
+            ),
+          ),
+          tinfix(tname("x"), "+", tname("y")),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("colon argument in a generator after `for` alone on its line, the argument on a deeper next line, `yield` at the column of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs.filter:
+         |        _ > 0
+         |    yield x
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs.filter {
+         |    _ > 0
+         |  }) yield x
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.ForYield(
+          List(Enumerator.Generator(
+            patvar("x"),
+            tapply(
+              tselect("xs", "filter"),
+              blk(Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", int(0)))),
+            ),
+          )),
+          tname("x"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda in a generator at the end of the line of `for` after the `=>` of a case at the end of the line of `{`, an expression on a deeper next line, `yield` at the column of `for`") {
+    val code =
+      """|object A:
+         |  def f = foo { case x =>
+         |    for y <- xs.map: z =>
+         |        z + 1
+         |    yield y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      for (y <- xs.map {
+         |        z => z + 1
+         |      }) yield y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              Term.ForYield(
+                List(Enumerator.Generator(
+                  patvar("y"),
+                  tapply(
+                    tselect(tname("xs"), tname("map")),
+                    blk(tfunc(tparam("z"))(tinfix(tname("z"), tname("+"), int(1)))),
+                  ),
+                )),
+                tname("y"),
+              ),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda in a generator at the end of the line of `for` on the line of `{`, an expression on a deeper next line, `yield` left of `for`") {
+    val code =
+      """|object A:
+         |  def f = { for y <- xs.map: z =>
+         |      z + 1
+         |    yield y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    for (y <- xs.map {
+         |      z => z + 1
+         |    }) yield y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(Term.ForYield(
+            List(Enumerator.Generator(
+              patvar("y"),
+              tapply(
+                tselect(tname("xs"), tname("map")),
+                blk(tfunc(tparam("z"))(tinfix(tname("z"), tname("+"), int(1)))),
+              ),
+            )),
+            tname("y"),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, an expression on each of the two next lines, a comment line") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    a
+         |    b
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    a
+         |    b
+         |    // c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(
+              blk(tname("a"), Term.Name.newBuilder("b").endComment(detachedComments("// c")).result()),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, an expression and a comment on the next line") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    a // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => a // c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val c = comments("// c")
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(
+              tfunc(tparam("x"))(Term.Name.newBuilder("a").endComment(c).result()).toBuilder
+                .endComment(c).result(),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, an expression, a comment line and an expression on the next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    a
+         |    // c
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    a
+         |    // c
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(
+              blk(tname("a"), Term.Name.newBuilder("b").begComment(detachedComments("// c")).result()),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces and a comment at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x => // c
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    // c
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(
+              blk(Term.Name.newBuilder("a").begComment(comments("// c")).result(), tname("b")),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a case in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { case x =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case x =>
+         |      a
+         |      // c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, an expression and a blank line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x =>
+         |    a
+         |
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("x"))(tname("a")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces in an argument clause at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo(xs.map { x =>
+         |    a
+         |    // c
+         |  })
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo(xs.map {
+         |    x => {
+         |      a
+         |      // c
+         |    }
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            tapply(
+              tselect(tname("xs"), tname("map")),
+              blk(tfunc(tparam("x"))(blk(
+                Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+              ))),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda in a block in braces, on the line after `{` and on the line of `{`, an expression on a deeper next line, an expression at a shallower column on the line after") {
+    val code =
+      """|object A:
+         |  def f = {
+         |    xs.map: x =>
+         |      a
+         |    b
+         |  }
+         |  def g = { xs.map: x =>
+         |      a
+         |    b
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    xs.map {
+         |      x => a
+         |    }
+         |    b
+         |  }
+         |  def g = {
+         |    xs.map {
+         |      x => a
+         |    }
+         |    b
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(
+            tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("x"))(tname("a")))),
+            tname("b"),
+          ),
+        ),
+        Defn.Def(
+          Nil,
+          tname("g"),
+          Nil,
+          None,
+          blk(
+            tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("x"))(tname("a")))),
+            tname("b"),
+          ),
+        ),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces at the end of the line of `def`, an expression, a blank line and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x =>
+         |    a
+         |
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => {
+         |      a
+         |
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda in braces at the end of the line of `def`, an expression, a blank line and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = g { (x: Int) ?=>
+         |    a
+         |
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g {
+         |    (x: Int) ?=> {
+         |      a
+         |
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            blk(tctxfunc(tparam("x", pname("Int")))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a case in braces at the end of the line of `def`, an expression, a blank line and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { case x =>
+         |    a
+         |
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case x =>
+         |      a
+         |
+         |      // c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`match` at the end of the line of `def` after the arrow of a lambda in braces, the cases on the next lines, a comment line") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => x match
+         |    case 1 => a
+         |    case _ => b
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => x match {
+         |      case 1 =>
+         |        a
+         |      case _ =>
+         |        b
+         |        // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(tmatch(
+              tname("x"),
+              Case(int(1), None, tname("a")),
+              Case(
+                patwildcard,
+                None,
+                Term.Name.newBuilder("b").endComment(detachedComments("// c")).result(),
+              ),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`match` at the end of the line of `def` after the arrow of a lambda in braces, the cases on the next lines, a blank line and a comment line") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => x match
+         |    case 1 => a
+         |    case _ => b
+         |
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => x match {
+         |      case 1 =>
+         |        a
+         |      case _ =>
+         |        b
+         |
+         |        // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(tmatch(
+              tname("x"),
+              Case(int(1), None, tname("a")),
+              Case(
+                patwildcard,
+                None,
+                Term.Name.newBuilder("b").endComment(detachedComments("// c")).result(),
+              ),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`match` at the end of the line of `def` after the arrow of a lambda in braces, the cases on the next lines, an expression at the column of the cases") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x => x match
+         |    case 1 => a
+         |    case _ => b
+         |    c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => x match {
+         |      case 1 =>
+         |        a
+         |      case _ =>
+         |        b
+         |        c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(tmatch(
+              tname("x"),
+              Case(int(1), None, tname("a")),
+              Case(patwildcard, None, blk(tname("b"), tname("c"))),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a case with a guard in braces at the end of the line of `def`, an expression on a deeper next line, a case at a shallower column on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.collect { case x if p(x) =>
+         |      a
+         |    case y =>
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case x if p(x) => a
+         |    case y => b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("collect")),
+            Term.PartialFunction(List(
+              Case(patvar("x"), Some(tapply(tname("p"), tname("x"))), tname("a")),
+              Case(patvar("y"), None, tname("b")),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure with a typed parameter in braces at the end of the line of `def`, an expression on the next line") {
+    val code =
+      """|object A:
+         |  def f = foo { implicit ec: Ec =>
+         |    a
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    implicit ec: Ec => a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "ec", pname("Ec"))),
+              tname("a"),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure with a typed parameter in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { implicit ec: Ec =>
+         |    a
+         |    b
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo { implicit ec: Ec =>
+         |    a
+         |    b
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(
+          tname("foo"),
+          blk(Term.Function(
+            tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "ec", pname("Ec"))),
+            blk(tname("a"), tname("b")),
+          )),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure with a typed parameter in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { implicit ec: Ec =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    implicit ec: Ec => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "ec", pname("Ec"))),
+              blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result()),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure with a typed parameter in braces in an argument clause at the end of the line of `def`, an expression on the next line") {
+    val code =
+      """|object A:
+         |  def f = bar(foo { implicit ec: Ec =>
+         |    a
+         |  })
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = bar(foo {
+         |    implicit ec: Ec => a
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("bar"),
+            tapply(
+              tname("foo"),
+              blk(Term.Function(
+                tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "ec", pname("Ec"))),
+                tname("a"),
+              )),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure with a typed parameter in braces in an argument clause at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = bar(foo { implicit ec: Ec =>
+         |    a
+         |    b
+         |  })
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = bar(foo { implicit ec: Ec =>
+         |    a
+         |    b
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("bar"),
+            tapply(
+              tname("foo"),
+              blk(Term.Function(
+                tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "ec", pname("Ec"))),
+                blk(tname("a"), tname("b")),
+              )),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure with a typed parameter in braces in an argument clause at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = bar(foo { implicit ec: Ec =>
+         |    a
+         |    // c
+         |  })
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = bar(foo {
+         |    implicit ec: Ec => {
+         |      a
+         |      // c
+         |    }
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("bar"),
+            tapply(
+              tname("foo"),
+              blk(Term.Function(
+                tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "ec", pname("Ec"))),
+                blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result()),
+              )),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure with an untyped parameter in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { implicit ec =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo { implicit ec =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "ec")),
+              blk(tname("a"), tname("b")),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure with an untyped parameter in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { implicit ec =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    implicit ec => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "ec")),
+              blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result()),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a block in braces with an expression on the line of `{` on the line of `def`, `=>` of a curried colon lambda in an argument clause at the end of the next line, the body and `)` on the line after at the column of the call") {
+    val code =
+      """|object A:
+         |  def f = { a
+         |    bar(b, xs.map: u => v =>
+         |    u)
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    a
+         |    bar(b, xs.map: (u => v => u))
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(
+            tname("a"),
+            tapply(
+              tname("bar"),
+              tname("b"),
+              Term.Ascribe(
+                tselect(tname("xs"), tname("map")),
+                pfunc(pname("u"))(pfunc(pname("v"))(pname("u"))),
+              ),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure with a parameter of an applied type in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { implicit request: Request[?] =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    implicit request: Request[?] => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(Term.Function(
+              tpc(
+                Mod.Implicit(),
+                tparam(List(Mod.Implicit()), "request", papply(pname("Request"), pwildcard)),
+              ),
+              blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result()),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with two parameters in braces after an argument clause at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.foldLeft(0) { (acc, x) =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foldLeft(0) {
+         |    (acc, x) => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tapply(tselect(tname("xs"), tname("foldLeft")), int(0)),
+            blk(tfunc(tparam("acc"), tparam("x"))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in braces after an argument clause on the line of `def`, its two parameters over two lines, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.foldLeft(0) { (acc,
+         |      x) =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foldLeft(0) {
+         |    (acc, x) => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tapply(tselect(tname("xs"), tname("foldLeft")), int(0)),
+            blk(tfunc(tparam("acc"), tparam("x"))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a curried lambda in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => y =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => y => {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("foo"), blk(tfunc(tparam("x"))(tfunc(tparam("y"))(blk(tname("a"), tname("b")))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a `val` on the line of the `{` of an argument on the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { val h = (x: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    val h = (x: Int) => {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(Defn.Val(
+              Nil,
+              List(patvar("h")),
+              None,
+              tfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b"))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a `val` on the line after an expression on the line of the `{` of an argument on the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { a
+         |    val h = (x: Int) =>
+         |    b
+         |    c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    a
+         |    val h = (x: Int) => {
+         |      b
+         |      c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(
+              tname("a"),
+              Defn.Val(
+                Nil,
+                List(patvar("h")),
+                None,
+                tfunc(tparam("x", pname("Int")))(blk(tname("b"), tname("c"))),
+              ),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda after a name at the end of the line of the `{` of an argument on the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { bar: x =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    bar { x =>
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tapply(tname("bar"), blk(tfunc(tparam("x"))(blk(tname("a"), tname("b")))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a case in braces at the end of the line of `def`, an expression on a deeper next line, a case between its column and that of `def`, its body at the column of the expression") {
+    val code =
+      """|object A:
+         |  def f = xs.map { case 1 =>
+         |      a
+         |    case _ =>
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case 1 => a
+         |    case _ => b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            Term.PartialFunction(
+              List(Case(int(1), None, tname("a")), Case(patwildcard, None, tname("b"))),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`match` at the end of the line of `def` after the arrow of a lambda in braces, the cases on deeper next lines, an expression between their column and that of `def`") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x => x match
+         |      case 1 => a
+         |      case _ => b
+         |    c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map { x =>
+         |    x match {
+         |      case 1 => a
+         |      case _ => b
+         |    }
+         |    c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(blk(
+              tmatch(tname("x"), Case(int(1), None, tname("a")), Case(patwildcard, None, tname("b"))),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a curried lambda in braces at the end of the line of `def`, an expression on the next line") {
+    val code =
+      """|object A:
+         |  def f = foo { x => y =>
+         |    a
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => y => a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("foo"), blk(tfunc(tparam("x"))(tfunc(tparam("y"))(tname("a"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a curried lambda in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => y => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(tfunc(tparam("y"))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            )))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a curried lambda in braces at the end of the line of `def`, an expression, a blank line and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => y =>
+         |    a
+         |
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => y => {
+         |      a
+         |
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(tfunc(tparam("y"))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            )))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda in a curried lambda in braces at the end of the line of `def`, an expression on the next line") {
+    val code =
+      """|object A:
+         |  def f = foo { x => y ?=>
+         |    a
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => y ?=> a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("foo"), blk(tfunc(tparam("x"))(tctxfunc(tparam("y"))(tname("a"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda in a curried lambda in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => y ?=>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => y ?=> {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(tctxfunc(tparam("y"))(blk(tname("a"), tname("b"))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda in a curried lambda in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => y ?=>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => y ?=> {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(tctxfunc(tparam("y"))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            )))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a curried lambda in braces at the end of the line of `def`, an expression on the next line") {
+    val code =
+      """|object A:
+         |  def f = foo { x => (y: Int) =>
+         |    a
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => (y: Int) => a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("foo"), blk(tfunc(tparam("x"))(tfunc(tparam("y", pname("Int")))(tname("a"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a curried lambda in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => (y: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => (y: Int) => {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(tfunc(tparam("y", pname("Int")))(blk(tname("a"), tname("b"))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a curried lambda in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => (y: Int) =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => (y: Int) => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(tfunc(tparam("y", pname("Int")))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            )))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a curried lambda in braces at the end of the line of a `val` with a function type, an expression on the next line") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int = { x => y =>
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int = {
+         |    x => y => x + y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int")))),
+          blk(tfunc(tparam("x"))(tfunc(tparam("y"))(tinfix(tname("x"), tname("+"), tname("y"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a curried lambda in braces at the end of the line of a `val` with a function type, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int = { x => y =>
+         |    a
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int = {
+         |    x => y => {
+         |      a
+         |      x + y
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int")))),
+          blk(tfunc(tparam("x"))(
+            tfunc(tparam("y"))(blk(tname("a"), tinfix(tname("x"), tname("+"), tname("y")))),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a curried lambda in braces at the end of the line of a `val` with a function type, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int = { x => y =>
+         |    x + y
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int = {
+         |    x => y => {
+         |      x + y
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int")))),
+          blk(tfunc(tparam("x"))(tfunc(tparam("y"))(blk(
+            tinfix(tname("x"), tname("+"), tname("y")).toBuilder.endComment(detachedComments("// c"))
+              .result(),
+          )))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda in a curried lambda in braces at the end of the line of a `val` with a function type, an expression on the next line") {
+    val code =
+      """|object A:
+         |  val add: Int => Int ?=> Int = { x => y ?=>
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int ?=> Int = {
+         |    x => y ?=> x + y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pctxfunc(pname("Int"))(pname("Int")))),
+          blk(tfunc(tparam("x"))(tctxfunc(tparam("y"))(tinfix(tname("x"), tname("+"), tname("y"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda in a curried lambda in braces at the end of the line of a `val` with a function type, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int ?=> Int = { x => y ?=>
+         |    a
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int ?=> Int = {
+         |    x => y ?=> {
+         |      a
+         |      x + y
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pctxfunc(pname("Int"))(pname("Int")))),
+          blk(tfunc(tparam("x"))(
+            tctxfunc(tparam("y"))(blk(tname("a"), tinfix(tname("x"), tname("+"), tname("y")))),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda in a curried lambda in braces at the end of the line of a `val` with a function type, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int ?=> Int = { x => y ?=>
+         |    x + y
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int ?=> Int = {
+         |    x => y ?=> {
+         |      x + y
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pctxfunc(pname("Int"))(pname("Int")))),
+          blk(tfunc(tparam("x"))(tctxfunc(tparam("y"))(blk(
+            tinfix(tname("x"), tname("+"), tname("y")).toBuilder.endComment(detachedComments("// c"))
+              .result(),
+          )))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a curried lambda in braces at the end of the line of a `val` with a function type, an expression on the next line") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int = { x => (y: Int) =>
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int = {
+         |    x => (y: Int) => x + y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int")))),
+          blk(tfunc(tparam("x"))(
+            tfunc(tparam("y", pname("Int")))(tinfix(tname("x"), tname("+"), tname("y"))),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a curried lambda in braces at the end of the line of a `val` with a function type, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int = { x => (y: Int) =>
+         |    a
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int = {
+         |    x => (y: Int) => {
+         |      a
+         |      x + y
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int")))),
+          blk(tfunc(tparam("x"))(tfunc(tparam("y", pname("Int")))(
+            blk(tname("a"), tinfix(tname("x"), tname("+"), tname("y"))),
+          ))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a curried lambda in braces at the end of the line of a `val` with a function type, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int = { x => (y: Int) =>
+         |    x + y
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int = {
+         |    x => (y: Int) => {
+         |      x + y
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int")))),
+          blk(tfunc(tparam("x"))(tfunc(tparam("y", pname("Int")))(blk(
+            tinfix(tname("x"), tname("+"), tname("y")).toBuilder.endComment(detachedComments("// c"))
+              .result(),
+          )))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a curried implicit closure in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { implicit ec => implicit mat =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    implicit ec => implicit mat => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "ec")),
+              Term.Function(
+                tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "mat")),
+                blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result()),
+              ),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a `val` after an implicit closure with a typed parameter on the line of the `{` of an argument on the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { implicit ec: Ec => val h = (x: Int) =>
+         |      a
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    implicit ec: Ec => {
+         |      val h = (x: Int) => {
+         |        a
+         |        b
+         |      }
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "ec", pname("Ec"))),
+              blk(Defn.Val(
+                Nil,
+                List(patvar("h")),
+                None,
+                tfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b"))),
+              )),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("third `=>` of a curried lambda in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => y => z =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => y => z => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(tfunc(tparam("y"))(tfunc(tparam("z"))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            ))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("third `=>` of a curried lambda in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => y => z =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => y => z => {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(tfunc(tparam("y"))(tfunc(tparam("z"))(blk(tname("a"), tname("b")))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure in a curried lambda in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => implicit y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => implicit y => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "y")),
+              blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result()),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure in a curried lambda in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => implicit y =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => implicit y => {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "y")),
+              blk(tname("a"), tname("b")),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in an implicit closure with a typed parameter in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { implicit x: Int => y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    implicit x: Int => y => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "x", pname("Int"))),
+              tfunc(
+                tparam("y"),
+              )(blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result())),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in a lambda with two parameters in parentheses in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { (x, y) => z =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    (x, y) => z => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"), tparam("y"))(tfunc(tparam("z"))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            )))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a polymorphic function in braces at the end of the line of a `val`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  val f = { [T] => (x: T) =>
+         |    x
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val f = {
+         |    [T] => (x: T) => {
+         |      x
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("f")),
+          None,
+          blk(tpolyfunc(pparam("T"))(tfunc(tparam("x", "T"))(blk(
+            Term.Name.newBuilder("x").endComment(detachedComments("// c")).result(),
+          )))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a polymorphic function in braces at the end of the line of a `val`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  val f = { [T] => (x: T) =>
+         |    a
+         |    x
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val f = {
+         |    [T] => (x: T) => {
+         |      a
+         |      x
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("f")),
+          None,
+          blk(tpolyfunc(pparam("T"))(tfunc(tparam("x", "T"))(blk(tname("a"), tname("x"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a curried lambda in braces in an argument clause at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo({ x => y =>
+         |    a
+         |    // c
+         |  })
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => y => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(tfunc(tparam("y"))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            )))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses in a curried lambda in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => y: Int =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => y { Int =>
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(
+              tapply(tname("y"), blk(tfunc(tparam("Int"))(blk(tname("a"), tname("b"))))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a `val` after a lambda on the line of the `{` of an argument on the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => val h = (y: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => {
+         |      val h = (y: Int) => {
+         |        a
+         |        b
+         |      }
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(blk(Defn.Val(
+              Nil,
+              List(patvar("h")),
+              None,
+              tfunc(tparam("y", pname("Int")))(blk(tname("a"), tname("b"))),
+            )))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a `val` after a lambda with a typed parameter without parentheses on the line of the `{` of an argument on the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x: Int => val h = (y: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `}` expected but `=>` found
+         |  def f = foo { x: Int => val h = (y: Int) =>
+         |                       ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`=>` of a lambda after the `=>` of a case in braces at the end of the line of `def`, an expression on the next line") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => y =>
+         |    a
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      y => a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(patvar("x"), None, tfunc(tparam("y"))(tname("a"))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda after the `=>` of a case in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => y =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      y => {
+         |        a
+         |        b
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(
+              Case(patvar("x"), None, tfunc(tparam("y"))(blk(tname("a"), tname("b")))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda after the `=>` of a case in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      y => {
+         |        a
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              tfunc(
+                tparam("y"),
+              )(blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result())),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda after the `=>` of a case in braces at the end of the line of `def`, an expression on the next line") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => y ?=>
+         |    a
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      y ?=> a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(patvar("x"), None, tctxfunc(tparam("y"))(tname("a"))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda after the `=>` of a case in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => y ?=>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      y ?=> {
+         |        a
+         |        b
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(
+              Case(patvar("x"), None, tctxfunc(tparam("y"))(blk(tname("a"), tname("b")))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda after the `=>` of a case in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => y ?=>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      y ?=> {
+         |        a
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              tctxfunc(
+                tparam("y"),
+              )(blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result())),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure after the `=>` of a case in braces at the end of the line of `def`, an expression on the next line") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => implicit y =>
+         |    a
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      implicit y => a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              Term.Function(tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "y")), tname("a")),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure after the `=>` of a case in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => implicit y =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      implicit y => {
+         |        a
+         |        b
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              Term.Function(
+                tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "y")),
+                blk(tname("a"), tname("b")),
+              ),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure after the `=>` of a case in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => implicit y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      implicit y => {
+         |        a
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              Term.Function(
+                tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "y")),
+                blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result()),
+              ),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("second `=>` of a curried lambda after the `=>` of a case in braces at the end of the line of `def`, an expression on the next line") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => y => z =>
+         |    a
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      y => z => a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(
+              Case(patvar("x"), None, tfunc(tparam("y"))(tfunc(tparam("z"))(tname("a")))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("second `=>` of a curried lambda after the `=>` of a case in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => y => z =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      y => z => {
+         |        a
+         |        b
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              tfunc(tparam("y"))(tfunc(tparam("z"))(blk(tname("a"), tname("b")))),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("second `=>` of a curried lambda after the `=>` of a case in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => y => z =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      y => z => {
+         |        a
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              tfunc(tparam("y"))(tfunc(tparam("z"))(blk(
+                Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+              ))),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure after the `=>` of a case with a tuple pattern in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { case (k, v) => implicit ctx =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case (k, v) =>
+         |      implicit ctx => {
+         |        a
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn
+          .Def(
+            Nil,
+            tname("f"),
+            Nil,
+            None,
+            tapply(
+              tselect(tname("xs"), tname("map")),
+              Term.PartialFunction(List(Case(
+                Pat.Tuple(List(patvar("k"), patvar("v"))),
+                None,
+                Term.Function(
+                  tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "ctx")),
+                  blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result()),
+                ),
+              ))),
+            ),
+          ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses after the `=>` of a case in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => (y: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      (y: Int) => {
+         |        a
+         |        b
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(
+              Case(patvar("x"), None, tfunc(tparam("y", pname("Int")))(blk(tname("a"), tname("b")))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda after the `=>` of a case in braces at the end of the line of `def`, an expression on each of the two next lines, then a case with a lambda on its line") {
+    val code =
+      """|object A:
+         |  def f = foo { case 1 => y =>
+         |    a
+         |    b
+         |  case _ => y => c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case 1 =>
+         |      y => {
+         |        a
+         |        b
+         |      }
+         |    case _ =>
+         |      y => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(
+              Case(int(1), None, tfunc(tparam("y"))(blk(tname("a"), tname("b")))),
+              Case(patwildcard, None, tfunc(tparam("y"))(tname("c"))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda after the `=>` of a case in a `match` with braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = x match { case 1 => y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      y => {
+         |        a
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              int(1),
+              None,
+              tfunc(
+                tparam("y"),
+              )(blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result())),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda after the `=>` of a case in braces at the end of the line of a `val` with a function type, an expression on the next line") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int = { case x => y =>
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int = {
+         |    case x =>
+         |      y => x + y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int")))),
+          Term.PartialFunction(List(
+            Case(patvar("x"), None, tfunc(tparam("y"))(tinfix(tname("x"), tname("+"), tname("y")))),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda after the `=>` of a case in braces at the end of the line of a `val` with a function type, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int = { case x => y =>
+         |    a
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int = {
+         |    case x =>
+         |      y => {
+         |        a
+         |        x + y
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int")))),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            tfunc(tparam("y"))(blk(tname("a"), tinfix(tname("x"), tname("+"), tname("y")))),
+          ))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda after the `=>` of a case in braces at the end of the line of a `val` with a function type, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int = { case x => y =>
+         |    x + y
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int = {
+         |    case x =>
+         |      y => {
+         |        x + y
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int")))),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            tfunc(tparam("y"))(blk(
+              tinfix(tname("x"), tname("+"), tname("y")).toBuilder
+                .endComment(detachedComments("// c")).result(),
+            )),
+          ))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda after the `=>` of a case in braces at the end of the line of a `val` with a function type, an expression on the next line") {
+    val code =
+      """|object A:
+         |  val add: Int => Int ?=> Int = { case x => y ?=>
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int ?=> Int = {
+         |    case x =>
+         |      y ?=> x + y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pctxfunc(pname("Int"))(pname("Int")))),
+          Term.PartialFunction(List(
+            Case(patvar("x"), None, tctxfunc(tparam("y"))(tinfix(tname("x"), tname("+"), tname("y")))),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda after the `=>` of a case in braces at the end of the line of a `val` with a function type, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int ?=> Int = { case x => y ?=>
+         |    a
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int ?=> Int = {
+         |    case x =>
+         |      y ?=> {
+         |        a
+         |        x + y
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pctxfunc(pname("Int"))(pname("Int")))),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            tctxfunc(tparam("y"))(blk(tname("a"), tinfix(tname("x"), tname("+"), tname("y")))),
+          ))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`?=>` of a context lambda after the `=>` of a case in braces at the end of the line of a `val` with a function type, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int ?=> Int = { case x => y ?=>
+         |    x + y
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int ?=> Int = {
+         |    case x =>
+         |      y ?=> {
+         |        x + y
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pctxfunc(pname("Int"))(pname("Int")))),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            tctxfunc(tparam("y"))(blk(
+              tinfix(tname("x"), tname("+"), tname("y")).toBuilder
+                .endComment(detachedComments("// c")).result(),
+            )),
+          ))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure after the `=>` of a case in braces at the end of the line of a `val` with a function type, an expression on the next line") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int = { case x => implicit y =>
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int = {
+         |    case x =>
+         |      implicit y => x + y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int")))),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "y")),
+              tinfix(tname("x"), tname("+"), tname("y")),
+            ),
+          ))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure after the `=>` of a case in braces at the end of the line of a `val` with a function type, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int = { case x => implicit y =>
+         |    a
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int = {
+         |    case x =>
+         |      implicit y => {
+         |        a
+         |        x + y
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int")))),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "y")),
+              blk(tname("a"), tinfix(tname("x"), tname("+"), tname("y"))),
+            ),
+          ))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure after the `=>` of a case in braces at the end of the line of a `val` with a function type, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int = { case x => implicit y =>
+         |    x + y
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int = {
+         |    case x =>
+         |      implicit y => {
+         |        x + y
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int")))),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "y")),
+              blk(
+                tinfix(tname("x"), tname("+"), tname("y")).toBuilder
+                  .endComment(detachedComments("// c")).result(),
+              ),
+            ),
+          ))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("second `=>` of a curried lambda after the `=>` of a case in braces at the end of the line of a `val` with a function type, an expression on the next line") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int => Int = { case x => y => z =>
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int => Int = {
+         |    case x =>
+         |      y => z => x + y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int"))))),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            tfunc(tparam("y"))(tfunc(tparam("z"))(tinfix(tname("x"), tname("+"), tname("y")))),
+          ))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("second `=>` of a curried lambda after the `=>` of a case in braces at the end of the line of a `val` with a function type, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int => Int = { case x => y => z =>
+         |    a
+         |    x + y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int => Int = {
+         |    case x =>
+         |      y => z => {
+         |        a
+         |        x + y
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int"))))),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            tfunc(
+              tparam("y"),
+            )(tfunc(tparam("z"))(blk(tname("a"), tinfix(tname("x"), tname("+"), tname("y"))))),
+          ))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("second `=>` of a curried lambda after the `=>` of a case in braces at the end of the line of a `val` with a function type, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  val add: Int => Int => Int => Int = { case x => y => z =>
+         |    x + y
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val add: Int => Int => Int => Int = {
+         |    case x =>
+         |      y => z => {
+         |        x + y
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("add")),
+          Some(pfunc(pname("Int"))(pfunc(pname("Int"))(pfunc(pname("Int"))(pname("Int"))))),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            tfunc(tparam("y"))(tfunc(tparam("z"))(blk(
+              tinfix(tname("x"), tname("+"), tname("y")).toBuilder
+                .endComment(detachedComments("// c")).result(),
+            ))),
+          ))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda after the `=>` of a case with a guard in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x if p => y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x if p =>
+         |      y => {
+         |        a
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              Some(tname("p")),
+              tfunc(
+                tparam("y"),
+              )(blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result())),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda after the `=>` of a case with a lambda in its guard in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x if p(z => z) => y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x if p(z => z) =>
+         |      y => {
+         |        a
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              Some(tapply(tname("p"), tfunc(tparam("z"))(tname("z")))),
+              tfunc(
+                tparam("y"),
+              )(blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result())),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda after the `=>` of a case in the braces of `catch` at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = try a catch { case e => y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      y => {
+         |        a
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(
+              patvar("e"),
+              None,
+              tfunc(
+                tparam("y"),
+              )(blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result())),
+            )),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda after the `=>` of a case in nested braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => bar { case z => y =>
+         |    a
+         |    // c
+         |  }}
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      bar {
+         |        case z =>
+         |          y => {
+         |            a
+         |            // c
+         |          }
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              tapply(
+                tname("bar"),
+                Term.PartialFunction(List(Case(
+                  patvar("z"),
+                  None,
+                  tfunc(
+                    tparam("y"),
+                  )(blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result())),
+                ))),
+              ),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses after the `=>` of a case in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => y: Int =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      y { Int =>
+         |        a
+         |        b
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              tapply(tname("y"), blk(tfunc(tparam("Int"))(blk(tname("a"), tname("b"))))),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure with a typed parameter after the `=>` of a case in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => implicit y: Int =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      implicit y: Int => {
+         |        a
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              Term.Function(
+                tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "y", pname("Int"))),
+                blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result()),
+              ),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a `val` after the `=>` of a case in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => val h = (y: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      val h = (y: Int) => {
+         |        a
+         |        b
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              blk(Defn.Val(
+                Nil,
+                List(patvar("h")),
+                None,
+                tfunc(tparam("y", pname("Int")))(blk(tname("a"), tname("b"))),
+              )),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda after the `=>` of a case in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case x => xs.map: y =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case x =>
+         |      xs.map { y =>
+         |        a
+         |        b
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              tapply(
+                tselect(tname("xs"), tname("map")),
+                blk(tfunc(tparam("y"))(blk(tname("a"), tname("b")))),
+              ),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda after the `=>` of the second case on the line of `{` in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { case 1 => a; case x => y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    case 1 => a
+         |    case x =>
+         |      y => {
+         |        a
+         |        // c
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.PartialFunction(List(
+              Case(int(1), None, tname("a")),
+              Case(
+                patvar("x"),
+                None,
+                tfunc(
+                  tparam("y"),
+                )(blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result())),
+              ),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("second `=>` of a curried lambda with a typed first parameter without parentheses in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x: Int => y =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x {
+         |      Int => y => {
+         |        a
+         |        b
+         |      }
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tapply(
+              tname("x"),
+              blk(tfunc(tparam("Int"))(tfunc(tparam("y"))(blk(tname("a"), tname("b"))))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter without parentheses in an implicit closure in braces at the end of the line of `def`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { implicit x => y: Int =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    implicit x => y { Int =>
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "x")),
+              tapply(tname("y"), blk(tfunc(tparam("Int"))(blk(tname("a"), tname("b"))))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an implicit closure with a typed parameter in a curried lambda in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { x => implicit y: Int =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    x => implicit y: Int => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("x"))(Term.Function(
+              tpc(Mod.Implicit(), tparam(List(Mod.Implicit()), "y", pname("Int"))),
+              blk(Term.Name.newBuilder("a").endComment(detachedComments("// c")).result()),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("second `=>` of a curried lambda with a placeholder parameter in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { _ => y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    _ => y => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tfunc(tparam("_"))(tfunc(tparam("y"))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            )))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda in a context lambda in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { (x: Int) ?=> y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    (x: Int) ?=> y => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tctxfunc(tparam("x", pname("Int")))(tfunc(tparam("y"))(blk(
+              Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+            )))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("second `=>` of a curried lambda after a comment in braces at the end of the line of `def`, an expression and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo { /* p */ x => y =>
+         |    a
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    /* p */ x => y => {
+         |      a
+         |      // c
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(
+              tfunc(tparam("x"))(tfunc(tparam("y"))(blk(
+                Term.Name.newBuilder("a").endComment(detachedComments("// c")).result(),
+              ))).toBuilder.begComment(comments("/* p */")).result(),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a colon lambda after a name and its body in braces on the line of `def`") {
+    val code =
+      """|object A:
+         |  def f = foo { bar: x => a }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    bar {
+         |      x => a
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tapply(tname("foo"), blk(tapply(tname("bar"), blk(tfunc(tparam("x"))(tname("a")))))),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
   test("colon lambda in then, if with else on the body line") {
     val code =
       """|def f =

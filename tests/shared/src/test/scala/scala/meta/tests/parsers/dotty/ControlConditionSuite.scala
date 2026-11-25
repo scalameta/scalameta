@@ -11878,6 +11878,99 @@ class ControlConditionSuite extends BaseDottySuite {
     runTestAssert[Source](code, layout)(tree)
   }
 
+  test("leading infix after a colon argument: a condition that starts with `{`, `&&` between the columns of the `if` and the argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    val r =
+         |      if { a } && foo:
+         |          z
+         |        && w
+         |      then 1 else 2
+         |    r
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    val r = if ({
+         |      a
+         |    } && foo {
+         |      z
+         |    } && w) 1 else 2
+         |    r
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Defn.Val(
+            Nil,
+            List(patvar("r")),
+            None,
+            Term.If(
+              tinfix(
+                tinfix(blk(tname("a")), "&&", tapply(tname("foo"), blk(tname("z")))),
+                "&&",
+                tname("w"),
+              ),
+              int(1),
+              int(2),
+              Nil,
+            ),
+          ),
+          tname("r"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("leading infix after a colon argument: a `while` condition that starts with `{`, `&&` between the columns of the `while` and the argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while { a } && foo:
+         |        z
+         |      && w
+         |    do g
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = while ({
+         |    a
+         |  } && foo {
+         |    z
+         |  } && w) g
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        Term.While(
+          tinfix(
+            tinfix(blk(tname("a")), "&&", tapply(tname("foo"), blk(tname("z")))),
+            "&&",
+            tname("w"),
+          ),
+          tname("g"),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
   test("case guard: `if` at the end of a line, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument, `=>` on the next line") {
     val code =
       """|object A:

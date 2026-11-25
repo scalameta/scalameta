@@ -4054,6 +4054,10678 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Source](code, layout)(tree)
   }
 
+  test("`throw` at the end of a line after the `=` of a `def`, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f = throw
+         |      a
+         |      b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw a
+         |  b
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tname("a"))),
+        tname("b"),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the `=` of a `def`, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f = throw
+         |      foo:
+         |        z
+         |      b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw foo {
+         |    z
+         |  }
+         |  b
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tapply(tname("foo"), blk(tname("z"))))),
+        tname("b"),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the `=` of a `def`, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f = throw
+         |      val v = 1
+         |      v
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: illegal start of simple expression
+         |      val v = 1
+         |      ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line after the `=` of a `def`, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f = throw
+         |      foo:
+         |        z
+         |    && w
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw foo {
+         |    z && w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the `=` of a `def`, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after") {
+    val code =
+      """|object A:
+         |  def f = throw
+         |      a &&
+         |      b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw a && b
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tinfix(tname("a"), tname("&&"), tname("b")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        a
+         |        b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Throw(tname("a")), tname("b"))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        foo:
+         |          z
+         |        b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw foo {
+         |      z
+         |    }
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(Term.Throw(tapply(tname("foo"), blk(tname("z")))), tname("b")),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        val v = 1
+         |        v
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        foo:
+         |          z
+         |      && w
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw foo {
+         |    z && w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, a colon argument on the next line, the argument on the line after, a blank line, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        foo:
+         |          z
+         |
+         |        b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw foo {
+         |      z
+         |    }
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(Term.Throw(tapply(tname("foo"), blk(tname("z")))), tname("b")),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, a colon argument on the next line, the argument on the line after, a comment line, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        foo:
+         |          z
+         |        // c
+         |        b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw foo {
+         |      z
+         |    }
+         |    // c
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(
+            Term.Throw(tapply(tname("foo"), blk(tname("z")))),
+            Term.Name.newBuilder("b").begComment(detachedComments("// c")).result(),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        foo:
+         |          z
+         |        && w
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw foo {
+         |    z
+         |  } && w
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Throw(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, an expression on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        a
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw a
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tname("a"))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, an expression on the next line at the column of the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |    a
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw a
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tname("a"))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, an expression on a deeper next line, a leading infix operator at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        a
+         |        && w
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw a && w
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tinfix(tname("a"), tname("&&"), tname("w")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, an expression on a deeper next line, a leading infix operator between its column and that of the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        a
+         |      && w
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw a && w
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tinfix(tname("a"), tname("&&"), tname("w")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, an expression on a deeper next line, a leading infix operator at the column of the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        a
+         |    && w
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw a && w
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tinfix(tname("a"), tname("&&"), tname("w")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, an expression on a deeper next line, a selection at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        a
+         |        .b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw a.b
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tselect(tname("a"), tname("b")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, an expression on a deeper next line, a selection between its column and that of the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        a
+         |      .b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw a.b
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tselect(tname("a"), tname("b")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |        a &&
+         |        b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw a && b
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tinfix(tname("a"), tname("&&"), tname("b")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, `new` with an argument clause continued on a deeper line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |      new E(
+         |        "m")
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw new E("m")
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(Term.New(init(pname("E"), List(str("m")))))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line on a line of its own in a `def` body, an expression on a deeper next line, a leading infix operator on a deeper line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    throw
+         |      a
+         |        ++ b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = throw a ++ b
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.Throw(tinfix(tname("a"), tname("++"), tname("b")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        a
+         |        b
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw a b)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, tapply(tname("g"), Term.Throw(tpostfix(tname("a"), "b")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        foo:
+         |          z
+         |        b
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw foo {
+         |    z
+         |  } b)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("g"), Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        val v = 1
+         |        v
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        foo:
+         |          z
+         |      && w
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw foo {
+         |    z && w
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, a colon argument on the next line, the argument on the line after, a blank line, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        foo:
+         |          z
+         |
+         |        b
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw foo {
+         |    z
+         |  } b)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("g"), Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, a colon argument on the next line, the argument on the line after, a comment line, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        foo:
+         |          z
+         |        // c
+         |        b
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(
+         |    throw foo {
+         |      z
+         |    }
+         |      // c
+         |      b
+         |  )
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            Term.Throw(Term.SelectPostfix(
+              tapply(tname("foo"), blk(tname("z"))),
+              Term.Name.newBuilder("b").begComment(detachedComments("// c")).result(),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        foo:
+         |          z
+         |        && w
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw foo {
+         |    z && w
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, an expression on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        a
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw a)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, tapply(tname("g"), Term.Throw(tname("a")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, an expression on the next line at the column of the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |    a
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw a)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, tapply(tname("g"), Term.Throw(tname("a")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, an expression on a deeper next line, a leading infix operator at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        a
+         |        && w
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw a && w)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("g"), Term.Throw(tinfix(tname("a"), tname("&&"), tname("w")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, an expression on a deeper next line, a leading infix operator between its column and that of the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        a
+         |      && w
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw a && w)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("g"), Term.Throw(tinfix(tname("a"), tname("&&"), tname("w")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, an expression on a deeper next line, a leading infix operator at the column of the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        a
+         |    && w
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw a && w)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("g"), Term.Throw(tinfix(tname("a"), tname("&&"), tname("w")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, an expression on a deeper next line, a selection at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        a
+         |        .b
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw a.b)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("g"), Term.Throw(tselect(tname("a"), tname("b")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, an expression on a deeper next line, a selection between its column and that of the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        a
+         |      .b
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw a.b)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("g"), Term.Throw(tselect(tname("a"), tname("b")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses closed on a line of their own, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(throw
+         |        a &&
+         |        b
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(throw a && b)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(tname("g"), Term.Throw(tinfix(tname("a"), tname("&&"), tname("b")))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line in a block in braces, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    throw
+         |        a
+         |        b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Throw(tname("a")), tname("b"))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line in a block in braces, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    throw
+         |        foo:
+         |          z
+         |        b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw foo {
+         |      z
+         |    }
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(Term.Throw(tapply(tname("foo"), blk(tname("z")))), tname("b")),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line in a block in braces, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    throw
+         |        val v = 1
+         |        v
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line in a block in braces, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    throw
+         |        foo:
+         |          z
+         |      && w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw foo {
+         |      z && w
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w")))))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line in a block in braces, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after") {
+    val code =
+      """|object A {
+         |  def f = {
+         |    throw
+         |        a &&
+         |        b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw a && b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn
+          .Def(Nil, tname("f"), Nil, None, blk(Term.Throw(tinfix(tname("a"), tname("&&"), tname("b"))))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after an inline `then`, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if c then throw
+         |        a
+         |        b
+         |    else d
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `outdent` expected but `else` found
+         |    else d
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of the line of `{` on the line of `def`, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f = { throw
+         |      a
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Throw(tname("a")), tname("b"))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after an inline `then`, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if c then throw
+         |        foo:
+         |          z
+         |        b
+         |    else d
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:7: error: `outdent` expected but `else` found
+         |    else d
+         |    ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line after an inline `then`, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if c then throw
+         |        val v = 1
+         |        v
+         |    else d
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line after an inline `then`, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if c then throw
+         |        foo:
+         |          z
+         |      && w
+         |    else d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (c) throw foo {
+         |    z
+         |  } && w else d
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tname("c"),
+            Term.Throw(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
+            tname("d"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after an inline `else`, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if c then d else throw
+         |        a
+         |        b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (c) d else throw a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tif(tname("c"), tname("d"), Term.Throw(tname("a"))), tname("b")),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after an inline `else`, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if c then d else throw
+         |        foo:
+         |          z
+         |        b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (c) d else throw foo {
+         |      z
+         |    }
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(
+            tif(tname("c"), tname("d"), Term.Throw(tapply(tname("foo"), blk(tname("z"))))),
+            tname("b"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after an inline `else`, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if c then d else throw
+         |        val v = 1
+         |        v
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line after an inline `else`, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if c then d else throw
+         |        foo:
+         |          z
+         |      && w
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (c) d else throw foo {
+         |    z && w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tname("c"),
+            tname("d"),
+            Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after a condition in parentheses, an expression on a deeper next line, a statement at the column of `if`") {
+    val code =
+      """|object A:
+         |  def f(x: String) =
+         |    if (x == null) throw
+         |      new IllegalArgumentException("x")
+         |    x
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f(x: String) = {
+         |    if (x == null) throw new IllegalArgumentException("x")
+         |    x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          List(pcg(tpc(tparam("x", pname("String"))))),
+          None,
+          blk(
+            tif(
+              tinfix(tname("x"), tname("=="), Lit.Null()),
+              Term.Throw(Term.New(init(pname("IllegalArgumentException"), List(str("x"))))),
+            ),
+            tname("x"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after a condition in parentheses, an expression on a deeper next line, `else` at the column of `if`") {
+    val code =
+      """|object A:
+         |  def f(x: String) =
+         |    if (x == null) throw
+         |      new IllegalArgumentException("x")
+         |    else x
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f(x: String) = if (x == null) throw new IllegalArgumentException("x") else x
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          List(pcg(tpc(tparam("x", pname("String"))))),
+          None,
+          tif(
+            tinfix(tname("x"), tname("=="), Lit.Null()),
+            Term.Throw(Term.New(init(pname("IllegalArgumentException"), List(str("x"))))),
+            tname("x"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the arrow of a case, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y => throw
+         |        a
+         |        b
+         |    case _ => d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y =>
+         |      throw a
+         |      b
+         |    case _ =>
+         |      d
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(patvar("y"), None, blk(Term.Throw(tname("a")), tname("b"))),
+            Case(patwildcard, None, tname("d")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the arrow of a case, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y => throw
+         |        foo:
+         |          z
+         |        b
+         |    case _ => d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y =>
+         |      throw foo {
+         |        z
+         |      }
+         |      b
+         |    case _ =>
+         |      d
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(patvar("y"), None, blk(Term.Throw(tapply(tname("foo"), blk(tname("z")))), tname("b"))),
+            Case(patwildcard, None, tname("d")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the arrow of a case, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y => throw
+         |        val v = 1
+         |        v
+         |    case _ => d
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line after the arrow of a case, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y => throw
+         |        foo:
+         |          z
+         |      && w
+         |    case _ => d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y =>
+         |      throw foo {
+         |        z && w
+         |      }
+         |    case _ =>
+         |      d
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("y"),
+              None,
+              Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+            ),
+            Case(patwildcard, None, tname("d")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the arrow of a case, an expression on a deeper next line, the next case at the column of the case") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case 1 => throw
+         |      new E("one")
+         |    case _ => 2
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case 1 =>
+         |      throw new E("one")
+         |    case _ =>
+         |      2
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(int(1), None, Term.Throw(Term.New(init(pname("E"), List(str("one")))))),
+            Case(patwildcard, None, int(2)),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the arrow of a case on the line of `{`, `new` with an argument clause continued on a deeper line") {
+    val code =
+      """|object A:
+         |  def f = xs.map { case x => throw
+         |      new E(x,
+         |        y)
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    case x =>
+         |      throw new E(x, y)
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            Term.PartialFunction(List(Case(
+              patvar("x"),
+              None,
+              Term.Throw(Term.New(init(pname("E"), List(tname("x"), tname("y"))))),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the arrow of a same-line `catch` case, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => throw
+         |        a
+         |        b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    try a catch {
+         |      case e =>
+         |        throw a
+         |    }
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(
+            Term.Try(tname("a"), List(Case(patvar("e"), None, Term.Throw(tname("a")))), None),
+            tname("b"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the arrow of a same-line `catch` case, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => throw
+         |        foo:
+         |          z
+         |        b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    try a catch {
+         |      case e =>
+         |        throw foo {
+         |          z
+         |        }
+         |    }
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(
+            Term.Try(
+              tname("a"),
+              List(Case(patvar("e"), None, Term.Throw(tapply(tname("foo"), blk(tname("z")))))),
+              None,
+            ),
+            tname("b"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line after the arrow of a same-line `catch` case, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => throw
+         |        val v = 1
+         |        v
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`throw` at the end of a line after the arrow of a same-line `catch` case, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case e => throw
+         |        foo:
+         |          z
+         |      && w
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case e =>
+         |      throw foo {
+         |        z && w
+         |      }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(
+              patvar("e"),
+              None,
+              Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+            )),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses in a `for` generator, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs.getOrElse(throw
+         |        a
+         |        b
+         |    ) do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs.getOrElse(throw a b)) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(Enumerator.Generator(
+              patvar("x"),
+              tapply(tselect(tname("xs"), tname("getOrElse")), Term.Throw(tpostfix(tname("a"), "b"))),
+            )),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses in a `for` generator, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs.getOrElse(throw
+         |        foo:
+         |          z
+         |        b
+         |    ) do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs.getOrElse(throw foo {
+         |    z
+         |  } b)) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(Enumerator.Generator(
+              patvar("x"),
+              tapply(
+                tselect(tname("xs"), tname("getOrElse")),
+                Term.Throw(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+              ),
+            )),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses in a `for` generator, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the line of `throw`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs.getOrElse(throw
+         |        foo:
+         |          z
+         |      && w
+         |    ) do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs.getOrElse(throw foo {
+         |    z && w
+         |  })) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(Enumerator.Generator(
+              patvar("x"),
+              tapply(
+                tselect(tname("xs"), tname("getOrElse")),
+                Term.Throw(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              ),
+            )),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        foo:
+         |          z
+         |        b => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z
+         |    } b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(patvar("y"), Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")), tname("c")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`throw` at the end of a line within parentheses in a `for` generator, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs.getOrElse(throw
+         |        val v = 1
+         |        v
+         |    ) do c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, a definition and an expression on deeper next lines, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        val v = 1
+         |        v
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        foo:
+         |          z
+         |        && w
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("y"),
+              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the case, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        foo:
+         |          z
+         |      && w => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("y"),
+              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, an expression on each of the two deeper next lines, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        a
+         |        b
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(tname("x"), Case(patvar("y"), Some(tpostfix(tname("a"), "b")), tname("c"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, a colon argument on the next line, the argument on the line after, a blank line, an expression at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        foo:
+         |          z
+         |
+         |        b
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z
+         |    } b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(patvar("y"), Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")), tname("c")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, a colon argument on the next line, the argument on the line after, a comment line, an expression at the column of the colon argument, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        foo:
+         |          z
+         |        // c
+         |        b => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z
+         |    }
+         |      // c
+         |      b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("y"),
+              Some(Term.SelectPostfix(
+                tapply(tname("foo"), blk(tname("z"))),
+                Term.Name.newBuilder("b").begComment(detachedComments("// c")).result(),
+              )),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, an expression on a deeper next line, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        a
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(tname("x"), Case(patvar("y"), Some(tname("a")), tname("c"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, an expression on a deeper next line, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        a => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(tname("x"), Case(patvar("y"), Some(tname("a")), tname("c"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, an expression on the next line at the column of the case, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |    a => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(tname("x"), Case(patvar("y"), Some(tname("a")), tname("c"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, an expression on a deeper next line, a leading infix operator at its column, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        a
+         |        && w
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a && w => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(patvar("y"), Some(tinfix(tname("a"), tname("&&"), tname("w"))), tname("c")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, an expression on a deeper next line, a leading infix operator between its column and that of the case, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        a
+         |      && w => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a && w => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(patvar("y"), Some(tinfix(tname("a"), tname("&&"), tname("w"))), tname("c")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, an expression on a deeper next line, a leading infix operator at the column of the case, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        a
+         |    && w
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a && w => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(patvar("y"), Some(tinfix(tname("a"), tname("&&"), tname("w"))), tname("c")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, an expression on a deeper next line, a selection at its column, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        a
+         |        .b
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a.b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(tname("x"), Case(patvar("y"), Some(tselect(tname("a"), tname("b"))), tname("c"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, an expression on a deeper next line, a selection between its column and that of the case, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        a
+         |      .b => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a.b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(tname("x"), Case(patvar("y"), Some(tselect(tname("a"), tname("b"))), tname("c"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        a &&
+         |        b
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a && b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(patvar("y"), Some(tinfix(tname("a"), tname("&&"), tname("b"))), tname("c")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |        a &&
+         |        b => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a && b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(patvar("y"), Some(tinfix(tname("a"), tname("&&"), tname("b"))), tname("c")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` after `=`, an expression on a deeper next line, an expression between its column and that of the case, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y if
+         |          a
+         |        b
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(tname("x"), Case(patvar("y"), Some(tpostfix(tname("a"), "b")), tname("c"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` in braces, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument, `=>` at the end of the last line") {
+    val code =
+      """|object A {
+         |  def f = x match {
+         |    case y if
+         |        foo:
+         |          z
+         |        b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z
+         |    } b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(patvar("y"), Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")), tname("c")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` in braces, a definition and an expression on deeper next lines, `=>` on the next line") {
+    val code =
+      """|object A {
+         |  def f = x match {
+         |    case y if
+         |        val v = 1
+         |        v
+         |      => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` in braces, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A {
+         |  def f = x match {
+         |    case y if
+         |        foo:
+         |          z
+         |        && w
+         |      => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("y"),
+              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` in braces, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the case, `=>` at the end of the last line") {
+    val code =
+      """|object A {
+         |  def f = x match {
+         |    case y if
+         |        foo:
+         |          z
+         |      && w => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("y"),
+              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` in braces, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after, `=>` at the end of the last line") {
+    val code =
+      """|object A {
+         |  def f = x match {
+         |    case y if
+         |        a &&
+         |        b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a && b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(patvar("y"), Some(tinfix(tname("a"), tname("&&"), tname("b"))), tname("c")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` within parentheses, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(x match
+         |      case y if
+         |          foo:
+         |            z
+         |          b => c
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(x match {
+         |    case y if foo {
+         |      z
+         |    } b => c
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            tmatch(
+              tname("x"),
+              Case(
+                patvar("y"),
+                Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+                tname("c"),
+              ),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` within parentheses, a definition and an expression on deeper next lines, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(x match
+         |      case y if
+         |          val v = 1
+         |          v
+         |        => c
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: illegal start of simple expression
+         |          val v = 1
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` within parentheses, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(x match
+         |      case y if
+         |          foo:
+         |            z
+         |          && w
+         |        => c
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(x match {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            tmatch(
+              tname("x"),
+              Case(
+                patvar("y"),
+                Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+                tname("c"),
+              ),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` within parentheses, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the case, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(x match
+         |      case y if
+         |          foo:
+         |            z
+         |        && w => c
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(x match {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            tmatch(
+              tname("x"),
+              Case(
+                patvar("y"),
+                Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+                tname("c"),
+              ),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` within parentheses, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(x match
+         |      case y if
+         |          a &&
+         |          b => c
+         |    )
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(x match {
+         |    case y if a && b => c
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            tmatch(
+              tname("x"),
+              Case(patvar("y"), Some(tinfix(tname("a"), tname("&&"), tname("b"))), tname("c")),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a partial function in braces, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = xs.collect {
+         |    case y if
+         |        foo:
+         |          z
+         |        b => c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case y if foo {
+         |      z
+         |    } b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("collect")),
+            Term.PartialFunction(List(Case(
+              patvar("y"),
+              Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a partial function in braces, a definition and an expression on deeper next lines, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = xs.collect {
+         |    case y if
+         |        val v = 1
+         |        v
+         |      => c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("case guard: `if` at the end of a line in a partial function in braces, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = xs.collect {
+         |    case y if
+         |        foo:
+         |          z
+         |        && w
+         |      => c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("collect")),
+            Term.PartialFunction(List(Case(
+              patvar("y"),
+              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a partial function in braces, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the case, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = xs.collect {
+         |    case y if
+         |        foo:
+         |          z
+         |      && w => c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("collect")),
+            Term.PartialFunction(List(Case(
+              patvar("y"),
+              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a partial function in braces, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = xs.collect {
+         |    case y if
+         |        a &&
+         |        b => c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case y if a && b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("collect")),
+            Term.PartialFunction(List(
+              Case(patvar("y"), Some(tinfix(tname("a"), tname("&&"), tname("b"))), tname("c")),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a partial function in braces with `case` on the line of `{`, an expression on each of the two deeper next lines, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = xs.collect { case y if
+         |        a
+         |        b
+         |      => c }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case y if a b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("collect")),
+            Term.PartialFunction(List(Case(patvar("y"), Some(tpostfix(tname("a"), "b")), tname("c")))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in cases after a colon, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = xs.collect:
+         |    case y if
+         |        foo:
+         |          z
+         |        b => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case y if foo {
+         |      z
+         |    } b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("collect")),
+            Term.PartialFunction(List(Case(
+              patvar("y"),
+              Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in cases after a colon, a definition and an expression on deeper next lines, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = xs.collect:
+         |    case y if
+         |        val v = 1
+         |        v
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("case guard: `if` at the end of a line in cases after a colon, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = xs.collect:
+         |    case y if
+         |        foo:
+         |          z
+         |        && w
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("collect")),
+            Term.PartialFunction(List(Case(
+              patvar("y"),
+              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in cases after a colon, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the case, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = xs.collect:
+         |    case y if
+         |        foo:
+         |          z
+         |      && w => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.collect {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("collect")),
+            Term.PartialFunction(List(Case(
+              patvar("y"),
+              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `catch` on a line of its own, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a
+         |    catch
+         |      case y if
+         |          foo:
+         |            z
+         |          b => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case y if foo {
+         |      z
+         |    } b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(
+              patvar("y"),
+              Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+              tname("c"),
+            )),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `catch` on a line of its own, a definition and an expression on deeper next lines, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a
+         |    catch
+         |      case y if
+         |          val v = 1
+         |          v
+         |        => c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: illegal start of simple expression
+         |          val v = 1
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("case guard: `if` at the end of a line in a `catch` on a line of its own, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a
+         |    catch
+         |      case y if
+         |          foo:
+         |            z
+         |          && w
+         |        => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(
+              patvar("y"),
+              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              tname("c"),
+            )),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `catch` on a line of its own, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the case, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a
+         |    catch
+         |      case y if
+         |          foo:
+         |            z
+         |        && w => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(
+              patvar("y"),
+              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              tname("c"),
+            )),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `catch` on a line of its own, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a
+         |    catch
+         |      case y if
+         |          a &&
+         |          b => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case y if a && b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(patvar("y"), Some(tinfix(tname("a"), tname("&&"), tname("b"))), tname("c"))),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a same-line `catch` case, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case y if
+         |        foo:
+         |          z
+         |        b => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case y if foo {
+         |      z
+         |    } b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(
+              patvar("y"),
+              Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+              tname("c"),
+            )),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a same-line `catch` case, a definition and an expression on deeper next lines, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case y if
+         |        val v = 1
+         |        v
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("case guard: `if` at the end of a line in a same-line `catch` case, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case y if
+         |        foo:
+         |          z
+         |        && w
+         |      => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(
+              patvar("y"),
+              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              tname("c"),
+            )),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a same-line `catch` case, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the case, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    try a catch case y if
+         |        foo:
+         |          z
+         |      && w => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = try a catch {
+         |    case y if foo {
+         |      z && w
+         |    } => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Try(
+            tname("a"),
+            List(Case(
+              patvar("y"),
+              Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              tname("c"),
+            )),
+            None,
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` in a case body, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case u =>
+         |      v match
+         |        case y if
+         |            foo:
+         |              z
+         |            b => c
+         |    case _ => d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case u =>
+         |      v match {
+         |        case y if foo {
+         |          z
+         |        } b => c
+         |      }
+         |    case _ =>
+         |      d
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("u"),
+              None,
+              tmatch(
+                tname("v"),
+                Case(
+                  patvar("y"),
+                  Some(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+                  tname("c"),
+                ),
+              ),
+            ),
+            Case(patwildcard, None, tname("d")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` in a case body, a definition and an expression on deeper next lines, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case u =>
+         |      v match
+         |        case y if
+         |            val v = 1
+         |            v
+         |          => c
+         |    case _ => d
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: illegal start of simple expression
+         |            val v = 1
+         |            ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` in a case body, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument, `=>` on the next line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case u =>
+         |      v match
+         |        case y if
+         |            foo:
+         |              z
+         |            && w
+         |          => c
+         |    case _ => d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case u =>
+         |      v match {
+         |        case y if foo {
+         |          z && w
+         |        } => c
+         |      }
+         |    case _ =>
+         |      d
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("u"),
+              None,
+              tmatch(
+                tname("v"),
+                Case(
+                  patvar("y"),
+                  Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+                  tname("c"),
+                ),
+              ),
+            ),
+            Case(patwildcard, None, tname("d")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("case guard: `if` at the end of a line in a `match` in a case body, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the case, `=>` at the end of the last line") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case u =>
+         |      v match
+         |        case y if
+         |            foo:
+         |              z
+         |          && w => c
+         |    case _ => d
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case u =>
+         |      v match {
+         |        case y if foo {
+         |          z && w
+         |        } => c
+         |      }
+         |    case _ =>
+         |      d
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(
+            tname("x"),
+            Case(
+              patvar("u"),
+              None,
+              tmatch(
+                tname("v"),
+                Case(
+                  patvar("y"),
+                  Some(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+                  tname("c"),
+                ),
+              ),
+            ),
+            Case(patwildcard, None, tname("d")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          a
+         |          b
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:7: error: `<-` expected but `outdent` found
+         |          b
+         |           ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          val v = 1
+         |          v
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: illegal start of simple expression
+         |          val v = 1
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          foo:
+         |            z
+         |        && w
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if foo {
+         |    z && w
+         |  }) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          foo:
+         |            z
+         |          b
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:8: error: `<-` expected but `outdent` found
+         |          b
+         |           ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          foo:
+         |            z
+         |          && w
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if foo {
+         |    z
+         |  } && w) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tinfix(tapply(tname("foo"), blk(tname("z"))), tname("&&"), tname("w"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, an expression on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          a
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Guard(tname("a"))),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, an expression on the next line at the column of the guard") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |      a
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Guard(tname("a"))),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, an expression on a deeper next line, a leading infix operator at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          a
+         |          && w
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a && w) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tinfix(tname("a"), tname("&&"), tname("w"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, an expression on a deeper next line, a leading infix operator between its column and that of the guard") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          a
+         |        && w
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a && w) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tinfix(tname("a"), tname("&&"), tname("w"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, an expression on a deeper next line, a leading infix operator at the column of the guard") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          a
+         |      && w
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a && w) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tinfix(tname("a"), tname("&&"), tname("w"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, an expression on a deeper next line, a selection at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          a
+         |          .b
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a.b) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tselect(tname("a"), tname("b"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, an expression on a deeper next line, a selection between its column and that of the guard") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          a
+         |        .b
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a.b) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tselect(tname("a"), tname("b"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, `do` after them, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          a &&
+         |          b
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a && b) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tinfix(tname("a"), tname("&&"), tname("b"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, a generator after the guard, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          a
+         |          b
+         |      y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:7: error: `<-` expected but `\n` found
+         |          b
+         |           ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, a generator after the guard, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          val v = 1
+         |          v
+         |      y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: illegal start of simple expression
+         |          val v = 1
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, a generator after the guard, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          foo:
+         |            z
+         |        && w
+         |      y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if foo {
+         |    z && w
+         |  }; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators, a generator after the guard, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |      if
+         |          a &&
+         |          b
+         |      y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a && b; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tinfix(tname("a"), tname("&&"), tname("b"))),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line at the end of a generator line in indented enumerators, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs if
+         |          a
+         |          b
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `<-` expected but `outdent` found
+         |          b
+         |           ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line at the end of a generator line in indented enumerators, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs if
+         |          val v = 1
+         |          v
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: illegal start of simple expression
+         |          val v = 1
+         |          ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line in enumerators in braces, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if
+         |        a
+         |        b
+         |  } yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `<-` expected but `\n` found
+         |        b
+         |         ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line at the end of a generator line in indented enumerators, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs if
+         |          foo:
+         |            z
+         |        && w
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if foo {
+         |    z && w
+         |  }) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line at the end of a generator line in indented enumerators, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs if
+         |          a &&
+         |          b
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a && b) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tinfix(tname("a"), tname("&&"), tname("b"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in enumerators in braces, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if
+         |        val v = 1
+         |        v
+         |  } yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: illegal start of simple expression
+         |        val v = 1
+         |        ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line in enumerators in braces, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
+    val code =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if
+         |        foo:
+         |          z
+         |      && w
+         |  } yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if foo {
+         |    z && w
+         |  }) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in enumerators in braces, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument") {
+    val code =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if
+         |        foo:
+         |          z
+         |        && w
+         |  } yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if foo {
+         |    z && w
+         |  }) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in enumerators in braces, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after") {
+    val code =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if
+         |        a &&
+         |        b
+         |  } yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a && b) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tinfix(tname("a"), tname("&&"), tname("b"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in enumerators in parentheses, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f = for (
+         |    x <- xs
+         |    if
+         |        a
+         |        b
+         |  ) yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a b) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tpostfix(tname("a"), "b")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in enumerators in parentheses, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f = for (
+         |    x <- xs
+         |    if
+         |        val v = 1
+         |        v
+         |  ) yield c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `)` expected but `<-` found
+         |    x <- xs
+         |      ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line in enumerators in parentheses, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
+    val code =
+      """|object A:
+         |  def f = for (
+         |    x <- xs
+         |    if
+         |        foo:
+         |          z
+         |      && w
+         |  ) yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if foo {
+         |    z && w
+         |  }) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in enumerators in parentheses, a colon argument on the next line, the argument on the line after, an expression at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f = for (
+         |    x <- xs
+         |    if
+         |        foo:
+         |          z
+         |        b
+         |  ) yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if foo {
+         |    z
+         |  } b) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tpostfix(tapply(tname("foo"), blk(tname("z"))), "b")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in enumerators in parentheses, a colon argument on the next line, the argument on the line after, a leading infix operator at the column of the colon argument") {
+    val code =
+      """|object A:
+         |  def f = for (
+         |    x <- xs
+         |    if
+         |        foo:
+         |          z
+         |        && w
+         |  ) yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if foo {
+         |    z && w
+         |  }) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in enumerators in parentheses, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after") {
+    val code =
+      """|object A:
+         |  def f = for (
+         |    x <- xs
+         |    if
+         |        a &&
+         |        b
+         |  ) yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a && b) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tinfix(tname("a"), tname("&&"), tname("b"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators within parentheses, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(for
+         |        x <- xs
+         |        if
+         |            a
+         |            b
+         |      yield c)
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:7: error: `<-` expected but `outdent` found
+         |            b
+         |             ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators within parentheses, a definition and an expression on deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(for
+         |        x <- xs
+         |        if
+         |            val v = 1
+         |            v
+         |      yield c)
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: illegal start of simple expression
+         |            val v = 1
+         |            ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators within parentheses, a colon argument on the next line, the argument on the line after, a leading infix operator between the columns of the colon argument and the guard") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(for
+         |        x <- xs
+         |        if
+         |            foo:
+         |              z
+         |          && w
+         |      yield c)
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(for (x <- xs; if foo {
+         |    z && w
+         |  }) yield c)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            Term.ForYield(
+              List(
+                Enumerator.Generator(patvar("x"), tname("xs")),
+                Enumerator.Guard(tapply(tname("foo"), blk(tinfix(tname("z"), tname("&&"), tname("w"))))),
+              ),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line in indented enumerators within parentheses, a trailing infix operator at the end of a deeper next line, an expression at its column on the line after") {
+    val code =
+      """|object A:
+         |  def f =
+         |    g(for
+         |        x <- xs
+         |        if
+         |            a &&
+         |            b
+         |      yield c)
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = g(for (x <- xs; if a && b) yield c)
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("g"),
+            Term.ForYield(
+              List(
+                Enumerator.Generator(patvar("x"), tname("xs")),
+                Enumerator.Guard(tinfix(tname("a"), tname("&&"), tname("b"))),
+              ),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for`, an expression on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs if
+         |          a
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Guard(tname("a"))),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for`, an expression on a deeper next line, a generator at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs if
+         |          a
+         |          y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tname("a")),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for` after a generator of `new`, an expression on a deeper next line, a generator at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- new B(1) if
+         |        x.ok
+         |        y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- new B(1); if x.ok; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), Term.New(init(pname("B"), List(int(1))))),
+              Enumerator.Guard(tselect(tname("x"), tname("ok"))),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for`, an expression on a deeper next line, a guard at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs if
+         |          a
+         |          if b
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a; if b) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tname("a")),
+              Enumerator.Guard(tname("b")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for`, an expression on a deeper next line, an alias at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs if
+         |          a
+         |          z = 1
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a; z = 1) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tname("a")),
+              Enumerator.Val(patvar("z"), int(1)),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for`, an expression on a deeper next line, a generator at the column of the generator on the line of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs if
+         |          a
+         |        y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tname("a")),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for`, an expression on each of the two deeper next lines, a generator between their column and that of the generator on the line of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs if
+         |            a
+         |            b
+         |          y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `<-` expected but `\n` found
+         |            b
+         |             ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for {`, an expression on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for {x <- xs if
+         |          a}
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Guard(tname("a"))),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for {`, an expression on a deeper next line, a generator at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for {x <- xs if
+         |          a
+         |          y <- ys}
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a; y <- ys) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tname("a")),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for {`, an expression on a deeper next line, a guard at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for {x <- xs if
+         |          a
+         |          if b}
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a; if b) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tname("a")),
+              Enumerator.Guard(tname("b")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for {`, an expression on a deeper next line, an alias at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for {x <- xs if
+         |          a
+         |          z = 1}
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a; z = 1) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tname("a")),
+              Enumerator.Val(patvar("z"), int(1)),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for (`, an expression on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for (x <- xs if
+         |          a)
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Guard(tname("a"))),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for (`, an expression on a deeper next line, a guard at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for (x <- xs if
+         |          a
+         |          if b)
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a; if b) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tname("a")),
+              Enumerator.Guard(tname("b")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for (`, an expression on a deeper next line, a generator at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for (x <- xs if
+         |          a
+         |          y <- ys)
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `)` expected but `<-` found
+         |    for (x <- xs if
+         |           ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for (`, an expression on a deeper next line, an alias at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for (x <- xs if
+         |          a
+         |          z = 1)
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `)` expected but `<-` found
+         |    for (x <- xs if
+         |           ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` alone on the line after a generator on the line of `for`, an expression on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs
+         |        if
+         |          a
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(Enumerator.Generator(patvar("x"), tname("xs")), Enumerator.Guard(tname("a"))),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` alone on the line after a generator on the line of `for`, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs
+         |        if
+         |          a
+         |          b
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `<-` expected but `\n` found
+         |          b
+         |           ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` guard: `if` alone on the line after a generator on the line of `for`, an expression on a deeper next line, a generator at the column of the guard") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs
+         |        if
+         |          a
+         |        y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tname("a")),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for`, an expression on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <-
+         |          xs
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(List(Enumerator.Generator(patvar("x"), tname("xs"))), tname("c")),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for`, an expression on a deeper next line, a generator at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <-
+         |          xs
+         |          y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `outdent` expected but `<-` found
+         |          y <- ys
+         |            ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for`, an expression on a deeper next line, a guard at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <-
+         |          xs
+         |          if b
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `then` expected but `outdent` found
+         |          if b
+         |              ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for`, an expression on a deeper next line, an alias at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <-
+         |          xs
+         |          z = 1
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- {
+         |    xs
+         |    z = 1
+         |  }) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(Enumerator.Generator(patvar("x"), blk(tname("xs"), Term.Assign(tname("z"), int(1))))),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for`, an expression on a deeper next line, a generator at the column of the generator on the line of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <-
+         |          xs
+         |        y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for {`, an expression on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for {x <-
+         |          xs}
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(List(Enumerator.Generator(patvar("x"), tname("xs"))), tname("c")),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for {`, an expression on a deeper next line, a generator at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for {x <-
+         |          xs
+         |          y <- ys}
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `outdent` expected but `<-` found
+         |          y <- ys}
+         |            ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for {`, an expression on a deeper next line, a guard at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for {x <-
+         |          xs
+         |          if b}
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `then` expected but `outdent` found
+         |          if b}
+         |              ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for {`, an expression on a deeper next line, an alias at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for {x <-
+         |          xs
+         |          z = 1}
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- {
+         |    xs
+         |    z = 1
+         |  }) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(Enumerator.Generator(patvar("x"), blk(tname("xs"), Term.Assign(tname("z"), int(1))))),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for (`, an expression on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for (x <-
+         |          xs)
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(List(Enumerator.Generator(patvar("x"), tname("xs"))), tname("c")),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for (`, an expression on a deeper next line, a generator at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for (x <-
+         |          xs
+         |          y <- ys)
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `)` expected but `<-` found
+         |    for (x <-
+         |           ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for (`, an expression on a deeper next line, a guard at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for (x <-
+         |          xs
+         |          if b)
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `)` expected but `<-` found
+         |    for (x <-
+         |           ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` generator: `<-` at the end of a line on the line of `for (`, an expression on a deeper next line, an alias at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for (x <-
+         |          xs
+         |          z = 1)
+         |    yield c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- {
+         |    xs
+         |    z = 1
+         |  }) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(Enumerator.Generator(patvar("x"), blk(tname("xs"), Term.Assign(tname("z"), int(1))))),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`if` at the end of a line, the condition on the next line, `then` at the column of `def`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      a
+         |  then 1 else 2
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `then` expected but `outdent` found
+         |      a
+         |       ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test(
+    "`while` at the end of a line, the condition on the next line, `do` at the column of `def`",
+  ) {
+    val code =
+      """|object A:
+         |  def f =
+         |    while
+         |      a
+         |  do b
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `do` expected but `outdent` found
+         |      a
+         |       ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` at the end of a line, a generator on the next line, `yield` at the column of `def`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |  yield x
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |      x <- xs
+         |             ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`for` at the end of a line, a generator on the next line, `do` at the column of `def`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      x <- xs
+         |  do x
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: illegal start of simple expression
+         |      x <- xs
+         |             ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`if` at the end of a line, a condition in parentheses on the next line, `then` at the column of `def`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      (a)
+         |  then 1 else 2
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `then` expected but `outdent` found
+         |      (a)
+         |         ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`if` at the end of a line, a condition in parentheses on the next line, `then` and `else` at the column of `if`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      (a)
+         |    then 1
+         |    else 2
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (a) 1 else 2
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, tif(tname("a"), int(1), int(2))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`if` at the end of a line, a condition in parentheses and an infix operator on the next line, `then` and `else` at the column of `if`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    if
+         |      (a) && b
+         |    then 1
+         |    else 2
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (a && b) 1 else 2
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(tinfix(tname("a"), tname("&&"), tname("b")), int(1), int(2)),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`while` at the end of a line, a condition in parentheses on the next line, `do` at the column of `def`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while
+         |      (a)
+         |  do b
+         |  def g = 1
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `do` expected but `outdent` found
+         |      (a)
+         |         ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("`while` at the end of a line, a condition in parentheses on the next line, `do` at the column of `while`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while
+         |      (a)
+         |    do b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = while (a) b
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, Term.While(tname("a"), tname("b"))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`while` at the end of a line, a condition in parentheses and an infix operator on the next line, `do` at the column of `while`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while
+         |      (a) && b
+         |    do b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = while (a && b) b
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.While(tinfix(tname("a"), tname("&&"), tname("b")), tname("b")),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test(
+    "`if` with a `match` on its line, the cases on deeper next lines, `then` at the column of `if`",
+  ) {
+    val code =
+      """|object A:
+         |  def f =
+         |    if x match
+         |      case 1 => true
+         |      case _ => false
+         |    then a else b
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = if (x match {
+         |    case 1 => true
+         |    case _ => false
+         |  }) a else b
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tif(
+            tmatch(tname("x"), Case(int(1), None, bool(true)), Case(patwildcard, None, bool(false))),
+            tname("a"),
+            tname("b"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`while` with a `match` on its line, the cases on deeper next lines, `do` at the column of `while`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    while it.next() match
+         |      case 1 => true
+         |      case _ => false
+         |    do a
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = while (it.next() match {
+         |    case 1 => true
+         |    case _ => false
+         |  }) a
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.While(
+            tmatch(
+              tapply(tselect(tname("it"), tname("next"))),
+              Case(int(1), None, bool(true)),
+              Case(patwildcard, None, bool(false)),
+            ),
+            tname("a"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` and a comment at the end of a line on the line of `for`, an expression on a deeper next line, a generator at the column of the generator on the line of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs if // c
+         |          a
+         |        y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if // c
+         |      a
+         |    y <- ys
+         |  } c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(Term.Name.newBuilder("a").begComment(comments("// c")).result()),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for`, a comment line and an expression on deeper next lines, a generator at the column of the generator on the line of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs if
+         |          // c
+         |          a
+         |        y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if
+         |      // c
+         |      a
+         |    y <- ys
+         |  } c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(Term.Name.newBuilder("a").begComment(detachedComments("// c")).result()),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for`, a blank line, an expression on a deeper next line, a generator at the column of the generator on the line of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs if
+         |
+         |          a
+         |        y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tname("a")),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for` with a tuple pattern, an expression on a deeper next line, a generator at the column of the generator on the line of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for (x, y) <- xs.zip(ys) if
+         |          a
+         |        z <- zs
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for ((x, y) <- xs.zip(ys); if a; z <- zs) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(
+                Pat.Tuple(List(patvar("x"), patvar("y"))),
+                tapply(tselect(tname("xs"), tname("zip")), tname("ys")),
+              ),
+              Enumerator.Guard(tname("a")),
+              Enumerator.Generator(patvar("z"), tname("zs")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for`, an expression on a deeper next line, a leading infix operator at its column, a generator at the column of the generator on the line of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for x <- xs if
+         |          a
+         |          && b
+         |        y <- ys
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a && b; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tinfix(tname("a"), tname("&&"), tname("b"))),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` and a comment at the end of a line on the line of `for {`, an expression on a deeper next line, a generator at the column of the generator on the line of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for {x <- xs if // c
+         |          a
+         |         y <- ys}
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if // c
+         |      a
+         |    y <- ys
+         |  } c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(Term.Name.newBuilder("a").begComment(comments("// c")).result()),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for {`, a comment line and an expression on deeper next lines, a generator at the column of the generator on the line of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for {x <- xs if
+         |          // c
+         |          a
+         |         y <- ys}
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if
+         |      // c
+         |      a
+         |    y <- ys
+         |  } c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(Term.Name.newBuilder("a").begComment(detachedComments("// c")).result()),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for {`, a blank line, an expression on a deeper next line, a generator at the column of the generator on the line of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for {x <- xs if
+         |
+         |          a
+         |         y <- ys}
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tname("a")),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` guard: `if` at the end of a line on the line of `for {`, an expression on a deeper next line, a leading infix operator at its column, a generator at the column of the generator on the line of `for`") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for {x <- xs if
+         |          a
+         |          && b
+         |         y <- ys}
+         |    do c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a && b; y <- ys) c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.For(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tinfix(tname("a"), tname("&&"), tname("b"))),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` at the end of a line, a generator with a tuple pattern on the next line, a generator at its column") {
+    val code =
+      """|object A:
+         |  def f =
+         |    for
+         |      (a, b) <- pairs
+         |      c <- cs
+         |    yield a + c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for ((a, b) <- pairs; c <- cs) yield a + c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(Pat.Tuple(List(patvar("a"), patvar("b"))), tname("pairs")),
+              Enumerator.Generator(patvar("c"), tname("cs")),
+            ),
+            tinfix(tname("a"), tname("+"), tname("c")),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`then` at the end of the line of `{` after a lambda on that line, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => if x > 0 then
+         |      a
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => if (x > 0) {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(
+              tif(tinfix(tname("x"), tname(">"), int(0)), blk(tname("a"), tname("b"))),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a colon argument at the end of a condition on the line of `{` after a lambda on that line, its argument on a deeper next line, `then` on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => if x.forall:
+         |        _ > 0
+         |      then a
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => if (x.forall {
+         |      _ > 0
+         |    }) a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(tif(
+              tapply(
+                tselect(tname("x"), tname("forall")),
+                blk(Term.AnonymousFunction(tinfix(Term.Placeholder(), tname(">"), int(0)))),
+              ),
+              tname("a"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a condition on the line of `{` after a lambda on that line, continued on a deeper next line that ends with `then`, an expression on each of the two next lines, `else` on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => if x > 0 &&
+         |        x < 10 then
+         |      a
+         |      b
+         |    else c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => if (x > 0 && x < 10) {
+         |      a
+         |      b
+         |    } else c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(tif(
+              tinfix(
+                tinfix(tname("x"), tname(">"), int(0)),
+                tname("&&"),
+                tinfix(tname("x"), tname("<"), int(10)),
+              ),
+              blk(tname("a"), tname("b")),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a condition on the line of `{`, continued on a deeper next line that ends with `then`, an expression on each of the two next lines, `else` on the line after") {
+    val code =
+      """|object A:
+         |  def f = foo { if a &&
+         |        b then
+         |      c
+         |      d
+         |    else e
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo {
+         |    if (a && b) {
+         |      c
+         |      d
+         |    } else e
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            blk(tif(
+              tinfix(tname("a"), tname("&&"), tname("b")),
+              blk(tname("c"), tname("d")),
+              tname("e"),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a condition in parentheses on the line of `{` after a lambda on that line, continued on a deeper next line, an expression on each of the two next lines, `else` on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => if (x > 0 &&
+         |        x < 10)
+         |      a
+         |      b
+         |    else c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => if (x > 0 && x < 10) {
+         |      a
+         |      b
+         |    } else c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(tif(
+              tinfix(
+                tinfix(tname("x"), tname(">"), int(0)),
+                tname("&&"),
+                tinfix(tname("x"), tname("<"), int(10)),
+              ),
+              blk(tname("a"), tname("b")),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a `while` condition on the line of `{` after a lambda on that line, continued on a deeper next line that ends with `do`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => while x > 0 &&
+         |        x < 10 do
+         |      a
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => while (x > 0 && x < 10) {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(Term.While(
+              tinfix(
+                tinfix(tname("x"), tname(">"), int(0)),
+                tname("&&"),
+                tinfix(tname("x"), tname("<"), int(10)),
+              ),
+              blk(tname("a"), tname("b")),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a generator on the line of `{` after a lambda on that line, its arguments continued on a deeper next line that ends with `do`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => for y <- foo(x,
+         |        z) do
+         |      a
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => for (y <- foo(x, z)) {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(Term.For(
+              List(Enumerator.Generator(patvar("y"), tapply(tname("foo"), tname("x"), tname("z")))),
+              blk(tname("a"), tname("b")),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a generator on the line of `{` after a lambda on that line, its arguments continued on a deeper next line, `do` on the line after, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => for y <- foo(x,
+         |        z)
+         |    do
+         |      a
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => for (y <- foo(x, z)) {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(Term.For(
+              List(Enumerator.Generator(patvar("y"), tapply(tname("foo"), tname("x"), tname("z")))),
+              blk(tname("a"), tname("b")),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a generator on the line of `{` after a lambda on that line, its arguments continued on a deeper next line that ends with `yield`, a definition and an expression on the two next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.map { x => for y <- foo(x,
+         |        z) yield
+         |      val s = y + 1
+         |      s * x
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.map {
+         |    x => for (y <- foo(x, z)) yield {
+         |      val s = y + 1
+         |      s * x
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("map")),
+            blk(tfunc(tparam("x"))(Term.ForYield(
+              List(Enumerator.Generator(patvar("y"), tapply(tname("foo"), tname("x"), tname("z")))),
+              blk(
+                Defn.Val(Nil, List(patvar("s")), None, tinfix(tname("y"), tname("+"), int(1))),
+                tinfix(tname("s"), tname("*"), tname("x")),
+              ),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a condition on the line of `{` after a lambda on that line, a lambda in braces in it, its arguments continued on a deeper next line that ends with `then`, an expression on each of the two next lines, `else` on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => if ys.exists { y => check(x,
+         |        y) } then
+         |      a
+         |      b
+         |    else c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => if (ys.exists {
+         |      y => check(x, y)
+         |    }) {
+         |      a
+         |      b
+         |    } else c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(tif(
+              tapply(
+                tselect(tname("ys"), tname("exists")),
+                blk(tfunc(tparam("y"))(tapply(tname("check"), tname("x"), tname("y")))),
+              ),
+              blk(tname("a"), tname("b")),
+              tname("c"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a `while` condition on the line of `{` after a lambda on that line, a lambda in braces in it, its arguments continued on a deeper next line that ends with `do`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => while ys.exists { y => check(x,
+         |        y) } do
+         |      a
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    x => while (ys.exists {
+         |      y => check(x, y)
+         |    }) {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(Term.While(
+              tapply(
+                tselect(tname("ys"), tname("exists")),
+                blk(tfunc(tparam("y"))(tapply(tname("check"), tname("x"), tname("y")))),
+              ),
+              blk(tname("a"), tname("b")),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a lambda at the end of the line of `{`, an expression on a deeper next line, a leading infix operator at a smaller column on the line after") {
+    val code =
+      """|def f(lines: List[String]) = {
+         |  val args = lines.filter { s =>
+         |       s.contains("a")
+         |    || s.contains("b")
+         |  }.headOption
+         |  args
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f(lines: List[String]) = {
+         |  val args = lines.filter {
+         |    s => s.contains("a") || s.contains("b")
+         |  }.headOption
+         |  args
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      List(List(tparam("lines", papply("List", "String")))),
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("args")),
+          None,
+          tselect(
+            tapply(
+              tselect(tname("lines"), tname("filter")),
+              blk(tfunc(tparam("s"))(tinfix(
+                tapply(tselect(tname("s"), tname("contains")), str("a")),
+                tname("||"),
+                tapply(tselect(tname("s"), tname("contains")), str("b")),
+              ))),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("args"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a lambda at the end of the line of `{`, an expression on a deeper next line, a leading infix operator at its column on the line after") {
+    val code =
+      """|def f = {
+         |  val y = xs.filter { s =>
+         |       a
+         |       || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = xs.filter {
+         |    s => a || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tselect(tname("xs"), tname("filter")),
+              blk(tfunc(tparam("s"))(tinfix(tname("a"), tname("||"), tname("b")))),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a lambda at the end of the line of `{`, an expression on a deeper next line, `&&` at a smaller column on the line after") {
+    val code =
+      """|def f = {
+         |  val y = xs.filter { s =>
+         |       a
+         |    && b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = xs.filter {
+         |    s => a && b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tselect(tname("xs"), tname("filter")),
+              blk(tfunc(tparam("s"))(tinfix(tname("a"), tname("&&"), tname("b")))),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a lambda at the end of the line of `{`, an expression on a deeper next line, a leading infix operator at a larger column on the line after") {
+    val code =
+      """|def f = {
+         |  val y = xs.filter { s =>
+         |       a
+         |         || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = xs.filter {
+         |    s => a || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tselect(tname("xs"), tname("filter")),
+              blk(tfunc(tparam("s"))(tinfix(tname("a"), tname("||"), tname("b")))),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a lambda at the end of the line of `{`, an expression on a deeper next line, `+` at a smaller column on the line after") {
+    val code =
+      """|def f = {
+         |  val y = xs.map { s =>
+         |       a
+         |    + b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = xs.map {
+         |    s => a + b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tselect(tname("xs"), tname("map")),
+              blk(tfunc(tparam("s"))(tinfix(tname("a"), tname("+"), tname("b")))),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a lambda at the end of the line of `{`, an expression on a deeper next line, a blank line, then a leading infix operator at a smaller column") {
+    val code =
+      """|def f = {
+         |  val y = xs.filter { s =>
+         |       a
+         |
+         |    || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = xs.filter {
+         |    s => a
+         |    ||b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tselect(tname("xs"), tname("filter")),
+              blk(tfunc(tparam("s"))(tname("a")), tpostfix(tname("||"), "b")),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("a lambda at the end of the line of `{`, an expression on a deeper next line, a leading infix operator at a smaller column on each of the two lines after") {
+    val code =
+      """|def f = {
+         |  val y = xs.filter { s =>
+         |       a
+         |    || b
+         |    || c
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = xs.filter {
+         |    s => a || b || c
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tselect(tname("xs"), tname("filter")),
+              blk(tfunc(tparam("s"))(
+                tinfix(tinfix(tname("a"), tname("||"), tname("b")), tname("||"), tname("c")),
+              )),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a lambda at the end of the line of `{`, an expression on a deeper next line, a leading infix operator at a smaller column on each of the two lines after, a comment line at that column") {
+    val code =
+      """|def f = {
+         |  val y = xs.filter { s =>
+         |       a
+         |    || b
+         |    || c
+         |    // a comment
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = xs.filter {
+         |    s => a || b || c
+         |    // a comment
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tselect(tname("xs"), tname("filter")),
+              blk(
+                tfunc(tparam("s"))(
+                  tinfix(tinfix(tname("a"), tname("||"), tname("b")), tname("||"), tname("c")),
+                ).toBuilder.endComment(detachedComments("// a comment")).result(),
+              ),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("the arrow of a case at the end of the line of `{`, an expression on a deeper next line, a leading infix operator at a smaller column on the line after") {
+    val code =
+      """|def f = {
+         |  val y = xs.filter { case s =>
+         |       a
+         |    || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = xs.filter {
+         |    case s =>
+         |      a || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tselect(tname("xs"), tname("filter")),
+              Term.PartialFunction(List(
+                Case(patvar("s"), None, tinfix(tname("a"), tname("||"), tname("b"))),
+              )),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a lambda at the end of the line of `{`, an expression on a deeper next line, a comment line at a smaller column, then a leading infix operator at that column") {
+    val code =
+      """|def f = {
+         |  val y = xs.filter { s =>
+         |       a
+         |    // a comment
+         |    || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = xs.filter {
+         |    s => a
+         |      // a comment
+         |      || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tselect(tname("xs"), tname("filter")),
+              blk(tfunc(tparam("s"))(tinfix(
+                tname("a"),
+                Term.Name.newBuilder("||").begComment(detachedComments("// a comment")).result(),
+                tname("b"),
+              ))),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a lambda at the end of the line of `{`, an expression on a deeper next line, a comment line at its column, then a leading infix operator at a smaller column") {
+    val code =
+      """|def f = {
+         |  val y = xs.filter { s =>
+         |       a
+         |       // a comment
+         |    || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = xs.filter {
+         |    s => a
+         |      // a comment
+         |      || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tselect(tname("xs"), tname("filter")),
+              blk(tfunc(tparam("s"))(tinfix(
+                Term.Name.newBuilder("a").endComment(detachedComments("// a comment")).result(),
+                tname("||"),
+                tname("b"),
+              ))),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("`=` of a `val` at the end of the line of `{`, an expression on a deeper next line, a leading infix operator at a smaller column on the line after") {
+    val code =
+      """|def f = {
+         |  val y = foo { val t =
+         |       a
+         |    || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = foo {
+         |    val t = a || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tname("foo"),
+              blk(Defn.Val(Nil, List(patvar("t")), None, tinfix(tname("a"), tname("||"), tname("b")))),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("an implicit lambda at the end of the line of `{`, an expression on a deeper next line, a leading infix operator at a smaller column on the line after") {
+    val code =
+      """|def f = {
+         |  val y = xs.filter { implicit s =>
+         |       a
+         |    || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = xs.filter {
+         |    implicit s => a || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tselect(tname("xs"), tname("filter")),
+              blk(Term.Function(
+                Term.ParamClause(List(tparam(List(Mod.Implicit()), "s")), Some(Mod.Implicit())),
+                tinfix(tname("a"), tname("||"), tname("b")),
+              )),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a context lambda at the end of the line of `{`, an expression on a deeper next line, a leading infix operator at a smaller column on the line after") {
+    val code =
+      """|def f = {
+         |  val y = foo { s ?=>
+         |       a
+         |    || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = foo {
+         |    s ?=> a || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(tname("foo"), blk(tctxfunc(tparam("s"))(tinfix(tname("a"), tname("||"), tname("b"))))),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a colon lambda at the end of a line outside braces, an expression on a deeper next line, a leading infix operator at a smaller column on the line after") {
+    val code =
+      """|def f = {
+         |  val y = xs.filter: s =>
+         |       a
+         |    || b
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = xs.filter {
+         |    s => a || b
+         |  }
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tapply(
+            tselect(tname("xs"), tname("filter")),
+            blk(tfunc(tparam("s"))(tinfix(tname("a"), tname("||"), tname("b")))),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a curried lambda at the end of the line of `{`, an expression on a deeper next line, a leading infix operator at a smaller column on the line after") {
+    val code =
+      """|def f = {
+         |  val y = foo { s => t =>
+         |       a
+         |    || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = foo {
+         |    s => t => a || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tname("foo"),
+              blk(tfunc(tparam("s"))(tfunc(tparam("t"))(tinfix(tname("a"), tname("||"), tname("b"))))),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a colon lambda at the end of the line of `{`, an expression on a deeper next line, a leading infix operator at a smaller column on the line after") {
+    val code =
+      """|def f = {
+         |  val y = foo { xs.filter: s =>
+         |       a
+         |    || b
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = foo {
+         |    xs.filter {
+         |      s => a || b
+         |    }
+         |  }.headOption
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tselect(
+            tapply(
+              tname("foo"),
+              blk(tapply(
+                tselect(tname("xs"), tname("filter")),
+                blk(tfunc(tparam("s"))(tinfix(tname("a"), tname("||"), tname("b")))),
+              )),
+            ),
+            tname("headOption"),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("Scala 2 with `-Xsource:3`: a lambda at the end of the line of `{`, an expression on a deeper next line, a leading infix operator at a smaller column on the line after") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = {
+         |    val y = xs.filter { s =>
+         |         a
+         |      || b
+         |    }.headOption
+         |    y
+         |  }
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    val y = xs.filter {
+         |      s => a || b
+         |    }.headOption
+         |    y
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        blk(
+          Defn.Val(
+            Nil,
+            List(patvar("y")),
+            None,
+            tselect(
+              tapply(
+                tselect(tname("xs"), tname("filter")),
+                blk(tfunc(tparam("s"))(tinfix(tname("a"), tname("||"), tname("b")))),
+              ),
+              tname("headOption"),
+            ),
+          ),
+          tname("y"),
+        ),
+      )),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a lambda at the end of the line of `{` in an indented body, an expression on a deeper next line, a leading infix operator at a smaller column on the line after") {
+    val code =
+      """|object A:
+         |  def f =
+         |    xs.filter { s =>
+         |         a
+         |      || b
+         |    }.headOption
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.filter {
+         |    s => a || b
+         |  }.headOption
+         |}
+         |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("f"),
+        Nil,
+        None,
+        tselect(
+          tapply(
+            tselect(tname("xs"), tname("filter")),
+            blk(tfunc(tparam("s"))(tinfix(tname("a"), tname("||"), tname("b")))),
+          ),
+          tname("headOption"),
+        ),
+      )),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("a lambda at the end of the line of `{` in an argument in parentheses, an expression on a deeper next line, a leading infix operator at a smaller column on the line after") {
+    val code =
+      """|def f = {
+         |  val y = foo(xs.filter { s =>
+         |       a
+         |    || b
+         |  })
+         |  y
+         |}
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  val y = foo(xs.filter {
+         |    s => a || b
+         |  })
+         |  y
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("y")),
+          None,
+          tapply(
+            tname("foo"),
+            tapply(
+              tselect(tname("xs"), tname("filter")),
+              blk(tfunc(tparam("s"))(tinfix(tname("a"), tname("||"), tname("b")))),
+            ),
+          ),
+        ),
+        tname("y"),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("`=>` of a case at the end of its line in an indented `match`, an expression on a deeper next line, a leading infix operator at a smaller column on the line after") {
+    val code =
+      """|object A:
+         |  def f = x match
+         |    case y =>
+         |        a
+         |      || b
+         |    case _ => c
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y =>
+         |      a || b
+         |    case _ =>
+         |      c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Match(
+            tname("x"),
+            List(
+              Case(patvar("y"), None, tinfix(tname("a"), "||", tname("b"))),
+              Case(patwildcard, None, tname("c")),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`catch` and a case on the line of `{` after a lambda on that line, its arguments continued on a deeper next line, `=` of a `val` at the end of the line after, an expression at its column on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => try run(x) catch case e: Exception => log(e,
+         |        x)
+         |      val w =
+         |      p
+         |      w
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach { x =>
+         |    try run(x) catch {
+         |      case e: Exception =>
+         |        log(e, x)
+         |    }
+         |    val w = {
+         |      p
+         |      w
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(blk(
+              Term.Try(
+                tapply(tname("run"), tname("x")),
+                Case(
+                  Pat.Typed(patvar("e"), pname("Exception")),
+                  None,
+                  tapply(tname("log"), tname("e"), tname("x")),
+                ) :: Nil,
+                None,
+              ),
+              Defn.Val(Nil, List(patvar("w")), None, blk(tname("p"), tname("w"))),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`catch` and a case on the line of `{` after a lambda on that line, a blank line, `=` of a `val` at the end of the line after, an expression on each of the two deeper next lines, an expression at the column of `val` on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => try run(x) catch case e: Exception => log(e)
+         |
+         |      val w =
+         |        p
+         |        q
+         |      w
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach { x =>
+         |    try run(x) catch {
+         |      case e: Exception =>
+         |        log(e)
+         |    }
+         |    val w = {
+         |      p
+         |      q
+         |    }
+         |    w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(blk(
+              Term.Try(
+                tapply(tname("run"), tname("x")),
+                Case(
+                  Pat.Typed(patvar("e"), pname("Exception")),
+                  None,
+                  tapply(tname("log"), tname("e")),
+                ) :: Nil,
+                None,
+              ),
+              Defn.Val(Nil, List(patvar("w")), None, blk(tname("p"), tname("q"))),
+              tname("w"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`catch` and a case on the line of `{` after a lambda on that line, a blank line, a comment line, `=` of a `val` at the end of the line after, an expression on each of the two deeper next lines, an expression at the column of `val` on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => try run(x) catch case e: Exception => log(e)
+         |
+         |      // c
+         |      val w =
+         |        p
+         |        q
+         |      w
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach { x =>
+         |    try run(x) catch {
+         |      case e: Exception =>
+         |        log(e)
+         |    }
+         |
+         |    // c
+         |    val w = {
+         |      p
+         |      q
+         |    }
+         |    w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source {
+      List {
+        Defn.Object(
+          Nil,
+          tname("A"),
+          tpl(
+            Defn.Def(
+              Nil,
+              tname("f"),
+              Nil,
+              None,
+              tapply(
+                tselect(tname("xs"), tname("foreach")),
+                blk(tfunc(tparam("x"))(blk(
+                  Term.Try(
+                    tapply(tname("run"), tname("x")),
+                    Case(
+                      Pat.Typed(patvar("e"), pname("Exception")),
+                      None,
+                      tapply(tname("log"), tname("e")),
+                    ) :: Nil,
+                    None,
+                  ),
+                  Defn.Val(Nil, List(patvar("w")), None, blk(tname("p"), tname("q"))).toBuilder
+                    .begComment(detachedComments("// c")).result(),
+                  tname("w"),
+                ))),
+              ),
+            ),
+            Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+          ),
+        )
+      }
+    }
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`catch` and a case on the line of `{` after a lambda on that line, a comment line, `=` of a `val` at the end of the line after, an expression on each of the two deeper next lines, an expression at the column of `val` on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => try run(x) catch case e: Exception => log(e)
+         |      // c
+         |      val w =
+         |        p
+         |        q
+         |      w
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach { x =>
+         |    try run(x) catch {
+         |      case e: Exception =>
+         |        log(e)
+         |    }
+         |    // c
+         |    val w = {
+         |      p
+         |      q
+         |    }
+         |    w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source {
+      List {
+        Defn.Object(
+          Nil,
+          tname("A"),
+          tpl(
+            Defn.Def(
+              Nil,
+              tname("f"),
+              Nil,
+              None,
+              tapply(
+                tselect(tname("xs"), tname("foreach")),
+                blk(tfunc(tparam("x"))(blk(
+                  Term.Try(
+                    tapply(tname("run"), tname("x")),
+                    Case(
+                      Pat.Typed(patvar("e"), pname("Exception")),
+                      None,
+                      tapply(tname("log"), tname("e")),
+                    ) :: Nil,
+                    None,
+                  ),
+                  Defn.Val(Nil, List(patvar("w")), None, blk(tname("p"), tname("q"))).toBuilder
+                    .begComment(detachedComments("// c")).result(),
+                  tname("w"),
+                ))),
+              ),
+            ),
+            Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+          ),
+        )
+      }
+    }
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`catch` and a case on the line of `{` after a lambda on that line, `=` of a `val` at the end of the next line, an expression on each of the two deeper next lines, an expression at the column of `val` on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => try run(x) catch case e: Exception => log(e)
+         |      val w =
+         |        p
+         |        q
+         |      w
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach { x =>
+         |    try run(x) catch {
+         |      case e: Exception =>
+         |        log(e)
+         |    }
+         |    val w = {
+         |      p
+         |      q
+         |    }
+         |    w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(blk(
+              Term.Try(
+                tapply(tname("run"), tname("x")),
+                Case(
+                  Pat.Typed(patvar("e"), pname("Exception")),
+                  None,
+                  tapply(tname("log"), tname("e")),
+                ) :: Nil,
+                None,
+              ),
+              Defn.Val(Nil, List(patvar("w")), None, blk(tname("p"), tname("q"))),
+              tname("w"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`catch` and a case on the line of `{` after a lambda on that line, a blank line, `=` of a `val` two columns right of `def` at the end of the line after, an expression on each of the two deeper next lines, an expression at the column of `val` on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => try run(x) catch case e: Exception => log(e)
+         |
+         |    val w =
+         |      p
+         |      q
+         |    w
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach { x =>
+         |    try run(x) catch {
+         |      case e: Exception =>
+         |        log(e)
+         |    }
+         |    val w = {
+         |      p
+         |      q
+         |    }
+         |    w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(blk(
+              Term.Try(
+                tapply(tname("run"), tname("x")),
+                Case(
+                  Pat.Typed(patvar("e"), pname("Exception")),
+                  None,
+                  tapply(tname("log"), tname("e")),
+                ) :: Nil,
+                None,
+              ),
+              Defn.Val(Nil, List(patvar("w")), None, blk(tname("p"), tname("q"))),
+              tname("w"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`catch` and a case on the line of `{` after a lambda on that line, a blank line, an expression, `then` at the end of the line after, an expression on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => try run(x) catch case e: Exception => log(e)
+         |
+         |      w
+         |      if a then
+         |        b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach { x =>
+         |    try run(x) catch {
+         |      case e: Exception =>
+         |        log(e)
+         |    }
+         |    w
+         |    if (a) b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(blk(
+              Term.Try(
+                tapply(tname("run"), tname("x")),
+                Case(
+                  Pat.Typed(patvar("e"), pname("Exception")),
+                  None,
+                  tapply(tname("log"), tname("e")),
+                ) :: Nil,
+                None,
+              ),
+              tname("w"),
+              tif(tname("a"), tname("b")),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`catch` and a case on the line of `{`, a blank line, `=` of a `val` at the end of the line after, an expression on each of the two deeper next lines, an expression at the column of `val` on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { try run(x) catch case e: Exception => log(e)
+         |
+         |      val w =
+         |        p
+         |        q
+         |      w
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach {
+         |    try run(x) catch {
+         |      case e: Exception =>
+         |        log(e)
+         |    }
+         |    val w = {
+         |      p
+         |      q
+         |    }
+         |    w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(
+              Term.Try(
+                tapply(tname("run"), tname("x")),
+                Case(
+                  Pat.Typed(patvar("e"), pname("Exception")),
+                  None,
+                  tapply(tname("log"), tname("e")),
+                ) :: Nil,
+                None,
+              ),
+              Defn.Val(Nil, List(patvar("w")), None, blk(tname("p"), tname("q"))),
+              tname("w"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`catch` and a case on the line of `{` after a case on that line, a blank line, a case at the end of the line after, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  def f = x match { case a => try run(a) catch case e: Exception => log(e)
+         |
+         |      case b =>
+         |        c
+         |        d
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case a =>
+         |      try run(a) catch {
+         |        case e: Exception =>
+         |          log(e)
+         |      }
+         |    case b =>
+         |      c
+         |      d
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.Match(
+            tname("x"),
+            List(
+              Case(
+                patvar("a"),
+                None,
+                Term.Try(
+                  tapply(tname("run"), tname("a")),
+                  Case(
+                    Pat.Typed(patvar("e"), pname("Exception")),
+                    None,
+                    tapply(tname("log"), tname("e")),
+                  ) :: Nil,
+                  None,
+                ),
+              ),
+              Case(patvar("b"), None, blk(tname("c"), tname("d"))),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a colon lambda on the line of `{` after a lambda on that line, a blank line, `=` of a `val` at the end of the line after, an expression on each of the two deeper next lines, an expression at the column of `val` on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => val ys = xs.map: y => y
+         |
+         |      val w =
+         |        p
+         |        q
+         |      w
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach { x =>
+         |    val ys = xs.map {
+         |      y => y
+         |    }
+         |    val w = {
+         |      p
+         |      q
+         |    }
+         |    w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(blk(
+              Defn.Val(
+                Nil,
+                List(patvar("ys")),
+                None,
+                tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("y"))(tname("y")))),
+              ),
+              Defn.Val(Nil, List(patvar("w")), None, blk(tname("p"), tname("q"))),
+              tname("w"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a colon lambda on the line of `{` after a lambda on that line, `=` of a `val` at the end of the next line, an expression on each of the two deeper next lines, an expression at the column of `val` on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => val ys = xs.map: y => y
+         |      val w =
+         |        p
+         |        q
+         |      w
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach { x =>
+         |    val ys = xs.map {
+         |      y => y
+         |    }
+         |    val w = {
+         |      p
+         |      q
+         |    }
+         |    w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(blk(
+              Defn.Val(
+                Nil,
+                List(patvar("ys")),
+                None,
+                tapply(tselect(tname("xs"), tname("map")), blk(tfunc(tparam("y"))(tname("y")))),
+              ),
+              Defn.Val(Nil, List(patvar("w")), None, blk(tname("p"), tname("q"))),
+              tname("w"),
+            ))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=` of a `val` at the end of the line of `{` after a lambda on that line, an expression on a deeper next line, an expression at a shallower column on the line after") {
+    val code =
+      """|object A:
+         |  def f = xs.foreach { x => val y =
+         |      a
+         |    y
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = xs.foreach { x =>
+         |    val y = a
+         |    y
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tselect(tname("xs"), tname("foreach")),
+            blk(tfunc(tparam("x"))(blk(Defn.Val(Nil, List(patvar("y")), None, tname("a")), tname("y")))),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=` of a `def` at the end of the line of the `{` of a class, an expression on a deeper next line, a definition at a shallower column on the line after") {
+    val code =
+      """|class A { def f =
+         |    1
+         |  def g = 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|class A {
+         |  def f = 1
+         |  def g = 2
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      ctor,
+      tpl(Defn.Def(Nil, tname("f"), Nil, None, int(1)), Defn.Def(Nil, tname("g"), Nil, None, int(2))),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=` of a `def` at the end of the line of the `{` of `new`, an expression on each of the two deeper next lines") {
+    val code =
+      """|object A:
+         |  val r = new Runnable { def run() =
+         |      a
+         |      b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val r = new Runnable {
+         |    def run() = {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(patvar("r")),
+          None,
+          Term.NewAnonymous(tpl(
+            List(init(pname("Runnable"))),
+            List(Defn.Def(Nil, tname("run"), Nil, List(List()), None, blk(tname("a"), tname("b")))),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`if` at the end of the line of `{` on the line of `def`, an expression on each of the two deeper next lines, `then` between their column and that of `def`") {
+    val code =
+      """|object A:
+         |  def f = { if
+         |      a
+         |      b
+         |    then c else d
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if ({
+         |      a
+         |      b
+         |    }) c else d
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tif(blk(tname("a"), tname("b")), tname("c"), tname("d"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`if` at the end of the line of `{` on the line of `def`, an expression on a deeper next line, `then` between its column and that of `def`") {
+    val code =
+      """|object A:
+         |  def f = { if
+         |      a
+         |    then c else d
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    if (a) c else d
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(tif(tname("a"), tname("c"), tname("d")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`for` at the end of the line of `{` on the line of `def`, a generator on each of the two deeper next lines, `yield` between their column and that of `def`") {
+    val code =
+      """|object A:
+         |  def f = { for
+         |      x <- xs
+         |      y <- ys
+         |    yield x
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    for (x <- xs; y <- ys) yield x
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Generator(patvar("y"), tname("ys")),
+            ),
+            tname("x"),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("colon at the end of the line of `{` on the line of `def`, an expression on a deeper next line, an expression between its column and that of `def`") {
+    val code =
+      """|object A:
+         |  def f = { foo:
+         |      a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    foo {
+         |      a
+         |    }
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(tapply(tname("foo"), blk(tname("a"))), tname("b"))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`with` of a `given` at the end of the line of the `{` of an object, a definition on a deeper next line, a definition at a shallower column on the line after") {
+    val code =
+      """|object A { given Ordering[Int] with
+         |    def compare(a: Int, b: Int) = 0
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  given Ordering[Int] with { def compare(a: Int, b: Int) = 0 }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Given(
+          Nil,
+          anon,
+          Nil,
+          tpl(
+            List(init(papply(pname("Ordering"), pname("Int")))),
+            List(Defn.Def(
+              Nil,
+              tname("compare"),
+              List(pcg(tpc(tparam("a", pname("Int")), tparam("b", pname("Int"))))),
+              None,
+              int(0),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a typed self type at the end of the line of the `{` of a trait, a definition on the next line") {
+    val code =
+      """|object A:
+         |  trait B { self: C =>
+         |    def f = 1
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  trait B { self: C => def f = 1 }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Trait(
+          Nil,
+          pname("B"),
+          Nil,
+          EmptyCtor(),
+          tpl(self("self", pname("C")), Defn.Def(Nil, tname("f"), Nil, None, int(1))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a typed self type at the end of the line of the `{` of a trait, a definition on each of the two next lines") {
+    val code =
+      """|object A:
+         |  trait B { self: C =>
+         |    def f = 1
+         |    def h = 2
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  trait B { self: C =>
+         |    def f = 1
+         |    def h = 2
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Trait(
+          Nil,
+          pname("B"),
+          Nil,
+          EmptyCtor(),
+          tpl(
+            self("self", pname("C")),
+            Defn.Def(Nil, tname("f"), Nil, None, int(1)),
+            Defn.Def(Nil, tname("h"), Nil, None, int(2)),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a self type at the end of the line of the `{` of a trait: typed with a definition and a comment line, `this` typed with a definition, a blank line and a comment line, untyped with a definition") {
+    val code =
+      """|object A:
+         |  trait B { self: C =>
+         |    def f = 1
+         |    // c
+         |  }
+         |  trait D { this: C =>
+         |    def f = 1
+         |
+         |    // c
+         |  }
+         |  trait E { self =>
+         |    def f = 1
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  trait B { self: C =>
+         |    def f = 1
+         |    // c
+         |  }
+         |  trait D { this: C =>
+         |    def f = 1
+         |
+         |    // c
+         |  }
+         |  trait E { self => def f = 1 }
+         |}
+         |""".stripMargin
+    val c1 = detachedComments("// c")
+    val c2 = detachedComments("// c")
+    val tree = Source {
+      List {
+        Defn.Object(
+          Nil,
+          tname("A"),
+          tpl(
+            Defn.Trait(
+              Nil,
+              pname("B"),
+              Nil,
+              EmptyCtor(),
+              tpl(
+                self("self", pname("C")),
+                Defn.Def(Nil, tname("f"), Nil, None, int(1).toBuilder.endComment(c1).result())
+                  .toBuilder.endComment(c1).result(),
+              ),
+            ),
+            Defn.Trait(
+              Nil,
+              pname("D"),
+              Nil,
+              EmptyCtor(),
+              tpl(
+                self(Name.This(), pname("C")),
+                Defn.Def(Nil, tname("f"), Nil, None, int(1).toBuilder.endComment(c2).result())
+                  .toBuilder.endComment(c2).result(),
+              ),
+            ),
+            Defn.Trait(
+              Nil,
+              pname("E"),
+              Nil,
+              EmptyCtor(),
+              tpl(self("self"), Defn.Def(Nil, tname("f"), Nil, None, int(1))),
+            ),
+          ),
+        )
+      }
+    }
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a typed self type at the end of the line of the `{` of `new` in an argument clause, a definition on the next line") {
+    val code =
+      """|object A:
+         |  def f = foo(new B { self: C =>
+         |    def h = 1
+         |  })
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo(new B { self: C => def h = 1 })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.NewAnonymous(tpl(
+              List(init(pname("B"))),
+              self("self", pname("C")),
+              Defn.Def(Nil, tname("h"), Nil, None, int(1)),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a typed self type at the end of the line of the `{` of `new` in an argument clause, a definition on each of the two next lines") {
+    val code =
+      """|object A:
+         |  def f = foo(new B { self: C =>
+         |    def h = 1
+         |    def k = 2
+         |  })
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo(new B { self: C =>
+         |    def h = 1
+         |    def k = 2
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.NewAnonymous(tpl(
+              List(init(pname("B"))),
+              self("self", pname("C")),
+              Defn.Def(Nil, tname("h"), Nil, None, int(1)),
+              Defn.Def(Nil, tname("k"), Nil, None, int(2)),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a typed self type at the end of the line of the `{` of `new` in an argument clause, a definition and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = foo(new B { self: C =>
+         |    def h = 1
+         |    // c
+         |  })
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = foo(new B { self: C =>
+         |    def h = 1
+         |    // c
+         |  })
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val c = detachedComments("// c")
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tapply(
+            tname("foo"),
+            Term.NewAnonymous(tpl(
+              List(init(pname("B"))),
+              self("self", pname("C")),
+              Defn.Def(Nil, tname("h"), Nil, None, int(1).toBuilder.endComment(c).result())
+                .toBuilder.endComment(c).result(),
+            )),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a block in braces with an expression on the line of `{` on the line of `def`, an expression in parentheses on a deeper next line") {
+    val code =
+      """|object A:
+         |  def f = { foo
+         |    (a)
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    foo
+         |    a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(tname("foo"), tname("a"))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a block in braces with an expression on the line of `{` on the line of `def`, an expression on a deeper next line, an expression in parentheses on a deeper line after") {
+    val code =
+      """|object A:
+         |  def f = { a
+         |    foo
+         |      (b)
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    a
+         |    foo(b)
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), tapply(tname("foo"), tname("b")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a block in braces with an expression on the line of `{` on the line of `def`, an expression on a deeper next line, an expression in braces on a deeper line after") {
+    val code =
+      """|object A:
+         |  def f = { a
+         |    foo
+         |      { b }
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    a
+         |    foo {
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(tname("a"), tapply(tname("foo"), blk(tname("b"))))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a block in braces with an expression on the line of `{` on the line of `def`, `if` on a deeper next line with a colon argument at its end, the argument on a deeper line, a leading infix operator and `then` at the column of `if`") {
+    val code =
+      """|object A:
+         |  def f = { a
+         |    if x && foo:
+         |        z
+         |    && w
+         |    then b else c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    a
+         |    if (x && foo {
+         |      z
+         |    } && w) b else c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(
+            tname("a"),
+            tif(
+              tinfix(
+                tinfix(tname("x"), tname("&&"), tapply(tname("foo"), blk(tname("z")))),
+                tname("&&"),
+                tname("w"),
+              ),
+              tname("b"),
+              tname("c"),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("a block in braces with an expression on the line of `{` on the line of `def`, an expression, a blank line and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = { a
+         |    b
+         |
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    a
+         |    b
+         |
+         |    // c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          blk(tname("a"), Term.Name.newBuilder("b").endComment(detachedComments("// c")).result()),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`match` at the end of an alias on the line after a generator on the line of the `{` of a `for`, the cases and a generator at the column of the alias") {
+    val code =
+      """|object A:
+         |  def f = for { x <- xs
+         |                y = x match
+         |                case 1 => a
+         |                case _ => b
+         |                z <- zs
+         |  } yield z
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; y = x match {
+         |    case 1 => a
+         |    case _ => b
+         |  }; z <- zs) yield z
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Val(
+                patvar("y"),
+                tmatch(tname("x"), Case(int(1), None, tname("a")), Case(patwildcard, None, tname("b"))),
+              ),
+              Enumerator.Generator(patvar("z"), tname("zs")),
+            ),
+            tname("z"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a self type with an intersection type at the end of the line of the `{` of a trait, a definition and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  trait B { self: C & D =>
+         |    def f = 1
+         |    // c
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  trait B { self: C & D =>
+         |    def f = 1
+         |    // c
+         |  }
+         |}
+         |""".stripMargin
+    val c = detachedComments("// c")
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Trait(
+        Nil,
+        pname("B"),
+        Nil,
+        EmptyCtor(),
+        tpl(
+          self("self", pinfix(pname("C"), "&", pname("D"))),
+          Defn.Def(Nil, tname("f"), Nil, None, int(1).toBuilder.endComment(c).result()).toBuilder
+            .endComment(c).result(),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a self type with an applied type at the end of the line of the `{` of a trait, a definition and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  trait B { self: C[Int] =>
+         |    def f = 1
+         |    // c
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  trait B { self: C[Int] =>
+         |    def f = 1
+         |    // c
+         |  }
+         |}
+         |""".stripMargin
+    val c = detachedComments("// c")
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Trait(
+        Nil,
+        pname("B"),
+        Nil,
+        EmptyCtor(),
+        tpl(
+          self("self", papply(pname("C"), pname("Int"))),
+          Defn.Def(Nil, tname("f"), Nil, None, int(1).toBuilder.endComment(c).result()).toBuilder
+            .endComment(c).result(),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a typed self type at the end of the line of the `{` of `new` on the line of `def`, a definition and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  def f = new B { self: C =>
+         |    def h = 1
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = new B { self: C =>
+         |    def h = 1
+         |    // c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val c = detachedComments("// c")
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.NewAnonymous(tpl(
+            List(init(pname("B"))),
+            self("self", pname("C")),
+            Defn.Def(Nil, tname("h"), Nil, None, int(1).toBuilder.endComment(c).result()).toBuilder
+              .endComment(c).result(),
+          )),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a `def` after a typed self type on the line of the `{` of a trait, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  trait B { self: C => def f = (x: Int) =>
+         |      a
+         |      b
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  trait B { self: C =>
+         |    def f = (x: Int) => {
+         |      a
+         |      b
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Trait(
+        Nil,
+        pname("B"),
+        Nil,
+        EmptyCtor(),
+        tpl(
+          self("self", pname("C")),
+          Defn.Def(
+            Nil,
+            tname("f"),
+            Nil,
+            None,
+            tfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b"))),
+          ),
+        ),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a `def` after a typed `this` self type on the line of the `{` of a trait, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  trait B { this: C => def f = (x: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  trait B { this: C =>
+         |    def f = (x: Int) => {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Trait(
+          Nil,
+          pname("B"),
+          Nil,
+          EmptyCtor(),
+          tpl(
+            self(Name.This(), pname("C")),
+            Defn.Def(
+              Nil,
+              tname("f"),
+              Nil,
+              None,
+              tfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b"))),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a `def` after an untyped self type on the line of the `{` of a trait, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  trait B { self => def f = (x: Int) =>
+         |    a
+         |    b
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  trait B { self =>
+         |    def f = (x: Int) => {
+         |      a
+         |      b
+         |    }
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Trait(
+          Nil,
+          pname("B"),
+          Nil,
+          EmptyCtor(),
+          tpl(
+            self("self"),
+            Defn.Def(
+              Nil,
+              tname("f"),
+              Nil,
+              None,
+              tfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b"))),
+            ),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a typed `this` self type at the end of the line of the `{` of a trait, a definition and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  trait B { this: C =>
+         |    def f = 1
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  trait B { this: C =>
+         |    def f = 1
+         |    // c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val c = detachedComments("// c")
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Trait(
+          Nil,
+          pname("B"),
+          Nil,
+          EmptyCtor(),
+          tpl(
+            self(Name.This(), pname("C")),
+            Defn.Def(Nil, tname("f"), Nil, None, int(1).toBuilder.endComment(c).result()).toBuilder
+              .endComment(c).result(),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of an untyped self type at the end of the line of the `{` of a trait, a definition and a comment line on the next lines") {
+    val code =
+      """|object A:
+         |  trait B { self =>
+         |    def f = 1
+         |    // c
+         |  }
+         |  def g = 1
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  trait B { self =>
+         |    def f = 1
+         |    // c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val c = detachedComments("// c")
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Trait(
+          Nil,
+          pname("B"),
+          Nil,
+          EmptyCtor(),
+          tpl(
+            self("self"),
+            Defn.Def(Nil, tname("f"), Nil, None, int(1).toBuilder.endComment(c).result()).toBuilder
+              .endComment(c).result(),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("`=>` of a lambda with a typed parameter in parentheses in a `def` after a typed self type on the line of the `{` of `new` on the line of a `val`, an expression on each of the two next lines") {
+    val code =
+      """|object A:
+         |  val b = new B { self: C => def f = (x: Int) =>
+         |      a
+         |      b
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  val b = new B { self: C =>
+         |    def f = (x: Int) => {
+         |      a
+         |      b
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Val(
+        Nil,
+        List(patvar("b")),
+        None,
+        Term.NewAnonymous(tpl(
+          List(init(pname("B"))),
+          self("self", pname("C")),
+          Defn.Def(
+            Nil,
+            tname("f"),
+            Nil,
+            None,
+            tfunc(tparam("x", pname("Int")))(blk(tname("a"), tname("b"))),
+          ),
+        )),
+      )),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2: `throw` at the end of a line in a block in braces, an expression on a deeper next line") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|object A {
+         |  def f = {
+         |    throw
+         |        a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Throw(tname("a")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2 with `-Xsource:3`: `throw` at the end of a line in a block in braces, an expression on a deeper next line") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = {
+         |    throw
+         |        a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw a
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Throw(tname("a")))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2: `throw` at the end of a line in a block in braces, an expression on each of the two deeper next lines") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|object A {
+         |  def f = {
+         |    throw
+         |        a
+         |        b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Throw(tname("a")), tname("b"))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2 with `-Xsource:3`: `throw` at the end of a line in a block in braces, an expression on each of the two deeper next lines") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = {
+         |    throw
+         |        a
+         |        b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw a
+         |    b
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Throw(tname("a")), tname("b"))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2: `throw` at the end of a line in a block in braces, an expression on a deeper next line, a leading infix operator at its column") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|object A {
+         |  def f = {
+         |    throw
+         |        a
+         |        && w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw a
+         |    && w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(Nil, tname("f"), Nil, None, blk(Term.Throw(tname("a")), tpostfix(tname("&&"), "w"))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2 with `-Xsource:3`: `throw` at the end of a line in a block in braces, an expression on a deeper next line, a leading infix operator at its column") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = {
+         |    throw
+         |        a
+         |        && w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = {
+         |    throw a && w
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn
+          .Def(Nil, tname("f"), Nil, None, blk(Term.Throw(tinfix(tname("a"), tname("&&"), tname("w"))))),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2: case guard: `if` at the end of a line in a `match` in braces, an expression on each of the two deeper next lines, `=>` on the next line") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|object A {
+         |  def f = x match {
+         |    case y if
+         |        a
+         |        b
+         |      => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(tname("x"), Case(patvar("y"), Some(tpostfix(tname("a"), "b")), tname("c"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2 with `-Xsource:3`: case guard: `if` at the end of a line in a `match` in braces, an expression on each of the two deeper next lines, `=>` on the next line") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = x match {
+         |    case y if
+         |        a
+         |        b
+         |      => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = x match {
+         |    case y if a b => c
+         |  }
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          tmatch(tname("x"), Case(patvar("y"), Some(tpostfix(tname("a"), "b")), tname("c"))),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
+  test("Scala 2: `for` guard: `if` at the end of a line in enumerators in braces, an expression on each of the two deeper next lines") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if
+         |        a
+         |        b
+         |  } yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `<-` expected but `\n` found
+         |        b
+         |         ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("Scala 2 with `-Xsource:3`: `for` guard: `if` at the end of a line in enumerators in braces, an expression on each of the two deeper next lines") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if
+         |        a
+         |        b
+         |  } yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: `<-` expected but `\n` found
+         |        b
+         |         ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("Scala 2: `for` guard: `if` at the end of a line in enumerators in braces, an expression on a deeper next line, a leading infix operator at its column") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if
+         |        a
+         |        && w
+         |  } yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: illegal start of simple pattern
+         |        && w
+         |            ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("Scala 2 with `-Xsource:3`: `for` guard: `if` at the end of a line in enumerators in braces, an expression on a deeper next line, a leading infix operator at its column") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    val code =
+      """|object A {
+         |  def f = for {
+         |    x <- xs
+         |    if
+         |        a
+         |        && w
+         |  } yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|object A {
+         |  def f = for (x <- xs; if a && w) yield c
+         |  def g = 1
+         |}
+         |""".stripMargin
+    val tree = Source(List(Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("f"),
+          Nil,
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("x"), tname("xs")),
+              Enumerator.Guard(tinfix(tname("a"), tname("&&"), tname("w"))),
+            ),
+            tname("c"),
+          ),
+        ),
+        Defn.Def(Nil, tname("g"), Nil, None, int(1)),
+      ),
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
   test("a carriage return in the indent of a `def` body on the next line") {
     val code =
       s"""|object O:
