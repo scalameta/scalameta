@@ -9561,8 +9561,8 @@ class ControlConditionSuite extends BaseDottySuite {
     val layout =
       """|object A {
          |  def f = for (a <- as; y <- if (x && foo {
-         |    z && w
-         |  }) ys else zs) yield y
+         |    z
+         |  } && w) ys else zs) yield y
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -9579,7 +9579,11 @@ class ControlConditionSuite extends BaseDottySuite {
             Enumerator.Generator(
               patvar("y"),
               tif(
-                tinfix(tname("x"), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
+                tinfix(
+                  tinfix(tname("x"), tname("&&"), tapply(tname("foo"), blk(tname("z")))),
+                  tname("&&"),
+                  tname("w"),
+                ),
                 tname("ys"),
                 tname("zs"),
               ),

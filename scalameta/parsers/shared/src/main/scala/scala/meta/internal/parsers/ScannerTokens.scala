@@ -425,8 +425,10 @@ private[meta] final class ScannerTokens(
       else if (head eq null) Left(xs)
       else {
         if (currNonTrivial) last.next = currRef(xs)
-        else if (multiEOL && mightStartStat(next) && canProduceLF(xs))
+        else if (multiEOL && mightStartStat(next) && canProduceLF(xs)) {
+          setBraceWidth(xs, prev, nextIndent) // as at a single EOL
           last.next = eolRefAt(xs, last.pointPos, multiEOL = true)
+        }
         Right((head, last))
       }
 
@@ -850,6 +852,8 @@ private[meta] final class ScannerTokens(
         })
 
       val hasLF = indentPos > prevPos // includes indentPos = -1
+      if (hasLF && nextIndent >= 0 && dialect.allowSignificantIndentation)
+        setBraceWidth(sepRegionsOrig, prev, nextIndent)
       val eolPos = if (hasLF) findFirstEOL(prevPos + 1) else -1
       val multiEOL = eolPos >= 0 && (hasBlank(eolPos) || hasCommentBlankBefore(eolPos - 1))
 
@@ -993,7 +997,8 @@ private[meta] final class ScannerTokens(
                   // then  [else]  [do]  catch  [finally]  [yield]  match
                   case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
                   // exclude leading infix op
-                  case _ => !isIndented(xs, nextIndent) || canBeLeadingInfix != LeadingInfix.Yes
+                  case _ => canBeLeadingInfix != LeadingInfix.Yes ||
+                    !exceedsWidthOrIndent(xs, nextIndent, r.isInstanceOf[RegionArrowIndent])
                 }) => OutdentInfo(r, xs)
             case _ => null
           }
@@ -1026,7 +1031,7 @@ private[meta] final class ScannerTokens(
             else if (next.is[KwFinally]) OutdentInfo(r, rs, noOutdent(rs))
             else if (nextIndent < r.indent ||
               // only if outer is at the same indentation level
-              findIndent(rs) == nextIndent &&
+              findWidth(rs) == nextIndent &&
               // https://docs.scala-lang.org/scala3/reference/other-new-features/indentation.html#special-treatment-of-case-clauses
               (rc.arrow.ne(prev) && !next.is[KwCase] || nextNonTrivia(nextPos).isClassOrObject))
               OutdentInfo(r, dropRegionLine(nextIndent, rs))
@@ -1070,13 +1075,15 @@ private[meta] final class ScannerTokens(
            * level.
            */
           def getIndentIfNeeded(sepRegions: List[SepRegion]): Either[List[SepRegion], TokenRef] = {
-            def exceedsIndent = isIndented(sepRegions, nextIndent)
+            def exceedsIndent = exceedsWidthOrIndent(sepRegions, nextIndent, prev.is[FunctionArrow])
             def emitIndentWith(ri: SepRegionIndented, rs: List[SepRegion], next: TokenRef) =
               Right(mkIndent(prevPos, indentPos, ri :: rs, next))
             def emitIndent(rs: List[SepRegion], next: TokenRef = null) = {
               val cg = rs.headOrNull.isInstanceOf[RegionCaseGuard]
               val ri =
-                if (cg) new RegionCaseGuardIndent(nextIndent) else new RegionIndent(nextIndent)
+                if (cg) new RegionCaseGuardIndent(nextIndent)
+                else if (prev.is[FunctionArrow]) new RegionArrowIndent(nextIndent)
+                else new RegionIndent(nextIndent)
               emitIndentWith(ri, rs, next)
             }
             def emitIndentAndOutdent(regions: List[SepRegion]) =
@@ -1692,7 +1699,7 @@ private[meta] object ScannerTokens {
   private[parsers] def isDeeperLine(regions: List[SepRegion], indent: Int): Boolean =
     regions match {
       case RegionThen :: rs => isDeeperLine(rs, indent)
-      case r :: _ => r.indent >= 0 && r.indent < indent
+      case r :: _ => r.width >= 0 && r.width < indent
       case Nil => true // at the top level
     }
 
@@ -1702,6 +1709,40 @@ private[meta] object ScannerTokens {
   @inline
   private def isIndented(sepRegions: List[SepRegion], curIndent: Int): Boolean =
     findIndent(sepRegions) < curIndent
+
+  private def findWidth(sepRegions: List[SepRegion]): Int = sepRegions.findOrNull(_.width >= 0)
+    .nnFold(0)(_.width)
+
+  @inline
+  private def exceedsWidth(sepRegions: List[SepRegion], curIndent: Int): Boolean =
+    findWidth(sepRegions) < curIndent
+
+  @inline
+  private def exceedsWidthOrIndent(rs: List[SepRegion], indent: Int, useIndent: Boolean): Boolean =
+    if (useIndent) isIndented(rs, indent) else exceedsWidth(rs, indent)
+
+  /** Sets width of the braces around the current statement, if unset */
+  @tailrec
+  private def setBraceWidth(regions: List[SepRegion], prev: Token, width: Int): Unit = regions match {
+    // the block of a keyword at the end of this line starts on the next line
+    case (r: RegionControl) :: rs if r.isControlKeyword(prev) => setBraceWidth(rs, prev, width)
+    case (r: RegionBrace) :: _ => if (r.widthValue < 0) r.widthValue = width
+    case (_: RegionDelimNonIndented | _: RegionControlCond) :: _ => setOuterBracesWidth(regions)
+    case (_: SepRegionIndented | _: RegionCaseExpr | RegionForOther) :: _ =>
+    case _ :: rs => setBraceWidth(rs, prev, width)
+    case Nil =>
+  }
+
+  /** Inside delims or cond, the width is borrowed from an outer region (see [[setBraceWidth]]) */
+  @tailrec
+  private def setOuterBracesWidth(regions: List[SepRegion]): Unit = regions match {
+    case (r: RegionBrace) :: rs => if (r.widthValue < 0) {
+        r.widthValue = findWidth(rs)
+        setOuterBracesWidth(rs)
+      }
+    case (_: RegionCaseExpr | _: RegionIndent) :: _ | Nil =>
+    case _ :: rs => setOuterBracesWidth(rs)
+  }
 
   private def withBody(rc: RegionControlMaybeCond, rs: List[SepRegion]): List[SepRegion] =
     rc.asBody() ?:: rs
