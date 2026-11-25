@@ -13052,4 +13052,754 @@ class QualifierSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  occurrences(
+    "`_root_` in a type argument of a call",
+    """|package qs129a { class C; object O { class T } }
+       |object qs129 {
+       |  val a = Option[_root_.qs129a.C](null)
+       |  val b = Option[_root_.qs129a.O.T](null)
+       |  val c = Option[_root_.scala.Int](1)
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs129a <= qs129a/
+       |[0:23..0:24): C <= qs129a/C#
+       |[0:24..0:24):  <= qs129a/C#`<init>`().
+       |[0:33..0:34): O <= qs129a/O.
+       |[0:43..0:44): T <= qs129a/O.T#
+       |[0:44..0:44):  <= qs129a/O.T#`<init>`().
+       |[1:7..1:12): qs129 <= _empty_/qs129.
+       |[2:6..2:7): a <= _empty_/qs129.a.
+       |[2:10..2:16): Option => scala/Option.
+       |[2:24..2:30): qs129a => qs129a/
+       |[2:31..2:32): C => qs129a/C#
+       |[3:6..3:7): b <= _empty_/qs129.b.
+       |[3:10..3:16): Option => scala/Option.
+       |[3:24..3:30): qs129a => qs129a/
+       |[3:31..3:32): O => qs129a/O.
+       |[3:33..3:34): T => qs129a/O.T#
+       |[4:6..4:7): c <= _empty_/qs129.c.
+       |[4:10..4:16): Option => scala/Option.
+       |[4:24..4:29): scala => scala/
+       |[4:30..4:33): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a type argument of a type",
+    """|package qs130a { class C; object O { class T } }
+       |object qs130 {
+       |  val a: Option[_root_.qs130a.C] = None
+       |  val b: Option[_root_.qs130a.O.T] = None
+       |  val c: Option[_root_.scala.Int] = None
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs130a <= qs130a/
+       |[0:23..0:24): C <= qs130a/C#
+       |[0:24..0:24):  <= qs130a/C#`<init>`().
+       |[0:33..0:34): O <= qs130a/O.
+       |[0:43..0:44): T <= qs130a/O.T#
+       |[0:44..0:44):  <= qs130a/O.T#`<init>`().
+       |[1:7..1:12): qs130 <= _empty_/qs130.
+       |[2:6..2:7): a <= _empty_/qs130.a.
+       |[2:9..2:15): Option => scala/Option#
+       |[2:23..2:29): qs130a => qs130a/
+       |[2:30..2:31): C => qs130a/C#
+       |[2:35..2:39): None => scala/None.
+       |[3:6..3:7): b <= _empty_/qs130.b.
+       |[3:9..3:15): Option => scala/Option#
+       |[3:23..3:29): qs130a => qs130a/
+       |[3:30..3:31): O => qs130a/O.
+       |[3:32..3:33): T => qs130a/O.T#
+       |[3:37..3:41): None => scala/None.
+       |[4:6..4:7): c <= _empty_/qs130.c.
+       |[4:9..4:15): Option => scala/Option#
+       |[4:23..4:28): scala => scala/
+       |[4:29..4:32): Int => scala/Int#
+       |[4:36..4:40): None => scala/None.
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a value's type",
+    """|package qs131a { class C; object O { class T } }
+       |object qs131 {
+       |  val a: _root_.qs131a.C = null
+       |  val b: _root_.qs131a.O.T = null
+       |  val c: _root_.scala.Int = 0
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs131a <= qs131a/
+       |[0:23..0:24): C <= qs131a/C#
+       |[0:24..0:24):  <= qs131a/C#`<init>`().
+       |[0:33..0:34): O <= qs131a/O.
+       |[0:43..0:44): T <= qs131a/O.T#
+       |[0:44..0:44):  <= qs131a/O.T#`<init>`().
+       |[1:7..1:12): qs131 <= _empty_/qs131.
+       |[2:6..2:7): a <= _empty_/qs131.a.
+       |[2:16..2:22): qs131a => qs131a/
+       |[2:23..2:24): C => qs131a/C#
+       |[3:6..3:7): b <= _empty_/qs131.b.
+       |[3:16..3:22): qs131a => qs131a/
+       |[3:23..3:24): O => qs131a/O.
+       |[3:25..3:26): T => qs131a/O.T#
+       |[4:6..4:7): c <= _empty_/qs131.c.
+       |[4:16..4:21): scala => scala/
+       |[4:22..4:25): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a method parameter's type",
+    """|package qs132a { class C; object O { class T } }
+       |object qs132 {
+       |  def a(x: _root_.qs132a.C) = x
+       |  def b(x: _root_.qs132a.O.T) = x
+       |  def c(x: _root_.scala.Int) = x
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs132a <= qs132a/
+       |[0:23..0:24): C <= qs132a/C#
+       |[0:24..0:24):  <= qs132a/C#`<init>`().
+       |[0:33..0:34): O <= qs132a/O.
+       |[0:43..0:44): T <= qs132a/O.T#
+       |[0:44..0:44):  <= qs132a/O.T#`<init>`().
+       |[1:7..1:12): qs132 <= _empty_/qs132.
+       |[2:6..2:7): a <= _empty_/qs132.a().
+       |[2:8..2:9): x <= _empty_/qs132.a().(x)
+       |[2:18..2:24): qs132a => qs132a/
+       |[2:25..2:26): C => qs132a/C#
+       |[2:30..2:31): x => _empty_/qs132.a().(x)
+       |[3:6..3:7): b <= _empty_/qs132.b().
+       |[3:8..3:9): x <= _empty_/qs132.b().(x)
+       |[3:18..3:24): qs132a => qs132a/
+       |[3:25..3:26): O => qs132a/O.
+       |[3:27..3:28): T => qs132a/O.T#
+       |[3:32..3:33): x => _empty_/qs132.b().(x)
+       |[4:6..4:7): c <= _empty_/qs132.c().
+       |[4:8..4:9): x <= _empty_/qs132.c().(x)
+       |[4:18..4:23): scala => scala/
+       |[4:24..4:27): Int => scala/Int#
+       |[4:31..4:32): x => _empty_/qs132.c().(x)
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a constructor parameter's type",
+    """|package qs133a { class C; object O { class T } }
+       |object qs133 {
+       |  class A(x: _root_.qs133a.C)
+       |  class B(val x: _root_.qs133a.O.T)
+       |  case class D(x: _root_.scala.Int)
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs133a <= qs133a/
+       |[0:23..0:24): C <= qs133a/C#
+       |[0:24..0:24):  <= qs133a/C#`<init>`().
+       |[0:33..0:34): O <= qs133a/O.
+       |[0:43..0:44): T <= qs133a/O.T#
+       |[0:44..0:44):  <= qs133a/O.T#`<init>`().
+       |[1:7..1:12): qs133 <= _empty_/qs133.
+       |[2:8..2:9): A <= _empty_/qs133.A#
+       |[2:9..2:9):  <= _empty_/qs133.A#`<init>`().
+       |[2:10..2:11): x <= _empty_/qs133.A#`<init>`().(x)
+       |[2:10..2:11): x <= _empty_/qs133.A#x.
+       |[2:20..2:26): qs133a => qs133a/
+       |[2:27..2:28): C => qs133a/C#
+       |[3:8..3:9): B <= _empty_/qs133.B#
+       |[3:9..3:9):  <= _empty_/qs133.B#`<init>`().
+       |[3:14..3:15): x <= _empty_/qs133.B#`<init>`().(x)
+       |[3:14..3:15): x <= _empty_/qs133.B#x.
+       |[3:24..3:30): qs133a => qs133a/
+       |[3:31..3:32): O => qs133a/O.
+       |[3:33..3:34): T => qs133a/O.T#
+       |[4:13..4:14): D <= _empty_/qs133.D#
+       |[4:14..4:14):  <= _empty_/qs133.D#`<init>`().
+       |[4:15..4:16): x <= _empty_/qs133.D#`<init>`().(x)
+       |[4:15..4:16): x <= _empty_/qs133.D#x.
+       |[4:18..4:24): _root_ => _root_/
+       |[4:25..4:30): scala => scala/
+       |[4:31..4:34): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a lambda's parameter type",
+    """|package qs134a { class C; object O { class T } }
+       |object qs134 {
+       |  val a = (x: _root_.qs134a.C) => x
+       |  val b = (x: _root_.qs134a.O.T) => x
+       |  val c = (x: _root_.scala.Int) => x
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs134a <= qs134a/
+       |[0:23..0:24): C <= qs134a/C#
+       |[0:24..0:24):  <= qs134a/C#`<init>`().
+       |[0:33..0:34): O <= qs134a/O.
+       |[0:43..0:44): T <= qs134a/O.T#
+       |[0:44..0:44):  <= qs134a/O.T#`<init>`().
+       |[1:7..1:12): qs134 <= _empty_/qs134.
+       |[2:6..2:7): a <= _empty_/qs134.a.
+       |[2:11..2:12): x <= local0
+       |[2:21..2:27): qs134a => qs134a/
+       |[2:28..2:29): C => qs134a/C#
+       |[2:34..2:35): x => local0
+       |[3:6..3:7): b <= _empty_/qs134.b.
+       |[3:11..3:12): x <= local1
+       |[3:21..3:27): qs134a => qs134a/
+       |[3:28..3:29): O => qs134a/O.
+       |[3:30..3:31): T => qs134a/O.T#
+       |[3:36..3:37): x => local1
+       |[4:6..4:7): c <= _empty_/qs134.c.
+       |[4:11..4:12): x <= local2
+       |[4:21..4:26): scala => scala/
+       |[4:27..4:30): Int => scala/Int#
+       |[4:35..4:36): x => local2
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a partial function lambda's parameter type",
+    """|package qs135a { class C; object O { class T } }
+       |object qs135 {
+       |  val a: PartialFunction[_root_.qs135a.C, Any] = (x: _root_.qs135a.C) => x match { case _ => x }
+       |  val b: PartialFunction[_root_.qs135a.O.T, Any] = (x: _root_.qs135a.O.T) => x match { case _ => x }
+       |  val c: PartialFunction[_root_.scala.Int, Any] = (x: _root_.scala.Int) => x match { case _ => x }
+       |}
+       |""".stripMargin,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.atLeast("2.13.17") ->
+          """|[0:8..0:14): qs135a <= qs135a/
+             |[0:23..0:24): C <= qs135a/C#
+             |[0:24..0:24):  <= qs135a/C#`<init>`().
+             |[0:33..0:34): O <= qs135a/O.
+             |[0:43..0:44): T <= qs135a/O.T#
+             |[0:44..0:44):  <= qs135a/O.T#`<init>`().
+             |[1:7..1:12): qs135 <= _empty_/qs135.
+             |[2:6..2:7): a <= _empty_/qs135.a.
+             |[2:9..2:24): PartialFunction => scala/PartialFunction#
+             |[2:32..2:38): qs135a => qs135a/
+             |[2:39..2:40): C => qs135a/C#
+             |[2:42..2:45): Any => scala/Any#
+             |[2:49..2:96): (x: _root_.qs135a.C) => x match { case _ => x } <= local0
+             |[2:50..2:51): x <= local7
+             |[2:53..2:59): _root_ => _root_/
+             |[2:60..2:66): qs135a => qs135a/
+             |[2:67..2:68): C => qs135a/C#
+             |[2:73..2:74): x => local7
+             |[2:93..2:94): x => local7
+             |[3:6..3:7): b <= _empty_/qs135.b.
+             |[3:9..3:24): PartialFunction => scala/PartialFunction#
+             |[3:32..3:38): qs135a => qs135a/
+             |[3:39..3:40): O => qs135a/O.
+             |[3:41..3:42): T => qs135a/O.T#
+             |[3:44..3:47): Any => scala/Any#
+             |[3:51..3:100): (x: _root_.qs135a.O.T) => x match { case _ => x } <= local8
+             |[3:52..3:53): x <= local15
+             |[3:55..3:61): _root_ => _root_/
+             |[3:62..3:68): qs135a => qs135a/
+             |[3:69..3:70): O => qs135a/O.
+             |[3:71..3:72): T => qs135a/O.T#
+             |[3:77..3:78): x => local15
+             |[3:97..3:98): x => local15
+             |[4:6..4:7): c <= _empty_/qs135.c.
+             |[4:9..4:24): PartialFunction => scala/PartialFunction#
+             |[4:32..4:37): scala => scala/
+             |[4:38..4:41): Int => scala/Int#
+             |[4:43..4:46): Any => scala/Any#
+             |[4:50..4:98): (x: _root_.scala.Int) => x match { case _ => x } <= local16
+             |[4:51..4:52): x <= local23
+             |[4:54..4:60): _root_ => _root_/
+             |[4:61..4:66): scala => scala/
+             |[4:67..4:70): Int => scala/Int#
+             |[4:75..4:76): x => local23
+             |[4:95..4:96): x => local23
+             |""".stripMargin
+      },
+      """|[0:8..0:14): qs135a <= qs135a/
+         |[0:23..0:24): C <= qs135a/C#
+         |[0:24..0:24):  <= qs135a/C#`<init>`().
+         |[0:33..0:34): O <= qs135a/O.
+         |[0:43..0:44): T <= qs135a/O.T#
+         |[0:44..0:44):  <= qs135a/O.T#`<init>`().
+         |[1:7..1:12): qs135 <= _empty_/qs135.
+         |[2:6..2:7): a <= _empty_/qs135.a.
+         |[2:9..2:24): PartialFunction => scala/PartialFunction#
+         |[2:32..2:38): qs135a => qs135a/
+         |[2:39..2:40): C => qs135a/C#
+         |[2:42..2:45): Any => scala/Any#
+         |[2:49..2:96): (x: _root_.qs135a.C) => x match { case _ => x } <= local0
+         |[2:50..2:51): x <= local7
+         |[2:73..2:74): x => local7
+         |[2:93..2:94): x => local7
+         |[3:6..3:7): b <= _empty_/qs135.b.
+         |[3:9..3:24): PartialFunction => scala/PartialFunction#
+         |[3:32..3:38): qs135a => qs135a/
+         |[3:39..3:40): O => qs135a/O.
+         |[3:41..3:42): T => qs135a/O.T#
+         |[3:44..3:47): Any => scala/Any#
+         |[3:51..3:100): (x: _root_.qs135a.O.T) => x match { case _ => x } <= local8
+         |[3:52..3:53): x <= local15
+         |[3:77..3:78): x => local15
+         |[3:97..3:98): x => local15
+         |[4:6..4:7): c <= _empty_/qs135.c.
+         |[4:9..4:24): PartialFunction => scala/PartialFunction#
+         |[4:32..4:37): scala => scala/
+         |[4:38..4:41): Int => scala/Int#
+         |[4:43..4:46): Any => scala/Any#
+         |[4:50..4:98): (x: _root_.scala.Int) => x match { case _ => x } <= local16
+         |[4:51..4:52): x <= local23
+         |[4:75..4:76): x => local23
+         |[4:95..4:96): x => local23
+         |""".stripMargin,
+    ),
+  )
+
+  occurrences(
+    "`_root_` in a result type",
+    """|package qs136a { class C; object O { class T } }
+       |object qs136 {
+       |  def a: _root_.qs136a.C = null
+       |  def b: _root_.qs136a.O.T = null
+       |  def c: _root_.scala.Int = 0
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs136a <= qs136a/
+       |[0:23..0:24): C <= qs136a/C#
+       |[0:24..0:24):  <= qs136a/C#`<init>`().
+       |[0:33..0:34): O <= qs136a/O.
+       |[0:43..0:44): T <= qs136a/O.T#
+       |[0:44..0:44):  <= qs136a/O.T#`<init>`().
+       |[1:7..1:12): qs136 <= _empty_/qs136.
+       |[2:6..2:7): a <= _empty_/qs136.a().
+       |[2:16..2:22): qs136a => qs136a/
+       |[2:23..2:24): C => qs136a/C#
+       |[3:6..3:7): b <= _empty_/qs136.b().
+       |[3:16..3:22): qs136a => qs136a/
+       |[3:23..3:24): O => qs136a/O.
+       |[3:25..3:26): T => qs136a/O.T#
+       |[4:6..4:7): c <= _empty_/qs136.c().
+       |[4:16..4:21): scala => scala/
+       |[4:22..4:25): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a parent",
+    """|package qs137a { class C; object O { class T } }
+       |object qs137 {
+       |  class A extends _root_.qs137a.C
+       |  class B extends _root_.qs137a.O.T
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs137a <= qs137a/
+       |[0:23..0:24): C <= qs137a/C#
+       |[0:24..0:24):  <= qs137a/C#`<init>`().
+       |[0:33..0:34): O <= qs137a/O.
+       |[0:43..0:44): T <= qs137a/O.T#
+       |[0:44..0:44):  <= qs137a/O.T#`<init>`().
+       |[1:7..1:12): qs137 <= _empty_/qs137.
+       |[2:8..2:9): A <= _empty_/qs137.A#
+       |[2:10..2:10):  <= _empty_/qs137.A#`<init>`().
+       |[2:18..2:24): _root_ => _root_/
+       |[2:25..2:31): qs137a => qs137a/
+       |[2:32..2:33): C => qs137a/C#
+       |[2:33..2:33):  => qs137a/C#`<init>`().
+       |[3:8..3:9): B <= _empty_/qs137.B#
+       |[3:10..3:10):  <= _empty_/qs137.B#`<init>`().
+       |[3:18..3:24): _root_ => _root_/
+       |[3:25..3:31): qs137a => qs137a/
+       |[3:32..3:33): O => qs137a/O.
+       |[3:34..3:35): T => qs137a/O.T#
+       |[3:35..3:35):  => qs137a/O.T#`<init>`().
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a self type",
+    """|package qs138a { class C; object O { class T } }
+       |object qs138 {
+       |  trait A { self: _root_.qs138a.C => }
+       |  trait B { self: _root_.qs138a.O.T => }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs138a <= qs138a/
+       |[0:23..0:24): C <= qs138a/C#
+       |[0:24..0:24):  <= qs138a/C#`<init>`().
+       |[0:33..0:34): O <= qs138a/O.
+       |[0:43..0:44): T <= qs138a/O.T#
+       |[0:44..0:44):  <= qs138a/O.T#`<init>`().
+       |[1:7..1:12): qs138 <= _empty_/qs138.
+       |[2:8..2:9): A <= _empty_/qs138.A#
+       |[2:12..2:16): self <= local0
+       |[2:18..2:24): _root_ => _root_/
+       |[2:25..2:31): qs138a => qs138a/
+       |[2:32..2:33): C => qs138a/C#
+       |[3:8..3:9): B <= _empty_/qs138.B#
+       |[3:12..3:16): self <= local1
+       |[3:18..3:24): _root_ => _root_/
+       |[3:25..3:31): qs138a => qs138a/
+       |[3:32..3:33): O => qs138a/O.
+       |[3:34..3:35): T => qs138a/O.T#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in an annotation's type",
+    """|package qs139a { class C extends scala.annotation.StaticAnnotation; object O { class T extends scala.annotation.StaticAnnotation } }
+       |object qs139 {
+       |  @_root_.qs139a.C def a = 1
+       |  @_root_.qs139a.O.T def b = 1
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs139a <= qs139a/
+       |[0:23..0:24): C <= qs139a/C#
+       |[0:25..0:25):  <= qs139a/C#`<init>`().
+       |[0:33..0:38): scala => scala/
+       |[0:39..0:49): annotation => scala/annotation/
+       |[0:50..0:66): StaticAnnotation => scala/annotation/StaticAnnotation#
+       |[0:66..0:66):  => scala/annotation/Annotation#`<init>`().
+       |[0:75..0:76): O <= qs139a/O.
+       |[0:85..0:86): T <= qs139a/O.T#
+       |[0:87..0:87):  <= qs139a/O.T#`<init>`().
+       |[0:95..0:100): scala => scala/
+       |[0:101..0:111): annotation => scala/annotation/
+       |[0:112..0:128): StaticAnnotation => scala/annotation/StaticAnnotation#
+       |[0:128..0:128):  => scala/annotation/Annotation#`<init>`().
+       |[1:7..1:12): qs139 <= _empty_/qs139.
+       |[2:3..2:9): _root_ => _root_/
+       |[2:10..2:16): qs139a => qs139a/
+       |[2:17..2:18): C => qs139a/C#
+       |[2:18..2:18):  => qs139a/C#`<init>`().
+       |[2:23..2:24): a <= _empty_/qs139.a().
+       |[3:3..3:9): _root_ => _root_/
+       |[3:10..3:16): qs139a => qs139a/
+       |[3:17..3:18): O => qs139a/O.
+       |[3:19..3:20): T => qs139a/O.T#
+       |[3:20..3:20):  => qs139a/O.T#`<init>`().
+       |[3:25..3:26): b <= _empty_/qs139.b().
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a `new`",
+    """|package qs140a { class C; object O { class T } }
+       |object qs140 {
+       |  val a = new _root_.qs140a.C
+       |  val b = new _root_.qs140a.O.T
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs140a <= qs140a/
+       |[0:23..0:24): C <= qs140a/C#
+       |[0:24..0:24):  <= qs140a/C#`<init>`().
+       |[0:33..0:34): O <= qs140a/O.
+       |[0:43..0:44): T <= qs140a/O.T#
+       |[0:44..0:44):  <= qs140a/O.T#`<init>`().
+       |[1:7..1:12): qs140 <= _empty_/qs140.
+       |[2:6..2:7): a <= _empty_/qs140.a.
+       |[2:21..2:27): qs140a => qs140a/
+       |[2:28..2:29): C => qs140a/C#
+       |[2:29..2:29):  => qs140a/C#`<init>`().
+       |[3:6..3:7): b <= _empty_/qs140.b.
+       |[3:21..3:27): qs140a => qs140a/
+       |[3:28..3:29): O => qs140a/O.
+       |[3:30..3:31): T => qs140a/O.T#
+       |[3:31..3:31):  => qs140a/O.T#`<init>`().
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in `classOf`",
+    """|package qs141a { class C; object O { class T } }
+       |object qs141 {
+       |  val a = classOf[_root_.qs141a.C]
+       |  val b = classOf[_root_.qs141a.O.T]
+       |  val c = classOf[_root_.scala.Int]
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs141a <= qs141a/
+       |[0:23..0:24): C <= qs141a/C#
+       |[0:24..0:24):  <= qs141a/C#`<init>`().
+       |[0:33..0:34): O <= qs141a/O.
+       |[0:43..0:44): T <= qs141a/O.T#
+       |[0:44..0:44):  <= qs141a/O.T#`<init>`().
+       |[1:7..1:12): qs141 <= _empty_/qs141.
+       |[2:6..2:7): a <= _empty_/qs141.a.
+       |[2:10..2:17): classOf => scala/Predef.classOf().
+       |[2:18..2:24): _root_ => _root_/
+       |[2:25..2:31): qs141a => qs141a/
+       |[2:32..2:33): C => qs141a/C#
+       |[3:6..3:7): b <= _empty_/qs141.b.
+       |[3:10..3:17): classOf => scala/Predef.classOf().
+       |[3:18..3:24): _root_ => _root_/
+       |[3:25..3:31): qs141a => qs141a/
+       |[3:32..3:33): O => qs141a/O.
+       |[3:34..3:35): T => qs141a/O.T#
+       |[4:6..4:7): c <= _empty_/qs141.c.
+       |[4:10..4:17): classOf => scala/Predef.classOf().
+       |[4:18..4:24): _root_ => _root_/
+       |[4:25..4:30): scala => scala/
+       |[4:31..4:34): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in an existential bound",
+    """|package qs142a { class C; object O { class T } }
+       |object qs142 {
+       |  val a: Option[X] forSome { type X <: _root_.qs142a.C } = None
+       |  val b: Option[X] forSome { type X <: _root_.qs142a.O.T } = None
+       |  val c: Option[X] forSome { type X <: _root_.scala.Int } = None
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs142a <= qs142a/
+       |[0:23..0:24): C <= qs142a/C#
+       |[0:24..0:24):  <= qs142a/C#`<init>`().
+       |[0:33..0:34): O <= qs142a/O.
+       |[0:43..0:44): T <= qs142a/O.T#
+       |[0:44..0:44):  <= qs142a/O.T#`<init>`().
+       |[1:7..1:12): qs142 <= _empty_/qs142.
+       |[2:6..2:7): a <= _empty_/qs142.a.
+       |[2:9..2:15): Option => scala/Option#
+       |[2:16..2:17): X => local0
+       |[2:34..2:35): X <= local0
+       |[2:39..2:45): _root_ => _root_/
+       |[2:46..2:52): qs142a => qs142a/
+       |[2:53..2:54): C => qs142a/C#
+       |[2:59..2:63): None => scala/None.
+       |[3:6..3:7): b <= _empty_/qs142.b.
+       |[3:9..3:15): Option => scala/Option#
+       |[3:16..3:17): X => local1
+       |[3:34..3:35): X <= local1
+       |[3:39..3:45): _root_ => _root_/
+       |[3:46..3:52): qs142a => qs142a/
+       |[3:53..3:54): O => qs142a/O.
+       |[3:55..3:56): T => qs142a/O.T#
+       |[3:61..3:65): None => scala/None.
+       |[4:6..4:7): c <= _empty_/qs142.c.
+       |[4:9..4:15): Option => scala/Option#
+       |[4:16..4:17): X => local2
+       |[4:34..4:35): X <= local2
+       |[4:39..4:45): _root_ => _root_/
+       |[4:46..4:51): scala => scala/
+       |[4:52..4:55): Int => scala/Int#
+       |[4:60..4:64): None => scala/None.
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a type parameter's bound",
+    """|package qs143a { class C; object O { class T } }
+       |object qs143 {
+       |  def a[X <: _root_.qs143a.C] = 1
+       |  def b[X <: _root_.qs143a.O.T] = 1
+       |  def c[X <: _root_.scala.Int] = 1
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs143a <= qs143a/
+       |[0:23..0:24): C <= qs143a/C#
+       |[0:24..0:24):  <= qs143a/C#`<init>`().
+       |[0:33..0:34): O <= qs143a/O.
+       |[0:43..0:44): T <= qs143a/O.T#
+       |[0:44..0:44):  <= qs143a/O.T#`<init>`().
+       |[1:7..1:12): qs143 <= _empty_/qs143.
+       |[2:6..2:7): a <= _empty_/qs143.a().
+       |[2:8..2:9): X <= _empty_/qs143.a().[X]
+       |[2:13..2:19): _root_ => _root_/
+       |[2:20..2:26): qs143a => qs143a/
+       |[2:27..2:28): C => qs143a/C#
+       |[3:6..3:7): b <= _empty_/qs143.b().
+       |[3:8..3:9): X <= _empty_/qs143.b().[X]
+       |[3:13..3:19): _root_ => _root_/
+       |[3:20..3:26): qs143a => qs143a/
+       |[3:27..3:28): O => qs143a/O.
+       |[3:29..3:30): T => qs143a/O.T#
+       |[4:6..4:7): c <= _empty_/qs143.c().
+       |[4:8..4:9): X <= _empty_/qs143.c().[X]
+       |[4:13..4:19): _root_ => _root_/
+       |[4:20..4:25): scala => scala/
+       |[4:26..4:29): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a type alias's right side",
+    """|package qs144a { class C; object O { class T } }
+       |object qs144 {
+       |  type A = _root_.qs144a.C
+       |  type B = _root_.qs144a.O.T
+       |  type D = _root_.scala.Int
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs144a <= qs144a/
+       |[0:23..0:24): C <= qs144a/C#
+       |[0:24..0:24):  <= qs144a/C#`<init>`().
+       |[0:33..0:34): O <= qs144a/O.
+       |[0:43..0:44): T <= qs144a/O.T#
+       |[0:44..0:44):  <= qs144a/O.T#`<init>`().
+       |[1:7..1:12): qs144 <= _empty_/qs144.
+       |[2:7..2:8): A <= _empty_/qs144.A#
+       |[2:11..2:17): _root_ => _root_/
+       |[2:18..2:24): qs144a => qs144a/
+       |[2:25..2:26): C => qs144a/C#
+       |[3:7..3:8): B <= _empty_/qs144.B#
+       |[3:11..3:17): _root_ => _root_/
+       |[3:18..3:24): qs144a => qs144a/
+       |[3:25..3:26): O => qs144a/O.
+       |[3:27..3:28): T => qs144a/O.T#
+       |[4:7..4:8): D <= _empty_/qs144.D#
+       |[4:11..4:17): _root_ => _root_/
+       |[4:18..4:23): scala => scala/
+       |[4:24..4:27): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a type ascription",
+    """|package qs145a { class C; object O { class T } }
+       |object qs145 {
+       |  val a = (null: _root_.qs145a.C)
+       |  val b = (null: _root_.qs145a.O.T)
+       |  val c = (0: _root_.scala.Int)
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs145a <= qs145a/
+       |[0:23..0:24): C <= qs145a/C#
+       |[0:24..0:24):  <= qs145a/C#`<init>`().
+       |[0:33..0:34): O <= qs145a/O.
+       |[0:43..0:44): T <= qs145a/O.T#
+       |[0:44..0:44):  <= qs145a/O.T#`<init>`().
+       |[1:7..1:12): qs145 <= _empty_/qs145.
+       |[2:6..2:7): a <= _empty_/qs145.a.
+       |[2:24..2:30): qs145a => qs145a/
+       |[2:31..2:32): C => qs145a/C#
+       |[3:6..3:7): b <= _empty_/qs145.b.
+       |[3:24..3:30): qs145a => qs145a/
+       |[3:31..3:32): O => qs145a/O.
+       |[3:33..3:34): T => qs145a/O.T#
+       |[4:6..4:7): c <= _empty_/qs145.c.
+       |[4:21..4:26): scala => scala/
+       |[4:27..4:30): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a pattern's type",
+    """|package qs146a { class C; object O { class T } }
+       |object qs146 {
+       |  def a(x: Any) = x match { case y: _root_.qs146a.C => y }
+       |  def b(x: Any) = x match { case y: _root_.qs146a.O.T => y }
+       |  def c(x: Any) = x match { case y: _root_.scala.Int => y }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs146a <= qs146a/
+       |[0:23..0:24): C <= qs146a/C#
+       |[0:24..0:24):  <= qs146a/C#`<init>`().
+       |[0:33..0:34): O <= qs146a/O.
+       |[0:43..0:44): T <= qs146a/O.T#
+       |[0:44..0:44):  <= qs146a/O.T#`<init>`().
+       |[1:7..1:12): qs146 <= _empty_/qs146.
+       |[2:6..2:7): a <= _empty_/qs146.a().
+       |[2:8..2:9): x <= _empty_/qs146.a().(x)
+       |[2:11..2:14): Any => scala/Any#
+       |[2:18..2:19): x => _empty_/qs146.a().(x)
+       |[2:33..2:34): y <= local0
+       |[2:43..2:49): qs146a => qs146a/
+       |[2:50..2:51): C => qs146a/C#
+       |[2:55..2:56): y => local0
+       |[3:6..3:7): b <= _empty_/qs146.b().
+       |[3:8..3:9): x <= _empty_/qs146.b().(x)
+       |[3:11..3:14): Any => scala/Any#
+       |[3:18..3:19): x => _empty_/qs146.b().(x)
+       |[3:33..3:34): y <= local1
+       |[3:43..3:49): qs146a => qs146a/
+       |[3:50..3:51): O => qs146a/O.
+       |[3:52..3:53): T => qs146a/O.T#
+       |[3:57..3:58): y => local1
+       |[4:6..4:7): c <= _empty_/qs146.c().
+       |[4:8..4:9): x <= _empty_/qs146.c().(x)
+       |[4:11..4:14): Any => scala/Any#
+       |[4:18..4:19): x => _empty_/qs146.c().(x)
+       |[4:33..4:34): y <= local2
+       |[4:43..4:48): scala => scala/
+       |[4:49..4:52): Int => scala/Int#
+       |[4:56..4:57): y => local2
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in an import",
+    """|package qs147a { class C; object O { class T } }
+       |object qs147 {
+       |  import _root_.qs147a.C
+       |  import _root_.qs147a.{C => D}
+       |  import _root_.qs147a.O.T
+       |  import _root_.qs147a._
+       |  import _root_.scala.Int
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs147a <= qs147a/
+       |[0:23..0:24): C <= qs147a/C#
+       |[0:24..0:24):  <= qs147a/C#`<init>`().
+       |[0:33..0:34): O <= qs147a/O.
+       |[0:43..0:44): T <= qs147a/O.T#
+       |[0:44..0:44):  <= qs147a/O.T#`<init>`().
+       |[1:7..1:12): qs147 <= _empty_/qs147.
+       |[2:16..2:22): qs147a => qs147a/
+       |[2:23..2:24): C => qs147a/C#
+       |[3:16..3:22): qs147a => qs147a/
+       |[3:24..3:25): C => qs147a/C#
+       |[4:16..4:22): qs147a => qs147a/
+       |[4:23..4:24): O => qs147a/O.
+       |[4:25..4:26): T => qs147a/O.T#
+       |[5:16..5:22): qs147a => qs147a/
+       |[6:16..6:21): scala => scala/
+       |[6:22..6:25): Int => scala/Int#
+       |[6:22..6:25): Int => scala/Int.
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "`_root_` in a term and a pattern",
+    """|package qs148a { object O { val m = 1; object P } }
+       |object qs148 {
+       |  val a = _root_.qs148a.O.m
+       |  val b = _root_.qs148a.O.P
+       |  val c = _root_.scala.Int.MaxValue
+       |  def d(x: Any) = x match {
+       |    case _root_.qs148a.O.P => 1
+       |    case _root_.qs148a.O => 2
+       |  }
+       |}
+       |""".stripMargin,
+    """|[0:8..0:14): qs148a <= qs148a/
+       |[0:24..0:25): O <= qs148a/O.
+       |[0:32..0:33): m <= qs148a/O.m.
+       |[0:46..0:47): P <= qs148a/O.P.
+       |[1:7..1:12): qs148 <= _empty_/qs148.
+       |[2:6..2:7): a <= _empty_/qs148.a.
+       |[2:17..2:23): qs148a => qs148a/
+       |[2:24..2:25): O => qs148a/O.
+       |[2:26..2:27): m => qs148a/O.m.
+       |[3:6..3:7): b <= _empty_/qs148.b.
+       |[3:17..3:23): qs148a => qs148a/
+       |[3:24..3:25): O => qs148a/O.
+       |[3:26..3:27): P => qs148a/O.P.
+       |[4:6..4:7): c <= _empty_/qs148.c.
+       |[4:17..4:22): scala => scala/
+       |[4:23..4:26): Int => scala/Int.
+       |[4:27..4:35): MaxValue => scala/Int.MaxValue.
+       |[5:6..5:7): d <= _empty_/qs148.d().
+       |[5:8..5:9): x <= _empty_/qs148.d().(x)
+       |[5:11..5:14): Any => scala/Any#
+       |[5:18..5:19): x => _empty_/qs148.d().(x)
+       |[6:16..6:22): qs148a => qs148a/
+       |[6:23..6:24): O => qs148a/O.
+       |[6:25..6:26): P => qs148a/O.P.
+       |[7:16..7:22): qs148a => qs148a/
+       |[7:23..7:24): O => qs148a/O.
+       |
+       |""".stripMargin,
+  )
+
 }
