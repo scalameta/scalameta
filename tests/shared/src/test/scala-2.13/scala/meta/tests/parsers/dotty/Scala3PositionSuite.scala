@@ -8215,11 +8215,11 @@ class Scala3PositionSuite extends BasePositionSuite {
        |    new E
        |    // c
        |""".stripMargin,
-    """|Term.Block throw
+    """|Term.Throw throw
        |    new E
        |    // c [10:throw...:34)
-       |Term.Throw throw
-       |    new E [10:throw...:25)
+       |Term.Block new E
+       |    // c [20:new E...:34)
        |Term.New new E [20:new E:25)
        |""".stripMargin,
     """|BOF [0..0)
@@ -8228,8 +8228,10 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Equals [6..7)
        |Indentation.Indent [7..7)
        |KwThrow [10..15)
+       |Indentation.Indent [15..15)
        |KwNew [20..23)
        |Ident(E) [24..25)
+       |Indentation.Outdent [34..34)
        |Indentation.Outdent [34..34)
        |EOF [35..35)
        |""".stripMargin,
