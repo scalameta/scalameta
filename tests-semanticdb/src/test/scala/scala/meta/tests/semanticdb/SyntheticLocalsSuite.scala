@@ -199,7 +199,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |local4 => final class $anon extends AnyRef { +1 decls }
          |local5 => val method n: Int
          |local6 => val local x$2: B
-         |local7 => val local o: AnyRef { val def n: Int }
+         |local7 => val local o: AnyRef { val n: Int }
          |local8 => final object Q extends AnyRef { +1 decls }
          |local9 => val method q: Int
          |local10 => val local x$2: B
@@ -223,7 +223,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |_empty_/s1#`<init>`(). => primary ctor <init>()
        |_empty_/s1#m(). => method m: Unit
        |  Unit => scala/Unit#
-       |local0 => type S = AnyRef { var def vs: Int; var def vs_=(x$1: Int): Unit }
+       |local0 => type S = AnyRef { var vs: Int; def vs_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
        |  vs => local1
        |  Int => scala/Int#
@@ -251,7 +251,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|_empty_/s2# => class s2 extends AnyRef { +4 decls }
        |  AnyRef => scala/AnyRef#
-       |_empty_/s2#S# => type S = AnyRef { var def vs: Int; var def vs_=(x$1: Int): Unit }
+       |_empty_/s2#S# => type S = AnyRef { var vs: Int; def vs_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
        |  vs => local0
        |  Int => scala/Int#
@@ -259,14 +259,14 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  x$1 => local2
        |  Unit => scala/Unit#
        |_empty_/s2#`<init>`(). => primary ctor <init>()
-       |_empty_/s2#n. => val method n: AnyRef { var def vn: Int; var def vn_=(x$1: Int): Unit }
+       |_empty_/s2#n. => val method n: AnyRef { var vn: Int; def vn_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
        |  vn => local3
        |  Int => scala/Int#
        |  vn_= => local4
        |  x$1 => local5
        |  Unit => scala/Unit#
-       |_empty_/s2#rs(). => method rs(r: AnyRef { var def vr: Int; var def vr_=(x$1: Int): Unit }): Int
+       |_empty_/s2#rs(). => method rs(r: AnyRef { var vr: Int; def vr_=(x$1: Int): Unit }): Int
        |  r => _empty_/s2#rs().(r)
        |  AnyRef => scala/AnyRef#
        |  vr => local6
@@ -274,7 +274,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  vr_= => local7
        |  x$1 => local8
        |  Unit => scala/Unit#
-       |_empty_/s2#rs().(r) => param r: AnyRef { var def vr: Int; var def vr_=(x$1: Int): Unit }
+       |_empty_/s2#rs().(r) => param r: AnyRef { var vr: Int; def vr_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
        |  vr => local6
        |  Int => scala/Int#
@@ -321,14 +321,14 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
     """|_empty_/s3# => class s3 extends AnyRef { +3 decls }
        |  AnyRef => scala/AnyRef#
        |_empty_/s3#`<init>`(). => primary ctor <init>()
-       |_empty_/s3#anon(). => method anon: AnyRef { var def va: Int; var def va_=(x$1: Int): Unit }
+       |_empty_/s3#anon(). => method anon: AnyRef { var va: Int; def va_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
        |  va => local0
        |  Int => scala/Int#
        |  va_= => local1
        |  x$1 => local2
        |  Unit => scala/Unit#
-       |_empty_/s3#m(). => method m: AnyRef { var def v: Int; var def v_=(x$1: Int): Unit }
+       |_empty_/s3#m(). => method m: AnyRef { var v: Int; def v_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
        |  v => local4
        |  Int => scala/Int#
@@ -2503,7 +2503,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|_empty_/s5# => class s5 extends AnyRef { +2 decls }
        |  AnyRef => scala/AnyRef#
-       |_empty_/s5#`<init>`(). => primary ctor <init>(val n: AnyRef { var def vn: Int; var def vn_=(x$1: Int): Unit })
+       |_empty_/s5#`<init>`(). => primary ctor <init>(val n: AnyRef { var vn: Int; def vn_=(x$1: Int): Unit })
        |  n => _empty_/s5#`<init>`().(n)
        |  AnyRef => scala/AnyRef#
        |  vn => local0
@@ -2511,14 +2511,14 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  vn_= => local1
        |  x$1 => local2
        |  Unit => scala/Unit#
-       |_empty_/s5#`<init>`().(n) => val param n: AnyRef { var def vn: Int; var def vn_=(x$1: Int): Unit }
+       |_empty_/s5#`<init>`().(n) => val param n: AnyRef { var vn: Int; def vn_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
        |  vn => local0
        |  Int => scala/Int#
        |  vn_= => local1
        |  x$1 => local2
        |  Unit => scala/Unit#
-       |_empty_/s5#n. => val method n: AnyRef { var def vn: Int; var def vn_=(x$1: Int): Unit }
+       |_empty_/s5#n. => val method n: AnyRef { var vn: Int; def vn_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
        |  vn => local0
        |  Int => scala/Int#
@@ -2550,7 +2550,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |_empty_/s6#`<init>`(). => primary ctor <init>()
        |_empty_/s6#m(). => method m: Unit
        |  Unit => scala/Unit#
-       |local0 => val local n: AnyRef { var def vn: Int; var def vn_=(x$1: Int): Unit }
+       |local0 => val local n: AnyRef { var vn: Int; def vn_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
        |  vn => local1
        |  Int => scala/Int#
@@ -2861,7 +2861,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|_empty_/t3. => final object t3 extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
-       |_empty_/t3.m(). => method m: AnyRef { val def a: Int; val def b: Int; var def p: Int; var def p_=(x$1: Int): Unit; var def q: Int; var def q_=(x$1: Int): Unit }
+       |_empty_/t3.m(). => method m: AnyRef { val a: Int; val b: Int; var p: Int; def p_=(x$1: Int): Unit; var q: Int; def q_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
        |  a => local0
        |  Int => scala/Int#
@@ -3015,7 +3015,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|_empty_/t5. => final object t5 extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
-         |_empty_/t5.m(). => method m: AnyRef { val def a: Int; val def b: Int; lazy val def c: Int; lazy val def d: Int; val def _: Int }
+         |_empty_/t5.m(). => method m: AnyRef { val a: Int; val b: Int; lazy val c: Int; lazy val d: Int; val _: Int }
          |  AnyRef => scala/AnyRef#
          |  a => local0
          |  Int => scala/Int#
@@ -3045,7 +3045,7 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
     else
       """|_empty_/t5. => final object t5 extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
-         |_empty_/t5.m(). => method m: AnyRef { val def a: Int; val def b: Int; lazy val def c: Int; lazy val def d: Int }
+         |_empty_/t5.m(). => method m: AnyRef { val a: Int; val b: Int; lazy val c: Int; lazy val d: Int }
          |  AnyRef => scala/AnyRef#
          |  a => local0
          |  Int => scala/Int#

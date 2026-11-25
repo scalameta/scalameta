@@ -269,7 +269,7 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Unit => scala/Unit#
        |local0 => val local xl: Int
        |  Int => scala/Int#
-       |local1 => type S = AnyRef { val def xs: Int; def ds[T](t: T): Int; var def vs: Int; var def vs_=(x$1: Int): Unit }
+       |local1 => type S = AnyRef { val xs: Int; def ds[T](t: T): Int; var vs: Int; def vs_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
        |  xs => local2
        |  Int => scala/Int#
@@ -373,7 +373,7 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local21 => val method b: Int
        |  Int => scala/Int#
-       |local22 => val local n: AnyRef { lazy val def a: Int; val def b: Int }
+       |local22 => val local n: AnyRef { lazy val a: Int; val b: Int }
        |  AnyRef => scala/AnyRef#
        |  a => local20
        |  Int => scala/Int#

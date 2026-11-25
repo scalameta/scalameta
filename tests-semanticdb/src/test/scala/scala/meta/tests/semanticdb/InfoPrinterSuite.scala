@@ -591,7 +591,7 @@ class InfoPrinterSuite extends FunSuite {
       s.SymbolInformation.Property.VAL,
     ),
     "_empty_/C#x. => val method x: R",
-    "{ val def x: R }",
+    "{ val x: R }",
   ))
 
   test("dotc: inline def without parameter clauses")(assertMember(
@@ -603,7 +603,7 @@ class InfoPrinterSuite extends FunSuite {
       s.SymbolInformation.Property.INLINE,
     ),
     "_empty_/C#g(). => inline macro g: R",
-    "{ macro g: R }",
+    "{ inline def g: R }",
   ))
 
   test("dotc: var")(assertMember(
@@ -615,7 +615,7 @@ class InfoPrinterSuite extends FunSuite {
       s.SymbolInformation.Property.VAR,
     ),
     "_empty_/C#v(). => var method v: R",
-    "{ var def v: R }",
+    "{ var v: R }",
   ))
 
   test("dotc: inline def with a parameter")(assertMember(
@@ -630,7 +630,7 @@ class InfoPrinterSuite extends FunSuite {
       s.SymbolInformation.Property.INLINE,
     ),
     "_empty_/C#h(). => inline macro h(y: B): R",
-    "{ macro h(y: B): R }",
+    "{ inline def h(y: B): R }",
   ))
 
   test("dotc: transparent inline def")(assertMember(
@@ -643,7 +643,7 @@ class InfoPrinterSuite extends FunSuite {
       s.SymbolInformation.Property.TRANSPARENT,
     ),
     "_empty_/C#t(). => inline transparent macro t: R",
-    "{ macro t: R }",
+    "{ inline transparent def t: R }",
   ))
 
   test("dotc: inline def with an inline parameter") {
@@ -661,8 +661,8 @@ class InfoPrinterSuite extends FunSuite {
         ),
         s.SymbolInformation.Property.INLINE,
       ),
-      "_empty_/C#p(). => inline macro p(y: B): R",
-      "{ macro p(y: B): R }",
+      "_empty_/C#p(). => inline macro p(inline y: B): R",
+      "{ inline def p(inline y: B): R }",
     )
   }
 
@@ -686,8 +686,8 @@ class InfoPrinterSuite extends FunSuite {
         ),
         s.SymbolInformation.Property.INLINE,
       ),
-      "_empty_/C#u(). => inline macro u(using y: B): R",
-      "{ macro u(using y: B): R }",
+      "_empty_/C#u(). => inline macro u(using inline y: B): R",
+      "{ inline def u(using inline y: B): R }",
     )
   }
 
@@ -703,7 +703,7 @@ class InfoPrinterSuite extends FunSuite {
       s.SymbolInformation.Property.INFIX,
     ),
     "_empty_/C#op(). => infix method op(y: B): R",
-    "{ def op(y: B): R }",
+    "{ infix def op(y: B): R }",
   ))
 
   private def selfRefined(member: s.SymbolInformation) = s.SymbolInformation(
@@ -724,7 +724,7 @@ class InfoPrinterSuite extends FunSuite {
       s.TypeSignature(),
       s.SymbolInformation.Property.OPAQUE,
     )),
-    "_empty_/O. => final object O { self: O.type { type A } =>  }",
+    "_empty_/O. => final object O { self: O.type { opaque type A } =>  }",
   ))
 
   test("dotc: opaque infix type in a self type")(assertInfo(
@@ -738,7 +738,7 @@ class InfoPrinterSuite extends FunSuite {
       s.SymbolInformation.Property.INFIX,
       s.SymbolInformation.Property.OPAQUE,
     )),
-    "_empty_/O. => final object O { self: O.type { type Or[A, B] } =>  }",
+    "_empty_/O. => final object O { self: O.type { infix opaque type Or[A, B] } =>  }",
   ))
 
   test("scalac: implicit val") {
@@ -750,7 +750,7 @@ class InfoPrinterSuite extends FunSuite {
       displayName = "i",
       signature = s.MethodSignature(returnType = returnType),
     )
-    assertMember(info, "_empty_/C#i(). => implicit val method i: R", "{ implicit val def i: R }")
+    assertMember(info, "_empty_/C#i(). => implicit val method i: R", "{ implicit val i: R }")
   }
 
   test("scalac: macro def")(assertMember(
@@ -761,7 +761,7 @@ class InfoPrinterSuite extends FunSuite {
       signature = s.MethodSignature(returnType = returnType),
     ),
     "_empty_/C#m(). => macro m: R",
-    "{ macro m: R }",
+    "{ def m: R }",
   ))
 
   test("dotc: local def without parameter clauses") {
@@ -784,7 +784,7 @@ class InfoPrinterSuite extends FunSuite {
     val sig = s.MethodSignature(parameterLists = List(scope(x)), returnType = returnType)
     val info =
       dotc("local6", "g", s.SymbolInformation.Kind.LOCAL, sig, s.SymbolInformation.Property.INLINE)
-    assertInfo(info, "local6 => inline local g(x: B): R")
+    assertInfo(info, "local6 => inline local g(inline x: B): R")
   }
 
   test("dotc: local val")(assertInfo(
@@ -813,7 +813,7 @@ class InfoPrinterSuite extends FunSuite {
       s.SymbolInformation.Property.VAL,
     ),
     "_empty_/C#w(). => val method w[T]: R",
-    "{ val def w[T]: R }",
+    "{ def w[T]: R }",
   ))
 
   test("val with an extended method signature")(assertMember(
@@ -828,7 +828,7 @@ class InfoPrinterSuite extends FunSuite {
       s.SymbolInformation.Property.VAL,
     ),
     "_empty_/C#e(). => val method e(y: B): R",
-    "{ val def e(y: B): R }",
+    "{ def e(y: B): R }",
   ))
 
   test("dotc: inline val")(assertMember(
@@ -841,7 +841,7 @@ class InfoPrinterSuite extends FunSuite {
       s.SymbolInformation.Property.INLINE,
     ),
     "_empty_/C#n. => val inline method n: R",
-    "{ val def n: R }",
+    "{ inline val n: R }",
   ))
 
   test("by-name parameter") {
