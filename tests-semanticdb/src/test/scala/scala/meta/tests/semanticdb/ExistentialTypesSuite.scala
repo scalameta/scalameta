@@ -2002,7 +2002,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
          |  f => local7
          |  Int => scala/Int#
          |  Singleton => scala/Singleton#
-         |_empty_/e40.e. => val method e: Class[Option[x.type] forSome { type x.type <: AnyRef { val def v: Int; type U <: Int } with Singleton {} }]
+         |_empty_/e40.e. => val method e: Class[Option[x.type] forSome { type x.type <: AnyRef { val v: Int; type U <: Int } with Singleton {} }]
          |  Class => java/lang/Class#
          |  Option => scala/Option#
          |  x.type => local12
@@ -2036,7 +2036,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local7 => abstract method f: Int
          |  Int => scala/Int#
-         |local9 => val local x: AnyRef { val def v: Int; type U <: Int }
+         |local9 => val local x: AnyRef { val v: Int; type U <: Int }
          |  AnyRef => scala/AnyRef#
          |  v => local10
          |  Int => scala/Int#
@@ -2086,7 +2086,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
          |  f => local7
          |  Int => scala/Int#
          |  Singleton => scala/Singleton#
-         |_empty_/e40.e. => val method e: Class[Option[x.type] forSome { type x.type <: AnyRef { val def v: Int; type U <: Int } with Singleton {} }]
+         |_empty_/e40.e. => val method e: Class[Option[x.type] forSome { type x.type <: AnyRef { val v: Int; type U <: Int } with Singleton {} }]
          |  Class => java/lang/Class#
          |  Option => scala/Option#
          |  x.type => local12
@@ -2120,7 +2120,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local7 => abstract method f: Int
          |  Int => scala/Int#
-         |local9 => val local x: AnyRef { val def v: Int; type U <: Int }
+         |local9 => val local x: AnyRef { val v: Int; type U <: Int }
          |  AnyRef => scala/AnyRef#
          |  v => local10
          |  Int => scala/Int#
@@ -6714,7 +6714,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |_empty_/e89#[A] => typeparam A
        |_empty_/e89#`<init>`(). => primary ctor <init>()
-       |_empty_/e89#c. => val method c: Class[List[AnyRef { val def m: A }]]
+       |_empty_/e89#c. => val method c: Class[List[AnyRef { val m: A }]]
        |  Class => java/lang/Class#
        |  List => scala/package.List#
        |  AnyRef => scala/AnyRef#
@@ -6722,7 +6722,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |  A => _empty_/e89#[A]
        |_empty_/e89o. => final object e89o extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
-       |_empty_/e89o.d. => val method d: Class[List[AnyRef { val def m: Int }]]
+       |_empty_/e89o.d. => val method d: Class[List[AnyRef { val m: Int }]]
        |  Class => java/lang/Class#
        |  List => scala/package.List#
        |  AnyRef => scala/AnyRef#
@@ -7009,7 +7009,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|_empty_/e93. => final object e93 extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
-       |_empty_/e93.c. => val method c: Class[List[U] forSome { type T <: AnyRef; type U <: AnyRef { val def x: T; def y: AnyRef { def z: x.type } } }]
+       |_empty_/e93.c. => val method c: Class[List[U] forSome { type T <: AnyRef; type U <: AnyRef { val x: T; def y: AnyRef { def z: x.type } } }]
        |  Class => java/lang/Class#
        |  List => scala/package.List#
        |  U => local1
@@ -7020,7 +7020,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |  z => local4
        |local0 => abstract type T <: AnyRef
        |  AnyRef => scala/AnyRef#
-       |local1 => abstract type U <: AnyRef { val def x: T; def y: AnyRef { def z: x.type } }
+       |local1 => abstract type U <: AnyRef { val x: T; def y: AnyRef { def z: x.type } }
        |  AnyRef => scala/AnyRef#
        |  x => local2
        |  T => local0
@@ -7153,7 +7153,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|_empty_/e95. => final object e95 extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
-       |_empty_/e95.c. => val method c: Class[List[U] forSome { type T <: AnyRef; type U <: AnyRef { val def x: T; def y: x.type } }]
+       |_empty_/e95.c. => val method c: Class[List[U] forSome { type T <: AnyRef; type U <: AnyRef { val x: T; def y: x.type } }]
        |  Class => java/lang/Class#
        |  List => scala/package.List#
        |  U => local1
@@ -7163,7 +7163,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |  y => local3
        |local0 => abstract type T <: AnyRef
        |  AnyRef => scala/AnyRef#
-       |local1 => abstract type U <: AnyRef { val def x: T; def y: x.type }
+       |local1 => abstract type U <: AnyRef { val x: T; def y: x.type }
        |  AnyRef => scala/AnyRef#
        |  x => local2
        |  T => local0

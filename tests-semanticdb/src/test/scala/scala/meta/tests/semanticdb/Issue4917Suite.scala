@@ -98,13 +98,13 @@ class Issue4917Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |a/C#m(). => method m(): Unit
        |  Unit => scala/Unit#
-       |a/C#memberDef(). => method memberDef: AnyRef { val def x: Int }
+       |a/C#memberDef(). => method memberDef: AnyRef { val x: Int }
        |  AnyRef => scala/AnyRef#
        |  x => local0
        |  Int => scala/Int#
        |a/C#memberDefX. => val method memberDefX: Int
        |  Int => scala/Int#
-       |a/C#memberVal. => val method memberVal: AnyRef { val def x: Int }
+       |a/C#memberVal. => val method memberVal: AnyRef { val x: Int }
        |  AnyRef => scala/AnyRef#
        |  x => local0
        |  Int => scala/Int#
@@ -119,7 +119,7 @@ class Issue4917Suite extends SemanticdbSuite {
        |local2 => method m(x: Int): Int
        |  x => local5
        |  Int => scala/Int#
-       |local3 => val local localVal: AnyRef { val def x: Int }
+       |local3 => val local localVal: AnyRef { val x: Int }
        |  AnyRef => scala/AnyRef#
        |  x => local0
        |  Int => scala/Int#

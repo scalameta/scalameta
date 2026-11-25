@@ -18177,7 +18177,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
         ScalaVersion.Scala212 ->
           """|_empty_/t241. => final object t241 extends AnyRef { +9 decls }
              |  AnyRef => scala/AnyRef#
-             |_empty_/t241.R# => type R = AnyRef { type T; def f(x: Int): Int; val def v: Int }
+             |_empty_/t241.R# => type R = AnyRef { type T; def f(x: Int): Int; val v: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local0
              |  f => local1
@@ -18216,7 +18216,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AnyRef => scala/AnyRef#
              |  Singleton => scala/Singleton#
              |  Int => scala/Int#
-             |_empty_/t241.e. => val method e: PartialFunction[AnyRef { type T; def f(x: Int): Int; val def v: Int }, Int]
+             |_empty_/t241.e. => val method e: PartialFunction[AnyRef { type T; def f(x: Int): Int; val v: Int }, Int]
              |  PartialFunction => scala/PartialFunction#
              |  AnyRef => scala/AnyRef#
              |  T => local35
@@ -18224,7 +18224,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  x => local37
              |  Int => scala/Int#
              |  v => local38
-             |_empty_/t241.f. => val method f: Function1[AnyRef { type T; def f(x: Int): Int; val def v: Int }, Int]
+             |_empty_/t241.f. => val method f: Function1[AnyRef { type T; def f(x: Int): Int; val v: Int }, Int]
              |  Function1 => scala/Function1#
              |  AnyRef => scala/AnyRef#
              |  T => local51
@@ -18400,7 +18400,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AnyRef => scala/AnyRef#
              |local32 => val local v: T
              |  T => local31
-             |local34 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[AnyRef { type T; def f(x: Int): Int; val def v: Int }, Int] with Serializable { +2 decls }
+             |local34 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[AnyRef { type T; def f(x: Int): Int; val v: Int }, Int] with Serializable { +2 decls }
              |  SerialVersionUID => scala/SerialVersionUID#
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  AnyRef => scala/AnyRef#
@@ -18418,7 +18418,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |local38 => abstract val method v: Int
              |  Int => scala/Int#
-             |local39 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local39 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local44
              |  AnyRef => scala/AnyRef#
              |  T => local35
@@ -18430,7 +18430,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  x => local41
              |  default => local42
              |  Function1 => scala/Function1#
-             |local40 => final method isDefinedAt(x: AnyRef { type T; def f(x: Int): Int; val def v: Int }): Boolean <: scala/PartialFunction#isDefinedAt().
+             |local40 => final method isDefinedAt(x: AnyRef { type T; def f(x: Int): Int; val v: Int }): Boolean <: scala/PartialFunction#isDefinedAt().
              |  x => local45
              |  AnyRef => scala/AnyRef#
              |  T => local35
@@ -18447,21 +18447,21 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  B1 => local43
              |local43 => typeparam B1 >: Int
              |  Int => scala/Int#
-             |local44 => typeparam A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+             |local44 => typeparam A1 <: AnyRef { type T; def f(x: Int): Int; val v: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local35
              |  f => local36
              |  x => local37
              |  Int => scala/Int#
              |  v => local38
-             |local45 => param x: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+             |local45 => param x: AnyRef { type T; def f(x: Int): Int; val v: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local35
              |  f => local36
              |  x => local37
              |  Int => scala/Int#
              |  v => local38
-             |local46 => param x: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+             |local46 => param x: AnyRef { type T; def f(x: Int): Int; val v: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local47
              |  f => local48
@@ -18658,7 +18658,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
         ScalaVersion.AtMost213(16) ->
           """|_empty_/t241. => final object t241 extends AnyRef { +9 decls }
              |  AnyRef => scala/AnyRef#
-             |_empty_/t241.R# => type R = AnyRef { type T; def f(x: Int): Int; val def v: Int }
+             |_empty_/t241.R# => type R = AnyRef { type T; def f(x: Int): Int; val v: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local0
              |  f => local1
@@ -18697,7 +18697,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AnyRef => scala/AnyRef#
              |  Singleton => scala/Singleton#
              |  Int => scala/Int#
-             |_empty_/t241.e. => val method e: PartialFunction[AnyRef { type T; def f(x: Int): Int; val def v: Int }, Int]
+             |_empty_/t241.e. => val method e: PartialFunction[AnyRef { type T; def f(x: Int): Int; val v: Int }, Int]
              |  PartialFunction => scala/PartialFunction#
              |  AnyRef => scala/AnyRef#
              |  T => local35
@@ -18705,7 +18705,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  x => local37
              |  Int => scala/Int#
              |  v => local38
-             |_empty_/t241.f. => val method f: Function1[AnyRef { type T; def f(x: Int): Int; val def v: Int }, Int]
+             |_empty_/t241.f. => val method f: Function1[AnyRef { type T; def f(x: Int): Int; val v: Int }, Int]
              |  Function1 => scala/Function1#
              |  AnyRef => scala/AnyRef#
              |  T => local51
@@ -18881,7 +18881,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  AnyRef => scala/AnyRef#
              |local32 => val local v: T
              |  T => local31
-             |local34 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[AnyRef { type T; def f(x: Int): Int; val def v: Int }, Int] with Serializable { +2 decls }
+             |local34 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[AnyRef { type T; def f(x: Int): Int; val v: Int }, Int] with Serializable { +2 decls }
              |  SerialVersionUID => scala/SerialVersionUID#
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  AnyRef => scala/AnyRef#
@@ -18899,7 +18899,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |local38 => abstract val method v: Int
              |  Int => scala/Int#
-             |local39 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local39 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local44
              |  AnyRef => scala/AnyRef#
              |  T => local35
@@ -18911,7 +18911,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  x => local41
              |  default => local42
              |  Function1 => scala/Function1#
-             |local40 => final method isDefinedAt(x: AnyRef { type T; def f(x: Int): Int; val def v: Int }): Boolean <: scala/PartialFunction#isDefinedAt().
+             |local40 => final method isDefinedAt(x: AnyRef { type T; def f(x: Int): Int; val v: Int }): Boolean <: scala/PartialFunction#isDefinedAt().
              |  x => local45
              |  AnyRef => scala/AnyRef#
              |  T => local35
@@ -18928,21 +18928,21 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  B1 => local43
              |local43 => typeparam B1 >: Int
              |  Int => scala/Int#
-             |local44 => typeparam A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+             |local44 => typeparam A1 <: AnyRef { type T; def f(x: Int): Int; val v: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local35
              |  f => local36
              |  x => local37
              |  Int => scala/Int#
              |  v => local38
-             |local45 => param x: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+             |local45 => param x: AnyRef { type T; def f(x: Int): Int; val v: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local35
              |  f => local36
              |  x => local37
              |  Int => scala/Int#
              |  v => local38
-             |local46 => param x: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+             |local46 => param x: AnyRef { type T; def f(x: Int): Int; val v: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local47
              |  f => local48
@@ -19139,7 +19139,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
       ),
       """|_empty_/t241. => final object t241 extends AnyRef { +9 decls }
          |  AnyRef => scala/AnyRef#
-         |_empty_/t241.R# => type R = AnyRef { type T; def f(x: Int): Int; val def v: Int }
+         |_empty_/t241.R# => type R = AnyRef { type T; def f(x: Int): Int; val v: Int }
          |  AnyRef => scala/AnyRef#
          |  T => local0
          |  f => local1
@@ -19178,7 +19178,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |  Singleton => scala/Singleton#
          |  Int => scala/Int#
-         |_empty_/t241.e. => val method e: PartialFunction[AnyRef { type T; def f(x: Int): Int; val def v: Int }, Int]
+         |_empty_/t241.e. => val method e: PartialFunction[AnyRef { type T; def f(x: Int): Int; val v: Int }, Int]
          |  PartialFunction => scala/PartialFunction#
          |  AnyRef => scala/AnyRef#
          |  T => local50
@@ -19186,7 +19186,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  x => local52
          |  Int => scala/Int#
          |  v => local53
-         |_empty_/t241.f. => val method f: Function1[AnyRef { type T; def f(x: Int): Int; val def v: Int }, Int]
+         |_empty_/t241.f. => val method f: Function1[AnyRef { type T; def f(x: Int): Int; val v: Int }, Int]
          |  Function1 => scala/Function1#
          |  AnyRef => scala/AnyRef#
          |  T => local59
@@ -19369,7 +19369,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local36 => val local v: T
          |  T => local35
-         |local38 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[AnyRef { type T; def f(x: Int): Int; val def v: Int }, Int] with Serializable { +2 decls }
+         |local38 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[AnyRef { type T; def f(x: Int): Int; val v: Int }, Int] with Serializable { +2 decls }
          |  SerialVersionUID => scala/SerialVersionUID#
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  AnyRef => scala/AnyRef#
@@ -19387,7 +19387,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local42 => abstract val method v: Int
          |  Int => scala/Int#
-         |local43 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local43 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local48
          |  AnyRef => scala/AnyRef#
          |  T => local39
@@ -19399,7 +19399,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  x => local45
          |  default => local46
          |  Function1 => scala/Function1#
-         |local44 => final method isDefinedAt(x: AnyRef { type T; def f(x: Int): Int; val def v: Int }): Boolean <: scala/PartialFunction#isDefinedAt().
+         |local44 => final method isDefinedAt(x: AnyRef { type T; def f(x: Int): Int; val v: Int }): Boolean <: scala/PartialFunction#isDefinedAt().
          |  x => local49
          |  AnyRef => scala/AnyRef#
          |  T => local39
@@ -19416,14 +19416,14 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B1 => local47
          |local47 => typeparam B1 >: Int
          |  Int => scala/Int#
-         |local48 => typeparam A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+         |local48 => typeparam A1 <: AnyRef { type T; def f(x: Int): Int; val v: Int }
          |  AnyRef => scala/AnyRef#
          |  T => local39
          |  f => local40
          |  x => local41
          |  Int => scala/Int#
          |  v => local42
-         |local49 => param x: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+         |local49 => param x: AnyRef { type T; def f(x: Int): Int; val v: Int }
          |  AnyRef => scala/AnyRef#
          |  T => local39
          |  f => local40
@@ -19438,7 +19438,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local53 => abstract val method v: Int
          |  Int => scala/Int#
-         |local54 => param x: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+         |local54 => param x: AnyRef { type T; def f(x: Int): Int; val v: Int }
          |  AnyRef => scala/AnyRef#
          |  T => local55
          |  f => local56
@@ -19720,7 +19720,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  T => local35
              |  Int => scala/Int#
-             |_empty_/t242.g. => val method g: PartialFunction[AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, Int]
+             |_empty_/t242.g. => val method g: PartialFunction[AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }, Int]
              |  PartialFunction => scala/PartialFunction#
              |  AnyRef => scala/AnyRef#
              |  T => local37
@@ -19729,7 +19729,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |  v => local40
              |  k => local41
-             |_empty_/t242.h. => val method h: Function1[AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, Int]
+             |_empty_/t242.h. => val method h: Function1[AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }, Int]
              |  Function1 => scala/Function1#
              |  AnyRef => scala/AnyRef#
              |  T => local54
@@ -19888,7 +19888,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  T => local34
              |local34 => abstract type T
              |local35 => abstract type T
-             |local36 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, Int] with Serializable { +2 decls }
+             |local36 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }, Int] with Serializable { +2 decls }
              |  SerialVersionUID => scala/SerialVersionUID#
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  AnyRef => scala/AnyRef#
@@ -19909,7 +19909,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |local41 => abstract method k: Int
              |  Int => scala/Int#
-             |local42 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local42 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local47
              |  AnyRef => scala/AnyRef#
              |  T => local37
@@ -19922,7 +19922,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  x => local44
              |  default => local45
              |  Function1 => scala/Function1#
-             |local43 => final method isDefinedAt(x: AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }): Boolean <: scala/PartialFunction#isDefinedAt().
+             |local43 => final method isDefinedAt(x: AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }): Boolean <: scala/PartialFunction#isDefinedAt().
              |  x => local48
              |  AnyRef => scala/AnyRef#
              |  T => local37
@@ -19940,7 +19940,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  B1 => local46
              |local46 => typeparam B1 >: Int
              |  Int => scala/Int#
-             |local47 => typeparam A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }
+             |local47 => typeparam A1 <: AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local37
              |  f => local38
@@ -19948,7 +19948,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |  v => local40
              |  k => local41
-             |local48 => param x: AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }
+             |local48 => param x: AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local37
              |  f => local38
@@ -19956,7 +19956,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |  v => local40
              |  k => local41
-             |local49 => param x: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+             |local49 => param x: AnyRef { type T; def f(x: Int): Int; val v: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local50
              |  f => local51
@@ -20130,7 +20130,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  List => scala/package.List#
              |  T => local35
              |  Int => scala/Int#
-             |_empty_/t242.g. => val method g: PartialFunction[AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, Int]
+             |_empty_/t242.g. => val method g: PartialFunction[AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }, Int]
              |  PartialFunction => scala/PartialFunction#
              |  AnyRef => scala/AnyRef#
              |  T => local37
@@ -20139,7 +20139,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |  v => local40
              |  k => local41
-             |_empty_/t242.h. => val method h: Function1[AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, Int]
+             |_empty_/t242.h. => val method h: Function1[AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }, Int]
              |  Function1 => scala/Function1#
              |  AnyRef => scala/AnyRef#
              |  T => local54
@@ -20298,7 +20298,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  T => local34
              |local34 => abstract type T
              |local35 => abstract type T
-             |local36 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, Int] with Serializable { +2 decls }
+             |local36 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }, Int] with Serializable { +2 decls }
              |  SerialVersionUID => scala/SerialVersionUID#
              |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
              |  AnyRef => scala/AnyRef#
@@ -20319,7 +20319,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |local41 => abstract method k: Int
              |  Int => scala/Int#
-             |local42 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+             |local42 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
              |  A1 => local47
              |  AnyRef => scala/AnyRef#
              |  T => local37
@@ -20332,7 +20332,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  x => local44
              |  default => local45
              |  Function1 => scala/Function1#
-             |local43 => final method isDefinedAt(x: AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }): Boolean <: scala/PartialFunction#isDefinedAt().
+             |local43 => final method isDefinedAt(x: AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }): Boolean <: scala/PartialFunction#isDefinedAt().
              |  x => local48
              |  AnyRef => scala/AnyRef#
              |  T => local37
@@ -20350,7 +20350,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  B1 => local46
              |local46 => typeparam B1 >: Int
              |  Int => scala/Int#
-             |local47 => typeparam A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }
+             |local47 => typeparam A1 <: AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local37
              |  f => local38
@@ -20358,7 +20358,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |  v => local40
              |  k => local41
-             |local48 => param x: AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }
+             |local48 => param x: AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local37
              |  f => local38
@@ -20366,7 +20366,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
              |  Int => scala/Int#
              |  v => local40
              |  k => local41
-             |local49 => param x: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+             |local49 => param x: AnyRef { type T; def f(x: Int): Int; val v: Int }
              |  AnyRef => scala/AnyRef#
              |  T => local50
              |  f => local51
@@ -20540,7 +20540,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  List => scala/package.List#
          |  T => local38
          |  Int => scala/Int#
-         |_empty_/t242.g. => val method g: PartialFunction[AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, Int]
+         |_empty_/t242.g. => val method g: PartialFunction[AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }, Int]
          |  PartialFunction => scala/PartialFunction#
          |  AnyRef => scala/AnyRef#
          |  T => local51
@@ -20549,7 +20549,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  v => local54
          |  k => local55
-         |_empty_/t242.h. => val method h: Function1[AnyRef { type T; def f(x: Int): Int; val def v: Int; def k: Int }, Int]
+         |_empty_/t242.h. => val method h: Function1[AnyRef { type T; def f(x: Int): Int; val v: Int; def k: Int }, Int]
          |  Function1 => scala/Function1#
          |  AnyRef => scala/AnyRef#
          |  T => local61
@@ -20714,7 +20714,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  T => local37
          |local37 => abstract type T
          |local38 => abstract type T
-         |local39 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[AnyRef { type T; def f(x: Int): Int; val def v: Int }, Int] with Serializable { +2 decls }
+         |local39 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[AnyRef { type T; def f(x: Int): Int; val v: Int }, Int] with Serializable { +2 decls }
          |  SerialVersionUID => scala/SerialVersionUID#
          |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
          |  AnyRef => scala/AnyRef#
@@ -20732,7 +20732,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local43 => abstract val method v: Int
          |  Int => scala/Int#
-         |local44 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |local44 => final override method applyOrElse[A1 <: AnyRef { type T; def f(x: Int): Int; val v: Int }, B1 >: Int](x: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
          |  A1 => local49
          |  AnyRef => scala/AnyRef#
          |  T => local40
@@ -20744,7 +20744,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  x => local46
          |  default => local47
          |  Function1 => scala/Function1#
-         |local45 => final method isDefinedAt(x: AnyRef { type T; def f(x: Int): Int; val def v: Int }): Boolean <: scala/PartialFunction#isDefinedAt().
+         |local45 => final method isDefinedAt(x: AnyRef { type T; def f(x: Int): Int; val v: Int }): Boolean <: scala/PartialFunction#isDefinedAt().
          |  x => local50
          |  AnyRef => scala/AnyRef#
          |  T => local40
@@ -20761,14 +20761,14 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  B1 => local48
          |local48 => typeparam B1 >: Int
          |  Int => scala/Int#
-         |local49 => typeparam A1 <: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+         |local49 => typeparam A1 <: AnyRef { type T; def f(x: Int): Int; val v: Int }
          |  AnyRef => scala/AnyRef#
          |  T => local40
          |  f => local41
          |  x => local42
          |  Int => scala/Int#
          |  v => local43
-         |local50 => param x: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+         |local50 => param x: AnyRef { type T; def f(x: Int): Int; val v: Int }
          |  AnyRef => scala/AnyRef#
          |  T => local40
          |  f => local41
@@ -20785,7 +20785,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local55 => abstract method k: Int
          |  Int => scala/Int#
-         |local56 => param x: AnyRef { type T; def f(x: Int): Int; val def v: Int }
+         |local56 => param x: AnyRef { type T; def f(x: Int): Int; val v: Int }
          |  AnyRef => scala/AnyRef#
          |  T => local57
          |  f => local58

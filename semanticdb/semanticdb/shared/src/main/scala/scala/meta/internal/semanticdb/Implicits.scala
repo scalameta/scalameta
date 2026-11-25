@@ -153,11 +153,13 @@ object Implicits {
     @inline
     def isLang(lang: l): Boolean = info.language eq lang
     @inline
-    def hasProperties(in: Int, out: Int = 0): Boolean = (info.properties & (in | out)) == in
+    def hasProperties(in: Int, out: Int = 0): Boolean = getProperties(in | out) == in
     @inline
-    def hasAnyProperties(bitmask: Int): Boolean = (info.properties & bitmask) != 0
+    def hasAnyProperties(bitmask: Int): Boolean = getProperties(bitmask) != 0
     @inline
     def hasProperty(prop: p): Boolean = hasAnyProperties(prop.value)
+    @inline
+    def getProperties(bitmask: Int): Int = info.properties & bitmask
 
   }
 

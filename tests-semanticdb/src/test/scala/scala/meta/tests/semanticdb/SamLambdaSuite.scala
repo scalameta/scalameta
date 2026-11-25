@@ -996,7 +996,7 @@ class SamLambdaSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |_empty_/t68. => final object t68 extends AnyRef { +2 decls }
        |  AnyRef => scala/AnyRef#
-       |_empty_/t68.m(). => method m: AnyRef { val def v: Int }
+       |_empty_/t68.m(). => method m: AnyRef { val v: Int }
        |  AnyRef => scala/AnyRef#
        |  v => local0
        |  Int => scala/Int#

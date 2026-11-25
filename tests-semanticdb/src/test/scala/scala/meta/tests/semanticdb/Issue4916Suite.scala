@@ -241,7 +241,7 @@ class Issue4916Suite extends SemanticdbSuite {
        |  C => advanced/C#
        |  List => scala/package.List#
        |  T => local2
-       |c/C#structuralVal. => val method structuralVal: AnyRef { val def x: Int }
+       |c/C#structuralVal. => val method structuralVal: AnyRef { val x: Int }
        |  AnyRef => scala/AnyRef#
        |  x => local3
        |  Int => scala/Int#

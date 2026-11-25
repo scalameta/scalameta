@@ -6931,7 +6931,7 @@ class LocalSymbolsSuite extends FunSuite {
     ) {
       """|b/B. => final object B extends AnyRef { +3 decls }
          |  AnyRef => scala/AnyRef#
-         |b/B.v. => val method v: AnyRef { val def a: Int; def m: Int }
+         |b/B.v. => val method v: AnyRef { val a: Int; def m: Int }
          |  AnyRef => scala/AnyRef#
          |  a => local0
          |  Int => scala/Int#

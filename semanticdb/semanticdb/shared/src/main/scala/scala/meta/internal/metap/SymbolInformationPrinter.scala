@@ -38,18 +38,18 @@ object SymbolInformationPrinter {
     Modifier(Property.CASE, "case "),
     Modifier(Property.COVARIANT, "covariant ", "+"),
     Modifier(Property.CONTRAVARIANT, "contravariant ", "-"),
-    Modifier(Property.VAL, "val "),
-    Modifier(Property.VAR, "var "),
+    Modifier(Property.VAL, "val ", defnOK = !_.isMethod),
+    Modifier(Property.VAR, "var ", defnOK = !_.isMethod),
     Modifier(Property.STATIC, "static "),
     Modifier(Property.PRIMARY, "primary ", ""),
     Modifier(Property.ENUM, "enum "),
     Modifier(Property.DEFAULT, "default ", ""),
     Modifier(Property.GIVEN, "given ", ""),
-    Modifier(Property.INLINE, "inline ", ""),
+    Modifier(Property.INLINE, "inline "),
     Modifier(Property.OPEN, "open ", ""),
-    Modifier(Property.TRANSPARENT, "transparent ", ""),
-    Modifier(Property.INFIX, "infix ", ""),
-    Modifier(Property.OPAQUE, "opaque ", ""),
+    Modifier(Property.TRANSPARENT, "transparent "),
+    Modifier(Property.INFIX, "infix "),
+    Modifier(Property.OPAQUE, "opaque ", defnOK = _.isType),
     Modifier(Property.EXTENSION, "extension ", ""),
     Modifier(Property.NATIVE, "native "),
     Modifier(Property.SYNCHRONIZED, "synchronized "),
@@ -298,7 +298,22 @@ trait SymbolInformationPrinter extends BasePrinter {
     /** Prints the SemanticDB name of the kind, or in `Definition` style its Scala keyword. */
     private def printKind(info: SymbolInformation, style: InfoStyle): Unit = str {
       info.kind match {
-        case METHOD | CONSTRUCTOR if style == Definition => "def "
+        case METHOD if style == Definition =>
+          def emptyClause(clause: Scope) = clause.symlinks.isEmpty && clause.hardlinks.isEmpty
+          def hasNoClause = info.signature match {
+            case sig: MethodSignature => sig.typeParameters.forall(emptyClause) &&
+              sig.parameterLists.forall(emptyClause)
+            case sig: ExtendedMethodSignature => sig.paramClauseGroups.forall(x =>
+                x.typeParamClause.forall(emptyClause) && x.paramClauses.forall(emptyClause),
+              )
+            case _ => true
+          }
+          info.getProperties(Property.VAL.value | Property.VAR.value) match {
+            case Property.VAL.value if hasNoClause => "val "
+            case Property.VAR.value if hasNoClause => "var "
+            case _ => "def "
+          }
+        case MACRO | CONSTRUCTOR if style == Definition => "def "
         case LOCAL | FIELD | PARAMETER | SELF_PARAMETER | TYPE_PARAMETER if style == Definition =>
           ""
         case CONSTRUCTOR => "ctor "

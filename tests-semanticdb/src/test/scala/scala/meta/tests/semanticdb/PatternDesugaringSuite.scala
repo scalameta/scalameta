@@ -3043,7 +3043,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|_empty_/rn. => final object rn extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
-       |_empty_/rn.x. => val method x: AnyRef with ru { val def a: Int; val def b: Int; def f: Int }
+       |_empty_/rn.x. => val method x: AnyRef with ru { val a: Int; val b: Int; def f: Int }
        |  AnyRef => scala/AnyRef#
        |  ru => _empty_/ru#
        |  a => local2
@@ -3352,7 +3352,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |_empty_/sc. => final object sc extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
-       |_empty_/sc.m(). => method m: AnyRef with rw { val def a: Int; val def b: Int; val def c: Int; def a(x: Int): Int; def b(x: Int): Int }
+       |_empty_/sc.m(). => method m: AnyRef with rw { val a: Int; val b: Int; val c: Int; def a(x: Int): Int; def b(x: Int): Int }
        |  AnyRef => scala/AnyRef#
        |  rw => _empty_/rw#
        |  a => local0
@@ -3586,7 +3586,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |_empty_/ub.m(). => method m: Int
        |  Int => scala/Int#
-       |_empty_/ub.x. => val method x: AnyRef with rw { var def b: Int; var def b_=(x$1: Int): Unit; lazy val def c: Int; val def d: Int; def f: Int }
+       |_empty_/ub.x. => val method x: AnyRef with rw { var b: Int; def b_=(x$1: Int): Unit; lazy val c: Int; val d: Int; def f: Int }
        |  AnyRef => scala/AnyRef#
        |  rw => _empty_/rw#
        |  b => local2
