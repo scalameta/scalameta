@@ -5,6 +5,8 @@ import scala.meta.tokens.Token
 
 sealed trait SepRegion {
   def indent = -1
+
+  /** the indent that a deeper line exceeds, or -1 if there is none */
   def width: Int = indent
   def isIndented: Boolean
 }
@@ -58,6 +60,9 @@ final class RegionCaseBody(override val indent: Int, val arrow: Token)
     extends SepRegionNonIndented with CanProduceLF with RegionDeferring
 // indented region within a case guard, such as a colon argument
 final class RegionCaseGuardIndent(indent: Int) extends RegionIndent(indent)
+
+/** The indented region after an arrow */
+final class RegionArrowIndent(indent: Int) extends RegionIndent(indent)
 
 case object RegionColonMaybeFewerBraces extends RegionNonDelimNonIndented with CanProduceLF
 

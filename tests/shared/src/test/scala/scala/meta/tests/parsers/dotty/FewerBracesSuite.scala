@@ -9003,14 +9003,12 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object A {
-         |  def f = xs.map {
-         |    x => x match {
-         |      case 1 =>
-         |        a
-         |      case _ =>
-         |        b
-         |        c
+         |  def f = xs.map { x =>
+         |    x match {
+         |      case 1 => a
+         |      case _ => b
          |    }
+         |    c
          |  }
          |  def g = 1
          |}
@@ -9026,10 +9024,9 @@ class FewerBracesSuite extends BaseDottySuite {
           None,
           tapply(
             tselect(tname("xs"), tname("map")),
-            blk(tfunc(tparam("x"))(tmatch(
-              tname("x"),
-              Case(int(1), None, tname("a")),
-              Case(patwildcard, None, blk(tname("b"), tname("c"))),
+            blk(tfunc(tparam("x"))(blk(
+              tmatch(tname("x"), Case(int(1), None, tname("a")), Case(patwildcard, None, tname("b"))),
+              tname("c"),
             ))),
           ),
         ),
