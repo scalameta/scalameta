@@ -620,8 +620,8 @@ private[meta] final class ScannerTokens(
       case _: KwEnum => currRef(RegionEnumMark :: sepRegions)
       case _: KwGiven if !prevToken.isAny[Dot, KwCase] =>
         currRef(dropRegionLine(sepRegions) match {
-          case rs @ (Nil | (_: RegionBrace | _: RegionIndent) :: _) => new RegionGivenDecl(curr) ::
-              rs
+          case rs @ (Nil | (_: RegionBrace | _: RegionDelimIndented) :: _) =>
+            new RegionGivenDecl(curr) :: rs
           case _ => sepRegions
         })
       case _: KwWith => currRef(dropRegionLine(sepRegions) match {
@@ -1021,7 +1021,7 @@ private[meta] final class ScannerTokens(
             case _ => null
           }
 
-          def getCaseBodyOutdent(rc: RegionCaseBody, r: RegionIndent, rs: List[SepRegion]) =
+          def getCaseBodyOutdent(rc: RegionCaseBody, r: RegionDelimIndented, rs: List[SepRegion]) =
             if (nextIndent > r.indent) null
             else if (next.is[KwFinally]) OutdentInfo(r, rs, noOutdent(rs))
             else if (nextIndent < r.indent ||
@@ -1044,7 +1044,8 @@ private[meta] final class ScannerTokens(
                   canBeLeadingInfix == LeadingInfix.Yes) && (closingColonLambda(rs) eq null)) null
               else if (infix || !canStartStatIn(rs, nextPos)) getCaseBodyOutdent(rc, r, rs)
               else OutdentInfo(r, rs)
-            case (rc: RegionCaseBody) :: (r: RegionIndent) :: rs => getCaseBodyOutdent(rc, r, rs)
+            case (rc: RegionCaseBody) :: (r: RegionDelimIndented) :: rs =>
+              getCaseBodyOutdent(rc, r, rs)
             case (_: RegionNonDelimNonIndented) :: rs if (prev match {
                   // [then]  else  do  [catch]  finally  yield  [match]
                   case _: KwThen | _: KwCatch | _: KwMatch => false
