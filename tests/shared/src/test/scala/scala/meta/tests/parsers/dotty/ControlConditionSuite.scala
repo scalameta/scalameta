@@ -11895,8 +11895,8 @@ class ControlConditionSuite extends BaseDottySuite {
          |    val r = if ({
          |      a
          |    } && foo {
-         |      z
-         |    } && w) 1 else 2
+         |      z && w
+         |    }) 1 else 2
          |    r
          |  }
          |}
@@ -11916,9 +11916,9 @@ class ControlConditionSuite extends BaseDottySuite {
             None,
             Term.If(
               tinfix(
-                tinfix(blk(tname("a")), "&&", tapply(tname("foo"), blk(tname("z")))),
+                blk(tname("a")),
                 "&&",
-                tname("w"),
+                tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w")))),
               ),
               int(1),
               int(2),
@@ -11946,8 +11946,8 @@ class ControlConditionSuite extends BaseDottySuite {
          |  def f = while ({
          |    a
          |  } && foo {
-         |    z
-         |  } && w) g
+         |    z && w
+         |  }) g
          |}
          |""".stripMargin
     val tree = Source(List(Defn.Object(
@@ -11959,11 +11959,7 @@ class ControlConditionSuite extends BaseDottySuite {
         Nil,
         None,
         Term.While(
-          tinfix(
-            tinfix(blk(tname("a")), "&&", tapply(tname("foo"), blk(tname("z")))),
-            "&&",
-            tname("w"),
-          ),
+          tinfix(blk(tname("a")), "&&", tapply(tname("foo"), blk(tinfix(tname("z"), "&&", tname("w"))))),
           tname("g"),
         ),
       )),
