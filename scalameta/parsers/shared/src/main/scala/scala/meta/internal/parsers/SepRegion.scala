@@ -5,6 +5,7 @@ import scala.meta.tokens.Token
 
 sealed trait SepRegion {
   def indent = -1
+  def width: Int = indent
   def isIndented: Boolean
 }
 
@@ -24,13 +25,14 @@ sealed trait RegionDeferring extends SepRegion
 sealed trait RegionDelim extends SepRegion
 // this describes delimiters which are non-indented
 sealed trait RegionDelimNonIndented extends SepRegionNonIndented with RegionDelim
+sealed trait RegionDelimIndented extends SepRegionIndented with RegionDelim
 // this describes non-delimiters which are also non-indented (likely all of them)
 sealed trait RegionNonDelimNonIndented extends SepRegionNonIndented
 
-class RegionIndent(override val indent: Int) extends SepRegionIndented with RegionDelim
+class RegionIndent(override val indent: Int) extends RegionDelimIndented
 
 /** The indented region of a `case` on the line of its `catch`. As in dotty, it holds one case. */
-final class RegionCatchSameLine(indent: Int) extends RegionIndent(indent)
+final class RegionCatchSameLine(override val indent: Int) extends RegionDelimIndented
 
 /**
  * A lambda after a colon that ends on its line, with the indentation of its context. As dotty's
@@ -43,7 +45,10 @@ case class RegionLine(override val indent: Int)
 
 case class RegionParen(override val indent: Int) extends RegionDelimNonIndented
 case class RegionBracket(override val indent: Int) extends RegionDelimNonIndented
-case class RegionBrace(override val indent: Int) extends RegionDelimNonIndented with CanProduceLF
+case class RegionBrace(override val indent: Int) extends RegionDelimNonIndented with CanProduceLF {
+  private[parsers] var widthValue: Int = indent
+  override def width: Int = widthValue
+}
 
 case object RegionCaseMark extends RegionNonDelimNonIndented
 sealed trait RegionCaseExpr extends RegionNonDelimNonIndented
