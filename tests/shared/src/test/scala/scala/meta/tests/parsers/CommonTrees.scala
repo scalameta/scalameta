@@ -16,6 +16,9 @@ object CommonTrees {
     final def tname(name: String): Term.Name = Term.Name(name)
     final def tnameComments(name: String)(begComment: String*)(endComment: String*): Term.Name =
       Term.Name.newBuilder(name).begComment(begComment).endComment(endComment).result()
+    final def tnameComments(begComment: Option[Tree.Comments] = None)(name: String)(
+        endComment: Option[Tree.Comments] = None,
+    ): Term.Name = Term.Name.newBuilder(name).begComment(begComment).endComment(endComment).result()
     final def tnameCapset(name: String) = Term.CapSetName(name)
     final def tnameOrCapset(name: String): Term.Ref = nameOrCapset(name, tname, tnameCapset)
     implicit def implicitStringToTerm(obj: String): Term.Name = tname(obj)
