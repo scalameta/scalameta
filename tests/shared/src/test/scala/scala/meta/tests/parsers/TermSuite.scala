@@ -373,131 +373,108 @@ class TermSuite extends ParseSuite {
   test("new K(x = 1)(a = 0) = 5 [scala212]") {
     implicit val dialect: Dialect = dialects.Scala212
     val code = "new K(x = 1)(a = 0) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K(x = 1)(a = 0) = 5
-         |                    ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(
+      tapply(New(init("K", List(Assign(tname("x"), int(1))))), Assign(tname("a"), int(0))),
+      int(5),
+    )
+    runTestAssert[Term](code, "(new K(x = 1))(a = 0) = 5")(tree)
   }
 
   test("new K(x = 1)(a = 0) = 5 [scala213]") {
     implicit val dialect: Dialect = dialects.Scala213
     val code = "new K(x = 1)(a = 0) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K(x = 1)(a = 0) = 5
-         |                    ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(
+      tapply(New(init("K", List(Assign(tname("x"), int(1))))), Assign(tname("a"), int(0))),
+      int(5),
+    )
+    runTestAssert[Term](code, "(new K(x = 1))(a = 0) = 5")(tree)
   }
 
   test("new K(x = 1)(a = 0) = 5 [scala3]") {
     implicit val dialect: Dialect = dialects.Scala3
     val code = "new K(x = 1)(a = 0) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K(x = 1)(a = 0) = 5
-         |                    ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(
+      tapply(New(init("K", List(Assign(tname("x"), int(1))))), Assign(tname("a"), int(0))),
+      int(5),
+    )
+    runTestAssert[Term](code, "(new K(x = 1))(a = 0) = 5")(tree)
   }
 
   test("new K(1)(0) = 5 [scala212]") {
     implicit val dialect: Dialect = dialects.Scala212
     val code = "new K(1)(0) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K(1)(0) = 5
-         |            ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapply(New(init("K", List(int(1)))), int(0)), int(5))
+    runTestAssert[Term](code, "(new K(1))(0) = 5")(tree)
   }
 
   test("new K(1)(0) = 5 [scala213]") {
     implicit val dialect: Dialect = dialects.Scala213
     val code = "new K(1)(0) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K(1)(0) = 5
-         |            ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapply(New(init("K", List(int(1)))), int(0)), int(5))
+    runTestAssert[Term](code, "(new K(1))(0) = 5")(tree)
   }
 
   test("new K(1)(0) = 5 [scala3]") {
     implicit val dialect: Dialect = dialects.Scala3
     val code = "new K(1)(0) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K(1)(0) = 5
-         |            ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapply(New(init("K", List(int(1)))), int(0)), int(5))
+    runTestAssert[Term](code, "(new K(1))(0) = 5")(tree)
   }
 
   test("new K()(0) = 5 [scala212]") {
     implicit val dialect: Dialect = dialects.Scala212
     val code = "new K()(0) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K()(0) = 5
-         |           ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapply(New(init("K", Nil)), int(0)), int(5))
+    runTestAssert[Term](code, "(new K())(0) = 5")(tree)
   }
 
   test("new K()(0) = 5 [scala213]") {
     implicit val dialect: Dialect = dialects.Scala213
     val code = "new K()(0) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K()(0) = 5
-         |           ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapply(New(init("K", Nil)), int(0)), int(5))
+    runTestAssert[Term](code, "(new K())(0) = 5")(tree)
   }
 
   test("new K()(0) = 5 [scala3]") {
     implicit val dialect: Dialect = dialects.Scala3
     val code = "new K()(0) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K()(0) = 5
-         |           ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapply(New(init("K", Nil)), int(0)), int(5))
+    runTestAssert[Term](code, "(new K())(0) = 5")(tree)
   }
 
   test("new K(1)(0)(2) = 5 [scala212]") {
     implicit val dialect: Dialect = dialects.Scala212
     val code = "new K(1)(0)(2) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K(1)(0)(2) = 5
-         |               ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapply(New(init("K", List(int(1)), List(int(0)))), int(2)), int(5))
+    runTestAssert[Term](code, "(new K(1)(0))(2) = 5")(tree)
   }
 
   test("new K(1)(0)(2) = 5 [scala213]") {
     implicit val dialect: Dialect = dialects.Scala213
     val code = "new K(1)(0)(2) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K(1)(0)(2) = 5
-         |               ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapply(New(init("K", List(int(1)), List(int(0)))), int(2)), int(5))
+    runTestAssert[Term](code, "(new K(1)(0))(2) = 5")(tree)
   }
 
   test("new K(1)(0)(2) = 5 [scala3]") {
     implicit val dialect: Dialect = dialects.Scala3
     val code = "new K(1)(0)(2) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K(1)(0)(2) = 5
-         |               ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapply(New(init("K", List(int(1)), List(int(0)))), int(2)), int(5))
+    runTestAssert[Term](code, "(new K(1)(0))(2) = 5")(tree)
   }
 
   test("new K(1)(0)(2) = 5: positions") {
     implicit val dialect: Dialect = dialects.Scala213
     val code = "new K(1)(0)(2) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K(1)(0)(2) = 5
-         |               ^""".stripMargin
-    runTestError[Term](code, error)
+    val positions =
+      """|Term.Apply new K(1)(0)(2)
+         |Term.New new K(1)(0)
+         |Init K(1)(0)
+         |Term.ArgClause (1)
+         |Term.ArgClause (0)
+         |Term.ArgClause (2)
+         |""".stripMargin
+    assertPositions(term(code), positions)
   }
 
   test("new K(1)(0) = 5 in a block") {
@@ -506,61 +483,47 @@ class TermSuite extends ParseSuite {
       """|{
          |  new K(1)(0) = 5
          |}""".stripMargin
-    val error =
-      """|<input>:2: error: `}` expected but `=` found
-         |  new K(1)(0) = 5
-         |              ^""".stripMargin
-    runTestError[Term](code, error)
+    val layout =
+      """|{
+         |  (new K(1))(0) = 5
+         |}""".stripMargin
+    val tree = blk(Assign(tapply(New(init("K", List(int(1)))), int(0)), int(5)))
+    runTestAssert[Term](code, layout)(tree)
   }
 
   test("f(new K(1)(0) = 5)") {
     implicit val dialect: Dialect = dialects.Scala213
     val code = "f(new K(1)(0) = 5)"
-    val error =
-      """|<input>:1: error: `)` expected but `=` found
-         |f(new K(1)(0) = 5)
-         |              ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = tapply(tname("f"), Assign(tapply(New(init("K", List(int(1)))), int(0)), int(5)))
+    runTestAssert[Term](code, "f((new K(1))(0) = 5)")(tree)
   }
 
   test("new K(1)() = 5") {
     implicit val dialect: Dialect = dialects.Scala213
     val code = "new K(1)() = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K(1)() = 5
-         |           ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapply(New(init("K", List(int(1))))), int(5))
+    runTestAssert[Term](code, "(new K(1))() = 5")(tree)
   }
 
   test("new K(1)(using 0) = 5 [scala3]") {
     implicit val dialect: Dialect = dialects.Scala3
     val code = "new K(1)(using 0) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K(1)(using 0) = 5
-         |                  ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapplyUsing(New(init("K", List(int(1)))), int(0)), int(5))
+    runTestAssert[Term](code, "(new K(1))(using 0) = 5")(tree)
   }
 
   test("new K[T](1)(0) = 5") {
     implicit val dialect: Dialect = dialects.Scala213
     val code = "new K[T](1)(0) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |new K[T](1)(0) = 5
-         |               ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapply(New(init(papply("K", "T"), List(int(1)))), int(0)), int(5))
+    runTestAssert[Term](code, "(new K[T](1))(0) = 5")(tree)
   }
 
   test("(new K(1)(0)) = 5") {
     implicit val dialect: Dialect = dialects.Scala213
     val code = "(new K(1)(0)) = 5"
-    val error =
-      """|<input>:1: error: `end of file` expected but `=` found
-         |(new K(1)(0)) = 5
-         |              ^""".stripMargin
-    runTestError[Term](code, error)
+    val tree = Assign(tapply(New(init("K", List(int(1)))), int(0)), int(5))
+    runTestAssert[Term](code, "(new K(1))(0) = 5")(tree)
   }
 
   test("new K(1)(0) = 5 in a template") {
@@ -569,11 +532,15 @@ class TermSuite extends ParseSuite {
       """|class A {
          |  new K(1)(0) = 5
          |}""".stripMargin
-    val error =
-      """|<input>:2: error: `;` expected but `=` found
-         |  new K(1)(0) = 5
-         |              ^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = "class A { (new K(1))(0) = 5 }"
+    val tree = Source(List(Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      ctor,
+      tpl(Assign(tapply(New(init("K", List(int(1)))), int(0)), int(5))),
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("new K(1)(0)") {

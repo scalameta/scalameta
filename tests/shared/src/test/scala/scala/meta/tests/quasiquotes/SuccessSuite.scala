@@ -780,6 +780,18 @@ class SuccessSuite extends TreeSuiteBase {
     )))
   }
 
+  test("q\"new K(..args)(..args) = expr\"") {
+    val a = List(q"1")
+    val b = List(q"0")
+    val tree = Term.Assign(tapply(Term.New(init("K", List(int(1)))), int(0)), int(5))
+    assertTree(q"new K(..$a)(..$b) = 5")(tree)
+  }
+
+  test("val q\"new init(arg)(arg) = expr\"") {
+    val q"new $c($a)($b) = $r" = q"new K(1)(0) = 5"
+    assertTrees(c, a, b, r)(pname("K"), int(1), int(0), int(5))
+  }
+
   test("q\"_\"")(assertTree(q"_")(Term.Placeholder()))
 
   test("1 q\"expr _\"") {
