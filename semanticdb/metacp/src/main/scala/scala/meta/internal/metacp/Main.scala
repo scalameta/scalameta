@@ -3,15 +3,15 @@ package scala.meta.internal.metacp
 import scala.meta.cli._
 import scala.meta.internal.classpath._
 import scala.meta.internal.cli._
-import scala.meta.internal.io.Implicits._
 import scala.meta.internal.io._
 import scala.meta.internal.scalacp._
 import scala.meta.io._
 import scala.meta.metacp._
 
-import java.io.BufferedOutputStream
+import java.io.IOException
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
+import java.util.Locale
 import java.util.jar._
 
 import scala.collection.{immutable, mutable}
@@ -34,28 +34,48 @@ class Main(settings: Settings, reporter: Reporter) {
     if (!settings.out.isDirectory) Files.createDirectories(settings.out.toNIO)
 
     val classpath = settings.classpath.entries
+    val classpathLen = classpath.length
     val cpargs = classpath.zip(settings.classpathArgs).zipWithIndex
 
-    val outputs = new Array[Option[AbsolutePath]](classpath.length)
-
-    Job.foreach(cpargs, if (settings.verbose) reporter.err else devnull) { case ((entry, arg), i) =>
-      val out = withOutput(entry, outputName(entry)) { x =>
-        outputs(i) = if (convertClasspathEntry(entry, arg, x.root)) Some(x.output) else None
-        x.output
-      }
-      if (entry.isFile) {
-        val jar = new JarFile(entry.toFile)
-        try {
-          val manifest = jar.getManifest
-          if (manifest != null) if (!processManifest(entry, manifest, out)) outputs(i) = None
-        } finally jar.close()
+    val inputs = mutable.ArrayBuffer.empty[Input]
+    val indices = mutable.HashMap.empty[Path, Int]
+    def visit(path: AbsolutePath, arg: String): Int = {
+      val key = path.toNIO.normalize()
+      indices.get(key) match {
+        case Some(i) => i
+        case _ =>
+          val i = inputs.length
+          indices(key) = i
+          inputs += null // reserve slot; set below after visits
+          inputs(i) = Input(path, arg, manifestLinks(path).map(visit(_, arg)))
+          i
       }
     }
+    val files = new Array[Int](classpathLen)
+    cpargs.foreach { case ((cp, arg), i) => files(i) = visit(cp, arg) }
+
+    val outputs = new Array[AbsolutePath](inputs.length)
+    val names = mutable.HashSet.empty[String]
+    val reserve =
+      (x: AbsolutePath) => names.add(x.toNIO.getFileName.toString.toLowerCase(Locale.ROOT))
+    def name(i: Int) = if (outputs(i) eq null) outputs(i) = outputName(inputs(i).path, reserve)
+    files.foreach { i =>
+      name(i)
+      inputs(i).links.foreach(name)
+    }
+    inputs.indices.foreach(name)
+
+    val failed = new Array[Boolean](inputs.length)
+    Job.foreach(inputs.indices, if (settings.verbose) reporter.err else devnull)(i =>
+      failed(i) = !processInput(inputs(i), outputs(i), outputs),
+    )
+    def ok(i: Int, seen: mutable.BitSet): Boolean =
+      if (seen.add(i)) !failed(i) && inputs(i).links.forall(ok(_, seen)) else true
 
     val scalaLibrarySynthetics =
       if (settings.scalaLibrarySynthetics) {
         val entry = settings.out.resolve("scala-library-synthetics.jar")
-        withOutput(entry, outputName(entry)) { out =>
+        withOutput(entry, outputName(entry, _ => true)) { out =>
           Scalalib.synthetics(Scalalib.isHashHashNullary(classpathIndex))
             .foreach(infos => infos.save(out.root))
           Some(out.output)
@@ -71,10 +91,11 @@ class Main(settings: Settings, reporter: Reporter) {
     val sb = new java.lang.StringBuilder("{").append(nl).append("  \"status\": {").append(nl)
     val orderedStatus = immutable.ListMap.newBuilder[AbsolutePath, Option[AbsolutePath]]
     cpargs.foreach { case ((cp, arg), i) =>
-      val output = outputs(i)
+      val file = files(i)
+      val output = if (ok(file, new mutable.BitSet)) Some(outputs(file)) else None
       orderedStatus += cp -> output
       sb.append("    ").json(arg).append(": ").json(output.fold("")(_.toString))
-      if (i != classpath.length - 1) sb.append(',')
+      if (i != classpathLen - 1) sb.append(',')
       sb.append(nl)
     }
     sb.append("  },").append(nl).append("  \"scalaLibrarySynthetics\": ")
@@ -84,45 +105,23 @@ class Main(settings: Settings, reporter: Reporter) {
     Result(orderedStatus.result(), scalaLibrarySynthetics)
   }
 
-  private def processManifest(entry: AbsolutePath, manifest: Manifest, out: AbsolutePath): Boolean = {
-    var success = true
-    val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
-    if (classpathAttr != null) {
-      val buf = List.newBuilder[Path]
-      classpathAttr.split(" ").foreach { classpathEntry =>
-        val linkedPath = entry.toNIO.getParent.resolve(classpathEntry)
-        val linkedEntry = AbsolutePath(linkedPath)
-        if (linkedEntry.isFile || linkedEntry.isDirectory)
-          withOutput(linkedEntry, outputName(linkedEntry)) { out =>
-            buf += out.output.toNIO.getFileName
-            success &= convertClasspathEntry(linkedEntry, linkedEntry.toString, out.root)
-          }
-      }
-      val convertedLinkedJars = buf.result()
-      if (convertedLinkedJars.nonEmpty) withJar(out.toNIO) { jos =>
-        jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"))
-        val classPath = convertedLinkedJars.mkString(" ")
-        val manifest = new Manifest
-        val attributes = manifest.getMainAttributes
-        attributes.put(Attributes.Name.MANIFEST_VERSION, "1.0")
-        attributes.put(Attributes.Name.CLASS_PATH, classPath)
-        manifest.write(jos)
-        jos.closeEntry()
-      }
+  private def processInput(
+      input: Input,
+      output: AbsolutePath,
+      outputs: Array[AbsolutePath],
+  ): Boolean = withOutput(input.path, output) { out =>
+    if (input.links.nonEmpty) {
+      val manifest = new Manifest
+      val attributes = manifest.getMainAttributes
+      attributes.put(Attributes.Name.MANIFEST_VERSION, "1.0")
+      val classPath = input.links.map(outputs(_).toNIO.getFileName).mkString(" ")
+      attributes.put(Attributes.Name.CLASS_PATH, classPath)
+      val dir = Files.createDirectories(out.root.resolve("META-INF").toNIO)
+      val os = Files.newOutputStream(dir.resolve("MANIFEST.MF"))
+      try manifest.write(os)
+      finally os.close()
     }
-    success
-  }
-
-  private def withJar(path: Path)(fn: JarOutputStream => Unit): Unit = {
-    val os = Files.newOutputStream(path)
-    val bos = new BufferedOutputStream(os)
-    val jos = new JarOutputStream(bos)
-    try fn(jos)
-    finally {
-      jos.close()
-      bos.close()
-      os.close()
-    }
+    convertClasspathEntry(input.path, input.arg, out.root)
   }
 
   /**
@@ -135,13 +134,13 @@ class Main(settings: Settings, reporter: Reporter) {
    */
   private case class OutputEntry(output: AbsolutePath, root: AbsolutePath)
 
-  private def outputName(entry: AbsolutePath): AbsolutePath = {
+  private def outputName(entry: AbsolutePath, reserve: AbsolutePath => Boolean): AbsolutePath = {
     val name = entry.toNIO.normalize().getFileName.toString
     val base = name.stripSuffix(JarExtension)
     val ext = if (name ne base) JarExtension else ""
     val pred: AbsolutePath => Boolean = if (name ne base) !_.isFile else !_.isDirectory
     Iterator.from(0).map(i => settings.out.resolve(if (i == 0) name else s"$base-$i$ext"))
-      .filter(pred).next()
+      .filter(x => pred(x) && reserve(x)).next()
   }
 
   private def withOutput[T](entry: AbsolutePath, output: AbsolutePath)(f: OutputEntry => T): T =
@@ -151,6 +150,30 @@ class Main(settings: Settings, reporter: Reporter) {
       Files.createDirectories(output.toNIO)
       f(OutputEntry(output, output))
     }
+
+  /** The existing files and directories that the `Class-Path` of a jar's manifest lists. */
+  private def manifestLinks(path: AbsolutePath): List[AbsolutePath] = {
+    val jar =
+      try if (path.isFile) new JarFile(path.toFile) else null
+      catch { case _: IOException => null }
+    val manifest =
+      if (null eq jar) null
+      else
+        try jar.getManifest
+        finally jar.close()
+    val classPath =
+      if (null eq manifest) null else manifest.getMainAttributes.getValue(Attributes.Name.CLASS_PATH)
+    if (null eq classPath) Nil
+    else {
+      val dir = path.toNIO.getParent
+      val res = List.newBuilder[AbsolutePath]
+      classPath.split(" ").foreach { x =>
+        val absPath = AbsolutePath(dir.resolve(x))
+        if (absPath.isFile || absPath.isDirectory) res += absPath
+      }
+      res.result()
+    }
+  }
 
   private def saveInfoVisitor(
       arg: String,
@@ -178,7 +201,12 @@ class Main(settings: Settings, reporter: Reporter) {
 
   private def convertClasspathEntry(in: AbsolutePath, arg: String, out: AbsolutePath): Boolean = {
     val ok = BooleanRef.create(true)
-    Classpath(in).visit(_ => saveInfoVisitor(arg, out, ok))
+    val walk = (x: AbsolutePath) => Files.walkFileTree(x.toNIO, saveInfoVisitor(arg, out, ok))
+    if (in.isDirectory) walk(in)
+    else if (in.isFile) {
+      if (!isJar(in)) sys.error(s"Expected jar file, obtained $in")
+      PlatformFileIO.withJarFileSystem(in, create = false, close = true)(walk)
+    }
     // NOTE: In the case when an input contains no class files,
     // we need to create an empty META-INF/semanticdb directory to distinguish
     // metacp-processed outputs from regular class directories and/or jar.
@@ -198,6 +226,8 @@ class Main(settings: Settings, reporter: Reporter) {
 }
 
 object Main {
+
+  private case class Input(path: AbsolutePath, arg: String, links: List[Int])
 
   implicit class ImplicitStringBuilder(val sb: java.lang.StringBuilder) extends AnyVal {
     // escape non-ASCII too, so that stdout in any charset keeps the string
