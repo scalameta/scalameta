@@ -880,6 +880,24 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
+  test("comments: an unquote at the end of a line comment in an argument clause") {
+    val error = typecheckError(
+      """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val name = Lit.String("x")
+      qQQQf(a, // $name
+        b)QQQ
+    """,
+    )
+    assertNoDiff(
+      error,
+      """|<macro>:6: illegal start of simple expression
+         |        b)QQQ
+         |          ^""".stripMargin.replace("QQQ", "\"\"\""),
+    )
+  }
+
   test("comments: a hole of the wrong type in a comment") {
     assertNoDiff(
       typecheckError(
@@ -899,6 +917,22 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
+  test("comments: an unclosed comment") {
+    val error = typecheckError(
+      """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      q"0 /* foo"
+    """,
+    )
+    assertNoDiff(
+      error,
+      """|<macro>:4: unclosed comment
+         |      q"0 /* foo"
+         |               ^""".stripMargin,
+    )
+  }
+
   test("comments: an unclosed comment with an unquote") {
     val error = typecheckError(
       """
@@ -906,6 +940,62 @@ class ErrorSuite extends TreeSuiteBase {
       import scala.meta.dialects.Scala211
       val name = Lit.String("x")
       q"0 /* $name"
+    """,
+    )
+    val expected =
+      "<macro>:5: exception during macro expansion: \njava.lang.StringIndexOutOfBoundsException"
+    assertNoDiff(error.take(expected.length), expected)
+  }
+
+  test("comments: two unquotes and one character between them") {
+    val error = typecheckError(
+      """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val name = Lit.String("x")
+      q"0 /* $name $name */"
+    """,
+    )
+    val expected =
+      "<macro>:5: exception during macro expansion: \njava.lang.StringIndexOutOfBoundsException"
+    assertNoDiff(error.take(expected.length), expected)
+  }
+
+  test("comments: two adjacent unquotes in braces") {
+    val error = typecheckError(
+      """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val name = Lit.String("x")
+      q"0 /* ${name}${name} */"
+    """,
+    )
+    val expected =
+      "<macro>:5: exception during macro expansion: \njava.lang.StringIndexOutOfBoundsException"
+    assertNoDiff(error.take(expected.length), expected)
+  }
+
+  test("comments: an unquote in braces and an escaped dollar in a line comment") {
+    val error = typecheckError(
+      """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val name = Lit.String("x")
+      q"0 // ${name}$$y"
+    """,
+    )
+    val expected =
+      "<macro>:5: exception during macro expansion: \njava.lang.StringIndexOutOfBoundsException"
+    assertNoDiff(error.take(expected.length), expected)
+  }
+
+  test("comments: an unquote in braces and an adjacent unquote") {
+    val error = typecheckError(
+      """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val name = Lit.String("x")
+      q"0 /* ${name}$name */"
     """,
     )
     val expected =

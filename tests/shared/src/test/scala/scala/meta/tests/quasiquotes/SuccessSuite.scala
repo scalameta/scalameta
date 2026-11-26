@@ -2381,11 +2381,46 @@ class SuccessSuite extends TreeSuiteBase {
     assertWithOriginalSyntax(id, "456", "456")
   }
 
+  test("two adjacent unquotes in an argument") {
+    val x = q"x"
+    val tree = q"f($x$x)"
+    assertNoDiff(tree.reprint, "f(x)")
+  }
+
   test("comments: single-line: literal") {
     val content = q""""real content""""
     assertTree(q"0 // $content has been unquoted")(
       Lit.Int.newBuilder(0).endComment(Seq("// real content has been unquoted")).result(),
     )
+  }
+
+  test("comments: single-line: two adjacent literals") {
+    val content = q""""real content""""
+    val tree = q"0 // foo $content$content"
+    assertNoDiff(tree.reprint, "0 // foo real content")
+  }
+
+  test("comments: single-line: literal at the end of the line, a statement after it") {
+    val content = q""""real content""""
+    val tree =
+      q"""{
+  a
+  // $content
+  b
+}"""
+    assertTree(tree)(blk(tname("a").toBuilder.endComment(Seq("// real content\n  b")).result()))
+  }
+
+  test("comments: single-line: two literals in braces at the end of the line, a statement after it") {
+    def lit(s: String) = Lit.String(s)
+    val tree =
+      q"""{
+  a
+  // ${lit("one")}${lit("two")}
+  b
+}"""
+    val b = tname("b").toBuilder.begComment(Seq("""// one${lit("two")}""")).result()
+    assertTree(tree)(blk(tname("a"), b))
   }
 
   test("comments: multi-line: literal") {
@@ -2395,6 +2430,38 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(q"/* bc1 */ /* $content bc */ /* bc2 */ 0 /* ec1 */ /* $content ec */ /* ec2 */")(
       Lit.Int.newBuilder(0).begComment(begComment).endComment(endComment).result(),
     )
+  }
+
+  test("comments: multi-line: two literals") {
+    val content = q""""real content""""
+    val tree = q"0 /* foo $content and $content bar */"
+    assertEquals(
+      tree.endComment.map(_.values.map(_.parts.map(_.value))),
+      Some(List(List("/* foo ", "real content", " and ", "real content", " bar */"))),
+    )
+    assertNoDiff(tree.reprint, "0 /* foo real content and real content bar */")
+  }
+
+  test("comments: multi-line: two adjacent literals") {
+    val content = q""""real content""""
+    val tree = q"0 /* foo $content$content bar */"
+    assertNoDiff(tree.reprint, "0 /* foo real content bar */")
+  }
+
+  test("comments: multi-line: a literal and an adjacent literal in braces") {
+    val content = q""""real content""""
+    val tree = q"0 /* foo $content${Lit.String("more")} bar */"
+    assertNoDiff(tree.reprint, """0 /* foo real content{Lit.String("more")} bar */""")
+  }
+
+  test("comments: multi-line: three literals") {
+    val content = q""""real content""""
+    val tree = q"0 /* $content and $content and $content */"
+    assertNoDiff(
+      tree.endComment.get.values.map(_.parts.map(_.value).mkString("|")).mkString("\n"),
+      "/* |real content| and |real content| and |real content| */",
+    )
+    assertNoDiff(tree.reprint, "0 /* real content and real content and real content */")
   }
 
   test("comments: multi-line: with comma and eol") {
