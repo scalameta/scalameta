@@ -2054,6 +2054,107 @@ class TokenizerSuite extends BaseTokenizerSuite {
   )
 
   testTokenizedStructLines(
+    "line comment that ends in an unquote within multi-line quasiquotes",
+    dialects.Scala213.unquoteTerm(multiline = true),
+  )(
+    "a // foo $x\nb",
+    """|BOF [0..0)
+       |Ident(a) [0..1)
+       |Space [1..2)
+       |CommentWithUnquotes( foo $x\nb) [2..13)
+       |EOF [13..13)
+       |""".stripMargin,
+  )
+
+  testTokenizedStructLines(
+    "line comment that ends in an unquote and CRLF within multi-line quasiquotes",
+    dialects.Scala213.unquoteTerm(multiline = true),
+  )(
+    "a // foo $x\r\nb",
+    """|BOF [0..0)
+       |Ident(a) [0..1)
+       |Space [1..2)
+       |CommentWithUnquotes( foo $x\r) [2..12)
+       |LF [12..13)
+       |Ident(b) [13..14)
+       |EOF [14..14)
+       |""".stripMargin,
+  )
+
+  testTokenizedStructLines(
+    "line comment that ends in an unquote and CR within multi-line quasiquotes",
+    dialects.Scala213.unquoteTerm(multiline = true),
+  )(
+    "a // foo $x\rb",
+    """|BOF [0..0)
+       |Ident(a) [0..1)
+       |Space [1..2)
+       |CommentWithUnquotes( foo $x\rb) [2..13)
+       |EOF [13..13)
+       |""".stripMargin,
+  )
+
+  testTokenizedStructLines(
+    "line comment with a space after an unquote within multi-line quasiquotes",
+    dialects.Scala213.unquoteTerm(multiline = true),
+  )(
+    "a // foo $x \nb",
+    """|BOF [0..0)
+       |Ident(a) [0..1)
+       |Space [1..2)
+       |CommentWithUnquotes( foo $x ) [2..12)
+       |LF [12..13)
+       |Ident(b) [13..14)
+       |EOF [14..14)
+       |""".stripMargin,
+  )
+
+  testTokenizedStructLines(
+    "line comment that starts with an unquote within multi-line quasiquotes",
+    dialects.Scala213.unquoteTerm(multiline = true),
+  )(
+    "a //$x\nb",
+    """|BOF [0..0)
+       |Ident(a) [0..1)
+       |Space [1..2)
+       |CommentWithUnquotes($x\nb) [2..8)
+       |EOF [8..8)
+       |""".stripMargin,
+  )
+
+  test("line comment with two adjacent unquotes in braces within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a // ${x}${y}\nb")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( ${x}${y}) [2..13)
+         |CommentStart( ) [2..5)
+         |CommentUnquote(${x}) [5..9)
+         |CommentEnd(${y}) [9..13)
+         |LF [13..14)
+         |Ident(b) [14..15)
+         |EOF [15..15)
+         |""".stripMargin,
+    )
+  }
+
+  testTokenizedStructLines(
+    "line comment with an unquote at the end of the input within multi-line quasiquotes",
+    dialects.Scala213.unquoteTerm(multiline = true),
+  )(
+    "a // foo $x",
+    """|BOF [0..0)
+       |Ident(a) [0..1)
+       |Space [1..2)
+       |CommentWithUnquotes( foo $x) [2..11)
+       |EOF [11..11)
+       |""".stripMargin,
+  )
+
+  testTokenizedStructLines(
     "comment with an unquote within multi-line quasiquotes",
     dialects.Scala213.unquoteTerm(multiline = true),
   )(
@@ -2063,6 +2164,300 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Space [1..2)
        |CommentWithUnquotes( foo $x bar ) [2..18)
        |EOF [18..18)
+       |""".stripMargin,
+  )
+
+  test("comment with two unquotes within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* foo $x and $y bar */")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( foo $x and $y bar ) [2..25)
+         |CommentStart( foo ) [2..9)
+         |CommentUnquote($x) [9..11)
+         |CommentStart(nd ) [11..16)
+         |CommentUnquote($y) [16..18)
+         |CommentEnd( bar ) [18..25)
+         |EOF [25..25)
+         |""".stripMargin,
+    )
+  }
+
+  test("comment with two adjacent unquotes within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* foo $x$y bar */")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( foo $x$y bar ) [2..20)
+         |CommentStart( foo ) [2..9)
+         |CommentUnquote($x$y) [9..13)
+         |CommentEnd( bar ) [13..20)
+         |EOF [20..20)
+         |""".stripMargin,
+    )
+  }
+
+  test("comment with two unquotes and one character between them within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* $x $y */")
+    intercept[StringIndexOutOfBoundsException](tokens())
+  }
+
+  test("comment with two adjacent unquotes in braces within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* ${x}${y} */")
+    intercept[StringIndexOutOfBoundsException](tokens())
+  }
+
+  test("comment with an unquote and an adjacent unquote in braces within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* $x${y} */")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( $x${y} ) [2..14)
+         |CommentStart( ) [2..5)
+         |CommentUnquote($x$) [5..8)
+         |CommentEnd({y} ) [8..14)
+         |EOF [14..14)
+         |""".stripMargin,
+    )
+  }
+
+  test("comment with an unquote in braces and an adjacent unquote within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* ${x}$y */")
+    intercept[StringIndexOutOfBoundsException](tokens())
+  }
+
+  test("comment with three unquotes within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* $x and $y and $z */")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( $x and $y and $z ) [2..24)
+         |CommentStart( ) [2..5)
+         |CommentUnquote($x) [5..7)
+         |CommentStart(nd ) [7..12)
+         |CommentUnquote($y) [12..14)
+         |CommentStart(nd ) [14..19)
+         |CommentUnquote($z) [19..21)
+         |CommentEnd( ) [21..24)
+         |EOF [24..24)
+         |""".stripMargin,
+    )
+  }
+
+  test("comment with an unquote before its end within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* foo $x*/")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( foo $x) [2..13)
+         |CommentStart( foo ) [2..9)
+         |CommentUnquote($x) [9..11)
+         |CommentEnd() [11..13)
+         |EOF [13..13)
+         |""".stripMargin,
+    )
+  }
+
+  test("comment with an unquote and an escaped dollar within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* $x $$ y */")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( $x $$ y ) [2..15)
+         |CommentStart( ) [2..5)
+         |CommentUnquote($x) [5..7)
+         |CommentEnd( $$ y ) [7..15)
+         |EOF [15..15)
+         |""".stripMargin,
+    )
+  }
+
+  test("nested comment with an unquote within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* /* $x */ */")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( /* $x */ ) [2..16)
+         |CommentStart( /* ) [2..8)
+         |CommentUnquote($x) [8..10)
+         |CommentEnd( */ ) [10..16)
+         |EOF [16..16)
+         |""".stripMargin,
+    )
+  }
+
+  test("unclosed comment with an unquote within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* foo $x")
+    intercept[StringIndexOutOfBoundsException](tokens())
+  }
+
+  test("unclosed comment without an unquote within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* foo")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |Comment( foo) [2..8)
+         |Invalid(unclosed comment) [7..7)
+         |EOF [8..8)
+         |""".stripMargin,
+    )
+  }
+
+  test("unclosed comment with text after an unquote within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* $x foo")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |Invalid(unclosed comment) [10..10)
+         |CommentWithUnquotes( $x foo) [2..11)
+         |CommentStart( ) [2..5)
+         |CommentUnquote($x) [5..7)
+         |CommentStart(oo) [7..11)
+         |EOF [11..11)
+         |""".stripMargin,
+    )
+  }
+
+  test("line comment with two unquotes and one character between them within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a // $x $y\nb")
+    intercept[StringIndexOutOfBoundsException](tokens())
+  }
+
+  test("line comment with two adjacent unquotes within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a // $x$y\nb")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( $x$y\nb) [2..11)
+         |CommentStart( ) [2..5)
+         |CommentUnquote($x$y) [5..9)
+         |CommentEnd(\nb) [9..11)
+         |EOF [11..11)
+         |""".stripMargin,
+    )
+  }
+
+  test(
+    "line comment with an unquote in braces and an adjacent unquote within multi-line quasiquotes",
+  ) {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a // ${x}$y\nb")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( ${x}$y) [2..11)
+         |CommentStart( ) [2..5)
+         |CommentUnquote(${x}) [5..9)
+         |CommentEnd($y) [9..11)
+         |LF [11..12)
+         |Ident(b) [12..13)
+         |EOF [13..13)
+         |""".stripMargin,
+    )
+  }
+
+  test("line comment with an unquote in braces and an escaped dollar within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a // ${x}$$y\nb")
+    intercept[StringIndexOutOfBoundsException](tokens())
+  }
+
+  test("comment with an unquote in braces and an escaped dollar within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* ${x}$$y */")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( ${x}$$y ) [2..15)
+         |CommentStart( ) [2..5)
+         |CommentUnquote(${x}) [5..9)
+         |CommentEnd($$y ) [9..15)
+         |EOF [15..15)
+         |""".stripMargin,
+    )
+  }
+
+  test("comment with an unquote and an adjacent escaped dollar within multi-line quasiquotes") {
+    implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
+    def tokens() = tokenize("a /* $x$$y */")
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( $x$$y ) [2..13)
+         |CommentStart( ) [2..5)
+         |CommentUnquote($x$$y) [5..10)
+         |CommentEnd( ) [10..13)
+         |EOF [13..13)
+         |""".stripMargin,
+    )
+  }
+
+  testTokenizedStructLines(
+    "code with two adjacent unquotes within multi-line quasiquotes",
+    dialects.Scala213.unquoteTerm(multiline = true),
+  )(
+    "f($x$y)",
+    """|BOF [0..0)
+       |Ident(f) [0..1)
+       |LeftParen [1..2)
+       |Unquote($x$y) [2..6)
+       |RightParen [6..7)
+       |EOF [7..7)
+       |""".stripMargin,
+  )
+
+  testTokenizedStructLines(
+    "code with an unquote and an adjacent escaped dollar within multi-line quasiquotes",
+    dialects.Scala213.unquoteTerm(multiline = true),
+  )(
+    "f($x$$y)",
+    """|BOF [0..0)
+       |Ident(f) [0..1)
+       |LeftParen [1..2)
+       |Unquote($x$$y) [2..7)
+       |RightParen [7..8)
+       |EOF [8..8)
        |""".stripMargin,
   )
 
@@ -2580,4 +2975,10 @@ object TokenizerSuite {
 
   def TestCase(obj: TestTokenizedWithDialects)(implicit loc: munit.Location) = tests.TestHelpers
     .TestCase(obj)
+
+  /** Returns the tokens, each comment with unquotes followed by its pieces. */
+  def withCommentPieces(tokens: Iterable[Token]): Iterable[Token] = tokens.flatMap {
+    case t: CommentWithUnquotes => t :: t.tokens
+    case t => t :: Nil
+  }
 }

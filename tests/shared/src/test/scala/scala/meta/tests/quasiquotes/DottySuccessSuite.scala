@@ -355,6 +355,21 @@ class DottySuccessSuite extends TreeSuiteBase {
     )(Defn.Object(Nil, tname("O"), tpl(f, g)))
   }
 
+  test("comments: an unquote at the end of a line comment after a statement, an outdent after it") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val comment = "// x\n  def g = 1"
+    val f = Defn.Def(Nil, tname("f"), Nil, None, tname("a")).toBuilder.endComment(Seq(comment))
+      .result()
+    val tree =
+      q"""object O:
+  def f =
+    a // $unquoted
+  def g = 1"""
+    assertTree(tree)(Defn.Object(Nil, tname("O"), tpl(f)))
+  }
+
   test("comments: an unquote in a one-line comment after a leading infix operator, its operand after it") {
     @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
     val dialect: Dialect = null
