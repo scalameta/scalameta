@@ -685,14 +685,14 @@ class TargetedSuite extends SemanticdbSuite {
     """|[0:8..0:10): uf <= uf/
        |[1:7..1:8): F <= uf/F.
        |[2:6..2:7): a <= uf/F.a.
-       |[2:10..2:14): List => scala/collection/immutable/Nil.
+       |[2:10..2:14): List => <List.>
        |[3:6..3:7): b <= uf/F.b.
-       |[3:10..3:14): List => scala/collection/immutable/Nil.
+       |[3:10..3:14): List => <List.>
        |[4:6..4:7): c <= uf/F.c.
-       |[4:10..4:14): List => scala/collection/immutable/Nil.
+       |[4:10..4:14): List => <List.>
        |[4:16..4:19): Int => scala/Int#
        |[5:6..5:7): d <= uf/F.d.
-       |[5:10..5:14): List => scala/collection/immutable/Nil.
+       |[5:10..5:14): List => <List.>
        |[5:15..5:18): Int => scala/Int#
        |""".stripMargin,
     "Occurrences",

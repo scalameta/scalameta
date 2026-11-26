@@ -3602,7 +3602,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.x. => val method x: List[List[_] forSome { type _ }]
        |  List => scala/collection/immutable/List#
        |  _ => local0
-       |local0 => abstract type _
+       |local0 => synthetic abstract type _
        |""".stripMargin,
   )
 
@@ -3610,8 +3610,8 @@ class Issue1583Suite extends SemanticdbSuite {
     emptyList,
     """|[0:7..0:8): O <= _empty_/O.
        |[1:6..1:7): x <= _empty_/O.x.
-       |[1:10..1:14): List => scala/collection/immutable/Nil.
-       |[1:15..1:19): List => scala/collection/immutable/List#
+       |[1:10..1:14): List => <List.>
+       |[1:15..1:19): List => scala/package.List#
        |[1:20..1:21): _ <= local0
        |""".stripMargin,
   )
@@ -3801,7 +3801,7 @@ class Issue1583Suite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|[0:7..0:8): O <= _empty_/O.
          |[1:6..1:7): a <= _empty_/O.a.
-         |[1:10..1:14): List => scala/collection/immutable/Nil.
+         |[1:10..1:14): List => scala/collection/immutable/List.
          |[1:15..1:18): Int => scala/Int#
          |[2:6..2:7): b <= _empty_/O.b.
          |[2:10..2:14): List => scala/collection/immutable/List.
@@ -3824,7 +3824,7 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|[0:7..0:8): O <= _empty_/O.
          |[1:6..1:7): a <= _empty_/O.a.
-         |[1:10..1:14): List => scala/collection/immutable/Nil.
+         |[1:10..1:14): List => scala/package.List.
          |[1:15..1:18): Int => scala/Int#
          |[2:6..2:7): b <= _empty_/O.b.
          |[2:10..2:14): List => scala/package.List.

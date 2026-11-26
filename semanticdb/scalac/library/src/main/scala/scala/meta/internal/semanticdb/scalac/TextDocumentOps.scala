@@ -108,6 +108,12 @@ trait TextDocumentOps {
             case Some(a) => traverse(a.tree)
             case _ => return false
           }
+        // traverse the empty call of `List.apply` that scalac replaced with this `Nil`
+        case t: g.Select if (t.symbol eq g.definitions.NilModule) && !t.attachments.isEmpty =>
+          t.attachments.get(EmptyListCallTag) match {
+            case Some(a) => traverse(a.call)
+            case _ => return false
+          }
         case _ => return false
       }
       true

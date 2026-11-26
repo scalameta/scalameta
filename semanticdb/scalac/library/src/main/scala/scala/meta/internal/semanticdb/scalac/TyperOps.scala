@@ -26,6 +26,10 @@ trait TyperOps {
 
   private[scalac] val MacroExpansionTag = classTag[MacroExpansionAttachment]
 
+  /** the empty call of `List.apply` that typer replaced with the `Nil` that has this attachment */
+  private[meta] final class EmptyListCall(val call: Tree)
+  private[scalac] val EmptyListCallTag = classTag[EmptyListCall]
+
   /**
    * the names that the imports of a unit rename to. `byStart` maps the start of each identifier
    * with one of these names to the symbol that the typer bound it to
@@ -90,6 +94,7 @@ trait TyperOps {
         recordValDefRhs(tree)
         recordBinding(typer, tree)
         recordExpansionOf(tree)
+        recordEmptyListCall(tree)
       }
       tpe
     }
@@ -144,6 +149,44 @@ trait TyperOps {
           }
       catch { case ex if NonFatal(ex) => }
     }
+
+    /** the last typed tree whose symbol is named `apply`, such as the function of a call */
+    private var lastApply: Tree = null
+
+    /**
+     * Typer replaces `List()` with `Nil`, so we need to put it back. The trick this method uses is
+     * to intercept the tree it types for `List.apply` (it doesn't keep it) and use that tree to
+     * reconstruct subsequent `Nil`, by adding Nil's generic type.
+     */
+    private def recordEmptyListCall(tree: Tree): Unit =
+      try {
+        val sym = tree.symbol
+        if (null eq sym) return
+        if (sym.name eq nme.apply) lastApply = tree // capture any `apply`
+        else if ((sym eq definitions.NilModule) && (null ne lastApply)) {
+          val fun = lastApply
+          val pos = tree.pos
+          val fpos = fun.pos
+          // `Nil` has the call's range; the call starts at the function and ends after the function
+          if (!pos.isRange || !fpos.isRange || (pos.source ne fpos.source) ||
+            pos.start != fpos.start || fpos.end >= pos.end || tree.hasAttachment(EmptyListCallTag))
+            return
+
+          val callee = fun.tpe match {
+            case gtpe: PolyType =>
+              val tparams = gtpe.typeParams
+              val targs = tree.tpe.typeArgs
+              if (!sameLength(tparams, targs)) return // RETURNING!
+              val focus = fpos.focus
+              TypeApply(fun, targs.map(TypeTree(_).setPos(focus))).setPos(fpos)
+                .setType(gtpe.resultType.instantiateTypeParams(tparams, targs))
+            case _ => fun
+          }
+          val call = Apply(callee, Nil).setPos(pos).setType(tree.tpe)
+          tree.updateAttachment(new EmptyListCall(call))(EmptyListCallTag)
+          lastApply = null // XXX: do we keep it if an exception is thrown?
+        }
+      } catch { case ex if NonFatal(ex) => }
 
     /**
      * the body of the last unit that the typer typed. The typer calls `pluginsTyped` for every

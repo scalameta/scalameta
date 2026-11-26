@@ -19,7 +19,7 @@ class InstrumentTyper/*<=example.InstrumentTyper#*/ { self/*<=local0*/: AnyRef/*
     Literal/*=>types.Test.Literal.*/.javaEnum/*=>types.Test.Literal.javaEnum.*/,
     Literal/*=>types.Test.Literal.*/.clazzOfInt/*=>types.Test.Literal.clazzOfInt.*/,
     Literal/*=>types.Test.Literal.*/.clazzOfOption/*=>types.Test.Literal.clazzOfOption.*/,
-    List/*=>scala.collection.immutable.Nil.*/()
+    List/*=>scala.collection.immutable.List.*/()
   )
   def existential/*<=example.InstrumentTyper#existential().*/: U/*=>local1*/[Int/*=>scala.Int#*/] forSome { type U/*<=local1*/[T/*<=local2*/ <: Int/*=>scala.Int#*/] } = ???/*=>scala.Predef.`???`().*/
   type AnnotatedType/*<=example.InstrumentTyper#AnnotatedType#*/ = Int/*=>scala.Int#*/ @param/*=>scala.annotation.meta.param#*//*=>scala.annotation.meta.param#`<init>`().*/
