@@ -1,6 +1,7 @@
 package scala.meta.internal.io
 
 import java.io._
+import java.nio.charset.Charset
 
 trait InputStreamIO[A] {
   def read(is: Array[Byte]): A
@@ -18,4 +19,6 @@ object InputStreamIO {
     }) baos.write(buffer, 0, nread)
     baos.toByteArray
   }
+
+  def readString(is: InputStream, charset: Charset): String = new String(readBytes(is), charset)
 }

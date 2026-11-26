@@ -2,14 +2,19 @@ package scala.meta.internal.io
 
 import scala.meta.io._
 
-import java.io.IOException
+import java.io.{ByteArrayOutputStream, IOException}
 import java.net.URI
+import java.nio.ByteBuffer
+import java.nio.channels.{AsynchronousFileChannel, CompletionHandler}
 import java.nio.charset.Charset
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 import java.util
 
-object PlatformFileIO {
+import scala.concurrent.{ExecutionContextExecutorService, Future, Promise}
+import scala.io.Codec
+
+object PlatformFileIO extends NioFileIO {
 
   def readAllBytes(uri: URI): Array[Byte] = {
     val is = uri.toURL.openStream()
@@ -34,17 +39,16 @@ object PlatformFileIO {
     finally os.close()
   }
 
-  def slurp(path: AbsolutePath, charset: Charset): String =
-    new String(Files.readAllBytes(path.toNIO), charset)
+  def slurp(path: AbsolutePath, charset: Charset): String = readFile(path.toNIO, charset)
 
   def listFiles(path: AbsolutePath): ListFiles =
     new ListFiles(path, Option(path.toFile.list()).toList.flatten.map(RelativePath.apply))
 
-  def isFile(path: AbsolutePath): Boolean = Files.isRegularFile(path.toNIO)
+  def isFile(path: AbsolutePath): Boolean = isRegularFile(path.toNIO)
 
-  def isDirectory(path: AbsolutePath): Boolean = Files.isDirectory(path.toNIO)
+  def isDirectory(path: AbsolutePath): Boolean = isDirectory(path.toNIO)
 
-  def exists(path: AbsolutePath): Boolean = Files.exists(path.toNIO)
+  def exists(path: AbsolutePath): Boolean = exists(path.toNIO)
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     val relativeFiles = List.newBuilder[RelativePath]
@@ -101,8 +105,92 @@ object PlatformFileIO {
     newFileSystem(uri, map)
   }
 
-  def newFileSystem(uri: URI, map: java.util.Map[String, _] = new util.HashMap()): FileSystem =
+  def newFileSystem(uri: URI, map: java.util.Map[String, String] = new util.HashMap()): FileSystem =
     try FileSystems.newFileSystem(uri, map)
     catch { case _: FileSystemAlreadyExistsException => FileSystems.getFileSystem(uri) }
+
+  def readFileAsync(path: Path, ec: ExecutionContextExecutorService)(implicit
+      codec: Codec,
+  ): Future[String] = Future {
+    val opts = new util.HashSet(util.Arrays.asList(StandardOpenOption.READ))
+    AsynchronousFileChannel.open(path, opts, ec)
+  }(ec).flatMap { channel =>
+    val promise = Promise[String]()
+    new ReadContext(promise, channel).read(0)
+    promise.future
+  }(ExecutionContexts.parasitic)
+
+  def writeFileAsync(path: Path, content: String, ec: ExecutionContextExecutorService)(implicit
+      codec: Codec,
+  ): Future[Unit] = Future {
+    val opts = new util.HashSet(util.Arrays.asList(
+      StandardOpenOption.CREATE,
+      StandardOpenOption.WRITE,
+      StandardOpenOption.TRUNCATE_EXISTING,
+    ))
+    AsynchronousFileChannel.open(path, opts, ec)
+  }(ec).flatMap { channel =>
+    val promise = Promise[Unit]()
+    val buf = ByteBuffer.wrap(content.getBytes(codec.charSet))
+    new WriteContext(promise, channel, buf).write()
+    promise.future
+  }(ExecutionContexts.parasitic)
+
+  private abstract class Handler[A <: Context[_]] extends CompletionHandler[Integer, A] {
+    override def failed(exc: Throwable, obj: A): Unit = obj.failed(exc)
+  }
+
+  private object ReadHandler extends Handler[ReadContext] {
+    override def completed(res: Integer, obj: ReadContext): Unit = obj.read(res.intValue())
+  }
+
+  private object WriteHandler extends Handler[WriteContext] {
+    override def completed(res: Integer, obj: WriteContext): Unit = obj.write()
+  }
+
+  private abstract class Context[A] {
+    val promise: Promise[A]
+    val channel: AsynchronousFileChannel
+    def failed(exc: Throwable): Unit = {
+      promise.tryFailure(exc)
+      channel.close()
+    }
+  }
+
+  private class ReadContext(val promise: Promise[String], val channel: AsynchronousFileChannel)(
+      implicit codec: Codec,
+  ) extends Context[String] {
+    private val arr = new Array[Byte](1024)
+    private val buf = ByteBuffer.wrap(arr)
+    private val os = new ByteArrayOutputStream()
+
+    def read(count: Int): Unit =
+      if (count < 0) {
+        promise.trySuccess(os.toString(codec.charSet.name()))
+        channel.close()
+      } else {
+        if (count > 0) {
+          os.write(arr, 0, count)
+          buf.clear()
+        }
+        try channel.read(buf, os.size(), this, ReadHandler)
+        catch { case exc: Throwable => failed(exc) }
+      }
+  }
+
+  private class WriteContext(
+      val promise: Promise[Unit],
+      val channel: AsynchronousFileChannel,
+      buf: ByteBuffer,
+  ) extends Context[Unit] {
+    def write(): Unit =
+      if (buf.hasRemaining)
+        try channel.write(buf, buf.position(), this, WriteHandler)
+        catch { case exc: Throwable => failed(exc) }
+      else {
+        promise.trySuccess(())
+        channel.close()
+      }
+  }
 
 }

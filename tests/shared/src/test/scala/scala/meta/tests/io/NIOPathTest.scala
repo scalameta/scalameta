@@ -92,7 +92,7 @@ class NIOPathTest extends FunSuite {
   )
 
   test("jar.toUri")(
-    if (scala.meta.internal.platform.isJVM) {
+    if (PlatformFlags.isJVM) {
       val jar = Files.createTempDirectory("scalameta").resolve("foo.jar")
       FileIO.withJarFileSystem(AbsolutePath(jar), true, true) { root =>
         val hello = root.resolve("hello")

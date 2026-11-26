@@ -4,9 +4,12 @@ import scala.meta.io._
 
 import java.net.URI
 import java.nio.charset.Charset
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 
-object PlatformFileIO {
+import scala.concurrent.{ExecutionContextExecutorService, Future}
+import scala.io.Codec
+
+object PlatformFileIO extends NioFileIO {
 
   def readAllBytes(uri: URI): Array[Byte] =
     // NOTE: URI.toURL isn't yet available in Scala Native,
@@ -46,11 +49,11 @@ object PlatformFileIO {
   def listFiles(path: AbsolutePath): ListFiles =
     new ListFiles(path, Option(path.toFile.list()).toList.flatten.map(RelativePath.apply))
 
-  def isFile(path: AbsolutePath): Boolean = Files.isRegularFile(path.toNIO)
+  def isFile(path: AbsolutePath): Boolean = isRegularFile(path.toNIO)
 
-  def isDirectory(path: AbsolutePath): Boolean = Files.isDirectory(path.toNIO)
+  def isDirectory(path: AbsolutePath): Boolean = isDirectory(path.toNIO)
 
-  def exists(path: AbsolutePath): Boolean = Files.exists(path.toNIO)
+  def exists(path: AbsolutePath): Boolean = exists(path.toNIO)
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     // NOTE: Some Java stream APIs aren't yet available in Scala Native,
@@ -77,5 +80,13 @@ object PlatformFileIO {
   def withJarFileSystem[T](path: AbsolutePath, create: Boolean, close: Boolean = false)(
       f: AbsolutePath => T,
   ): T = throw new UnsupportedOperationException()
+
+  def readFileAsync(path: Path, ec: ExecutionContextExecutorService)(implicit
+      codec: Codec,
+  ): Future[String] = Future(readFile(path, codec.charSet))(ec)
+
+  def writeFileAsync(path: Path, content: String, ec: ExecutionContextExecutorService)(implicit
+      codec: Codec,
+  ): Future[Unit] = Future(writeFile(path, content, codec.charSet))(ec)
 
 }

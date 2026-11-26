@@ -9,13 +9,17 @@ object PathIO {
 
   def workingDirectory: AbsolutePath = AbsolutePath.workingDirectory
 
+  val isWindows: Boolean =
+    // NOTE: org.scalameta:io implements java.io.File for Node.js so this will work correctly
+    // on Node.js + Window and also in the browser.
+    File.separatorChar == '\\'
+
   // These two methods work on strings instead of AbsolutePath because AbsolutePath
   // with unix / slashes is non-sensical on Windows.
-  def toUnix(path: String): String =
-    if (File.separatorChar != '/') path.replace(File.separatorChar, '/') else path
+  def toUnix(path: String): String = if (isWindows) path.replace(File.separatorChar, '/') else path
 
   def fromUnix(path: String): String =
-    if (File.separatorChar != '/') path.replace('/', File.separatorChar) else path
+    if (isWindows) path.replace('/', File.separatorChar) else path
 
   /** Returns file extension of this path, returns empty string if path has no extension */
   def extension(path: Path): String = {
