@@ -1148,6 +1148,931 @@ class NameRewriteSuite extends SemanticdbSuite {
     ),
   )
 
+  private val n96 =
+    """|object n96 {
+       |  import scala.{List => L}
+       |  List(1)
+       |  List()
+       |  List[Int](1)
+       |  List[Int]()
+       |  List.apply(1)
+       |  List.apply()
+       |  List.apply[Int](1)
+       |  List.apply[Int]()
+       |  L(1)
+       |  L()
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "empty lists as statements",
+    n96,
+    """|[0:7..0:10): n96 <= _empty_/n96.
+       |[1:9..1:14): scala => scala/
+       |[1:16..1:20): List => scala/package.List#
+       |[1:16..1:20): List => scala/package.List.
+       |[2:2..2:6): List => <List.>
+       |[3:2..3:6): List => scala/collection/immutable/Nil.
+       |[4:2..4:6): List => <List.>
+       |[4:7..4:10): Int => scala/Int#
+       |[5:2..5:6): List => scala/collection/immutable/Nil.
+       |[5:7..5:10): Int => scala/Int#
+       |[6:2..6:6): List => <List.>
+       |[6:7..6:12): apply => <List.apply().>
+       |[7:7..7:12): apply => scala/collection/immutable/Nil.
+       |[8:2..8:6): List => <List.>
+       |[8:7..8:12): apply => <List.apply().>
+       |[8:13..8:16): Int => scala/Int#
+       |[9:7..9:12): apply => scala/collection/immutable/Nil.
+       |[9:13..9:16): Int => scala/Int#
+       |[10:2..10:3): L => <List.>
+       |[11:2..11:3): L => scala/collection/immutable/Nil.
+       |""".stripMargin,
+  )
+
+  synthetics(
+    "empty lists as statements",
+    n96,
+    """|[2:2..2:6): List => *.apply[Int]
+       |  apply => <List.apply().>
+       |  Int => scala/Int#
+       |[4:2..4:6): List => *.apply
+       |  apply => <List.apply().>
+       |[6:2..6:12): List.apply => *[Int]
+       |  Int => scala/Int#
+       |[10:2..10:3): L => *.apply[Int]
+       |  apply => <List.apply().>
+       |  Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  interactiveOccurrences(
+    "empty lists as statements",
+    n96,
+    """|[0:7..0:10): n96 <= _empty_/n96.
+       |[1:9..1:14): scala => scala/
+       |[1:16..1:20): List => scala/package.List#
+       |[1:16..1:20): List => scala/package.List.
+       |[2:2..2:6): List => <List.>
+       |[3:2..3:6): List => <List.>
+       |[4:2..4:6): List => <List.>
+       |[4:7..4:10): Int => scala/Int#
+       |[5:2..5:6): List => <List.>
+       |[5:7..5:10): Int => scala/Int#
+       |[6:2..6:6): List => <List.>
+       |[6:7..6:12): apply => <List.apply().>
+       |[7:2..7:6): List => <List.>
+       |[7:7..7:12): apply => <List.apply().>
+       |[8:2..8:6): List => <List.>
+       |[8:7..8:12): apply => <List.apply().>
+       |[8:13..8:16): Int => scala/Int#
+       |[9:2..9:6): List => <List.>
+       |[9:7..9:12): apply => <List.apply().>
+       |[9:13..9:16): Int => scala/Int#
+       |[10:2..10:3): L => <List.>
+       |[11:2..11:3): L => <List.>
+       |""".stripMargin,
+  )
+
+  interactiveSynthetics(
+    "empty lists as statements",
+    n96,
+    """|[2:2..2:6): List => *.apply[Int]
+       |  apply => <List.apply().>
+       |  Int => scala/Int#
+       |[3:2..3:6): List => *.apply[Nothing]
+       |  apply => <List.apply().>
+       |  Nothing => scala/Nothing#
+       |[4:2..4:6): List => *.apply
+       |  apply => <List.apply().>
+       |[5:2..5:6): List => *.apply
+       |  apply => <List.apply().>
+       |[6:2..6:12): List.apply => *[Int]
+       |  Int => scala/Int#
+       |[7:2..7:12): List.apply => *[Nothing]
+       |  Nothing => scala/Nothing#
+       |[10:2..10:3): L => *.apply[Int]
+       |  apply => <List.apply().>
+       |  Int => scala/Int#
+       |[11:2..11:3): L => *.apply[Nothing]
+       |  apply => <List.apply().>
+       |  Nothing => scala/Nothing#
+       |""".stripMargin,
+  )
+
+  private val n118 =
+    """|object n118 {
+       |  val M = List
+       |  M(1)
+       |  M()
+       |  M[Int](1)
+       |  M[Int]()
+       |  M.apply(1)
+       |  M.apply()
+       |  M.apply[Int](1)
+       |  M.apply[Int]()
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "empty lists through a value as statements",
+    n118,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[0:7..0:11): n118 <= _empty_/n118.
+             |[1:6..1:7): M <= _empty_/n118.M.
+             |[1:10..1:14): List => <List.>
+             |[2:2..2:3): M => _empty_/n118.M.
+             |[3:2..3:3): M => scala/collection/immutable/Nil.
+             |[4:2..4:3): M => _empty_/n118.M.
+             |[4:4..4:7): Int => scala/Int#
+             |[5:2..5:3): M => scala/collection/immutable/Nil.
+             |[5:4..5:7): Int => scala/Int#
+             |[6:2..6:3): M => _empty_/n118.M.
+             |[6:4..6:9): apply => <List.apply().>
+             |[7:4..7:9): apply => scala/collection/immutable/Nil.
+             |[8:2..8:3): M => _empty_/n118.M.
+             |[8:4..8:9): apply => <List.apply().>
+             |[8:10..8:13): Int => scala/Int#
+             |[9:4..9:9): apply => scala/collection/immutable/Nil.
+             |[9:10..9:13): Int => scala/Int#
+             |""".stripMargin
+      },
+      """|[0:7..0:11): n118 <= _empty_/n118.
+         |[1:6..1:7): M <= _empty_/n118.M.
+         |[1:10..1:14): List => <List.>
+         |[2:2..2:3): M => _empty_/n118.M.
+         |[3:2..3:3): M => _empty_/n118.M.
+         |[4:2..4:3): M => _empty_/n118.M.
+         |[4:4..4:7): Int => scala/Int#
+         |[5:2..5:3): M => _empty_/n118.M.
+         |[5:4..5:7): Int => scala/Int#
+         |[6:2..6:3): M => _empty_/n118.M.
+         |[6:4..6:9): apply => <List.apply().>
+         |[7:2..7:3): M => _empty_/n118.M.
+         |[7:4..7:9): apply => <List.apply().>
+         |[8:2..8:3): M => _empty_/n118.M.
+         |[8:4..8:9): apply => <List.apply().>
+         |[8:10..8:13): Int => scala/Int#
+         |[9:2..9:3): M => _empty_/n118.M.
+         |[9:4..9:9): apply => <List.apply().>
+         |[9:10..9:13): Int => scala/Int#
+         |""".stripMargin,
+    ),
+  )
+
+  synthetics(
+    "empty lists through a value as statements",
+    n118,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[2:2..2:3): M => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[4:2..4:3): M => *.apply
+             |  apply => <List.apply().>
+             |[6:2..6:9): M.apply => *[Int]
+             |  Int => scala/Int#
+             |""".stripMargin
+      },
+      """|[2:2..2:3): M => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[3:2..3:3): M => *.apply[Nothing]
+         |  apply => <List.apply().>
+         |  Nothing => scala/Nothing#
+         |[4:2..4:3): M => *.apply
+         |  apply => <List.apply().>
+         |[5:2..5:3): M => *.apply
+         |  apply => <List.apply().>
+         |[6:2..6:9): M.apply => *[Int]
+         |  Int => scala/Int#
+         |[7:2..7:9): M.apply => *[Nothing]
+         |  Nothing => scala/Nothing#
+         |""".stripMargin,
+    ),
+  )
+
+  interactiveOccurrences(
+    "empty lists through a value as statements",
+    n118,
+    """|[0:7..0:11): n118 <= _empty_/n118.
+       |[1:6..1:7): M <= _empty_/n118.M.
+       |[1:10..1:14): List => <List.>
+       |[2:2..2:3): M => _empty_/n118.M.
+       |[3:2..3:3): M => _empty_/n118.M.
+       |[4:2..4:3): M => _empty_/n118.M.
+       |[4:4..4:7): Int => scala/Int#
+       |[5:2..5:3): M => _empty_/n118.M.
+       |[5:4..5:7): Int => scala/Int#
+       |[6:2..6:3): M => _empty_/n118.M.
+       |[6:4..6:9): apply => <List.apply().>
+       |[7:2..7:3): M => _empty_/n118.M.
+       |[7:4..7:9): apply => <List.apply().>
+       |[8:2..8:3): M => _empty_/n118.M.
+       |[8:4..8:9): apply => <List.apply().>
+       |[8:10..8:13): Int => scala/Int#
+       |[9:2..9:3): M => _empty_/n118.M.
+       |[9:4..9:9): apply => <List.apply().>
+       |[9:10..9:13): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  interactiveSynthetics(
+    "empty lists through a value as statements",
+    n118,
+    """|[2:2..2:3): M => *.apply[Int]
+       |  apply => <List.apply().>
+       |  Int => scala/Int#
+       |[3:2..3:3): M => *.apply[Nothing]
+       |  apply => <List.apply().>
+       |  Nothing => scala/Nothing#
+       |[4:2..4:3): M => *.apply
+       |  apply => <List.apply().>
+       |[5:2..5:3): M => *.apply
+       |  apply => <List.apply().>
+       |[6:2..6:9): M.apply => *[Int]
+       |  Int => scala/Int#
+       |[7:2..7:9): M.apply => *[Nothing]
+       |  Nothing => scala/Nothing#
+       |""".stripMargin,
+  )
+
+  private val n117 =
+    """|object n117 {
+       |  import example._
+       |  class K(xs: Any*) { def this() = this(List(1), List(), List.apply(1), List.apply()) }
+       |  class N extends K(List(1), List(), List.apply(1), List.apply())
+       |  class ann(xs: Any*) extends scala.annotation.StaticAnnotation
+       |  case class C(a: Any = List(1), b: Any = List(), c: Any = List.apply(1), d: Any = List.apply(), n: Int = 0)
+       |  type P = PartialFunction[Int, Any]
+       |  def call(xs: Any*) = xs
+       |  def m(a: Any = List(1), b: Any = List(), c: Any = List.apply(1), d: Any = List.apply()) = a
+       |  val a = List(1); val b = List(); val c = List.apply(1); val d = List.apply()
+       |  call(List(1), List(), List.apply(1), List.apply())
+       |  call(List(List(1)), List(List()), List(List.apply(1)), List(List.apply()))
+       |  call(List(1): _*); call(List(): _*); call(List.apply(1): _*); call(List.apply(): _*)
+       |  (List(1), List(), List.apply(1), List.apply())
+       |  List(1) ::: List.apply(1); List() ::: List.apply()
+       |  new K(List(1), List(), List.apply(1), List.apply())
+       |  val f: P = x => x match { case 0 => List(1); case 1 => List(); case 2 => List.apply(1); case _ => List.apply() }
+       |  val g: P = { case 0 => List(1); case 1 => List(); case 2 => List.apply(1); case _ => List.apply() }
+       |  @ann(List(1), List(), List.apply(1), List.apply()) def h = 1
+       |  ConstantExpansion.one(List(1)); ConstantExpansion.one(List())
+       |  ConstantExpansion.one(List.apply(1)); ConstantExpansion.one(List.apply())
+       |  ArgumentExpansion.same(List(1)); ArgumentExpansion.same(List())
+       |  ArgumentExpansion.same(List.apply(1)); ArgumentExpansion.same(List.apply())
+       |  for (x <- List(1)) yield x; for (x <- List()) yield x
+       |  for (x <- List.apply(1)) yield x; for (x <- List.apply()) yield x
+       |  C().copy(a = List(1), b = List(), c = List.apply(1), d = List.apply())
+       |  C(List(1), List(), List.apply(1), List.apply())
+       |  (List(1): Seq[Int], List(): Seq[Int], List.apply(1): Seq[Int], List.apply(): Seq[Int])
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "empty lists in each position",
+    n117,
+    """|[0:7..0:11): n117 <= _empty_/n117.
+       |[1:9..1:16): example => example/
+       |[2:8..2:9): K <= _empty_/n117.K#
+       |[2:9..2:9):  <= _empty_/n117.K#`<init>`().
+       |[2:10..2:12): xs <= _empty_/n117.K#`<init>`().(xs)
+       |[2:10..2:12): xs <= _empty_/n117.K#xs.
+       |[2:14..2:17): Any => scala/Any#
+       |[2:26..2:30): this <= _empty_/n117.K#`<init>`(+1).
+       |[2:39..2:39):  => _empty_/n117.K#`<init>`().
+       |[2:40..2:44): List => <List.>
+       |[2:49..2:53): List => scala/collection/immutable/Nil.
+       |[2:57..2:61): List => <List.>
+       |[2:62..2:67): apply => <List.apply().>
+       |[2:77..2:82): apply => scala/collection/immutable/Nil.
+       |[3:8..3:9): N <= _empty_/n117.N#
+       |[3:10..3:10):  <= _empty_/n117.N#`<init>`().
+       |[3:18..3:19): K => _empty_/n117.K#
+       |[3:19..3:19):  => _empty_/n117.K#`<init>`().
+       |[3:20..3:24): List => <List.>
+       |[3:29..3:33): List => scala/collection/immutable/Nil.
+       |[3:37..3:41): List => <List.>
+       |[3:42..3:47): apply => <List.apply().>
+       |[3:57..3:62): apply => scala/collection/immutable/Nil.
+       |[4:8..4:11): ann <= _empty_/n117.ann#
+       |[4:11..4:11):  <= _empty_/n117.ann#`<init>`().
+       |[4:12..4:14): xs <= _empty_/n117.ann#`<init>`().(xs)
+       |[4:12..4:14): xs <= _empty_/n117.ann#xs.
+       |[4:16..4:19): Any => scala/Any#
+       |[4:30..4:35): scala => scala/
+       |[4:36..4:46): annotation => scala/annotation/
+       |[4:47..4:63): StaticAnnotation => scala/annotation/StaticAnnotation#
+       |[4:63..4:63):  => scala/annotation/Annotation#`<init>`().
+       |[5:13..5:14): C <= _empty_/n117.C#
+       |[5:14..5:14):  <= _empty_/n117.C#`<init>`().
+       |[5:15..5:16): a <= _empty_/n117.C#`<init>`().(a)
+       |[5:15..5:16): a <= _empty_/n117.C#a.
+       |[5:18..5:21): Any => scala/Any#
+       |[5:24..5:28): List => <List.>
+       |[5:33..5:34): b <= _empty_/n117.C#`<init>`().(b)
+       |[5:33..5:34): b <= _empty_/n117.C#b.
+       |[5:36..5:39): Any => scala/Any#
+       |[5:42..5:46): List => scala/collection/immutable/Nil.
+       |[5:50..5:51): c <= _empty_/n117.C#`<init>`().(c)
+       |[5:50..5:51): c <= _empty_/n117.C#c.
+       |[5:53..5:56): Any => scala/Any#
+       |[5:59..5:63): List => <List.>
+       |[5:64..5:69): apply => <List.apply().>
+       |[5:74..5:75): d <= _empty_/n117.C#`<init>`().(d)
+       |[5:74..5:75): d <= _empty_/n117.C#d.
+       |[5:77..5:80): Any => scala/Any#
+       |[5:88..5:93): apply => scala/collection/immutable/Nil.
+       |[5:97..5:98): n <= _empty_/n117.C#`<init>`().(n)
+       |[5:97..5:98): n <= _empty_/n117.C#n.
+       |[5:100..5:103): Int => scala/Int#
+       |[6:7..6:8): P <= _empty_/n117.P#
+       |[6:11..6:26): PartialFunction => scala/PartialFunction#
+       |[6:27..6:30): Int => scala/Int#
+       |[6:32..6:35): Any => scala/Any#
+       |[7:6..7:10): call <= _empty_/n117.call().
+       |[7:11..7:13): xs <= _empty_/n117.call().(xs)
+       |[7:15..7:18): Any => scala/Any#
+       |[7:23..7:25): xs => _empty_/n117.call().(xs)
+       |[8:6..8:7): m <= _empty_/n117.m().
+       |[8:8..8:9): a <= _empty_/n117.m().(a)
+       |[8:11..8:14): Any => scala/Any#
+       |[8:17..8:21): List => <List.>
+       |[8:26..8:27): b <= _empty_/n117.m().(b)
+       |[8:29..8:32): Any => scala/Any#
+       |[8:35..8:39): List => scala/collection/immutable/Nil.
+       |[8:43..8:44): c <= _empty_/n117.m().(c)
+       |[8:46..8:49): Any => scala/Any#
+       |[8:52..8:56): List => <List.>
+       |[8:57..8:62): apply => <List.apply().>
+       |[8:67..8:68): d <= _empty_/n117.m().(d)
+       |[8:70..8:73): Any => scala/Any#
+       |[8:81..8:86): apply => scala/collection/immutable/Nil.
+       |[8:92..8:93): a => _empty_/n117.m().(a)
+       |[9:6..9:7): a <= _empty_/n117.a.
+       |[9:10..9:14): List => <List.>
+       |[9:23..9:24): b <= _empty_/n117.b.
+       |[9:27..9:31): List => scala/collection/immutable/Nil.
+       |[9:39..9:40): c <= _empty_/n117.c.
+       |[9:43..9:47): List => <List.>
+       |[9:48..9:53): apply => <List.apply().>
+       |[9:62..9:63): d <= _empty_/n117.d.
+       |[9:71..9:76): apply => scala/collection/immutable/Nil.
+       |[10:2..10:6): call => _empty_/n117.call().
+       |[10:7..10:11): List => <List.>
+       |[10:16..10:20): List => scala/collection/immutable/Nil.
+       |[10:24..10:28): List => <List.>
+       |[10:29..10:34): apply => <List.apply().>
+       |[10:44..10:49): apply => scala/collection/immutable/Nil.
+       |[11:2..11:6): call => _empty_/n117.call().
+       |[11:7..11:11): List => <List.>
+       |[11:12..11:16): List => <List.>
+       |[11:22..11:26): List => <List.>
+       |[11:27..11:31): List => scala/collection/immutable/Nil.
+       |[11:36..11:40): List => <List.>
+       |[11:41..11:45): List => <List.>
+       |[11:46..11:51): apply => <List.apply().>
+       |[11:57..11:61): List => <List.>
+       |[11:67..11:72): apply => scala/collection/immutable/Nil.
+       |[12:2..12:6): call => _empty_/n117.call().
+       |[12:7..12:11): List => <List.>
+       |[12:21..12:25): call => _empty_/n117.call().
+       |[12:26..12:30): List => scala/collection/immutable/Nil.
+       |[12:39..12:43): call => _empty_/n117.call().
+       |[12:44..12:48): List => <List.>
+       |[12:49..12:54): apply => <List.apply().>
+       |[12:64..12:68): call => _empty_/n117.call().
+       |[12:74..12:79): apply => scala/collection/immutable/Nil.
+       |[13:3..13:7): List => <List.>
+       |[13:12..13:16): List => scala/collection/immutable/Nil.
+       |[13:20..13:24): List => <List.>
+       |[13:25..13:30): apply => <List.apply().>
+       |[13:40..13:45): apply => scala/collection/immutable/Nil.
+       |[14:2..14:6): List => <List.>
+       |[14:10..14:13): ::: => scala/collection/immutable/List#`:::`().
+       |[14:14..14:18): List => <List.>
+       |[14:19..14:24): apply => <List.apply().>
+       |[14:29..14:33): List => scala/collection/immutable/Nil.
+       |[14:36..14:39): ::: => scala/collection/immutable/List#`:::`().
+       |[14:45..14:50): apply => scala/collection/immutable/Nil.
+       |[15:6..15:7): K => _empty_/n117.K#
+       |[15:7..15:7):  => _empty_/n117.K#`<init>`().
+       |[15:8..15:12): List => <List.>
+       |[15:17..15:21): List => scala/collection/immutable/Nil.
+       |[15:25..15:29): List => <List.>
+       |[15:30..15:35): apply => <List.apply().>
+       |[15:45..15:50): apply => scala/collection/immutable/Nil.
+       |[16:6..16:7): f <= _empty_/n117.f.
+       |[16:9..16:10): P => _empty_/n117.P#
+       |[16:13..16:14): x <= local7
+       |[16:13..16:114): x => x match { case 0 => List(1); case 1 => List(); case 2 => List.apply(1); case _ => List.apply() } <= local0
+       |[16:18..16:19): x => local7
+       |[16:38..16:42): List => <List.>
+       |[16:57..16:61): List => scala/collection/immutable/Nil.
+       |[16:75..16:79): List => <List.>
+       |[16:80..16:85): apply => <List.apply().>
+       |[16:105..16:110): apply => scala/collection/immutable/Nil.
+       |[17:6..17:7): g <= _empty_/n117.g.
+       |[17:9..17:10): P => _empty_/n117.P#
+       |[17:13..17:13):  <= local8
+       |[17:25..17:29): List => <List.>
+       |[17:44..17:48): List => scala/collection/immutable/Nil.
+       |[17:62..17:66): List => <List.>
+       |[17:67..17:72): apply => <List.apply().>
+       |[17:92..17:97): apply => scala/collection/immutable/Nil.
+       |[18:3..18:6): ann => _empty_/n117.ann#
+       |[18:6..18:6):  => _empty_/n117.ann#`<init>`().
+       |[18:7..18:11): List => <List.>
+       |[18:16..18:20): List => scala/collection/immutable/Nil.
+       |[18:24..18:28): List => <List.>
+       |[18:29..18:34): apply => <List.apply().>
+       |[18:44..18:49): apply => scala/collection/immutable/Nil.
+       |[18:57..18:58): h <= _empty_/n117.h().
+       |[19:2..19:19): ConstantExpansion => example/ConstantExpansion.
+       |[19:20..19:23): one => example/ConstantExpansion.one().
+       |[19:24..19:28): List => <List.>
+       |[19:34..19:51): ConstantExpansion => example/ConstantExpansion.
+       |[19:52..19:55): one => example/ConstantExpansion.one().
+       |[19:56..19:60): List => scala/collection/immutable/Nil.
+       |[20:2..20:19): ConstantExpansion => example/ConstantExpansion.
+       |[20:20..20:23): one => example/ConstantExpansion.one().
+       |[20:24..20:28): List => <List.>
+       |[20:29..20:34): apply => <List.apply().>
+       |[20:40..20:57): ConstantExpansion => example/ConstantExpansion.
+       |[20:58..20:61): one => example/ConstantExpansion.one().
+       |[20:67..20:72): apply => scala/collection/immutable/Nil.
+       |[21:2..21:19): ArgumentExpansion => example/ArgumentExpansion.
+       |[21:20..21:24): same => example/ArgumentExpansion.same().
+       |[21:25..21:29): List => <List.>
+       |[21:35..21:52): ArgumentExpansion => example/ArgumentExpansion.
+       |[21:53..21:57): same => example/ArgumentExpansion.same().
+       |[21:58..21:62): List => scala/collection/immutable/Nil.
+       |[22:2..22:19): ArgumentExpansion => example/ArgumentExpansion.
+       |[22:20..22:24): same => example/ArgumentExpansion.same().
+       |[22:25..22:29): List => <List.>
+       |[22:30..22:35): apply => <List.apply().>
+       |[22:41..22:58): ArgumentExpansion => example/ArgumentExpansion.
+       |[22:59..22:63): same => example/ArgumentExpansion.same().
+       |[22:69..22:74): apply => scala/collection/immutable/Nil.
+       |[23:7..23:8): x <= local16
+       |[23:12..23:16): List => <List.>
+       |[23:27..23:28): x => local16
+       |[23:35..23:36): x <= local17
+       |[23:40..23:44): List => scala/collection/immutable/Nil.
+       |[23:54..23:55): x => local17
+       |[24:7..24:8): x <= local18
+       |[24:12..24:16): List => <List.>
+       |[24:17..24:22): apply => <List.apply().>
+       |[24:33..24:34): x => local18
+       |[24:41..24:42): x <= local19
+       |[24:51..24:56): apply => scala/collection/immutable/Nil.
+       |[24:66..24:67): x => local19
+       |[25:2..25:3): C => _empty_/n117.C.
+       |[25:6..25:10): copy => _empty_/n117.C#copy().
+       |[25:11..25:12): a => _empty_/n117.C#copy().(a)
+       |[25:15..25:19): List => <List.>
+       |[25:24..25:25): b => _empty_/n117.C#copy().(b)
+       |[25:28..25:32): List => scala/collection/immutable/Nil.
+       |[25:36..25:37): c => _empty_/n117.C#copy().(c)
+       |[25:40..25:44): List => <List.>
+       |[25:45..25:50): apply => <List.apply().>
+       |[25:55..25:56): d => _empty_/n117.C#copy().(d)
+       |[25:64..25:69): apply => scala/collection/immutable/Nil.
+       |[26:2..26:3): C => _empty_/n117.C.
+       |[26:4..26:8): List => <List.>
+       |[26:13..26:17): List => scala/collection/immutable/Nil.
+       |[26:21..26:25): List => <List.>
+       |[26:26..26:31): apply => <List.apply().>
+       |[26:41..26:46): apply => scala/collection/immutable/Nil.
+       |[27:3..27:7): List => <List.>
+       |[27:12..27:15): Seq => scala/package.Seq#
+       |[27:16..27:19): Int => scala/Int#
+       |[27:22..27:26): List => scala/collection/immutable/Nil.
+       |[27:30..27:33): Seq => scala/package.Seq#
+       |[27:34..27:37): Int => scala/Int#
+       |[27:40..27:44): List => <List.>
+       |[27:45..27:50): apply => <List.apply().>
+       |[27:55..27:58): Seq => scala/package.Seq#
+       |[27:59..27:62): Int => scala/Int#
+       |[27:70..27:75): apply => scala/collection/immutable/Nil.
+       |[27:79..27:82): Seq => scala/package.Seq#
+       |[27:83..27:86): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  synthetics(
+    "empty lists in each position",
+    n117,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[2:40..2:44): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[2:57..2:67): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[3:20..3:24): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[3:37..3:47): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[5:24..5:28): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[5:59..5:69): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[8:17..8:21): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[8:52..8:62): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[9:10..9:14): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[9:43..9:53): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[10:7..10:11): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[10:24..10:34): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[11:7..11:11): List => *.apply[List[Int]]
+             |  apply => <List.apply().>
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |[11:12..11:16): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[11:22..11:26): List => *.apply[List[Nothing]]
+             |  apply => <List.apply().>
+             |  List => scala/collection/immutable/List#
+             |  Nothing => scala/Nothing#
+             |[11:36..11:40): List => *.apply[List[Int]]
+             |  apply => <List.apply().>
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |[11:41..11:51): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[11:57..11:61): List => *.apply[List[Nothing]]
+             |  apply => <List.apply().>
+             |  List => scala/collection/immutable/List#
+             |  Nothing => scala/Nothing#
+             |[12:7..12:11): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[12:44..12:54): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[13:3..13:7): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[13:20..13:30): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[14:2..14:6): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[14:10..14:27): ::: List.apply(1) => *[Int]
+             |  Int => scala/Int#
+             |[14:14..14:24): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[14:36..14:52): ::: List.apply() => *[Nothing]
+             |  Nothing => scala/Nothing#
+             |[15:8..15:12): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[15:25..15:35): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[16:38..16:42): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[16:75..16:85): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[17:13..17:101): { case 0 => List(1); case 1 => List(); case 2 => List.apply(1); case _ => List.apply() } => *.apply
+             |  apply => scala/Function1#apply().
+             |[17:25..17:29): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[17:62..17:72): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[18:7..18:11): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[18:24..18:34): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[19:2..19:23): ConstantExpansion.one => *[List[Int]]
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |[19:24..19:28): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[19:34..19:55): ConstantExpansion.one => *[List[Nothing]]
+             |  List => scala/collection/immutable/List#
+             |  Nothing => scala/Nothing#
+             |[20:2..20:23): ConstantExpansion.one => *[List[Int]]
+             |  List => scala/collection/immutable/List#
+             |  Int => scala/Int#
+             |[20:24..20:34): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[20:40..20:61): ConstantExpansion.one => *[List[Nothing]]
+             |  List => scala/collection/immutable/List#
+             |  Nothing => scala/Nothing#
+             |[21:25..21:29): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[22:25..22:35): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[23:2..23:28): for (x <- List(1)) yield x => orig(List(1)).map[Int, List[Int]]({(x) => orig(x)})(List.canBuildFrom[Int])
+             |  map => scala/collection/immutable/List#map().
+             |  Int => scala/Int#
+             |  List => scala/collection/immutable/List#
+             |  x => local16
+             |  List => <List.>
+             |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+             |[23:12..23:16): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[23:30..23:55): for (x <- List()) yield x => orig(List()).map[Nothing, List[Nothing]]({(x) => orig(x)})(List.canBuildFrom[Nothing])
+             |  map => scala/collection/immutable/List#map().
+             |  Nothing => scala/Nothing#
+             |  List => scala/collection/immutable/List#
+             |  x => local17
+             |  List => <List.>
+             |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+             |[24:2..24:34): for (x <- List.apply(1)) yield x => orig(List.apply(1)).map[Int, List[Int]]({(x) => orig(x)})(List.canBuildFrom[Int])
+             |  map => scala/collection/immutable/List#map().
+             |  Int => scala/Int#
+             |  List => scala/collection/immutable/List#
+             |  x => local18
+             |  List => <List.>
+             |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+             |[24:12..24:22): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[24:36..24:67): for (x <- List.apply()) yield x => orig(List.apply()).map[Nothing, List[Nothing]]({(x) => orig(x)})(List.canBuildFrom[Nothing])
+             |  map => scala/collection/immutable/List#map().
+             |  Nothing => scala/Nothing#
+             |  List => scala/collection/immutable/List#
+             |  x => local19
+             |  List => <List.>
+             |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+             |[25:2..25:3): C => *.apply
+             |  apply => _empty_/n117.C.apply().
+             |[25:15..25:19): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[25:40..25:50): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[26:2..26:3): C => *.apply
+             |  apply => _empty_/n117.C.apply().
+             |[26:4..26:8): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[26:21..26:31): List.apply => *[Int]
+             |  Int => scala/Int#
+             |[27:3..27:7): List => *.apply[Int]
+             |  apply => <List.apply().>
+             |  Int => scala/Int#
+             |[27:40..27:50): List.apply => *[Int]
+             |  Int => scala/Int#
+             |""".stripMargin
+      },
+      """|[2:40..2:44): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[2:57..2:67): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[3:20..3:24): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[3:37..3:47): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[5:24..5:28): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[5:59..5:69): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[8:17..8:21): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[8:52..8:62): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[9:10..9:14): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[9:43..9:53): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[10:7..10:11): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[10:24..10:34): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[11:7..11:11): List => *.apply[List[Int]]
+         |  apply => <List.apply().>
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |[11:12..11:16): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[11:22..11:26): List => *.apply[List[Nothing]]
+         |  apply => <List.apply().>
+         |  List => scala/collection/immutable/List#
+         |  Nothing => scala/Nothing#
+         |[11:36..11:40): List => *.apply[List[Int]]
+         |  apply => <List.apply().>
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |[11:41..11:51): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[11:57..11:61): List => *.apply[List[Nothing]]
+         |  apply => <List.apply().>
+         |  List => scala/collection/immutable/List#
+         |  Nothing => scala/Nothing#
+         |[12:7..12:11): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[12:44..12:54): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[13:3..13:7): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[13:20..13:30): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[14:2..14:6): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[14:10..14:27): ::: List.apply(1) => *[Int]
+         |  Int => scala/Int#
+         |[14:14..14:24): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[14:36..14:52): ::: List.apply() => *[Nothing]
+         |  Nothing => scala/Nothing#
+         |[15:8..15:12): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[15:25..15:35): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[16:38..16:42): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[16:75..16:85): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[17:13..17:101): { case 0 => List(1); case 1 => List(); case 2 => List.apply(1); case _ => List.apply() } => *.apply
+         |  apply => scala/Function1#apply().
+         |[17:25..17:29): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[17:62..17:72): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[18:7..18:11): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[18:24..18:34): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[19:2..19:23): ConstantExpansion.one => *[List[Int]]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |[19:24..19:28): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[19:34..19:55): ConstantExpansion.one => *[List[Nothing]]
+         |  List => scala/collection/immutable/List#
+         |  Nothing => scala/Nothing#
+         |[20:2..20:23): ConstantExpansion.one => *[List[Int]]
+         |  List => scala/collection/immutable/List#
+         |  Int => scala/Int#
+         |[20:24..20:34): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[20:40..20:61): ConstantExpansion.one => *[List[Nothing]]
+         |  List => scala/collection/immutable/List#
+         |  Nothing => scala/Nothing#
+         |[21:25..21:29): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[22:25..22:35): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[23:2..23:28): for (x <- List(1)) yield x => orig(List(1)).map[Int]({(x) => orig(x)})
+         |  map => scala/collection/immutable/List#map().
+         |  Int => scala/Int#
+         |  x => local16
+         |[23:12..23:16): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[23:30..23:55): for (x <- List()) yield x => orig(List()).map[Nothing]({(x) => orig(x)})
+         |  map => scala/collection/immutable/List#map().
+         |  Nothing => scala/Nothing#
+         |  x => local17
+         |[24:2..24:34): for (x <- List.apply(1)) yield x => orig(List.apply(1)).map[Int]({(x) => orig(x)})
+         |  map => scala/collection/immutable/List#map().
+         |  Int => scala/Int#
+         |  x => local18
+         |[24:12..24:22): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[24:36..24:67): for (x <- List.apply()) yield x => orig(List.apply()).map[Nothing]({(x) => orig(x)})
+         |  map => scala/collection/immutable/List#map().
+         |  Nothing => scala/Nothing#
+         |  x => local19
+         |[25:2..25:3): C => *.apply
+         |  apply => _empty_/n117.C.apply().
+         |[25:15..25:19): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[25:40..25:50): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[26:2..26:3): C => *.apply
+         |  apply => _empty_/n117.C.apply().
+         |[26:4..26:8): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[26:21..26:31): List.apply => *[Int]
+         |  Int => scala/Int#
+         |[27:3..27:7): List => *.apply[Int]
+         |  apply => <List.apply().>
+         |  Int => scala/Int#
+         |[27:40..27:50): List.apply => *[Int]
+         |  Int => scala/Int#
+         |""".stripMargin,
+    ),
+  )
+
+  private val n111 =
+    """|object n111 {
+       |  val a = List.empty
+       |  val b = List.empty[Int]
+       |  def c(xs: List[Int]) = xs match { case List() => 0; case _ => 1 }
+       |  object o {
+       |    object List { def apply() = 0; def apply(i: Int) = i }
+       |    val a = List()
+       |    val b = List.apply()
+       |    val c = List(1)
+       |  }
+       |}
+       |""".stripMargin
+
+  occurrences(
+    "empty lists through `List.empty`, a pattern and a local object `List`",
+    n111,
+    """|[0:7..0:11): n111 <= _empty_/n111.
+       |[1:6..1:7): a <= _empty_/n111.a.
+       |[1:10..1:14): List => <List.>
+       |[1:15..1:20): empty => scala/collection/immutable/List.empty().
+       |[2:6..2:7): b <= _empty_/n111.b.
+       |[2:10..2:14): List => <List.>
+       |[2:15..2:20): empty => scala/collection/immutable/List.empty().
+       |[2:21..2:24): Int => scala/Int#
+       |[3:6..3:7): c <= _empty_/n111.c().
+       |[3:8..3:10): xs <= _empty_/n111.c().(xs)
+       |[3:12..3:16): List => scala/package.List#
+       |[3:17..3:20): Int => scala/Int#
+       |[3:25..3:27): xs => _empty_/n111.c().(xs)
+       |[3:41..3:45): List => <List.>
+       |[4:9..4:10): o <= _empty_/n111.o.
+       |[5:11..5:15): List <= _empty_/n111.o.List.
+       |[5:22..5:27): apply <= _empty_/n111.o.List.apply().
+       |[5:39..5:44): apply <= _empty_/n111.o.List.apply(+1).
+       |[5:45..5:46): i <= _empty_/n111.o.List.apply(+1).(i)
+       |[5:48..5:51): Int => scala/Int#
+       |[5:55..5:56): i => _empty_/n111.o.List.apply(+1).(i)
+       |[6:8..6:9): a <= _empty_/n111.o.a.
+       |[6:12..6:16): List => _empty_/n111.o.List.
+       |[7:8..7:9): b <= _empty_/n111.o.b.
+       |[7:12..7:16): List => _empty_/n111.o.List.
+       |[7:17..7:22): apply => _empty_/n111.o.List.apply().
+       |[8:8..8:9): c <= _empty_/n111.o.c.
+       |[8:12..8:16): List => _empty_/n111.o.List.
+       |""".stripMargin,
+  )
+
+  synthetics(
+    "empty lists through `List.empty`, a pattern and a local object `List`",
+    n111,
+    ScalaVersion.getExpected(
+      List {
+        ScalaVersion.Scala212 ->
+          """|[1:10..1:20): List.empty => *[Nothing]
+             |  Nothing => scala/Nothing#
+             |[3:41..3:45): List => *.unapplySeq[Int]
+             |  unapplySeq => scala/collection/generic/SeqFactory#unapplySeq().
+             |  Int => scala/Int#
+             |[6:12..6:16): List => *.apply
+             |  apply => _empty_/n111.o.List.apply().
+             |[8:12..8:16): List => *.apply
+             |  apply => _empty_/n111.o.List.apply(+1).
+             |""".stripMargin
+      },
+      """|[1:10..1:20): List.empty => *[Nothing]
+         |  Nothing => scala/Nothing#
+         |[3:41..3:45): List => *.unapplySeq[Int]
+         |  unapplySeq => scala/collection/SeqFactory#unapplySeq().
+         |  Int => scala/Int#
+         |[6:12..6:16): List => *.apply
+         |  apply => _empty_/n111.o.List.apply().
+         |[8:12..8:16): List => *.apply
+         |  apply => _empty_/n111.o.List.apply(+1).
+         |""".stripMargin,
+    ),
+  )
+
   occurrences(
     "constants in arguments of annotations",
     """|object n25 {

@@ -2,6 +2,7 @@ package scala.meta.tests
 package semanticdb
 
 import org.scalameta.internal.ScalaCompat.EOL
+import scala.meta.interactive.InteractiveSemanticdb
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io._
 
@@ -163,6 +164,27 @@ abstract class SemanticdbSuite extends FunSuite {
     val obtained = computeDatabaseSectionFromSnippet(code, section)
     assertNoDiff(obtained, ScalaVersion.getExpected(compat, expected))
   }
+
+  def checkInteractiveSection(name: TestOptions, code: String, expected: String, section: String)(
+      implicit loc: munit.Location,
+  ): Unit = test(name) {
+    val options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
+    val pc = InteractiveSemanticdb.newCompiler()
+    val document =
+      try InteractiveSemanticdb.toTextDocument(pc, code, options)
+      finally pc.askShutdown()
+    val errors = document.diagnostics.filter(_.severity.isError).map(_.message)
+    if (errors.nonEmpty) fail(errors.mkString(EOL))
+    val payload = s.Print.document(scala.meta.metap.Format.Detailed, document)
+    assertNoDiff(computeSectionFromPayload(payload, section), ScalaVersion.getExpected(Nil, expected))
+  }
+
+  def interactiveOccurrences(name: String, code: String, expected: String)(implicit
+      loc: munit.Location,
+  ): Unit = checkInteractiveSection(s"$name: interactive occurrences", code, expected, "Occurrences")
+  def interactiveSynthetics(name: String, code: String, expected: String)(implicit
+      loc: munit.Location,
+  ): Unit = checkInteractiveSection(s"$name: interactive synthetics", code, expected, "Synthetics")
 
   def occurrences(code: String, expected: String)(implicit loc: munit.Location): Unit =
     checkSection(code, expected, "Occurrences")
