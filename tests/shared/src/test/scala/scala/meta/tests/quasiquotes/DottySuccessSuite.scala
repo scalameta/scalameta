@@ -572,6 +572,89 @@ $unquoted */ def g = 1""",
     )(blk(f, end, g))
   }
 
+  test("comments: positions after an unquote and a line break in a comment on its own line") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val tree =
+      q"""def f =
+  a
+  /* $unquoted
+  */ b + c"""
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Defn.Def [java.util.NoSuchElementException: token 22 out of 21]
+         |1 Term.Name [f]
+         |2 Term.Block [java.util.NoSuchElementException: token 21 out of 21]
+         |3 Term.Name [a]
+         |4 Term.ApplyInfix [java.util.NoSuchElementException: token 21 out of 21]
+         |5 Term.Name [+]
+         |6 Term.Name [c]
+         |7 Type.ArgClause [java.util.NoSuchElementException: token 21 out of 21]
+         |8 Term.ArgClause [java.util.NoSuchElementException: token 21 out of 21]
+         |9 Term.Name [java.util.NoSuchElementException: token 21 out of 21]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions after an unquote in a one-line comment on its own line") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val tree =
+      q"""def f =
+  a
+  // $unquoted here
+  b + c"""
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Defn.Def [java.util.NoSuchElementException: token 24 out of 23]
+         |1 Term.Name [f]
+         |2 Term.Block [java.util.NoSuchElementException: token 23 out of 23]
+         |3 Term.Name [a]
+         |4 Term.ApplyInfix [java.util.NoSuchElementException: token 23 out of 23]
+         |5 Term.Name [+]
+         |6 Term.Name [c]
+         |7 Type.ArgClause [java.util.NoSuchElementException: token 23 out of 23]
+         |8 Term.ArgClause [java.util.NoSuchElementException: token 23 out of 23]
+         |9 Term.Name [java.util.NoSuchElementException: token 23 out of 23]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions of a comment with an unquote and a line break on its own line") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val tree =
+      q"""def f =
+  a
+  /* $unquoted
+  */ b + c"""
+    val b = tree.collect { case t @ Term.Name("b") => t }.head
+    assertNoDiff(
+      positionsOrErrors(b.begComment.get),
+      """|0 Tree.Comments [/* $unquoted\n  */ b]
+         |1 Tree.Comment [/* $unquoted\n  */ b]
+         |2 Lit.String [/* $unquoted\n  */]
+         |3 Lit.String ["x"]
+         |4 Lit.String [b]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: syntax of a type wildcard after a comment with an unquote") {
+    @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
+    val dialect: Dialect = null
+    import dialects.Scala3
+    val tree = q"""/* $unquoted */ type T = F[_]"""
+    assertNoDiff(
+      tree.syntax,
+      """|type T = F[?]
+         |""".stripMargin,
+    )
+  }
+
   test("comments: an unquote whose value holds a newline, in a comment between a function and its argument") {
     @nowarn("msg=never used|unused") // hides the implicit dialect of the suite
     val dialect: Dialect = null

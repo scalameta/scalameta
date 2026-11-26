@@ -2496,6 +2496,449 @@ final def f = 1"""
     assertTree(tree)(blk(tname("a"), tname("b")))
   }
 
+  test("comments: positions after an unquote in a block comment") {
+    val content = q""""real content""""
+    val tree =
+      q"""{
+  a
+  /* $content */ b + c
+}"""
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.Block [java.util.NoSuchElementException: token 20 out of 19]
+         |1 Term.Name [a]
+         |2 Term.ApplyInfix [+ c\n}]
+         |3 Term.Name [+]
+         |4 Term.Name [c]
+         |5 Type.ArgClause []
+         |6 Term.ArgClause [}]
+         |7 Term.Name [}]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions after two unquotes in a block comment") {
+    val content = q""""real content""""
+    val tree =
+      q"""{
+  a
+  /* $content and $content */ b + c
+}"""
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.Block [java.util.NoSuchElementException: token 22 out of 19]
+         |1 Term.Name [a]
+         |2 Term.ApplyInfix [java.util.NoSuchElementException: token 19 out of 19]
+         |3 Term.Name [c]
+         |4 Term.Name [}]
+         |5 Type.ArgClause [java.util.NoSuchElementException: token 19 out of 19]
+         |6 Term.ArgClause [java.util.NoSuchElementException: token 19 out of 19]
+         |7 Term.Name [java.util.NoSuchElementException: token 19 out of 19]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions after an unquote in a line comment") {
+    val content = q""""real content""""
+    val tree =
+      q"""{
+  a
+  // $content here
+  b + c
+}"""
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.Block [java.util.NoSuchElementException: token 22 out of 21]
+         |1 Term.Name [a]
+         |2 Term.ApplyInfix [+ c\n}]
+         |3 Term.Name [+]
+         |4 Term.Name [c]
+         |5 Type.ArgClause []
+         |6 Term.ArgClause [}]
+         |7 Term.Name [}]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions of a block comment with an unquote") {
+    val content = q""""real content""""
+    val tree =
+      q"""{
+  a
+  /* $content here */ b + c
+}"""
+    val b = tree.collect { case t @ Term.Name("b") => t }.head
+    assertNoDiff(
+      positionsOrErrors(b.begComment.get),
+      """|0 Tree.Comments [/* $content here */ b]
+         |1 Tree.Comment [/* $content here */ b]
+         |2 Lit.String [/* $content here */]
+         |3 Lit.String ["real content"]
+         |4 Lit.String [b]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions after an end comment with an unquote") {
+    val content = q""""real content""""
+    val tree =
+      q"""{
+  a
+  b /* $content */ + c
+}"""
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.Block [java.util.NoSuchElementException: token 20 out of 19]
+         |1 Term.Name [a]
+         |2 Term.ApplyInfix [b /* $content */ + c\n}]
+         |3 Term.Name [b]
+         |4 Term.Name [c]
+         |5 Type.ArgClause []
+         |6 Term.ArgClause [}]
+         |7 Term.Name [}]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions after an unquote in braces in a block comment") {
+    val tree =
+      q"""{
+  a
+  /* ${Lit.String("real content")} */ b + c
+}"""
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.Block [java.util.NoSuchElementException: token 20 out of 19]
+         |1 Term.Name [a]
+         |2 Term.ApplyInfix [+ c\n}]
+         |3 Term.Name [+]
+         |4 Term.Name [c]
+         |5 Type.ArgClause []
+         |6 Term.ArgClause [}]
+         |7 Term.Name [}]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions of a line comment with an unquote") {
+    val content = q""""real content""""
+    val tree =
+      q"""{
+  a
+  // $content here
+  b + c
+}"""
+    val b = tree.collect { case t @ Term.Name("b") => t }.head
+    assertNoDiff(
+      positionsOrErrors(b.begComment.get),
+      """|0 Tree.Comments [// $content here\n ]
+         |1 Tree.Comment [// $content here\n ]
+         |2 Lit.String [// $content here]
+         |3 Lit.String ["real content"]
+         |4 Lit.String [ ]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions after two comments with unquotes") {
+    val content = q""""real content""""
+    val tree =
+      q"""{
+  a /* $content */
+  // $content here
+  b + c
+}"""
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.Block [java.util.NoSuchElementException: token 26 out of 23]
+         |1 Term.Name [a]
+         |2 Term.ApplyInfix [java.util.NoSuchElementException: token 23 out of 23]
+         |3 Term.Name [c]
+         |4 Term.Name [}]
+         |5 Type.ArgClause [java.util.NoSuchElementException: token 23 out of 23]
+         |6 Term.ArgClause [java.util.NoSuchElementException: token 23 out of 23]
+         |7 Term.Name [java.util.NoSuchElementException: token 23 out of 23]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions after an unquote in a comment that starts the quasiquote") {
+    val content = q""""real content""""
+    val tree = q"/* $content */ b + c"
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.ApplyInfix [java.util.NoSuchElementException: token 10 out of 9]
+         |1 Term.Name [+]
+         |2 Term.Name [c]
+         |3 Type.ArgClause [java.util.NoSuchElementException: token 9 out of 9]
+         |4 Term.ArgClause [java.util.NoSuchElementException: token 9 out of 9]
+         |5 Term.Name [java.util.NoSuchElementException: token 9 out of 9]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions of a comment with an unquote that starts the quasiquote") {
+    val content = q""""real content""""
+    val tree = q"/* $content */ b + c"
+    val commented = tree.collect { case t if t.begComment.isDefined => t }.head
+    assertNoDiff(
+      positionsOrErrors(commented.begComment.get),
+      """|0 Tree.Comments [/* $content */ b]
+         |1 Tree.Comment [/* $content */ b]
+         |2 Lit.String [/* $content */]
+         |3 Lit.String ["real content"]
+         |4 Lit.String [b]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions after an unquote and a comment with an unquote") {
+    val content = q""""real content""""
+    val tree =
+      q"""{
+  b + $content /* $content */ + c
+}"""
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.Block [java.util.NoSuchElementException: token 20 out of 19]
+         |1 Term.ApplyInfix [b + `{$}content` /* $content */ + c\n}]
+         |2 Term.ApplyInfix [b + `{$}content`]
+         |3 Term.Name [b]
+         |4 Term.Name [+]
+         |5 Type.ArgClause []
+         |6 Term.ArgClause [`{$}content`]
+         |7 Lit.String ["real content"]
+         |8 Term.Name [c]
+         |9 Type.ArgClause []
+         |10 Term.ArgClause [}]
+         |11 Term.Name [}]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions after an unquote right before a comment with an unquote") {
+    val content = q""""real content""""
+    val tree =
+      q"""{
+  b + $content/* $content */ + c
+}"""
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.Block [java.util.NoSuchElementException: token 19 out of 18]
+         |1 Term.ApplyInfix [b + `{$}content`/* $content */ + c\n}]
+         |2 Term.ApplyInfix [b + `{$}content`]
+         |3 Term.Name [b]
+         |4 Term.Name [+]
+         |5 Type.ArgClause []
+         |6 Term.ArgClause [`{$}content`]
+         |7 Lit.String ["real content"]
+         |8 Term.Name [c]
+         |9 Type.ArgClause []
+         |10 Term.ArgClause [}]
+         |11 Term.Name [}]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions of a block comment with two different unquotes") {
+    val first = q""""one""""
+    val second = q""""two""""
+    val tree = q"0 /* $first and $second */"
+    assertNoDiff(
+      tree.endComment.get.values.map(_.parts.map(_.value).mkString("|")).mkString("\n"),
+      """|/* |one
+         | and |two| */
+         |""".stripMargin,
+    )
+    assertNoDiff(
+      positionsOrErrors(tree.endComment.get),
+      """|0 Tree.Comments [java.util.NoSuchElementException: token 7 out of 5]
+         |1 Tree.Comment [/* $first and $second */]
+         |2 Lit.String [/* $first and $second */]
+         |3 Lit.String ["one"]
+         |4 Tree.Comment [java.util.NoSuchElementException: token 5 out of 5]
+         |5 Lit.String [java.util.NoSuchElementException: token 5 out of 5]
+         |6 Lit.String ["two"]
+         |7 Lit.String [java.util.NoSuchElementException: token 7 out of 5]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions after a line comment with two different unquotes") {
+    val first = q""""one""""
+    val second = q""""two""""
+    val tree =
+      q"""{
+  a // $first and $second here
+  b
+}"""
+    val a = tree.collect { case t @ Term.Name("a") => t }.head
+    assertNoDiff(
+      a.endComment.get.values.map(_.parts.map(_.value).mkString("|")).mkString("\n"),
+      """|// |one
+         | and |two| here
+         |""".stripMargin,
+    )
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.Block [java.util.NoSuchElementException: token 18 out of 15]
+         |1 Term.Name [a]
+         |2 Term.Name [java.util.NoSuchElementException: token 15 out of 15]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions after a line comment that ends in an unquote") {
+    val content = q""""real content""""
+    val tree =
+      q"""{
+  a
+  // $content
+  b
+}"""
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.Block [{\n  a\n  // $content\n  b\n]
+         |1 Term.Name [a]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions of a block comment with two unquotes in braces") {
+    def lit(s: String) = Lit.String(s)
+    val tree = q"0 /* ${lit("one")} and ${lit("two")} */"
+    assertNoDiff(
+      tree.endComment.get.values.map(_.parts.map(_.value).mkString("|")).mkString("\n"),
+      """|/* |one
+         | and |two| */
+         |""".stripMargin,
+    )
+    assertNoDiff(
+      positionsOrErrors(tree.endComment.get),
+      """|0 Tree.Comments [java.util.NoSuchElementException: token 7 out of 5]
+         |1 Tree.Comment [/* ${lit("one")} and ${lit("two")} */]
+         |2 Lit.String [/* ${lit("one")} and ${lit("two")} */]
+         |3 Lit.String []
+         |4 Tree.Comment [java.util.NoSuchElementException: token 5 out of 5]
+         |5 Lit.String [java.util.NoSuchElementException: token 5 out of 5]
+         |6 Lit.String []
+         |7 Lit.String [java.util.NoSuchElementException: token 7 out of 5]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions of a block comment with two unquotes before a tree") {
+    val content = q""""real content""""
+    val tree =
+      q"""{
+  a
+  /* foo $content and $content bar */ b
+}"""
+    val b = tree.collect { case t @ Term.Name("b") => t }.head
+    assertNoDiff(
+      b.begComment.get.values.map(_.parts.map(_.value).mkString("|")).mkString("\n"),
+      """| and |real content| bar */
+         |""".stripMargin,
+    )
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.Block [java.util.NoSuchElementException: token 18 out of 15]
+         |1 Term.Name [a]
+         |2 Term.Name [java.util.NoSuchElementException: token 15 out of 15]
+         |""".stripMargin,
+    )
+    assertNoDiff(
+      tree.reprint,
+      """|{
+         |  a
+         |    /* foo real content
+         |    and real content bar */ b
+         |}
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions of a line comment that ends the quasiquote with an unquote") {
+    val content = q""""real content""""
+    val tree = q"b + c // $content"
+    val c = tree.collect { case t @ Term.Name("c") => t }.head
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.ApplyInfix [java.util.NoSuchElementException: token 10 out of 9]
+         |1 Term.Name [b]
+         |2 Term.Name [+]
+         |3 Type.ArgClause []
+         |4 Term.ArgClause [c]
+         |5 Term.Name [c]
+         |""".stripMargin,
+    )
+    assertNoDiff(
+      positionsOrErrors(c.endComment.get),
+      """|0 Tree.Comments [java.util.NoSuchElementException: token 9 out of 9]
+         |1 Tree.Comment [java.util.NoSuchElementException: token 9 out of 9]
+         |2 Lit.String [// $content]
+         |3 Lit.String ["real content"]
+         |4 Lit.String [java.util.NoSuchElementException: token 9 out of 9]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: syntax of a string literal after a comment with an unquote") {
+    val content = q""""real content""""
+    val tree = q"""/* $content */ f("a")"""
+    assertNoDiff(
+      tree.syntax,
+      """|f()
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions before a comment with an unquote that ends the quasiquote") {
+    val content = q""""real content""""
+    val tree = q"b + c /* $content */"
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.ApplyInfix [java.util.NoSuchElementException: token 10 out of 9]
+         |1 Term.Name [b]
+         |2 Term.Name [+]
+         |3 Type.ArgClause []
+         |4 Term.ArgClause [c]
+         |5 Term.Name [c]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions of a comment with an unquote that ends the quasiquote") {
+    val content = q""""real content""""
+    val tree = q"b + c /* $content */"
+    val c = tree.collect { case t @ Term.Name("c") => t }.head
+    assertNoDiff(
+      positionsOrErrors(c.endComment.get),
+      """|0 Tree.Comments [java.util.NoSuchElementException: token 9 out of 9]
+         |1 Tree.Comment [java.util.NoSuchElementException: token 9 out of 9]
+         |2 Lit.String [/* $content */]
+         |3 Lit.String ["real content"]
+         |4 Lit.String [java.util.NoSuchElementException: token 9 out of 9]
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: positions after a comment with an unquote beside unquoted args") {
+    val content = q""""real content""""
+    val args = List(q"x", q"y")
+    val tree = q"f(..$args, /* $content */ c)"
+    assertNoDiff(
+      positionsOrErrors(tree),
+      """|0 Term.Apply [java.util.NoSuchElementException: token 13 out of 12]
+         |1 Term.Name [f]
+         |2 Term.ArgClause [java.util.NoSuchElementException: token 12 out of 12]
+         |3 Term.Name [x]
+         |4 Term.Name [y]
+         |5 Term.Name []
+         |""".stripMargin,
+    )
+  }
+
   test("#4434 quasiquote in braces") {
     val fooTypes = Seq(q"Foo", q"Bar")
     val quoted: Tree = q"""${fooTypes(0)}; "any message""""

@@ -880,4 +880,37 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
+  test("comments: a hole of the wrong type in a comment") {
+    assertNoDiff(
+      typecheckError(
+        """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val name = q"x"
+      q"0 /* $name */"
+    """,
+      ),
+      """|<macro>:5: type mismatch when unquoting;
+         | found   : scala.meta.Term.Name
+         | required: scala.meta.Lit.String
+         |      q"0 /* $name */"
+         |             ^
+         |""".stripMargin,
+    )
+  }
+
+  test("comments: an unclosed comment with an unquote") {
+    val error = typecheckError(
+      """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val name = Lit.String("x")
+      q"0 /* $name"
+    """,
+    ).nl2lf
+    val expected =
+      "<macro>:5: exception during macro expansion: \njava.lang.StringIndexOutOfBoundsException"
+    assertNoDiff(error.take(expected.length), expected)
+  }
+
 }

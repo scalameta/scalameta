@@ -8,6 +8,8 @@ import scala.meta.tests.parsers.CommonTrees
 import scala.meta.tokenizers.{Tokenize, TokenizerOptions}
 import scala.meta.trees.Origin
 
+import scala.util.control.NonFatal
+
 import munit._
 
 abstract class TreeSuiteBase extends FunSuite with CommonTrees {
@@ -141,6 +143,19 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
       assertWithOriginalSyntax(t, o, r)
     }
   }
+
+  /**
+   * Returns a line for each subtree of `tree`, in traversal order. A line holds the index, the name
+   * and the text at the position, or the error that reading it throws. The text shows a line break
+   * as `\n`.
+   */
+  protected def positionsOrErrors(tree: Tree): String = tree.collect { case t => t }.iterator
+    .zipWithIndex.map { case (t, idx) =>
+      val text =
+        try t.pos.text
+        catch { case NonFatal(e) => e.toString }
+      s"$idx ${t.productPrefix} [${text.replace("\n", "\\n")}]"
+    }.mkString("\n")
 
   protected def assertTokensAsStructureLines(tokens: Iterable[Token], expected: String)(implicit
       loc: Location,
