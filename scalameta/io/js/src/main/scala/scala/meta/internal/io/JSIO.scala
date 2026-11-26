@@ -3,6 +3,7 @@ package scala.meta.internal.io
 import scala.concurrent.{Future, Promise}
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
+import scala.util.Try
 
 /**
  * Facade for the native nodejs process API
@@ -17,6 +18,7 @@ import scala.scalajs.js.annotation.JSImport
 @js.native
 trait JSProcess extends js.Any {
   def cwd(): String = js.native
+  def exit(code: Int): Unit = js.native
 }
 
 /**
@@ -100,6 +102,22 @@ object JSFsPromises extends js.Object {
   def writeFile(path: String, data: String, encoding: String): js.Promise[Unit] = js.native
 }
 
+/**
+ * Facade for the native nodejs module "child_process".
+ *
+ * @see
+ *   https://nodejs.org/api/child_process.html
+ */
+@js.native
+@JSImport("child_process", JSImport.Namespace)
+object JSChildProcess extends js.Any {
+  def spawnSync(
+      command: String,
+      args: js.Array[String],
+      options: js.Dictionary[js.Any],
+  ): js.Dynamic = js.native
+}
+
 @js.native
 @JSImport("os", JSImport.Namespace)
 object JSOS extends js.Object {
@@ -170,11 +188,17 @@ object JSIO {
 
   def cwd(): String = if (isNode) process.cwd() else "/"
 
-  def exists(path: String): Boolean = if (isNode) JSFs.existsSync(path) else false
+  def exists(path: String): Boolean = isNode && PlatformFileIO.exists(path)
 
-  def isFile(path: String): Boolean = exists(path) && JSFs.lstatSync(path).isFile()
+  def isFile(path: String): Boolean = isNode && Try(stat(path, followLinks = false).isFile())
+    .getOrElse(false)
 
-  def isDirectory(path: String): Boolean = exists(path) && JSFs.lstatSync(path).isDirectory()
+  def isDirectory(path: String): Boolean = isNode && Try(stat(path, followLinks = false).isDirectory())
+    .getOrElse(false)
+
+  /** Returns the `fs.Stats` of a path, or of its target if `followLinks`. */
+  private[io] def stat(path: String, followLinks: Boolean): JSStats =
+    if (followLinks) JSFs.statSync(path) else JSFs.lstatSync(path)
 
   def readStdinAsync: Future[String] = {
     val inputStream = js.Dynamic.global.process.stdin

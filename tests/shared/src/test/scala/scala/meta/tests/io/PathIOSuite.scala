@@ -34,6 +34,8 @@ class PathIOSuite extends FunSuite {
   check("a/b", "a/", "b")
   check("a/b/", "a/", "b")
 
+  test("PathIO.isWindows")(assertEquals(PathIO.isWindows, File.pathSeparator == ";"))
+
   test("PathIO.toUnix") {
     assertEquals(PathIO.toUnix(s"a${File.separator}b"), "a/b")
     assertEquals(PathIO.toUnix("a/b"), "a/b")

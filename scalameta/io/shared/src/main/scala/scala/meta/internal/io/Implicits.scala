@@ -5,6 +5,8 @@ import scala.meta.io.{AbsolutePath, Classpath}
 import java.nio.file.{FileVisitor, Files, Path}
 import java.util.jar.Manifest
 
+import scala.io.Codec
+
 object Implicits {
 
   implicit class XtensionClasspath(private val cp: Classpath) extends AnyVal {
@@ -45,6 +47,21 @@ object Implicits {
         finally in.close()
       } else None
     }
+  }
+
+  implicit class XtensionNioPath(private val path: Path) extends AnyVal {
+
+    def exists: Boolean = FileIO.exists(path)
+    def isDirectory: Boolean = FileIO.isDirectory(path)
+    def isRegularFile: Boolean = FileIO.isRegularFile(path)
+    def isRegularFileNoLinks: Boolean = FileIO.isRegularFileNoLinks(path)
+    def findFiles: Seq[Path] = FileIO.findFiles(path)
+    def readFile(implicit codec: Codec): String = FileIO.readFile(path)
+    def writeFile(content: String)(implicit codec: Codec): Unit = FileIO.writeFile(path, content)
+    def delete(): Unit = FileIO.delete(path)
+    def mkdir(): Unit = FileIO.mkdir(path)
+    def mkdirs(): Unit = FileIO.mkdirs(path)
+
   }
 
 }

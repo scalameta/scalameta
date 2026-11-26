@@ -4,6 +4,9 @@ package io
 import scala.meta._
 import scala.meta.internal.io._
 
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
+
 import munit.FunSuite
 
 class IOSuite extends FunSuite {
@@ -35,6 +38,12 @@ class IOSuite extends FunSuite {
   test("FileIO.readAllBytes") {
     val obtained = new String(FileIO.readAllBytes(buildSbt))
     assert(obtained.contains("project"))
+  }
+
+  test("InputStreamIO.readString") {
+    val text = "aé" * 3000 // more than the buffer of `readBytes`
+    val is = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8))
+    assertEquals(InputStreamIO.readString(is, StandardCharsets.UTF_8), text)
   }
 
   test("Input.File.slurp") {
