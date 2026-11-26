@@ -1,11 +1,11 @@
-package scala.meta.internal
+package scala.meta.internal.io
 
 import scala.meta.io.{AbsolutePath, Classpath}
 
 import java.nio.file.{FileVisitor, Files, Path}
 import java.util.jar.Manifest
 
-package object io {
+object Implicits {
 
   implicit class XtensionClasspath(private val cp: Classpath) extends AnyVal {
     def visit(getVisitor: AbsolutePath => FileVisitor[Path]): Unit = cp.foreach { root =>

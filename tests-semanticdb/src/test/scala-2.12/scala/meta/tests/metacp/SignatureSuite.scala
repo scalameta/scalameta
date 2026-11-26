@@ -1,5 +1,6 @@
 package scala.meta.tests.metacp
 
+import scala.meta.internal.io.Implicits._
 import scala.meta.internal.io._
 import scala.meta.internal.javacp._
 import scala.meta.internal.javacp.asm._

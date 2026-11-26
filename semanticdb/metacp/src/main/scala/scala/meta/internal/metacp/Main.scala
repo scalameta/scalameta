@@ -3,6 +3,7 @@ package scala.meta.internal.metacp
 import scala.meta.cli._
 import scala.meta.internal.classpath._
 import scala.meta.internal.cli._
+import scala.meta.internal.io.Implicits._
 import scala.meta.internal.io._
 import scala.meta.internal.scalacp._
 import scala.meta.io._
