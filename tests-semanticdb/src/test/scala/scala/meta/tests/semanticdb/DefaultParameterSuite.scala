@@ -6,10 +6,6 @@ class DefaultParameterSuite extends SemanticdbSuite {
       loc: munit.Location,
   ): Unit = checkSection(s"$name: symbols", code, expected, "Symbols")
 
-  private def synthetics(name: String, code: String, expected: String)(implicit
-      loc: munit.Location,
-  ): Unit = checkSection(s"$name: synthetics", code, expected, "Synthetics")
-
   symbols(
     "a local in a default of a generic method",
     """|object t250 {

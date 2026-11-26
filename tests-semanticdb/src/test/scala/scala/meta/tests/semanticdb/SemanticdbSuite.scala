@@ -191,6 +191,8 @@ abstract class SemanticdbSuite extends FunSuite {
 
   def synthetics(code: String, expected: String)(implicit loc: munit.Location): Unit =
     checkSection(code, expected, "Synthetics")
+  def synthetics(name: String, code: String, expected: String)(implicit loc: munit.Location): Unit =
+    checkSection(s"$name: synthetics", code, expected, "Synthetics")
 
   private def computeDatabaseAndOccurrencesFromMarkup(
       markup: String,

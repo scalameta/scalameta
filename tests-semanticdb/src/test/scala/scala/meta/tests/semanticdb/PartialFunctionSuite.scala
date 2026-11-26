@@ -14,10 +14,6 @@ class PartialFunctionSuite extends SemanticdbSuite {
       loc: munit.Location,
   ): Unit = checkSection(s"$name: occurrences", code, expected, "Occurrences")
 
-  private def synthetics(name: String, code: String, expected: String)(implicit
-      loc: munit.Location,
-  ): Unit = checkSection(s"$name: synthetics", code, expected, "Synthetics")
-
   // for each tree, the first occurrence at its exact range, which scalafix reads as `tree.symbol`
   private def treeSymbols(name: String, code: String, expected: String)(implicit
       loc: munit.Location,

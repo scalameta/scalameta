@@ -10,10 +10,6 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
       loc: munit.Location,
   ): Unit = checkSection(s"$name: occurrences", code, expected, "Occurrences")
 
-  private def synthetics(name: String, code: String, expected: String)(implicit
-      loc: munit.Location,
-  ): Unit = checkSection(s"$name: synthetics", code, expected, "Synthetics")
-
   symbols(
     "extractor with a dependent result",
     """|class D { type T }
