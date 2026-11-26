@@ -1154,6 +1154,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:32..9:34): Tr => qs78/package.O.Tr#
          |[10:8..10:9): J <= qs78/package.J#
          |[10:10..10:10):  <= qs78/package.J#`<init>`().
+         |[10:18..10:27): `package` => qs78/package.
          |[10:33..10:34): O => qs78/package.O.
          |[10:35..10:36): P => qs78/package.O.P#
          |[10:36..10:36):  => qs78/package.O.P#`<init>`().
@@ -1224,6 +1225,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[20:34..20:36): Tr => qs78/package.O.Tr#
          |[21:10..21:11): J <= qs78/package.K#J#
          |[21:12..21:12):  <= qs78/package.K#J#`<init>`().
+         |[21:20..21:29): `package` => qs78/package.
          |[21:35..21:36): O => qs78/package.O.
          |[21:37..21:38): P => qs78/package.O.P#
          |[21:38..21:38):  => qs78/package.O.P#`<init>`().
@@ -1304,6 +1306,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:32..9:34): Tr => qs78/package.O.Tr#
          |[10:8..10:9): J <= qs78/package.J#
          |[10:10..10:10):  <= qs78/package.J#`<init>`().
+         |[10:18..10:27): `package` => qs78/package.
          |[10:33..10:34): O => qs78/package.O.
          |[10:35..10:36): P => qs78/package.O.P#
          |[10:36..10:36):  => qs78/package.O.P#`<init>`().
@@ -1371,6 +1374,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[20:34..20:36): Tr => qs78/package.O.Tr#
          |[21:10..21:11): J <= qs78/package.K#J#
          |[21:12..21:12):  <= qs78/package.K#J#`<init>`().
+         |[21:20..21:29): `package` => qs78/package.
          |[21:35..21:36): O => qs78/package.O.
          |[21:37..21:38): P => qs78/package.O.P#
          |[21:38..21:38):  => qs78/package.O.P#`<init>`().
@@ -7917,6 +7921,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[11:30..11:32): Tr => _empty_/qs68#qs68#Tr#
          |[12:10..12:11): B <= _empty_/qs68#qs68#B#
          |[12:12..12:12):  <= _empty_/qs68#qs68#B#`<init>`().
+         |[12:20..12:24): qs68 => _empty_/qs68#qs68#
          |[12:30..12:31): P => _empty_/qs68#qs68#P#
          |[12:31..12:31):  => _empty_/qs68#qs68#P#`<init>`().
          |[13:8..13:9): h <= _empty_/qs68#qs68#h.
@@ -8001,6 +8006,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[11:30..11:32): Tr => _empty_/qs68#qs68#Tr#
          |[12:10..12:11): B <= _empty_/qs68#qs68#B#
          |[12:12..12:12):  <= _empty_/qs68#qs68#B#`<init>`().
+         |[12:20..12:24): qs68 => _empty_/qs68#qs68#
          |[12:30..12:31): P => _empty_/qs68#qs68#P#
          |[12:31..12:31):  => _empty_/qs68#qs68#P#`<init>`().
          |[13:8..13:9): h <= _empty_/qs68#qs68#h.
@@ -8112,6 +8118,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[11:27..11:28): T => _empty_/qs75#A#T#
          |[12:10..12:11): J <= _empty_/qs75#qs75#J#
          |[12:12..12:12):  <= _empty_/qs75#qs75#J#`<init>`().
+         |[12:20..12:24): qs75 => _empty_/qs75#qs75#
          |[12:30..12:32): PA => _empty_/qs75#A#PA#
          |[12:32..12:32):  => _empty_/qs75#P#`<init>`().
          |[13:8..13:9): h <= _empty_/qs75#qs75#h.
@@ -8200,6 +8207,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[11:27..11:28): T => _empty_/qs75#A#T#
          |[12:10..12:11): J <= _empty_/qs75#qs75#J#
          |[12:12..12:12):  <= _empty_/qs75#qs75#J#`<init>`().
+         |[12:20..12:24): qs75 => _empty_/qs75#qs75#
          |[12:30..12:32): PA => _empty_/qs75#A#PA#
          |[12:32..12:32):  => _empty_/qs75#P#`<init>`().
          |[13:8..13:9): h <= _empty_/qs75#qs75#h.
@@ -8312,6 +8320,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[11:27..11:28): T => _empty_/qs76d#A#T#
          |[12:10..12:11): J <= _empty_/qs76d#qs76#J#
          |[12:12..12:12):  <= _empty_/qs76d#qs76#J#`<init>`().
+         |[12:20..12:24): qs76 => _empty_/qs76d#qs76#
          |[12:30..12:32): PA => _empty_/qs76d#A#PA#
          |[12:32..12:32):  => _empty_/qs76.P#`<init>`().
          |[13:8..13:9): h <= _empty_/qs76d#qs76#h.
@@ -8401,6 +8410,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[11:27..11:28): T => _empty_/qs76d#A#T#
          |[12:10..12:11): J <= _empty_/qs76d#qs76#J#
          |[12:12..12:12):  <= _empty_/qs76d#qs76#J#`<init>`().
+         |[12:20..12:24): qs76 => _empty_/qs76d#qs76#
          |[12:30..12:32): PA => _empty_/qs76d#A#PA#
          |[12:32..12:32):  => _empty_/qs76.P#`<init>`().
          |[13:8..13:9): h <= _empty_/qs76d#qs76#h.
@@ -8502,6 +8512,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:25..9:26): T => _empty_/qs85#T#
          |[10:8..10:9): J <= _empty_/qs85#J#
          |[10:10..10:10):  <= _empty_/qs85#J#`<init>`().
+         |[10:18..10:22): qs85 => _empty_/qs85#
          |[10:28..10:30): PA => _empty_/qs85#PA#
          |[10:30..10:30):  => _empty_/qs85#package.P#`<init>`().
          |[11:6..11:7): h <= _empty_/qs85#h.
@@ -8583,6 +8594,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[9:25..9:26): T => _empty_/qs85#T#
          |[10:8..10:9): J <= _empty_/qs85#J#
          |[10:10..10:10):  <= _empty_/qs85#J#`<init>`().
+         |[10:18..10:22): qs85 => _empty_/qs85#
          |[10:28..10:30): PA => _empty_/qs85#PA#
          |[10:30..10:30):  => _empty_/qs85#package.P#`<init>`().
          |[11:6..11:7): h <= _empty_/qs85#h.
@@ -8688,6 +8700,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[10:27..10:28): T => _empty_/qs86#qs86#T#
          |[11:10..11:11): J <= _empty_/qs86#qs86#J#
          |[11:12..11:12):  <= _empty_/qs86#qs86#J#`<init>`().
+         |[11:20..11:24): qs86 => _empty_/qs86#qs86#
          |[11:30..11:32): PA => _empty_/qs86#qs86#PA#
          |[11:32..11:32):  => _empty_/qs86#package.P#`<init>`().
          |[12:8..12:9): h <= _empty_/qs86#qs86#h.
@@ -8771,6 +8784,7 @@ class QualifierSuite extends SemanticdbSuite {
          |[10:27..10:28): T => _empty_/qs86#qs86#T#
          |[11:10..11:11): J <= _empty_/qs86#qs86#J#
          |[11:12..11:12):  <= _empty_/qs86#qs86#J#`<init>`().
+         |[11:20..11:24): qs86 => _empty_/qs86#qs86#
          |[11:30..11:32): PA => _empty_/qs86#qs86#PA#
          |[11:32..11:32):  => _empty_/qs86#package.P#`<init>`().
          |[12:8..12:9): h <= _empty_/qs86#qs86#h.
@@ -14185,6 +14199,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[3:20..3:22): Tr => _empty_/qs31#Tr#
        |[4:8..4:9): C <= _empty_/qs31#C#
        |[4:10..4:10):  <= _empty_/qs31#C#`<init>`().
+       |[4:18..4:22): qs31 => _empty_/qs31#
        |[4:28..4:29): P => _empty_/qs31#P#
        |[4:29..4:29):  => _empty_/qs31#P#`<init>`().
        |[5:8..5:9): D <= _empty_/qs31#D#
@@ -14277,6 +14292,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[9:16..9:17): B => _empty_/qs42#A#[B]
        |[10:8..10:9): C <= _empty_/qs42#C#
        |[10:10..10:10):  <= _empty_/qs42#C#`<init>`().
+       |[10:18..10:22): qs42 => _empty_/qs42#
        |[10:28..10:29): A => _empty_/qs42#A#
        |[10:29..10:29):  => _empty_/qs42#P#`<init>`().
        |""".stripMargin,
@@ -14312,10 +14328,13 @@ class QualifierSuite extends SemanticdbSuite {
        |[2:25..2:25):  => _empty_/qs61a#P#`<init>`().
        |[3:8..3:9): L <= _empty_/qs61#L#
        |[3:10..3:10):  <= _empty_/qs61#L#`<init>`().
+       |[3:18..3:22): qs61 => _empty_/qs61#
        |[3:29..3:30): P => _empty_/qs61a#P#
        |[3:30..3:30):  => _empty_/qs61a#P#`<init>`().
        |[4:8..4:9): M <= _empty_/qs61#M#
        |[4:10..4:10):  <= _empty_/qs61#M#`<init>`().
+       |[4:18..4:22): qs61 => _empty_/qs61#
+       |[4:29..4:34): qs61a => _empty_/qs61a#
        |[4:36..4:37): P => _empty_/qs61a#P#
        |[4:37..4:37):  => _empty_/qs61a#P#`<init>`().
        |[5:8..5:9): N <= _empty_/qs61#N#
@@ -14329,12 +14348,15 @@ class QualifierSuite extends SemanticdbSuite {
        |[6:10..6:10):  <= _empty_/qs61#I#`<init>`().
        |[6:18..6:19): J <= _empty_/qs61#I#J#
        |[6:20..6:20):  <= _empty_/qs61#I#J#`<init>`().
+       |[6:28..6:32): qs61 => _empty_/qs61#
        |[6:39..6:40): P => _empty_/qs61a#P#
        |[6:40..6:40):  => _empty_/qs61a#P#`<init>`().
        |[7:8..7:9): H <= _empty_/qs61#H#
        |[7:10..7:10):  <= _empty_/qs61#H#`<init>`().
        |[7:18..7:19): J <= _empty_/qs61#H#J#
        |[7:20..7:20):  <= _empty_/qs61#H#J#`<init>`().
+       |[7:28..7:32): qs61 => _empty_/qs61#
+       |[7:39..7:44): qs61a => _empty_/qs61a#
        |[7:46..7:47): P => _empty_/qs61a#P#
        |[7:47..7:47):  => _empty_/qs61a#P#`<init>`().
        |""".stripMargin,
@@ -15540,15 +15562,19 @@ class QualifierSuite extends SemanticdbSuite {
        |[2:57..2:59): Tr <= _empty_/qs150#Tr#
        |[3:8..3:10): C1 <= _empty_/qs150#C1#
        |[3:11..3:11):  <= _empty_/qs150#C1#`<init>`().
+       |[3:19..3:24): qs150 => _empty_/qs150#
        |[3:30..3:31): o => _empty_/qs150#o.
        |[3:32..3:33): P => _empty_/qs150#o.P#
        |[3:33..3:33):  => _empty_/qs150#o.P#`<init>`().
        |[4:8..4:10): C2 <= _empty_/qs150#C2#
        |[4:11..4:11):  <= _empty_/qs150#C2#`<init>`().
+       |[4:19..4:24): qs150 => _empty_/qs150#
        |[4:31..4:32): Q => _empty_/qs150a#Q#
        |[4:32..4:32):  => _empty_/qs150a#Q#`<init>`().
        |[5:8..5:10): C3 <= _empty_/qs150#C3#
        |[5:11..5:11):  <= _empty_/qs150#C3#`<init>`().
+       |[5:19..5:24): qs150 => _empty_/qs150#
+       |[5:31..5:37): qs150a => _empty_/qs150a#
        |[5:39..5:40): Q => _empty_/qs150a#Q#
        |[5:40..5:40):  => _empty_/qs150a#Q#`<init>`().
        |[6:8..6:10): C4 <= _empty_/qs150#C4#
@@ -15556,19 +15582,23 @@ class QualifierSuite extends SemanticdbSuite {
        |[6:25..6:26): Q => _empty_/qs150a#Q#
        |[6:26..6:26):  => _empty_/qs150a#Q#`<init>`().
        |[7:9..7:11): C5 <= _empty_/qs150#C5.
+       |[7:20..7:25): qs150 => _empty_/qs150#
        |[7:31..7:32): P => _empty_/qs150#P#
        |[7:32..7:32):  => _empty_/qs150#P#`<init>`().
        |[8:6..8:8): c6 <= _empty_/qs150#c6.
        |[8:15..8:15):  <= local0
+       |[8:15..8:20): qs150 => _empty_/qs150#
        |[8:26..8:27): P => _empty_/qs150#P#
        |[8:27..8:27):  => _empty_/qs150#P#`<init>`().
        |[9:8..9:10): C7 <= _empty_/qs150#C7#
        |[9:11..9:11):  <= _empty_/qs150#C7#`<init>`().
        |[9:25..9:26): x <= _empty_/qs150#C7#x.
+       |[9:38..9:43): qs150 => _empty_/qs150#
        |[9:49..9:50): P => _empty_/qs150#P#
        |[9:50..9:50):  => _empty_/qs150#P#`<init>`().
        |[10:8..10:10): C8 <= _empty_/qs150#C8#
        |[10:11..10:11):  <= _empty_/qs150#C8#`<init>`().
+       |[10:19..10:24): qs150 => _empty_/qs150#
        |[10:30..10:31): P => _empty_/qs150#P#
        |[10:31..10:31):  => _empty_/qs150#P#`<init>`().
        |[10:40..10:42): Tr => _empty_/qs150#Tr#
@@ -15576,6 +15606,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[11:10..11:10):  <= _empty_/qs150#M#`<init>`().
        |[11:18..11:20): C9 <= _empty_/qs150#M#C9#
        |[11:21..11:21):  <= _empty_/qs150#M#C9#`<init>`().
+       |[11:29..11:34): qs150 => _empty_/qs150#
        |[11:40..11:41): P => _empty_/qs150#P#
        |[11:41..11:41):  => _empty_/qs150#P#`<init>`().
        |[12:8..12:9): N <= _empty_/qs150#N#
@@ -15583,15 +15614,18 @@ class QualifierSuite extends SemanticdbSuite {
        |[12:16..12:21): qs150 <= _empty_/qs150#N#qs150.
        |[12:33..12:36): C10 <= _empty_/qs150#N#C10#
        |[12:37..12:37):  <= _empty_/qs150#N#C10#`<init>`().
+       |[12:45..12:50): qs150 => _empty_/qs150#
        |[12:56..12:57): P => _empty_/qs150#P#
        |[12:57..12:57):  => _empty_/qs150#P#`<init>`().
        |[13:6..13:7): f <= _empty_/qs150#f().
        |[13:18..13:21): C11 <= local1
        |[13:22..13:22):  <= local2
+       |[13:30..13:35): qs150 => _empty_/qs150#
        |[13:41..13:42): P => _empty_/qs150#P#
        |[13:42..13:42):  => _empty_/qs150#P#`<init>`().
        |[14:8..14:13): qs150 <= _empty_/qs150#qs150#
        |[14:14..14:14):  <= _empty_/qs150#qs150#`<init>`().
+       |[14:22..14:27): qs150 => _empty_/qs150#
        |[14:33..14:34): P => _empty_/qs150#P#
        |[14:34..14:34):  => _empty_/qs150#P#`<init>`().
        |[15:8..15:11): C12 <= _empty_/qs150#C12#
@@ -15602,6 +15636,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[15:37..15:37):  => _empty_/qs150#P#`<init>`().
        |[16:8..16:11): C13 <= _empty_/qs150#C13#
        |[16:12..16:12):  <= _empty_/qs150#C13#`<init>`().
+       |[16:26..16:32): qs150a => _empty_/qs150a#
        |[16:34..16:35): Q => _empty_/qs150a#Q#
        |[16:35..16:35):  => _empty_/qs150a#Q#`<init>`().
        |[17:6..17:9): c14 <= _empty_/qs150#c14.
@@ -15610,6 +15645,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[17:22..17:22):  => java/lang/Object#`<init>`().
        |[17:31..17:34): C14 <= local4
        |[17:35..17:35):  <= local5
+       |[17:43..17:48): qs150 => _empty_/qs150#
        |[17:54..17:55): P => _empty_/qs150#P#
        |[17:55..17:55):  => _empty_/qs150#P#`<init>`().
        |[19:7..19:13): qs150o <= _empty_/qs150o.
@@ -15621,6 +15657,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[19:30..19:31): A => _empty_/qs150o.P#[A]
        |[19:40..19:41): C <= _empty_/qs150o.C#
        |[19:42..19:42):  <= _empty_/qs150o.C#`<init>`().
+       |[19:50..19:56): qs150o => _empty_/qs150o.
        |[19:62..19:63): P => _empty_/qs150o.P#
        |[19:63..19:63):  => _empty_/qs150o.P#`<init>`().
        |[20:6..20:12): qs150t <= _empty_/qs150t#
@@ -15633,6 +15670,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[20:29..20:30): A => _empty_/qs150t#P#[A]
        |[20:39..20:40): C <= _empty_/qs150t#C#
        |[20:41..20:41):  <= _empty_/qs150t#C#`<init>`().
+       |[20:49..20:55): qs150t => _empty_/qs150t#
        |[20:61..20:62): P => _empty_/qs150t#P#
        |[20:62..20:62):  => _empty_/qs150t#P#`<init>`().
        |[21:7..21:13): qs150s <= _empty_/qs150s.
@@ -15640,6 +15678,7 @@ class QualifierSuite extends SemanticdbSuite {
        |[21:28..21:28):  => java/lang/Object#`<init>`().
        |[21:37..21:38): C <= _empty_/qs150s.C#
        |[21:39..21:39):  <= _empty_/qs150s.C#`<init>`().
+       |[21:47..21:53): qs150s => _empty_/qs150s.
        |[21:60..21:61): Q => _empty_/qs150a#Q#
        |[21:61..21:61):  => _empty_/qs150a#Q#`<init>`().
        |
