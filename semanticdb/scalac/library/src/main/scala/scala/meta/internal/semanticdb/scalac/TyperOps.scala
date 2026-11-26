@@ -85,16 +85,27 @@ trait TyperOps {
   private[scalac] object TyperRecorder extends AnalyzerPlugin {
 
     override def pluginsTyped(tpe: Type, typer: Typer, tree: Tree, mode: Mode, pt: Type): Type = {
-      if ((null eq currentRun) || isPastTyper) return tpe // we just need the typer phase
+      if ((null ne currentRun) && !isPastTyper) { // we just need the typer phase
+        recordAnnotArgs(typer, tree)
+        recordValDefRhs(tree)
+        recordBinding(typer, tree)
+        recordExpansionOf(tree)
+      }
+      tpe
+    }
 
-      recordBinding(typer, tree)
-      recordExpansionOf(tree)
+    private def recordValDefRhs(tree: Tree): Unit =
       try tree match {
           case t: ValDef =>
             val gsym = t.symbol
             if (gsym.isSynthetic && !gsym.isParameter && gsym.isLocalToBlock) gsym
               .updateAttachment(new ValDefRhs(t.rhs))
-          // mark a Java annotation once the typer has typed its constructor
+          case _ =>
+        }
+      catch { case ex if NonFatal(ex) => }
+
+    private def recordAnnotArgs(typer: Typer, tree: Tree): Unit =
+      try tree match {
           case t: Select if t.name eq nme.CONSTRUCTOR =>
             typer.context.tree match {
               case ann: Apply if ann.args.nonEmpty =>
@@ -118,8 +129,6 @@ trait TyperOps {
             }
         }
       catch { case ex if NonFatal(ex) => }
-      tpe
-    }
 
     /**
      * attaches the outer call to a macro call that is its whole expansion. When scalac expands the
@@ -192,6 +201,7 @@ trait TyperOps {
       case t: Select => !t.qualifier.pos.isOpaqueRange && hasNoWrittenQualifier(t.qualifier)
       case _ => true
     }
+
   }
 
 }
