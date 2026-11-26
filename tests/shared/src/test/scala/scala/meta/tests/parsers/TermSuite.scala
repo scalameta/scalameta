@@ -370,6 +370,258 @@ class TermSuite extends ParseSuite {
 
   test("new { self: T => }")(assertTerm("new { self: T => }")(NewAnonymous(tpl(self("self", "T")))))
 
+  test("new K(x = 1)(a = 0) = 5 [scala212]") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code = "new K(x = 1)(a = 0) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(x = 1)(a = 0) = 5
+         |                    ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(x = 1)(a = 0) = 5 [scala213]") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code = "new K(x = 1)(a = 0) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(x = 1)(a = 0) = 5
+         |                    ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(x = 1)(a = 0) = 5 [scala3]") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val code = "new K(x = 1)(a = 0) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(x = 1)(a = 0) = 5
+         |                    ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(1)(0) = 5 [scala212]") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code = "new K(1)(0) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(1)(0) = 5
+         |            ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(1)(0) = 5 [scala213]") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code = "new K(1)(0) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(1)(0) = 5
+         |            ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(1)(0) = 5 [scala3]") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val code = "new K(1)(0) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(1)(0) = 5
+         |            ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K()(0) = 5 [scala212]") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code = "new K()(0) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K()(0) = 5
+         |           ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K()(0) = 5 [scala213]") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code = "new K()(0) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K()(0) = 5
+         |           ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K()(0) = 5 [scala3]") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val code = "new K()(0) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K()(0) = 5
+         |           ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(1)(0)(2) = 5 [scala212]") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code = "new K(1)(0)(2) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(1)(0)(2) = 5
+         |               ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(1)(0)(2) = 5 [scala213]") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code = "new K(1)(0)(2) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(1)(0)(2) = 5
+         |               ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(1)(0)(2) = 5 [scala3]") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val code = "new K(1)(0)(2) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(1)(0)(2) = 5
+         |               ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(1)(0)(2) = 5: positions") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code = "new K(1)(0)(2) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(1)(0)(2) = 5
+         |               ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(1)(0) = 5 in a block") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|{
+         |  new K(1)(0) = 5
+         |}""".stripMargin
+    val error =
+      """|<input>:2: error: `}` expected but `=` found
+         |  new K(1)(0) = 5
+         |              ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("f(new K(1)(0) = 5)") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code = "f(new K(1)(0) = 5)"
+    val error =
+      """|<input>:1: error: `)` expected but `=` found
+         |f(new K(1)(0) = 5)
+         |              ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(1)() = 5") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code = "new K(1)() = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(1)() = 5
+         |           ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(1)(using 0) = 5 [scala3]") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val code = "new K(1)(using 0) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(1)(using 0) = 5
+         |                  ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K[T](1)(0) = 5") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code = "new K[T](1)(0) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K[T](1)(0) = 5
+         |               ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("(new K(1)(0)) = 5") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code = "(new K(1)(0)) = 5"
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |(new K(1)(0)) = 5
+         |              ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
+  test("new K(1)(0) = 5 in a template") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|class A {
+         |  new K(1)(0) = 5
+         |}""".stripMargin
+    val error =
+      """|<input>:2: error: `;` expected but `=` found
+         |  new K(1)(0) = 5
+         |              ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
+  test("new K(1)(0)") {
+    implicit val dialect: Dialect = dialects.Scala213
+    runTestAssert[Term]("new K(1)(0)")(New(init("K", List(int(1)), List(int(0)))))
+  }
+
+  test("(new K(1))(0) = 5") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val tree = Assign(tapply(New(init("K", List(int(1)))), int(0)), int(5))
+    runTestAssert[Term]("(new K(1))(0) = 5")(tree)
+  }
+
+  test("new K(1).f(0) = 5") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val tree = Assign(tapply(tselect(New(init("K", List(int(1)))), "f"), int(0)), int(5))
+    runTestAssert[Term]("new K(1).f(0) = 5")(tree)
+  }
+
+  test("f(1)(0) = 5") {
+    implicit val dialect: Dialect = dialects.Scala213
+    runTestAssert[Term]("f(1)(0) = 5")(Assign(tapply(tapply("f", int(1)), int(0)), int(5)))
+  }
+
+  test("new K(1)(0) += 5") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val tree = tinfix(New(init("K", List(int(1)), List(int(0)))), "+=", int(5))
+    runTestAssert[Term]("new K(1)(0) += 5")(tree)
+  }
+
+  test("new K(1) = 5") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K(1) = 5
+         |         ^""".stripMargin
+    runTestError[Term]("new K(1) = 5", error)
+  }
+
+  test("new K = 5") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val error =
+      """|<input>:1: error: `end of file` expected but `=` found
+         |new K = 5
+         |      ^""".stripMargin
+    runTestError[Term]("new K = 5", error)
+  }
+
   test("a + (b = c)")(assertTerm("a + (b = c)")(
     ApplyInfix(tname("a"), tname("+"), Nil, Assign(tname("b"), tname("c")) :: Nil),
   ))

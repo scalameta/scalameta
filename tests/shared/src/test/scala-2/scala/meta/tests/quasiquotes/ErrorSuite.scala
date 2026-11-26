@@ -52,6 +52,52 @@ class ErrorSuite extends TreeSuiteBase {
        |              ^""".stripMargin,
   ))
 
+  test("q\"new init = 5\"")(assertNoDiff(
+    typecheckError(
+      """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val init = init"K(1)(0)"
+      q"new $init = 5"
+    """,
+    ),
+    """|<macro>:5: `;` expected but `=` found
+       |      q"new $init = 5"
+       |                  ^""".stripMargin,
+  ))
+
+  test("q\"new K(..args)(..args) = expr\"") {
+    assertNoDiff(
+      typecheckError(
+        """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val a = List(q"1")
+      val b = List(q"0")
+      q"new K(..$a)(..$b) = 5"
+    """,
+      ),
+      """|<macro>:6: `;` expected but `=` found
+         |      q"new K(..$a)(..$b) = 5"
+         |                          ^""".stripMargin,
+    )
+  }
+
+  test("val q\"new init(arg)(arg) = expr\"") {
+    assertNoDiff(
+      typecheckError(
+        """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val q"new $c($a)($b) = $r" = q"(new K(1))(0) = 5"
+    """,
+      ),
+      """|<macro>:4: `;` expected but `=` found
+         |      val q"new $c($a)($b) = $r" = q"(new K(1))(0) = 5"
+         |                           ^""".stripMargin,
+    )
+  }
+
   test("q\"foo(x)\" when x has incompatible type") {
     assertNoDiff(
       typecheckError(
