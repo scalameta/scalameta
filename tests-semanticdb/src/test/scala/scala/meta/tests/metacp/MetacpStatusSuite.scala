@@ -182,20 +182,20 @@ class MetacpStatusSuite extends FunSuite {
     val in = relative(dir("twice"))
     val out = tmp.resolve("out-twice")
     val (result, stdout, stderr) = run(parse(out, s"$in$pathSeparator$in"))
-    assertNoDiff(stdout, status(in -> s"$out/twice", in -> s"$out/twice-1"))
+    assertNoDiff(stdout, status(in -> s"$out/twice", in -> s"$out/twice"))
     assertNoDiff(stderr, "")
-    assertEquals(result.classpath, Some(Classpath(out.resolve("twice-1"))))
-    assertEquals(Files.exists(out.resolve("twice-1")), true)
+    assertEquals(result.classpath, Some(Classpath(out.resolve("twice"))))
+    assertEquals(Files.exists(out.resolve("twice-1")), false)
   }
 
   test("relative jar passed twice") {
     val in = relative(jar("twice.jar"))
     val out = tmp.resolve("out-twice-jar")
     val (result, stdout, stderr) = run(parse(out, s"$in$pathSeparator$in"))
-    assertNoDiff(stdout, status(in -> s"$out/twice.jar", in -> s"$out/twice-1.jar"))
+    assertNoDiff(stdout, status(in -> s"$out/twice.jar", in -> s"$out/twice.jar"))
     assertNoDiff(stderr, "")
-    assertEquals(result.classpath, Some(Classpath(out.resolve("twice-1.jar"))))
-    assertEquals(Files.exists(out.resolve("twice-1.jar")), true)
+    assertEquals(result.classpath, Some(Classpath(out.resolve("twice.jar"))))
+    assertEquals(Files.exists(out.resolve("twice-1.jar")), false)
   }
 
   test("#1791: relative and absolute spelling of one entry") {
@@ -203,9 +203,9 @@ class MetacpStatusSuite extends FunSuite {
     val in = relative(abs)
     val out = tmp.resolve("out-spelling")
     val (result, stdout, stderr) = run(parse(out, s"$in$pathSeparator$abs"))
-    assertNoDiff(stdout, status(in -> s"$out/spelling", s"$abs" -> s"$out/spelling-1"))
+    assertNoDiff(stdout, status(in -> s"$out/spelling", s"$abs" -> s"$out/spelling"))
     assertNoDiff(stderr, "")
-    assertEquals(result.classpath, Some(Classpath(out.resolve("spelling-1"))))
+    assertEquals(result.classpath, Some(Classpath(out.resolve("spelling"))))
   }
 
   test("#1791: relative directory with a missing symbol") {
@@ -246,7 +246,7 @@ class MetacpStatusSuite extends FunSuite {
           |""".stripMargin,
     )
     val jar = out.resolve("manifest.jar")
-    assertEquals(entries(jar), List("META-INF/MANIFEST.MF"))
+    assertEquals(entries(jar), List("META-INF/", "META-INF/MANIFEST.MF", "META-INF/semanticdb/"))
     assertEquals(classPath(jar), Right(Some("part0.jar part1.jar")))
     val zip = new ZipFile(jar.toFile)
     val bytes =
@@ -394,7 +394,17 @@ class MetacpStatusSuite extends FunSuite {
     val (stdout, stderr) = metacp(parse(out, in))
     assertNoDiff(stdout, status(in -> s"$out/own.jar"))
     assertNoDiff(stderr, "")
-    assertEquals(entries(out.resolve("own.jar")), List("META-INF/MANIFEST.MF"))
+    assertEquals(
+      entries(out.resolve("own.jar")),
+      List(
+        "META-INF/",
+        "META-INF/MANIFEST.MF",
+        "META-INF/semanticdb/",
+        "META-INF/semanticdb/com/",
+        "META-INF/semanticdb/com/javacp/",
+        "META-INF/semanticdb/com/javacp/Coin.class.semanticdb",
+      ),
+    )
     assertEquals(classPath(out.resolve("own.jar")), Right(Some("linked.jar")))
     assertEquals(
       entries(out.resolve("linked.jar")),
@@ -413,9 +423,9 @@ class MetacpStatusSuite extends FunSuite {
     val again = Paths.get(in, "..", "dotdot").toString
     val out = tmp.resolve("out-dotdot")
     val (result, stdout, stderr) = run(parse(out, s"$in$pathSeparator$again"))
-    assertNoDiff(stdout, status(in -> s"$out/dotdot", again -> s"$out/dotdot-1"))
+    assertNoDiff(stdout, status(in -> s"$out/dotdot", again -> s"$out/dotdot"))
     assertNoDiff(stderr, "")
-    val outputs = List(out.resolve("dotdot"), out.resolve("dotdot-1")).map(AbsolutePath(_))
+    val outputs = List(out.resolve("dotdot"), out.resolve("dotdot")).map(AbsolutePath(_))
     assertEquals(result.classpath, Some(Classpath(outputs)))
   }
 
@@ -426,7 +436,8 @@ class MetacpStatusSuite extends FunSuite {
     assume(Files.exists(other), "the file system is case-sensitive")
     val out = tmp.resolve("out-spelled")
     val (stdout, stderr) = metacp(parse(out, s"$in$pathSeparator$other"))
-    assertNoDiff(stdout, status(in -> s"$out/spelled.jar", s"$other" -> s"$out/spelled-1.jar"))
+    val second = if (Properties.isWin) "spelled.jar" else "spelled-1.jar"
+    assertNoDiff(stdout, status(in -> s"$out/spelled.jar", s"$other" -> s"$out/$second"))
     assertNoDiff(stderr, "")
   }
 
@@ -447,9 +458,19 @@ class MetacpStatusSuite extends FunSuite {
     val own = jar("earlier/own.jar", manifest("linked.jar"), classfile("Coin")).toString
     val out = tmp.resolve("out-earlier")
     val (stdout, stderr) = metacp(parse(out, s"$own$pathSeparator$linked"))
-    assertNoDiff(stdout, status(own -> s"$out/own.jar", linked -> s"$out/linked-1.jar"))
+    assertNoDiff(stdout, status(own -> s"$out/own.jar", linked -> s"$out/linked.jar"))
     assertNoDiff(stderr, "")
-    assertEquals(entries(out.resolve("own.jar")), List("META-INF/MANIFEST.MF"))
+    assertEquals(
+      entries(out.resolve("own.jar")),
+      List(
+        "META-INF/",
+        "META-INF/MANIFEST.MF",
+        "META-INF/semanticdb/",
+        "META-INF/semanticdb/com/",
+        "META-INF/semanticdb/com/javacp/",
+        "META-INF/semanticdb/com/javacp/Coin.class.semanticdb",
+      ),
+    )
     assertEquals(classPath(out.resolve("own.jar")), Right(Some("linked.jar")))
   }
 
@@ -461,8 +482,18 @@ class MetacpStatusSuite extends FunSuite {
     val (stdout, stderr) = metacp(parse(out, s"$linked$pathSeparator$own"))
     assertNoDiff(stdout, status(linked -> s"$out/linked.jar", own -> s"$out/own.jar"))
     assertNoDiff(stderr, "")
-    assertEquals(entries(out.resolve("own.jar")), List("META-INF/MANIFEST.MF"))
-    assertEquals(classPath(out.resolve("own.jar")), Right(Some("linked-1.jar")))
+    assertEquals(
+      entries(out.resolve("own.jar")),
+      List(
+        "META-INF/",
+        "META-INF/MANIFEST.MF",
+        "META-INF/semanticdb/",
+        "META-INF/semanticdb/com/",
+        "META-INF/semanticdb/com/javacp/",
+        "META-INF/semanticdb/com/javacp/Coin.class.semanticdb",
+      ),
+    )
+    assertEquals(classPath(out.resolve("own.jar")), Right(Some("linked.jar")))
   }
 
   test("two manifests linking one jar") {
@@ -475,8 +506,8 @@ class MetacpStatusSuite extends FunSuite {
     assertNoDiff(stdout, status(a -> s"$out/a.jar", b -> s"$out/b.jar"))
     assertNoDiff(stderr, "")
     assertEquals(classPath(out.resolve("a.jar")), Right(Some("c.jar")))
-    assertEquals(classPath(out.resolve("b.jar")), Right(Some("c-1.jar")))
-    assertEquals(Files.exists(out.resolve("c-1.jar")), true)
+    assertEquals(classPath(out.resolve("b.jar")), Right(Some("c.jar")))
+    assertEquals(Files.exists(out.resolve("c-1.jar")), false)
   }
 
   test("manifest chain of three jars") {
@@ -488,20 +519,44 @@ class MetacpStatusSuite extends FunSuite {
     val (stdout, stderr) = metacp(parse(out, in))
     assertNoDiff(stdout, status(in -> s"$out/a.jar"))
     assertNoDiff(stderr, "")
-    assertEquals(Files.exists(out.resolve("c.jar")), false)
-    assertEquals(classPath(out.resolve("a.jar")), Right(Some("b.jar")))
     assertEquals(
-      entries(out.resolve("b.jar")),
+      entries(out.resolve("c.jar")),
       List(
         "META-INF/",
         "META-INF/semanticdb/",
         "META-INF/semanticdb/com/",
         "META-INF/semanticdb/com/javacp/",
-        "META-INF/semanticdb/com/javacp/Coin.class.semanticdb",
         "META-INF/semanticdb/com/javacp/Logger.class.semanticdb",
       ),
     )
-    assertEquals(classPath(out.resolve("b.jar")), Right(None))
+    assertEquals(classPath(out.resolve("a.jar")), Right(Some("b.jar")))
+    assertEquals(
+      entries(out.resolve("b.jar")),
+      List(
+        "META-INF/",
+        "META-INF/MANIFEST.MF",
+        "META-INF/semanticdb/",
+        "META-INF/semanticdb/com/",
+        "META-INF/semanticdb/com/javacp/",
+        "META-INF/semanticdb/com/javacp/Coin.class.semanticdb",
+      ),
+    )
+    assertEquals(classPath(out.resolve("b.jar")), Right(Some("c.jar")))
+  }
+
+  test("manifest cycle of two jars") {
+    dir("cycle")
+    val in = jar("cycle/a.jar", manifest("b.jar")).toString
+    jar("cycle/b.jar", manifest("a.jar"))
+    val out = tmp.resolve("out-cycle")
+    val (stdout, stderr) = metacp(parse(out, in))
+    assertNoDiff(stdout, status(in -> s"$out/a.jar"))
+    assertNoDiff(
+      stderr,
+      "warning: classpath cycle detected in manifest Class-Path: a.jar -> b.jar -> a.jar",
+    )
+    assertEquals(classPath(out.resolve("a.jar")), Right(Some("b.jar")))
+    assertEquals(classPath(out.resolve("b.jar")), Right(Some("a.jar")))
   }
 
   test("missing symbol in a jar on the classpath and linked") {
@@ -510,7 +565,7 @@ class MetacpStatusSuite extends FunSuite {
     val manifest = jars.resolve("manifest.jar").toString
     val out = tmp.resolve("out-linked-missing")
     val (stdout, stderr) = metacp(parse(out, s"$part0$pathSeparator$manifest"))
-    assertNoDiff(stdout, status(part0 -> "", manifest -> s"$out/manifest.jar"))
+    assertNoDiff(stdout, status(part0 -> "", manifest -> ""))
     assertNoDiff(
       stderr,
       s"""|missing symbol: scala in $part0
@@ -525,7 +580,7 @@ class MetacpStatusSuite extends FunSuite {
     val part0 = jars.resolve("part0.jar").toString
     val out = tmp.resolve("out-manifest-then-part0")
     val (stdout, stderr) = metacp(parse(out, s"$manifest$pathSeparator$part0"))
-    assertNoDiff(stdout, status(manifest -> "", part0 -> s"$out/part0-1.jar"))
+    assertNoDiff(stdout, status(manifest -> "", part0 -> ""))
     assertNoDiff(
       stderr,
       s"""|missing symbol: scala in $manifest
@@ -541,13 +596,7 @@ class MetacpStatusSuite extends FunSuite {
     val out = tmp.resolve("out-linked-broken")
     val (stdout, stderr) = metacp(parse(out, in))
     assertNoDiff(stdout, status(in -> ""))
-    assertEquals(
-      errors(stderr),
-      List(
-        s"error: can't convert /Bad.class in $in",
-        s"error: can't convert /Bad.class in ${tmp.resolve("linked-broken/bad.jar")}",
-      ),
-    )
+    assertEquals(errors(stderr), List(s"error: can't convert /Bad.class in $in"))
   }
 
   test("classpath entry that does not exist") {
@@ -566,7 +615,10 @@ class MetacpStatusSuite extends FunSuite {
     val (stdout, stderr) = metacp(parse(out, in))
     assertNoDiff(stdout, status(in -> s"$out/own.jar"))
     assertNoDiff(stderr, "")
-    assertEquals(entries(out.resolve("own.jar")), List("META-INF/MANIFEST.MF"))
+    assertEquals(
+      entries(out.resolve("own.jar")),
+      List("META-INF/", "META-INF/MANIFEST.MF", "META-INF/semanticdb/"),
+    )
     assertEquals(classPath(out.resolve("own.jar")), Right(Some("linked")))
   }
 
@@ -588,15 +640,15 @@ class MetacpStatusSuite extends FunSuite {
     val in = dir("missing-twice", "A.class" -> aclass).toString
     val out = tmp.resolve("out-missing-twice")
     val (result, stdout, stderr) = run(parse(out, s"$in$pathSeparator$in"))
-    assertNoDiff(stdout, status(in -> "", in -> s"$out/missing-twice-1"))
+    assertNoDiff(stdout, status(in -> "", in -> ""))
     assertNoDiff(
       stderr,
       s"""|missing symbol: scala in $in
           |$note
           |""".stripMargin,
     )
-    assertEquals(result.isSuccess, true)
-    assertEquals(result.classpath, Some(Classpath(out.resolve("missing-twice-1"))))
+    assertEquals(result.isSuccess, false)
+    assertEquals(result.classpath, None)
   }
 
   test("jar on the classpath and linked through `..`") {
@@ -608,8 +660,18 @@ class MetacpStatusSuite extends FunSuite {
     val (stdout, stderr) = metacp(parse(out, s"$x$pathSeparator$a"))
     assertNoDiff(stdout, status(x -> s"$out/x.jar", a -> s"$out/a.jar"))
     assertNoDiff(stderr, "")
-    assertEquals(entries(out.resolve("a.jar")), List("META-INF/MANIFEST.MF"))
-    assertEquals(classPath(out.resolve("a.jar")), Right(Some("x-1.jar")))
+    assertEquals(
+      entries(out.resolve("a.jar")),
+      List(
+        "META-INF/",
+        "META-INF/MANIFEST.MF",
+        "META-INF/semanticdb/",
+        "META-INF/semanticdb/com/",
+        "META-INF/semanticdb/com/javacp/",
+        "META-INF/semanticdb/com/javacp/Coin.class.semanticdb",
+      ),
+    )
+    assertEquals(classPath(out.resolve("a.jar")), Right(Some("x.jar")))
   }
 
   test("two manifests linking one jar with a missing symbol") {
@@ -619,7 +681,7 @@ class MetacpStatusSuite extends FunSuite {
     val b = jar("diamond-missing/b.jar", manifest("c.jar")).toString
     val out = tmp.resolve("out-diamond-missing")
     val (stdout, stderr) = metacp(parse(out, s"$a$pathSeparator$b"))
-    assertNoDiff(stdout, status(a -> "", b -> s"$out/b.jar"))
+    assertNoDiff(stdout, status(a -> "", b -> ""))
     assertNoDiff(
       stderr,
       s"""|missing symbol: scala in $a
@@ -664,19 +726,28 @@ class MetacpStatusSuite extends FunSuite {
     assertNoDiff(stdout, status(a -> s"$out/a.jar", c -> s"$out/c.jar"))
     assertNoDiff(stderr, "")
     assertEquals(entries(out.resolve("c.jar")), List("META-INF/", "META-INF/semanticdb/"))
-    assertEquals(Files.exists(out.resolve("c-1.jar")), false)
     assertEquals(
-      entries(out.resolve("b.jar")),
+      entries(out.resolve("c-1.jar")),
       List(
         "META-INF/",
         "META-INF/semanticdb/",
         "META-INF/semanticdb/com/",
         "META-INF/semanticdb/com/javacp/",
-        "META-INF/semanticdb/com/javacp/Coin.class.semanticdb",
         "META-INF/semanticdb/com/javacp/Logger.class.semanticdb",
       ),
     )
-    assertEquals(classPath(out.resolve("b.jar")), Right(None))
+    assertEquals(
+      entries(out.resolve("b.jar")),
+      List(
+        "META-INF/",
+        "META-INF/MANIFEST.MF",
+        "META-INF/semanticdb/",
+        "META-INF/semanticdb/com/",
+        "META-INF/semanticdb/com/javacp/",
+        "META-INF/semanticdb/com/javacp/Coin.class.semanticdb",
+      ),
+    )
+    assertEquals(classPath(out.resolve("b.jar")), Right(Some("c-1.jar")))
   }
 
   test("jar passed twice, then a jar of the same name") {
@@ -685,7 +756,7 @@ class MetacpStatusSuite extends FunSuite {
     val y = jar("same/y/x.jar", classfile("Logger")).toString
     val out = tmp.resolve("out-same")
     val (stdout, stderr) = metacp(parse(out, List(x, x, y).mkString(pathSeparator)))
-    assertNoDiff(stdout, status(x -> s"$out/x.jar", x -> s"$out/x-1.jar", y -> s"$out/x-2.jar"))
+    assertNoDiff(stdout, status(x -> s"$out/x.jar", x -> s"$out/x.jar", y -> s"$out/x-1.jar"))
     assertNoDiff(stderr, "")
     assertEquals(
       entries(out.resolve("x-1.jar")),
@@ -694,10 +765,10 @@ class MetacpStatusSuite extends FunSuite {
         "META-INF/semanticdb/",
         "META-INF/semanticdb/com/",
         "META-INF/semanticdb/com/javacp/",
-        "META-INF/semanticdb/com/javacp/Coin.class.semanticdb",
+        "META-INF/semanticdb/com/javacp/Logger.class.semanticdb",
       ),
     )
-    assertEquals(Files.exists(out.resolve("x-2.jar")), true)
+    assertEquals(Files.exists(out.resolve("x-2.jar")), false)
   }
 
   test("directory with a broken classfile passed twice") {
@@ -706,10 +777,7 @@ class MetacpStatusSuite extends FunSuite {
     val (stdout, stderr) = metacp(parse(out, s"$in$pathSeparator$in"))
     assertNoDiff(stdout, status(in -> "", in -> ""))
     val bad = AbsolutePath(in).resolve("Bad.class")
-    assertEquals(
-      errors(stderr),
-      List(s"error: can't convert $bad in $in", s"error: can't convert $bad in $in"),
-    )
+    assertEquals(errors(stderr), List(s"error: can't convert $bad in $in"))
   }
 
   test("jar with a manifest classpath over 72 bytes") {
@@ -749,7 +817,7 @@ class MetacpStatusSuite extends FunSuite {
     assertNoDiff(stdout, status(in -> s"$out/a.jar"))
     assertNoDiff(stderr, "")
     assertEquals(classPath(out.resolve("a.jar")), Right(Some("b.jar")))
-    assertEquals(classPath(out.resolve("b.jar")), Right(None))
+    assertEquals(classPath(out.resolve("b.jar")), Right(Some(links)))
   }
 
   test("directory with broken signatures passed twice") {
@@ -757,12 +825,10 @@ class MetacpStatusSuite extends FunSuite {
     val out = tmp.resolve("out-signatures")
     val flags = List("--stub-broken-signatures", "--log-broken-signatures")
     val (stdout, stderr) = metacp(parse(out, s"$in$pathSeparator$in", flags: _*))
-    assertNoDiff(stdout, status(in -> s"$out/signatures", in -> s"$out/signatures-1"))
+    assertNoDiff(stdout, status(in -> s"$out/signatures", in -> s"$out/signatures"))
     assertNoDiff(
       stderr,
       """|broken signature for _empty_/A#: missing symbol: scala
-         |broken signature for _empty_/A#b().: missing symbol: <empty>.B
-         |broken signature for _empty_/A#: missing symbol: scala
          |broken signature for _empty_/A#b().: missing symbol: <empty>.B
          |""".stripMargin,
     )
@@ -780,8 +846,6 @@ class MetacpStatusSuite extends FunSuite {
       stderr,
       """|broken signature for _empty_/A#: missing symbol: scala
          |broken signature for _empty_/A#b().: missing symbol: <empty>.B
-         |broken signature for _empty_/A#: missing symbol: scala
-         |broken signature for _empty_/A#b().: missing symbol: <empty>.B
          |""".stripMargin,
     )
   }
@@ -790,12 +854,10 @@ class MetacpStatusSuite extends FunSuite {
     dir("case-x")
     dir("case-y")
     val upper = jar("case-x/Lib.jar")
-    val ignoresCase = Files.exists(upper.resolveSibling("lib.jar"))
     val lower = jar("case-y/lib.jar")
     val out = tmp.resolve("out-case")
     val (stdout, stderr) = metacp(parse(out, s"$upper$pathSeparator$lower"))
-    val second = if (ignoresCase) "lib-1.jar" else "lib.jar"
-    assertNoDiff(stdout, status(s"$upper" -> s"$out/Lib.jar", s"$lower" -> s"$out/$second"))
+    assertNoDiff(stdout, status(s"$upper" -> s"$out/Lib.jar", s"$lower" -> s"$out/lib-1.jar"))
     assertNoDiff(stderr, "")
   }
 
@@ -803,7 +865,6 @@ class MetacpStatusSuite extends FunSuite {
     dir("turkish-x")
     dir("turkish-y")
     val upper = jar("turkish-x/LIB.jar")
-    val ignoresCase = Files.exists(upper.resolveSibling("lib.jar"))
     val lower = jar("turkish-y/lib.jar")
     val out = tmp.resolve("out-turkish")
     val locale = Locale.getDefault
@@ -811,19 +872,16 @@ class MetacpStatusSuite extends FunSuite {
     val (stdout, stderr) =
       try metacp(parse(out, s"$upper$pathSeparator$lower"))
       finally Locale.setDefault(locale)
-    val second = if (ignoresCase) "lib-1.jar" else "lib.jar"
-    assertNoDiff(stdout, status(s"$upper" -> s"$out/LIB.jar", s"$lower" -> s"$out/$second"))
+    assertNoDiff(stdout, status(s"$upper" -> s"$out/LIB.jar", s"$lower" -> s"$out/lib-1.jar"))
     assertNoDiff(stderr, "")
   }
 
   test("directories whose names differ in case") {
     val upper = dir("dircase-x/Foo")
-    val ignoresCase = Files.exists(upper.resolveSibling("foo"))
     val lower = dir("dircase-y/foo")
     val out = tmp.resolve("out-dircase")
     val (stdout, stderr) = metacp(parse(out, s"$upper$pathSeparator$lower"))
-    val second = if (ignoresCase) "foo-1" else "foo"
-    assertNoDiff(stdout, status(s"$upper" -> s"$out/Foo", s"$lower" -> s"$out/$second"))
+    assertNoDiff(stdout, status(s"$upper" -> s"$out/Foo", s"$lower" -> s"$out/foo-1"))
     assertNoDiff(stderr, "")
   }
 
