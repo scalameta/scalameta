@@ -124,9 +124,19 @@ object PlatformFileIO {
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     val builder = List.newBuilder[RelativePath]
-    def loop(path: AbsolutePath): Unit =
-      if (path.isDirectory) listFiles(path).foreach(loop) else builder += path.toRelative(root)
-    loop(root)
+    val rootPath = root.toNIO
+    walkFiles(new WalkVisitor {
+      override def onFile(file: Path, fileStat: FileStat): WalkVisit = {
+        builder += RelativePath(rootPath.relativize(file))
+        WalkVisit.Skip
+      }
+      override def onFailStop(file: Path, exc: Throwable): Boolean =
+        if (JSIO.isDirectory(file.toString)) throw exc
+        else {
+          builder += RelativePath(rootPath.relativize(file))
+          false
+        }
+    })(rootPath)
     ListFiles(root, builder.result())
   }
 
