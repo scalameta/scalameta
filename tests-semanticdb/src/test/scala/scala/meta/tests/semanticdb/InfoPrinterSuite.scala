@@ -773,7 +773,7 @@ class InfoPrinterSuite extends FunSuite {
       s.SymbolInformation.Property.ABSTRACT,
     ),
     "_empty_/o.x. => abstract field x: R",
-    "{ x: R }",
+    "{ val x: R }",
   ))
 
   test("dotc: inferred refinement def")(assertMember(
@@ -785,7 +785,7 @@ class InfoPrinterSuite extends FunSuite {
       s.SymbolInformation.Property.ABSTRACT,
     ),
     "_empty_/o.f. => abstract field f: => R",
-    "{ f: => R }",
+    "{ def f: R }",
   ))
 
   test("dotc: inferred refinement var") {
@@ -805,7 +805,7 @@ class InfoPrinterSuite extends FunSuite {
     )
     assertType(
       s.StructuralType(declarations = Some(scope(setter, getter))),
-      "{ def w_=(x$1: R): Unit; w: R }",
+      "{ def w_=(x$1: R): Unit; val w: R }",
     )
   }
 

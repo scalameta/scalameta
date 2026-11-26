@@ -280,7 +280,7 @@ trait SymbolInformationPrinter extends BasePrinter {
       printModifiers(info, style)
       printKind(info, style)
       pprintName(info.displayName)
-      printSignature(info)
+      printSig(info, style)
     }
 
     /** Prints the words that `modifiers` lists for the properties of `info`. */
@@ -314,8 +314,12 @@ trait SymbolInformationPrinter extends BasePrinter {
             case _ => "def "
           }
         case MACRO | CONSTRUCTOR if style == Definition => "def "
-        case LOCAL | FIELD | PARAMETER | SELF_PARAMETER | TYPE_PARAMETER if style == Definition =>
-          ""
+        case FIELD if style == Definition =>
+          info.signature match {
+            case sig: ValueSignature => if (sig.tpe.isInstanceOf[ByNameType]) "def " else "val "
+            case _ => ""
+          }
+        case LOCAL | PARAMETER | SELF_PARAMETER | TYPE_PARAMETER if style == Definition => ""
         case CONSTRUCTOR => "ctor "
         case PARAMETER => "param "
         case SELF_PARAMETER => "selfparam "
@@ -326,9 +330,10 @@ trait SymbolInformationPrinter extends BasePrinter {
       }
     }
 
-    private def printSignature(info: SymbolInformation): Unit = info.signature match {
-      case NoSignature if info.isSelfParameter => ()
-      case sig: ValueSignature if info.isMethod || info.isMacro || info.isLocal =>
+    private def printSig(info: SymbolInformation, style: InfoStyle): Unit = info.signature match {
+      case NoSignature if info.isSelfParameter =>
+      case sig: ValueSignature
+          if info.isMethod || info.isMacro || info.isLocal || info.isField && style == Definition =>
         str(": ")
         pprint(sig.tpe match {
           case tpe: ByNameType => tpe.tpe
