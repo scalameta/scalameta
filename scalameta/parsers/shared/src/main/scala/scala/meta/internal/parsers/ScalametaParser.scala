@@ -2442,6 +2442,14 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
           case _: Term.Ref | _: Term.Apply | _: Quasi =>
             next()
             addPos(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
+          // the last argument clause belongs to `update`
+          case t: Term.New if !t.init.is[Quasi] && t.init.argClauses.lengthCompare(1) > 0 =>
+            val init = t.init
+            val argss = init.argClauses
+            val ctorArgss = argss.init
+            val ctorEnd = ctorArgss.last.endIndex
+            val ctor = atPos(init, ctorEnd)(Init(init.tpe, init.name, ctorArgss))
+            iter(copyPos(t)(Term.Apply(atPos(t, ctorEnd)(Term.New(ctor)), argss.last)))
           case _ => t
         }
       case _: Colon => getFewerBracesApplyOnColon(t, startPos) match {
