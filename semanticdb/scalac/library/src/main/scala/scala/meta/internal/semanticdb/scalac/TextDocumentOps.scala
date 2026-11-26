@@ -967,7 +967,10 @@ trait TextDocumentOps {
               }
             case g.Select(q: g.Ident, _) // transformNamedApplication blockWithQualifier case
                 if q.name.decoded.startsWith(g.nme.QUAL_PREFIX) => tryMend(gend)
-            case _: g.RefTree => if (!gsym.isDefaultGetter) tryMstart(gpoint)
+            case _: g.RefTree =>
+              if (!gsym.isDefaultGetter) tryMstart(gpoint)
+              // scalac typed a written `_root_.x` as `x`, with the range of `_root_.x`
+              if (gstart < gpoint && gtree.isInstanceOf[g.Ident]) tryFindRoot(gstartMtree, gend)
             case gtree: g.Import if gtree.expr != null && gtree.expr.tpe != null =>
               gtree.selectors.foreach { sel =>
                 val gname = sel.name
@@ -1094,6 +1097,17 @@ trait TextDocumentOps {
             val gpos = gtree.pos
             gqpos.start == gpos.start && gqpos.end == gpos.end && isScalaAlias(gtree.symbol)
           }
+        }
+
+        /** records the written `_root_` of a selection that ends at `end` */
+        private def tryFindRoot(mname: m.Name, end: Int): Unit = mname match {
+          case mname: m.Term.Name if mname.value == DisplayNames.RootPackage =>
+            mname.parent match {
+              case Some(p: m.Term.Select) if (p.qual eq mname) && p.pos.end == end =>
+                success(mname, g.rootMirror.RootPackage)
+              case _ =>
+            }
+          case _ =>
         }
         // find the written `scala` of `scala.List`: scalac 2.12 dropped it
         private def tryFindScalaQualifier(mname: m.Name): Unit = mname.parent match {

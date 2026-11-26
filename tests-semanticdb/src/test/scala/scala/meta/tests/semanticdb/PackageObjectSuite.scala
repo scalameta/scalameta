@@ -314,9 +314,11 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[5:22..5:26): po8p => po8p/
        |[5:27..5:28): C => po8p/package.C#
        |[6:6..6:7): z <= _empty_/po8.z.
+       |[6:9..6:15): _root_ => _root_/
        |[6:16..6:20): po8p => po8p/
        |[6:21..6:22): T => po8p/package.T#
        |[7:6..7:7): y <= _empty_/po8.y.
+       |[7:9..7:15): _root_ => _root_/
        |[7:16..7:20): po8p => po8p/
        |[7:21..7:22): C => po8p/package.C#
        |""".stripMargin,

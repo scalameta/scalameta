@@ -1907,12 +1907,15 @@ class NameRewriteSuite extends SemanticdbSuite {
       },
       """|[0:7..0:10): n27 <= _empty_/n27.
          |[1:6..1:7): a <= _empty_/n27.a.
+         |[1:10..1:16): _root_ => _root_/
          |[1:17..1:22): scala => scala/
          |[1:23..1:27): List => scala/package.List.
          |[2:6..2:7): b <= _empty_/n27.b.
+         |[2:10..2:16): _root_ => _root_/
          |[2:17..2:22): scala => scala/
          |[2:23..2:26): Seq => scala/package.Seq.
          |[3:6..3:7): c <= _empty_/n27.c.
+         |[3:10..3:16): _root_ => _root_/
          |[3:17..3:22): scala => scala/
          |[3:23..3:26): Nil => scala/package.Nil.
          |[4:6..4:7): d <= _empty_/n27.d.
@@ -3994,6 +3997,7 @@ class NameRewriteSuite extends SemanticdbSuite {
              |[5:16..5:21): scala => scala/
              |[5:22..5:25): Seq => scala/collection/Seq.
              |[5:26..5:27): y <= local3
+             |[6:9..6:15): _root_ => _root_/
              |[6:16..6:21): scala => scala/
              |[6:22..6:32): collection => scala/collection/
              |[6:33..6:42): immutable => scala/collection/immutable/
@@ -4005,17 +4009,22 @@ class NameRewriteSuite extends SemanticdbSuite {
          |[1:8..1:9): x <= _empty_/n52.f().(x)
          |[1:11..1:14): Any => scala/Any#
          |[1:18..1:19): x => _empty_/n52.f().(x)
+         |[2:9..2:15): _root_ => _root_/
          |[2:16..2:21): scala => scala/
          |[2:22..2:25): Nil => scala/package.Nil.
+         |[3:9..3:15): _root_ => _root_/
          |[3:16..3:21): scala => scala/
          |[3:22..3:26): List => scala/package.List.
          |[3:27..3:28): y <= local1
          |[4:11..4:13): :: => scala/package.`::`.
+         |[4:14..4:20): _root_ => _root_/
          |[4:21..4:26): scala => scala/
          |[4:27..4:30): Nil => scala/package.Nil.
+         |[5:9..5:15): _root_ => _root_/
          |[5:16..5:21): scala => scala/
          |[5:22..5:25): Seq => scala/package.Seq.
          |[5:26..5:27): y <= local3
+         |[6:9..6:15): _root_ => _root_/
          |[6:16..6:21): scala => scala/
          |[6:22..6:32): collection => scala/collection/
          |[6:33..6:42): immutable => scala/collection/immutable/

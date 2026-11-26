@@ -72,8 +72,9 @@ class InteractiveSuite extends FunSuite {
     """.stripMargin
 
   val expectedLatest = expected(
-    11,
-    """|[3:17..3:22): scala => scala/
+    12,
+    """|[3:10..3:16): _root_ => _root_/
+       |[3:17..3:22): scala => scala/
        |[3:23..3:27): List => scala/package.List.""".stripMargin,
     "apply => scala/collection/IterableFactory#apply().",
   )
