@@ -55,12 +55,27 @@ object ScalaVersion {
   def atLeast213_16 = atLeast213(16)
   def atLeast213_17 = atLeast213(17)
 
-  def getExpected(compat: Seq[(Version, String)], expected: String): String =
+  /** The symbols of `List` that differ by version, under the keys that an expected text contains */
+  private val VersionSymbols =
+    if (is212) List(
+      "<List.>" -> "scala/collection/immutable/List.",
+      "<List.apply().>" -> "scala/collection/immutable/List.apply().",
+    )
+    else List(
+      "<List.>" -> "scala/package.List.",
+      "<List.apply().>" -> "scala/collection/IterableFactory#apply().",
+    )
+
+  private def fillVersionSymbols(expected: String): String = VersionSymbols
+    .foldLeft(expected) { case (text, (key, symbol)) => text.replace(key, symbol) }
+
+  def getExpected(compat: Seq[(Version, String)], expected: String): String = fillVersionSymbols(
     if (compat.isEmpty) expected
     else compat.collectFirst {
       case (Full(`version`), expected) => expected
       case (v: Between, expected) if parsedVersion >= v.minVer && parsedVersion <= v.maxVer =>
         expected
-    }.getOrElse(expected)
+    }.getOrElse(expected),
+  )
 
 }
