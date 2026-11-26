@@ -15373,6 +15373,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |[17:24..17:27): Int => scala/Int#
          |[17:32..17:35): Int => scala/Int#
          |[17:39..17:40): x <= local53
+         |[17:42..17:48): _root_ => _root_/
          |[17:49..17:53): java => java/
          |[17:54..17:58): util => java/util/
          |[17:59..17:63): List => java/util/List#
@@ -15473,6 +15474,7 @@ class PartialFunctionSuite extends SemanticdbSuite {
          |[17:24..17:27): Int => scala/Int#
          |[17:32..17:35): Int => scala/Int#
          |[17:39..17:40): x <= local53
+         |[17:42..17:48): _root_ => _root_/
          |[17:49..17:53): java => java/
          |[17:54..17:58): util => java/util/
          |[17:59..17:63): List => java/util/List#
