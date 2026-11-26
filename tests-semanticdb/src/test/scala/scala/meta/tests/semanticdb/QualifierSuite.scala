@@ -15487,4 +15487,163 @@ class QualifierSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  occurrences(
+    "inferred parents through this and super",
+    """|trait qs150a { class Q[A](a: A) }
+       |class qs150 extends qs150a {
+       |  class P[A](a: A); object o { class P[A](a: A) }; trait Tr
+       |  class C1 extends qs150.this.o.P(1)
+       |  class C2 extends qs150.super.Q(1)
+       |  class C3 extends qs150.super[qs150a].Q(1)
+       |  class C4 extends super.Q(1)
+       |  object C5 extends qs150.this.P(1)
+       |  val c6 = new qs150.this.P(1) {}
+       |  class C7 extends { val x = 1 } with qs150.this.P(1)
+       |  class C8 extends qs150.this.P(1) with Tr
+       |  class M { class C9 extends qs150.this.P(1) }
+       |  class N { val qs150 = 1; class C10 extends qs150.this.P(1) }
+       |  def f = { class C11 extends qs150.this.P(1); 1 }
+       |  class qs150 extends qs150.this.P(1)
+       |  class C12 extends qs150.this.P[Int](1)
+       |  class C13 extends super[qs150a].Q(1)
+       |  val c14 = new AnyRef { class C14 extends qs150.this.P(1) }
+       |}
+       |object qs150o { class P[A](a: A); class C extends qs150o.this.P(1) }
+       |trait qs150t { class P[A](a: A); class C extends qs150t.this.P(1) }
+       |object qs150s extends qs150a { class C extends qs150s.super.Q(1) }
+       |""".stripMargin,
+    """|[0:6..0:12): qs150a <= _empty_/qs150a#
+       |[0:13..0:13):  <= _empty_/qs150a#`<init>`().
+       |[0:21..0:22): Q <= _empty_/qs150a#Q#
+       |[0:23..0:24): A <= _empty_/qs150a#Q#[A]
+       |[0:25..0:25):  <= _empty_/qs150a#Q#`<init>`().
+       |[0:26..0:27): a <= _empty_/qs150a#Q#`<init>`().(a)
+       |[0:26..0:27): a <= _empty_/qs150a#Q#a.
+       |[0:29..0:30): A => _empty_/qs150a#Q#[A]
+       |[1:6..1:11): qs150 <= _empty_/qs150#
+       |[1:12..1:12):  <= _empty_/qs150#`<init>`().
+       |[1:20..1:26): qs150a => _empty_/qs150a#
+       |[1:26..1:26):  => java/lang/Object#`<init>`().
+       |[2:8..2:9): P <= _empty_/qs150#P#
+       |[2:10..2:11): A <= _empty_/qs150#P#[A]
+       |[2:12..2:12):  <= _empty_/qs150#P#`<init>`().
+       |[2:13..2:14): a <= _empty_/qs150#P#`<init>`().(a)
+       |[2:13..2:14): a <= _empty_/qs150#P#a.
+       |[2:16..2:17): A => _empty_/qs150#P#[A]
+       |[2:27..2:28): o <= _empty_/qs150#o.
+       |[2:37..2:38): P <= _empty_/qs150#o.P#
+       |[2:39..2:40): A <= _empty_/qs150#o.P#[A]
+       |[2:41..2:41):  <= _empty_/qs150#o.P#`<init>`().
+       |[2:42..2:43): a <= _empty_/qs150#o.P#`<init>`().(a)
+       |[2:42..2:43): a <= _empty_/qs150#o.P#a.
+       |[2:45..2:46): A => _empty_/qs150#o.P#[A]
+       |[2:57..2:59): Tr <= _empty_/qs150#Tr#
+       |[3:8..3:10): C1 <= _empty_/qs150#C1#
+       |[3:11..3:11):  <= _empty_/qs150#C1#`<init>`().
+       |[3:30..3:31): o => _empty_/qs150#o.
+       |[3:32..3:33): P => _empty_/qs150#o.P#
+       |[3:33..3:33):  => _empty_/qs150#o.P#`<init>`().
+       |[4:8..4:10): C2 <= _empty_/qs150#C2#
+       |[4:11..4:11):  <= _empty_/qs150#C2#`<init>`().
+       |[4:31..4:32): Q => _empty_/qs150a#Q#
+       |[4:32..4:32):  => _empty_/qs150a#Q#`<init>`().
+       |[5:8..5:10): C3 <= _empty_/qs150#C3#
+       |[5:11..5:11):  <= _empty_/qs150#C3#`<init>`().
+       |[5:39..5:40): Q => _empty_/qs150a#Q#
+       |[5:40..5:40):  => _empty_/qs150a#Q#`<init>`().
+       |[6:8..6:10): C4 <= _empty_/qs150#C4#
+       |[6:11..6:11):  <= _empty_/qs150#C4#`<init>`().
+       |[6:25..6:26): Q => _empty_/qs150a#Q#
+       |[6:26..6:26):  => _empty_/qs150a#Q#`<init>`().
+       |[7:9..7:11): C5 <= _empty_/qs150#C5.
+       |[7:31..7:32): P => _empty_/qs150#P#
+       |[7:32..7:32):  => _empty_/qs150#P#`<init>`().
+       |[8:6..8:8): c6 <= _empty_/qs150#c6.
+       |[8:15..8:15):  <= local0
+       |[8:26..8:27): P => _empty_/qs150#P#
+       |[8:27..8:27):  => _empty_/qs150#P#`<init>`().
+       |[9:8..9:10): C7 <= _empty_/qs150#C7#
+       |[9:11..9:11):  <= _empty_/qs150#C7#`<init>`().
+       |[9:25..9:26): x <= _empty_/qs150#C7#x.
+       |[9:49..9:50): P => _empty_/qs150#P#
+       |[9:50..9:50):  => _empty_/qs150#P#`<init>`().
+       |[10:8..10:10): C8 <= _empty_/qs150#C8#
+       |[10:11..10:11):  <= _empty_/qs150#C8#`<init>`().
+       |[10:30..10:31): P => _empty_/qs150#P#
+       |[10:31..10:31):  => _empty_/qs150#P#`<init>`().
+       |[10:40..10:42): Tr => _empty_/qs150#Tr#
+       |[11:8..11:9): M <= _empty_/qs150#M#
+       |[11:10..11:10):  <= _empty_/qs150#M#`<init>`().
+       |[11:18..11:20): C9 <= _empty_/qs150#M#C9#
+       |[11:21..11:21):  <= _empty_/qs150#M#C9#`<init>`().
+       |[11:40..11:41): P => _empty_/qs150#P#
+       |[11:41..11:41):  => _empty_/qs150#P#`<init>`().
+       |[12:8..12:9): N <= _empty_/qs150#N#
+       |[12:10..12:10):  <= _empty_/qs150#N#`<init>`().
+       |[12:16..12:21): qs150 <= _empty_/qs150#N#qs150.
+       |[12:33..12:36): C10 <= _empty_/qs150#N#C10#
+       |[12:37..12:37):  <= _empty_/qs150#N#C10#`<init>`().
+       |[12:56..12:57): P => _empty_/qs150#P#
+       |[12:57..12:57):  => _empty_/qs150#P#`<init>`().
+       |[13:6..13:7): f <= _empty_/qs150#f().
+       |[13:18..13:21): C11 <= local1
+       |[13:22..13:22):  <= local2
+       |[13:41..13:42): P => _empty_/qs150#P#
+       |[13:42..13:42):  => _empty_/qs150#P#`<init>`().
+       |[14:8..14:13): qs150 <= _empty_/qs150#qs150#
+       |[14:14..14:14):  <= _empty_/qs150#qs150#`<init>`().
+       |[14:33..14:34): P => _empty_/qs150#P#
+       |[14:34..14:34):  => _empty_/qs150#P#`<init>`().
+       |[15:8..15:11): C12 <= _empty_/qs150#C12#
+       |[15:12..15:12):  <= _empty_/qs150#C12#`<init>`().
+       |[15:20..15:25): qs150 => _empty_/qs150#
+       |[15:31..15:32): P => _empty_/qs150#P#
+       |[15:33..15:36): Int => scala/Int#
+       |[15:37..15:37):  => _empty_/qs150#P#`<init>`().
+       |[16:8..16:11): C13 <= _empty_/qs150#C13#
+       |[16:12..16:12):  <= _empty_/qs150#C13#`<init>`().
+       |[16:34..16:35): Q => _empty_/qs150a#Q#
+       |[16:35..16:35):  => _empty_/qs150a#Q#`<init>`().
+       |[17:6..17:9): c14 <= _empty_/qs150#c14.
+       |[17:16..17:16):  <= local3
+       |[17:16..17:22): AnyRef => scala/AnyRef#
+       |[17:22..17:22):  => java/lang/Object#`<init>`().
+       |[17:31..17:34): C14 <= local4
+       |[17:35..17:35):  <= local5
+       |[17:54..17:55): P => _empty_/qs150#P#
+       |[17:55..17:55):  => _empty_/qs150#P#`<init>`().
+       |[19:7..19:13): qs150o <= _empty_/qs150o.
+       |[19:22..19:23): P <= _empty_/qs150o.P#
+       |[19:24..19:25): A <= _empty_/qs150o.P#[A]
+       |[19:26..19:26):  <= _empty_/qs150o.P#`<init>`().
+       |[19:27..19:28): a <= _empty_/qs150o.P#`<init>`().(a)
+       |[19:27..19:28): a <= _empty_/qs150o.P#a.
+       |[19:30..19:31): A => _empty_/qs150o.P#[A]
+       |[19:40..19:41): C <= _empty_/qs150o.C#
+       |[19:42..19:42):  <= _empty_/qs150o.C#`<init>`().
+       |[19:62..19:63): P => _empty_/qs150o.P#
+       |[19:63..19:63):  => _empty_/qs150o.P#`<init>`().
+       |[20:6..20:12): qs150t <= _empty_/qs150t#
+       |[20:13..20:13):  <= _empty_/qs150t#`<init>`().
+       |[20:21..20:22): P <= _empty_/qs150t#P#
+       |[20:23..20:24): A <= _empty_/qs150t#P#[A]
+       |[20:25..20:25):  <= _empty_/qs150t#P#`<init>`().
+       |[20:26..20:27): a <= _empty_/qs150t#P#`<init>`().(a)
+       |[20:26..20:27): a <= _empty_/qs150t#P#a.
+       |[20:29..20:30): A => _empty_/qs150t#P#[A]
+       |[20:39..20:40): C <= _empty_/qs150t#C#
+       |[20:41..20:41):  <= _empty_/qs150t#C#`<init>`().
+       |[20:61..20:62): P => _empty_/qs150t#P#
+       |[20:62..20:62):  => _empty_/qs150t#P#`<init>`().
+       |[21:7..21:13): qs150s <= _empty_/qs150s.
+       |[21:22..21:28): qs150a => _empty_/qs150a#
+       |[21:28..21:28):  => java/lang/Object#`<init>`().
+       |[21:37..21:38): C <= _empty_/qs150s.C#
+       |[21:39..21:39):  <= _empty_/qs150s.C#`<init>`().
+       |[21:60..21:61): Q => _empty_/qs150a#Q#
+       |[21:61..21:61):  => _empty_/qs150a#Q#`<init>`().
+       |
+       |""".stripMargin,
+  )
+
 }
