@@ -24,7 +24,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[2:18..2:22): po1p => po1p/
        |[2:23..2:24): T => po1p/package.T#
        |[3:6..3:7): b <= _empty_/po1.b.
-       |[3:10..3:14): List => scala/collection/immutable/Nil.
+       |[3:10..3:14): List => <List.>
        |[3:15..3:19): po1p => po1p/
        |[3:20..3:21): T => po1p/package.T#
        |[4:6..4:7): z <= _empty_/po1.z.
@@ -57,7 +57,7 @@ class PackageObjectSuite extends SemanticdbSuite {
              |[2:23..2:24): L => po2p/package.L#
              |[2:25..2:28): Int => scala/Int#
              |[3:6..3:7): b <= _empty_/po2.b.
-             |[3:10..3:14): List => scala/collection/immutable/Nil.
+             |[3:10..3:14): List => scala/collection/immutable/List.
              |[3:15..3:19): po2p => po2p/
              |[3:20..3:21): L => po2p/package.L#
              |[3:22..3:25): Int => scala/Int#
@@ -80,7 +80,7 @@ class PackageObjectSuite extends SemanticdbSuite {
          |[2:23..2:24): L => po2p/package.L#
          |[2:25..2:28): Int => scala/Int#
          |[3:6..3:7): b <= _empty_/po2.b.
-         |[3:10..3:14): List => scala/collection/immutable/Nil.
+         |[3:10..3:14): List => scala/package.List.
          |[3:15..3:19): po2p => po2p/
          |[3:20..3:21): L => po2p/package.L#
          |[3:22..3:25): Int => scala/Int#
@@ -111,7 +111,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[2:18..2:22): po3p => po3p/
        |[2:23..2:24): C => po3p/package.C#
        |[3:6..3:7): b <= _empty_/po3.b.
-       |[3:10..3:14): List => scala/collection/immutable/Nil.
+       |[3:10..3:14): List => <List.>
        |[3:15..3:19): po3p => po3p/
        |[3:20..3:21): C => po3p/package.C#
        |[4:6..4:7): z <= _empty_/po3.z.
@@ -138,7 +138,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[2:25..2:29): po4p => po4p/
        |[2:30..2:31): v => po4p/package.v.
        |[3:6..3:7): b <= _empty_/po4.b.
-       |[3:10..3:14): List => scala/collection/immutable/Nil.
+       |[3:10..3:14): List => <List.>
        |[3:15..3:19): po4p => po4p/
        |[3:20..3:21): v => po4p/package.v.
        |[4:6..4:7): z <= _empty_/po4.z.
@@ -167,7 +167,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[2:25..2:29): po5p => po5p/
        |[2:30..2:31): O => po5p/package.O.
        |[3:6..3:7): b <= _empty_/po5.b.
-       |[3:10..3:14): List => scala/collection/immutable/Nil.
+       |[3:10..3:14): List => <List.>
        |[3:15..3:19): po5p => po5p/
        |[3:20..3:21): O => po5p/package.O.
        |[4:6..4:7): z <= _empty_/po5.z.
@@ -203,7 +203,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[2:23..2:27): po6b => po6a/po6b/
        |[2:28..2:29): T => po6a/po6b/package.T#
        |[3:6..3:7): b <= _empty_/po6.b.
-       |[3:10..3:14): List => scala/collection/immutable/Nil.
+       |[3:10..3:14): List => <List.>
        |[3:15..3:19): po6a => po6a/
        |[3:20..3:24): po6b => po6a/po6b/
        |[3:25..3:26): T => po6a/po6b/package.T#
@@ -213,7 +213,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[4:23..4:27): po6b => po6a/po6b/
        |[4:28..4:29): C => po6a/po6b/package.C#
        |[5:6..5:7): d <= _empty_/po6.d.
-       |[5:10..5:14): List => scala/collection/immutable/Nil.
+       |[5:10..5:14): List => <List.>
        |[5:15..5:19): po6a => po6a/
        |[5:20..5:24): po6b => po6a/po6b/
        |[5:25..5:26): C => po6a/po6b/package.C#
@@ -255,7 +255,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[3:18..3:19): q => po7a/po7b/
        |[3:20..3:21): T => po7a/po7b/package.T#
        |[4:6..4:7): b <= _empty_/po7.b.
-       |[4:10..4:14): List => scala/collection/immutable/Nil.
+       |[4:10..4:14): List => <List.>
        |[4:15..4:16): q => po7a/po7b/
        |[4:17..4:18): T => po7a/po7b/package.T#
        |[5:6..5:7): c <= _empty_/po7.c.
@@ -263,7 +263,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[5:18..5:19): q => po7a/po7b/
        |[5:20..5:21): C => po7a/po7b/package.C#
        |[6:6..6:7): d <= _empty_/po7.d.
-       |[6:10..6:14): List => scala/collection/immutable/Nil.
+       |[6:10..6:14): List => <List.>
        |[6:15..6:16): q => po7a/po7b/
        |[6:17..6:18): C => po7a/po7b/package.C#
        |[7:6..7:7): z <= _empty_/po7.z.
@@ -299,7 +299,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[2:25..2:29): po8p => po8p/
        |[2:30..2:31): T => po8p/package.T#
        |[3:6..3:7): b <= _empty_/po8.b.
-       |[3:10..3:14): List => scala/collection/immutable/Nil.
+       |[3:10..3:14): List => <List.>
        |[3:15..3:21): _root_ => _root_/
        |[3:22..3:26): po8p => po8p/
        |[3:27..3:28): T => po8p/package.T#
@@ -309,7 +309,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[4:25..4:29): po8p => po8p/
        |[4:30..4:31): C => po8p/package.C#
        |[5:6..5:7): d <= _empty_/po8.d.
-       |[5:10..5:14): List => scala/collection/immutable/Nil.
+       |[5:10..5:14): List => <List.>
        |[5:15..5:21): _root_ => _root_/
        |[5:22..5:26): po8p => po8p/
        |[5:27..5:28): C => po8p/package.C#
@@ -348,7 +348,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[2:23..2:32): `package` => po9p/package.
        |[2:33..2:34): T => po9p/package.T#
        |[3:6..3:7): b <= _empty_/po9.b.
-       |[3:10..3:14): List => scala/collection/immutable/Nil.
+       |[3:10..3:14): List => <List.>
        |[3:15..3:19): po9p => po9p/
        |[3:20..3:29): `package` => po9p/package.
        |[3:30..3:31): T => po9p/package.T#
@@ -358,7 +358,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[4:23..4:32): `package` => po9p/package.
        |[4:33..4:34): C => po9p/package.C#
        |[5:6..5:7): d <= _empty_/po9.d.
-       |[5:10..5:14): List => scala/collection/immutable/Nil.
+       |[5:10..5:14): List => <List.>
        |[5:15..5:19): po9p => po9p/
        |[5:20..5:29): `package` => po9p/package.
        |[5:30..5:31): C => po9p/package.C#
@@ -403,10 +403,11 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[2:76..2:81): po10p => po10p/
        |[2:82..2:83): T => po10p/package.T#
        |[3:6..3:7): b <= _empty_/po10.b.
-       |[3:10..3:14): List => scala/collection/immutable/Nil.
-       |[3:15..3:21): AnyRef => java/lang/Object#
+       |[3:10..3:14): List => <List.>
+       |[3:15..3:21): AnyRef => scala/AnyRef#
        |[3:28..3:29): m <= local3
-       |[3:37..3:38): T => scala/Int#
+       |[3:31..3:36): po10p => po10p/
+       |[3:37..3:38): T => po10p/package.T#
        |[3:44..3:45): n <= local4
        |[3:46..3:47): x <= local5
        |[3:49..3:54): po10p => po10p/
@@ -458,7 +459,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[3:50..3:55): po11p => po11p/
        |[3:56..3:57): C => po11p/package.C#
        |[4:6..4:7): c <= _empty_/po11.c.
-       |[4:10..4:14): List => scala/collection/immutable/Nil.
+       |[4:10..4:14): List => <List.>
        |[4:15..4:21): Option => scala/Option#
        |[4:22..4:23): v => local3
        |[4:44..4:45): v <= local3
@@ -498,10 +499,11 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[2:28..2:33): po12p => po12p/
        |[2:34..2:37): ann => po12p/package.ann#
        |[3:6..3:7): b <= _empty_/po12.b.
-       |[3:10..3:14): List => scala/collection/immutable/Nil.
+       |[3:10..3:14): List => <List.>
        |[3:15..3:18): Int => scala/Int#
        |[3:20..3:25): po12p => po12p/
        |[3:26..3:29): ann => po12p/package.ann#
+       |[3:29..3:29):  => po12p/package.ann#`<init>`().
        |[4:6..4:7): z <= _empty_/po12.z.
        |[4:9..4:12): Int => scala/Int#
        |[4:14..4:19): po12p => po12p/
@@ -597,8 +599,8 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[2:56..2:57): A => local3
        |[2:60..2:63): Int => scala/Int#
        |[3:6..3:7): b <= _empty_/po15.b.
-       |[3:10..3:14): List => scala/collection/immutable/Nil.
-       |[3:15..3:21): AnyRef => java/lang/Object#
+       |[3:10..3:14): List => <List.>
+       |[3:15..3:21): AnyRef => scala/AnyRef#
        |[3:28..3:29): m <= local4
        |[3:30..3:31): A <= local7
        |[3:33..3:33):  <= local6
@@ -649,7 +651,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[3:18..3:19): q => po17p/package.
        |[3:20..3:21): C => po17p/package.C#
        |[4:6..4:7): b <= _empty_/po17.b.
-       |[4:10..4:14): List => scala/collection/immutable/Nil.
+       |[4:10..4:14): List => <List.>
        |[4:15..4:16): q => po17p/package.
        |[4:17..4:18): T => po17p/package.T#
        |[5:6..5:7): z <= _empty_/po17.z.
@@ -663,7 +665,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[9:18..9:27): `package` => po17p/package.
        |[9:28..9:29): C => po17p/package.C#
        |[10:6..10:7): b <= _empty_/po17x.b.
-       |[10:10..10:14): List => scala/collection/immutable/Nil.
+       |[10:10..10:14): List => <List.>
        |[10:15..10:24): `package` => po17p/package.
        |[10:25..10:26): T => po17p/package.T#
        |[11:6..11:7): z <= _empty_/po17x.z.
@@ -701,7 +703,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[5:24..5:29): po18p => po18a/po18p/
        |[5:30..5:31): C => po18a/Base#C#
        |[6:6..6:7): b <= _empty_/po18.b.
-       |[6:10..6:14): List => scala/collection/immutable/Nil.
+       |[6:10..6:14): List => <List.>
        |[6:15..6:20): po18a => po18a/
        |[6:21..6:26): po18p => po18a/po18p/
        |[6:27..6:28): T => po18a/Base#T#
@@ -730,12 +732,12 @@ class PackageObjectSuite extends SemanticdbSuite {
          |[1:24..1:27): Seq => scala/package.Seq#
          |[1:28..1:31): Int => scala/Int#
          |[2:6..2:7): b <= _empty_/po19.b.
-         |[2:10..2:14): List => scala/collection/immutable/Nil.
+         |[2:10..2:14): List => scala/collection/immutable/List.
          |[2:15..2:20): scala => scala/
          |[2:21..2:25): List => scala/package.List#
          |[2:26..2:29): Int => scala/Int#
          |[3:6..3:7): c <= _empty_/po19.c.
-         |[3:10..3:14): List => scala/collection/immutable/Nil.
+         |[3:10..3:14): List => scala/collection/immutable/List.
          |[3:15..3:20): scala => scala/
          |[3:21..3:24): Nil => scala/collection/immutable/Nil.
          |[4:6..4:7): z <= _empty_/po19.z.
@@ -756,12 +758,12 @@ class PackageObjectSuite extends SemanticdbSuite {
          |[1:24..1:27): Seq => scala/package.Seq#
          |[1:28..1:31): Int => scala/Int#
          |[2:6..2:7): b <= _empty_/po19.b.
-         |[2:10..2:14): List => scala/collection/immutable/Nil.
+         |[2:10..2:14): List => scala/package.List.
          |[2:15..2:20): scala => scala/
          |[2:21..2:25): List => scala/package.List#
          |[2:26..2:29): Int => scala/Int#
          |[3:6..3:7): c <= _empty_/po19.c.
-         |[3:10..3:14): List => scala/collection/immutable/Nil.
+         |[3:10..3:14): List => scala/package.List.
          |[3:15..3:20): scala => scala/
          |[3:21..3:24): Nil => scala/package.Nil.
          |[4:6..4:7): z <= _empty_/po19.z.
@@ -808,7 +810,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[7:20..7:25): po20p => po20p/
        |[7:26..7:27): C => po20p/package.C#
        |[8:8..8:9): b <= po20p/o.b.
-       |[8:12..8:16): List => scala/collection/immutable/Nil.
+       |[8:12..8:16): List => <List.>
        |[8:17..8:22): po20p => po20p/
        |[8:23..8:24): C => po20p/package.C#
        |[9:8..9:9): z <= po20p/o.z.
@@ -1153,7 +1155,7 @@ class PackageObjectSuite extends SemanticdbSuite {
        |[3:18..3:23): po29b => po29a/po29b/package.
        |[3:24..3:25): C => po29a/po29b/package.C#
        |[4:6..4:7): b <= _empty_/po29.b.
-       |[4:10..4:14): List => scala/collection/immutable/Nil.
+       |[4:10..4:14): List => <List.>
        |[4:15..4:20): po29b => po29a/po29b/package.
        |[4:21..4:22): C => po29a/po29b/package.C#
        |""".stripMargin,

@@ -2151,7 +2151,7 @@ Text => non-empty
 Language => Scala
 Symbols => 11 entries
 Occurrences => 63 entries
-Synthetics => 1 entries
+Synthetics => 2 entries
 
 Symbols:
 example/InstrumentTyper# => class InstrumentTyper extends AnyRef { self: AnyRef => +6 decls }
@@ -2229,7 +2229,7 @@ Occurrences:
 [19:12..19:22): clazzOfInt => types/Test.Literal.clazzOfInt.
 [20:4..20:11): Literal => types/Test.Literal.
 [20:12..20:25): clazzOfOption => types/Test.Literal.clazzOfOption.
-[21:4..21:8): List => scala/collection/immutable/Nil.
+[21:4..21:8): List => scala/collection/immutable/List.
 [23:6..23:17): existential <= example/InstrumentTyper#existential().
 [23:19..23:20): U => local1
 [23:21..23:24): Int => scala/Int#
@@ -2254,6 +2254,9 @@ Synthetics:
 [8:12..8:16): List => *.apply[Any]
   apply => scala/collection/immutable/List.apply().
   Any => scala/Any#
+[21:4..21:8): List => *.apply[Nothing]
+  apply => scala/collection/immutable/List.apply().
+  Nothing => scala/Nothing#
 
 semanticdb/integration/src/main/scala/example/Issue1544.scala
 -------------------------------------------------------------
