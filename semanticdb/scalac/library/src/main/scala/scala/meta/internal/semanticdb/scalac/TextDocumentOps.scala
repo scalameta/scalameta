@@ -1212,15 +1212,17 @@ trait TextDocumentOps {
             }
           case mq: m.Term.This =>
             val gcls = enclosingClass(mq.qual, gscope)
-            if (null eq gcls) null else (gcls.thisType, Nil)
+            if (null eq gcls) null
+            else (gcls.thisType, if (mq.qual.value.isEmpty) Nil else (mq.qual -> gcls) :: Nil)
           case mq: m.Term.Super => enclosingClass(mq.thisp, gscope) match {
               case null => null
               case gcls =>
                 val gparents = gcls.info.parents
+                val gquals = if (mq.thisp.value.isEmpty) Nil else (mq.thisp -> gcls) :: Nil
                 val msuper = mq.superp
-                if (msuper.value.isEmpty) (g.intersectionType(gparents), Nil)
+                if (msuper.value.isEmpty) (g.intersectionType(gparents), gquals)
                 else gparents.find(_.typeSymbol.decodedName == msuper.value) match {
-                  case Some(gparent) => (gparent, Nil)
+                  case Some(gparent) => (gparent, (msuper -> gparent.typeSymbol) :: gquals)
                   case _ => null
                 }
             }
