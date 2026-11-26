@@ -2,6 +2,8 @@ package scala.meta.tests.io
 
 import scala.meta.internal.io.PathIO
 
+import java.io.File
+
 import munit.FunSuite
 
 class PathIOSuite extends FunSuite {
@@ -31,5 +33,12 @@ class PathIOSuite extends FunSuite {
   check("a/", "/", "a")
   check("a/b", "a/", "b")
   check("a/b/", "a/", "b")
+
+  test("PathIO.toUnix") {
+    assertEquals(PathIO.toUnix(s"a${File.separator}b"), "a/b")
+    assertEquals(PathIO.toUnix("a/b"), "a/b")
+  }
+
+  test("PathIO.fromUnix")(assertEquals(PathIO.fromUnix("a/b"), s"a${File.separator}b"))
 
 }
