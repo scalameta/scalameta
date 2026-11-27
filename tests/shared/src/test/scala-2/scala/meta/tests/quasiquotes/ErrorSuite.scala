@@ -907,7 +907,7 @@ class ErrorSuite extends TreeSuiteBase {
       val name = Lit.String("x")
       q"0 /* $name"
     """,
-    ).nl2lf
+    )
     val expected =
       "<macro>:5: exception during macro expansion: \njava.lang.StringIndexOutOfBoundsException"
     assertNoDiff(error.take(expected.length), expected)
