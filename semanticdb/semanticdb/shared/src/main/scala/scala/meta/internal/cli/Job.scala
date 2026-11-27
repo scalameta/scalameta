@@ -3,14 +3,22 @@ package scala.meta.internal.cli
 import java.io._
 import java.util.concurrent.atomic._
 
-case class Job[T](xs: collection.Seq[T], stream: PrintStream) {
-  def foreach(fn: T => Unit): Unit = {
-    val startStamp = System.nanoTime()
-    val lastStamp = new AtomicLong(startStamp)
-    val n = xs.length
-    val i = new AtomicInteger(0)
+object Job {
+  def foreach[T](xs: collection.Seq[T], stream: PrintStream)(fn: T => Unit): Unit = {
+    val track = new Track(xs.length, stream)
     xs.foreach { x =>
       fn(x)
+      track.afterEach()
+    }
+    track.afterAll()
+  }
+
+  private class Track(n: Int, stream: PrintStream) {
+    private val startStamp = System.nanoTime()
+    private val lastStamp = new AtomicLong(startStamp)
+    private val i = new AtomicInteger(0)
+
+    def afterEach(): Unit = {
       val i1 = i.incrementAndGet()
       val currStamp = System.nanoTime()
       val prevStamp = lastStamp.get()
@@ -22,8 +30,12 @@ case class Job[T](xs: collection.Seq[T], stream: PrintStream) {
         stream.println(s"($i/$n) $remaining remaining")
       }
     }
-    val elapsedSeconds = 1.0 * (System.nanoTime() - startStamp) / 1000000000
-    val elapsed = "%.2f".format(elapsedSeconds) + "s"
-    stream.println(s"Job finished in $elapsed")
+
+    def afterAll(): Unit = {
+      val elapsedSeconds = 1.0 * (System.nanoTime() - startStamp) / 1000000000
+      val elapsed = "%.2f".format(elapsedSeconds) + "s"
+      stream.println(s"Job finished in $elapsed")
+    }
   }
+
 }
