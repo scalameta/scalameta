@@ -16,6 +16,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.jar._
 
 import scala.collection.{immutable, mutable}
+import scala.runtime.BooleanRef
 
 class Main(settings: Settings, reporter: Reporter) {
 
@@ -152,39 +153,39 @@ class Main(settings: Settings, reporter: Reporter) {
       f(OutputEntry(output, output))
     }
 
-  private def convertClasspathEntry(in: AbsolutePath, arg: String, out: AbsolutePath): Boolean = {
-    var success = true
-    val classpath = Classpath(in)
-    classpath.visit { _ =>
-      new SimpleFileVisitor[Path] {
-        override def visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult = {
-          if (PathIO.fileExtension(path) == ".class" && Files.size(path) > 0)
-            try {
-              val abspath = AbsolutePath(path)
-              val node = abspath.toClassNode
-              val result = ClassfileInfos.fromClassNode(node, classpathIndex, settings, reporter)
-              result.foreach(infos => infos.save(out))
-            } catch {
-              case e @ MissingSymbolException(symbol) => if (!missingSymbols.contains(symbol)) {
-                  missingSymbols += symbol
-                  reporter.err.println(s"${e.getMessage} in $arg")
-                  success = false
-                }
-              case ex: Throwable =>
-                reporter.err.println(s"error: can't convert $path in $arg")
-                ex.printStackTrace(reporter.err)
-                success = false
+  private def saveInfoVisitor(
+      arg: String,
+      out: AbsolutePath,
+      ok: BooleanRef,
+  ): SimpleFileVisitor[Path] = new SimpleFileVisitor[Path] {
+    override def visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult = {
+      if (PathIO.fileExtension(path) == ".class" && attrs.size() > 0)
+        try ClassfileInfos
+            .fromClassNode(AbsolutePath(path).toClassNode, classpathIndex, settings, reporter)
+            .foreach(_.save(out))
+        catch {
+          case ex: MissingSymbolException => if (missingSymbols.add(ex.symbol)) {
+              reporter.err.println(s"${ex.getMessage} in $arg")
+              ok.elem = false
             }
-          FileVisitResult.CONTINUE
+          case ex: Throwable =>
+            reporter.err.println(s"error: can't convert $path in $arg")
+            ex.printStackTrace(reporter.err)
+            ok.elem = false
         }
-      }
+      FileVisitResult.CONTINUE
     }
+  }
+
+  private def convertClasspathEntry(in: AbsolutePath, arg: String, out: AbsolutePath): Boolean = {
+    val ok = BooleanRef.create(true)
+    Classpath(in).visit(_ => saveInfoVisitor(arg, out, ok))
     // NOTE: In the case when an input contains no class files,
     // we need to create an empty META-INF/semanticdb directory to distinguish
     // metacp-processed outputs from regular class directories and/or jar.
     val semanticdbRoot = out.resolve("META-INF").resolve("semanticdb")
     Files.createDirectories(semanticdbRoot.toNIO)
-    success
+    ok.elem
   }
 
   private def detectJavacp: Classpath =
