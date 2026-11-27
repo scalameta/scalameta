@@ -38,7 +38,7 @@ class Main(settings: Settings, reporter: Reporter) {
 
     val outputs = new Array[Option[AbsolutePath]](classpath.length)
 
-    Job(cpargs, if (settings.verbose) reporter.err else devnull).foreach { case ((entry, arg), i) =>
+    Job.foreach(cpargs, if (settings.verbose) reporter.err else devnull) { case ((entry, arg), i) =>
       val out = withOutputEntry(entry) { x =>
         outputs(i) = if (convertClasspathEntry(entry, arg, x.root)) Some(x.output) else None
         x.output
