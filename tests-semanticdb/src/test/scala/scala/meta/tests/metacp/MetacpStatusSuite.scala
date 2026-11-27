@@ -254,7 +254,7 @@ class MetacpStatusSuite extends FunSuite {
       finally zip.close()
     assertEquals(
       new String(bytes, UTF_8),
-      "Manifest-Version: 1.0\nClass-Path: part0.jar part1.jar\n\n\n",
+      "Manifest-Version: 1.0\r\nClass-Path: part0.jar part1.jar\r\n\r\n",
     )
   }
 
@@ -727,7 +727,7 @@ class MetacpStatusSuite extends FunSuite {
       try InputStreamIO.readBytes(zip.getInputStream(zip.getEntry(JarFile.MANIFEST_NAME)))
       finally zip.close()
     val text = new String(bytes, UTF_8)
-    assertEquals(text, s"Manifest-Version: 1.0\nClass-Path: $head$tail\n\n\n")
+    assertEquals(text, s"Manifest-Version: 1.0\r\nClass-Path: $head\r\n $tail\r\n\r\n")
   }
 
   test("jar with a long manifest classpath") {
@@ -737,7 +737,7 @@ class MetacpStatusSuite extends FunSuite {
     val (stdout, stderr) = metacp(parse(out, in))
     assertNoDiff(stdout, status(in -> s"$out/long.jar"))
     assertNoDiff(stderr, "")
-    assertEquals(classPath(out.resolve("long.jar")), Left("line too long"))
+    assertEquals(classPath(out.resolve("long.jar")), Right(Some(links)))
   }
 
   test("linked jar with a long manifest classpath") {
