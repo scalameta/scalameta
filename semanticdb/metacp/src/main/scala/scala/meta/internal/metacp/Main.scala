@@ -10,7 +10,6 @@ import scala.meta.io._
 import scala.meta.metacp._
 
 import java.io.BufferedOutputStream
-import java.nio.charset.StandardCharsets
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.jar._
@@ -103,11 +102,11 @@ class Main(settings: Settings, reporter: Reporter) {
       if (convertedLinkedJars.nonEmpty) withJar(out.toNIO) { jos =>
         jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"))
         val classPath = convertedLinkedJars.mkString(" ")
-        val manifest =
-          s"""|Manifest-Version: 1.0
-              |Class-Path: $classPath
-              |""".stripMargin + "\n\n"
-        jos.write(manifest.getBytes(StandardCharsets.UTF_8))
+        val manifest = new Manifest
+        val attributes = manifest.getMainAttributes
+        attributes.put(Attributes.Name.MANIFEST_VERSION, "1.0")
+        attributes.put(Attributes.Name.CLASS_PATH, classPath)
+        manifest.write(jos)
         jos.closeEntry()
       }
     }
