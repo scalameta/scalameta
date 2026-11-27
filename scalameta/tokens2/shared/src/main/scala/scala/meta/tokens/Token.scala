@@ -346,6 +346,12 @@ object Token {
   class CommentEnd(value: String) extends CommentValue
   @freeform("comment_unquote")
   class CommentUnquote extends CommentLike
+
+  /** A comment with unquotes: `value` holds its text with the unquotes, `tokens` its pieces. */
+  @freeform("comment with unquotes")
+  private[meta] class CommentWithUnquotes(value: String, tokens: List[CommentLike])
+      extends CommentValue with MultiToken
+
   @freeform("beginning of file")
   class BOF extends AtEOLorF {
     def this(input: Input, dialect: Dialect) = this(input, dialect, 0)

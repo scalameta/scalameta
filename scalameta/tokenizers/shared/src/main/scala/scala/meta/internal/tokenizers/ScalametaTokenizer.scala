@@ -38,6 +38,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
       } else nt
     }
 
+    def getNextToken(): Token = getToken(nextToken())
+
     def isAtLineStart: Boolean = lastEmittedToken.isInstanceOf[Token.AtEOLorF]
 
     @tailrec
@@ -120,10 +122,33 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
       pushToken(token)
       emitContents(nextToken())
     }
+    def emitTokenComment(token: Token.CommentStart): Token = {
+      val res = List.newBuilder[Token.CommentLike]
+      def push(end: Int, valueEnd: Int): Unit = pushToken {
+        val value = getPart(token.start + 2, valueEnd) // skip `/*` or `//`
+        Token.CommentWithUnquotes(input, dialect, token.start, end, value, res.result())
+      }
+      @tailrec
+      def iter(curr: Token.CommentLike): Token = {
+        res += curr
+        curr match {
+          case tok: Token.CommentEnd =>
+            push(tok.end, tok.start + tok.value.length)
+            getNextToken()
+          case _ => getNextToken() match {
+              case next: Token.CommentLike => iter(next)
+              case next =>
+                push(curr.end, curr.end)
+                next
+            }
+        }
+      }
+      iter(token)
+    }
     @tailrec
     def emitToken(token: Token): Unit = token match {
       case _: Token.At if input.isInstanceOf[Input.Ammonite] && isAtLineStart =>
-        getToken(nextToken()) match {
+        getNextToken() match {
           case t: Token.Whitespace =>
             pushToken(Token.EOF(input, dialect, token.start))
             pushToken(token)
@@ -136,6 +161,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
       case t: Token.Whitespace => emitToken(emitTokenWhitespace(t))
       case t: Token.Interpolation.Id => emitToken(emitTokenInterpolation(t))
       case t: Token.Xml.Part => emitTokenXml(t)
+      case t: Token.CommentStart => emitToken(emitTokenComment(t))
       case _ => pushToken(token)
     }
 

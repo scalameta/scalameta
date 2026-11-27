@@ -24,6 +24,7 @@ class ReflectionSuite extends TreeSuiteBase {
          |Token.CommentPart
          |Token.CommentStart
          |Token.CommentUnquote
+         |Token.CommentWithUnquotes
          |Token.Constant.Char
          |Token.Constant.Double
          |Token.Constant.Float

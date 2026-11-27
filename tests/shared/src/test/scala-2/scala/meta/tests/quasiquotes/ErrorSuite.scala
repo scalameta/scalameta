@@ -894,7 +894,7 @@ class ErrorSuite extends TreeSuiteBase {
          | found   : scala.meta.Term.Name
          | required: scala.meta.Lit.String
          |      q"0 /* $name */"
-         |             ^
+         |              ^
          |""".stripMargin,
     )
   }

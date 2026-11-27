@@ -12,7 +12,7 @@ object Absolutize {
       case Position.Range(Input.Slice(input, absoluteStart, _), start, end) =>
         val start1 = absoluteStart + start
         val end1 = absoluteStart + end
-        Position.Range(input, start1, end1)
+        Position.Range(input, start1, end1).absolutize
       case other => other
     }
   }
