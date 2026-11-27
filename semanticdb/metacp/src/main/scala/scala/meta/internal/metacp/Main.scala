@@ -39,7 +39,7 @@ class Main(settings: Settings, reporter: Reporter) {
     val outputs = new Array[Option[AbsolutePath]](classpath.length)
 
     Job.foreach(cpargs, if (settings.verbose) reporter.err else devnull) { case ((entry, arg), i) =>
-      val out = withOutputEntry(entry) { x =>
+      val out = withOutput(entry, outputName(entry)) { x =>
         outputs(i) = if (convertClasspathEntry(entry, arg, x.root)) Some(x.output) else None
         x.output
       }
@@ -53,13 +53,14 @@ class Main(settings: Settings, reporter: Reporter) {
     }
 
     val scalaLibrarySynthetics =
-      if (settings.scalaLibrarySynthetics)
-        withOutputEntry(settings.out.resolve("scala-library-synthetics.jar")) { out =>
+      if (settings.scalaLibrarySynthetics) {
+        val entry = settings.out.resolve("scala-library-synthetics.jar")
+        withOutput(entry, outputName(entry)) { out =>
           Scalalib.synthetics(Scalalib.isHashHashNullary(classpathIndex))
             .foreach(infos => infos.save(out.root))
           Some(out.output)
         }
-      else None
+      } else None
 
     if (missingSymbols.nonEmpty) reporter.err.println(
       "NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. " +
@@ -91,10 +92,11 @@ class Main(settings: Settings, reporter: Reporter) {
       classpathAttr.split(" ").foreach { classpathEntry =>
         val linkedPath = entry.toNIO.getParent.resolve(classpathEntry)
         val linkedEntry = AbsolutePath(linkedPath)
-        if (linkedEntry.isFile || linkedEntry.isDirectory) withOutputEntry(linkedEntry) { out =>
-          buf += out.output.toNIO.getFileName
-          success &= convertClasspathEntry(linkedEntry, linkedEntry.toString, out.root)
-        }
+        if (linkedEntry.isFile || linkedEntry.isDirectory)
+          withOutput(linkedEntry, outputName(linkedEntry)) { out =>
+            buf += out.output.toNIO.getFileName
+            success &= convertClasspathEntry(linkedEntry, linkedEntry.toString, out.root)
+          }
       }
       val convertedLinkedJars = buf.result()
       if (convertedLinkedJars.nonEmpty) withJar(out.toNIO) { jos =>
@@ -133,26 +135,22 @@ class Main(settings: Settings, reporter: Reporter) {
    */
   private case class OutputEntry(output: AbsolutePath, root: AbsolutePath)
 
-  private def withOutputEntry[T](entry: AbsolutePath)(f: OutputEntry => T): T = {
+  private def outputName(entry: AbsolutePath): AbsolutePath = {
     val name = entry.toNIO.normalize().getFileName.toString
-    if (PathIO.fileExtension(entry.toNIO) == ".jar") {
-      val freeJar = jarNameAlternatives(name).filter(!_.isFile).next()
-      PlatformFileIO
-        .withJarFileSystem(freeJar, create = true)(jarRoot => f(OutputEntry(freeJar, jarRoot)))
-    } else {
-      val freeDir = directoryNameAlternatives(name).filter(!_.isDirectory).next()
-      Files.createDirectories(freeDir.toNIO)
-      f(OutputEntry(freeDir, freeDir))
+    val base = name.stripSuffix(JarExtension)
+    val ext = if (name ne base) JarExtension else ""
+    val pred: AbsolutePath => Boolean = if (name ne base) !_.isFile else !_.isDirectory
+    Iterator.from(0).map(i => settings.out.resolve(if (i == 0) name else s"$base-$i$ext"))
+      .filter(pred).next()
+  }
+
+  private def withOutput[T](entry: AbsolutePath, output: AbsolutePath)(f: OutputEntry => T): T =
+    if (isJar(entry)) PlatformFileIO
+      .withJarFileSystem(output, create = true)(jarRoot => f(OutputEntry(output, jarRoot)))
+    else {
+      Files.createDirectories(output.toNIO)
+      f(OutputEntry(output, output))
     }
-  }
-
-  private def directoryNameAlternatives(filename: String): Iterator[AbsolutePath] = Iterator.from(0)
-    .map(i => settings.out.resolve(if (i == 0) filename else filename + "-" + i))
-
-  private def jarNameAlternatives(filename: String): Iterator[AbsolutePath] = {
-    val base = filename.stripSuffix(".jar")
-    Iterator.from(0).map(i => settings.out.resolve(if (i == 0) filename else base + "-" + i + ".jar"))
-  }
 
   private def convertClasspathEntry(in: AbsolutePath, arg: String, out: AbsolutePath): Boolean = {
     var success = true
@@ -224,5 +222,9 @@ object Main {
       sb.append('"')
     }
   }
+
+  private val JarExtension = ".jar"
+  private def isJar(entry: AbsolutePath): Boolean = PathIO.fileExtension(entry.toNIO) ==
+    JarExtension
 
 }
