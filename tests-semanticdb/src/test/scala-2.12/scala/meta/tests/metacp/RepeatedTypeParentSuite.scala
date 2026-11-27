@@ -53,7 +53,7 @@ class RepeatedTypeParentSuite extends FunSuite {
     assert(Metacp.process(settings, reporter).isSuccess, "metacp failed")
     (for {
       file <- FileIO.listAllFilesRecursively(AbsolutePath(target)).iterator
-      if PathIO.extension(file.toNIO) == "semanticdb"
+      if PathIO.fileExtension(file.toNIO) == ".semanticdb"
       doc <- TextDocuments.parseFrom(file.readAllBytes).documents
       sym <- doc.symbols
     } yield sym.symbol -> sym).toMap

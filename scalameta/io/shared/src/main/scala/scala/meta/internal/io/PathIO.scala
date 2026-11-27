@@ -21,11 +21,12 @@ object PathIO {
   def fromUnix(path: String): String =
     if (isWindows) path.replace('/', File.separatorChar) else path
 
-  /** Returns file extension of this path, returns empty string if path has no extension */
-  def extension(path: Path): String = {
-    val filename = path.getFileName.toString
+  /** Returns the extension of the file name, with its dot, or an empty string if it has none. */
+  def fileExtension(path: Path): String = fileExtension(path.getFileName.toString)
+
+  def fileExtension(filename: String): String = {
     val idx = filename.lastIndexOf('.')
-    if (idx == -1) "" else filename.substring(idx + 1)
+    if (idx == -1) "" else filename.substring(idx)
   }
 
   /**

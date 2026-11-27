@@ -3,6 +3,7 @@ package scala.meta.tests.io
 import scala.meta.internal.io.PathIO
 
 import java.io.File
+import java.nio.file.Paths
 
 import munit.FunSuite
 
@@ -42,5 +43,22 @@ class PathIOSuite extends FunSuite {
   }
 
   test("PathIO.fromUnix")(assertEquals(PathIO.fromUnix("a/b"), s"a${File.separator}b"))
+
+  def checkExtension(name: String, expected: String)(implicit loc: munit.Location): Unit =
+    test(s"PathIO.fileExtension: $name") {
+      assertEquals(PathIO.fileExtension(name), expected, "Unexpected extension of name")
+      assertEquals(
+        PathIO.fileExtension(Paths.get("a", name)),
+        expected,
+        "Unexpected extension of path",
+      )
+    }
+
+  checkExtension("foo.jar", ".jar")
+  checkExtension("Foo.class", ".class")
+  checkExtension("foo.tar.gz", ".gz")
+  checkExtension("foo", "")
+  checkExtension("foo.", ".")
+  checkExtension(".bashrc", ".bashrc")
 
 }

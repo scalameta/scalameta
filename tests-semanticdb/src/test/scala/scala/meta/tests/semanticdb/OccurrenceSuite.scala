@@ -44,7 +44,8 @@ object OccurrenceSuite {
     for {
       dir <- BuildInfo.integrationSourceDirectories
       absdir = AbsolutePath(dir) if absdir.isDirectory
-      source <- FileIO.listAllFilesRecursively(absdir) if PathIO.extension(source.toNIO) == "scala"
+      source <- FileIO.listAllFilesRecursively(absdir)
+      if PathIO.fileExtension(source.toNIO) == ".scala"
       if !isExcluded(source)
       relpath = source.toRelative(absdir)
     } yield {

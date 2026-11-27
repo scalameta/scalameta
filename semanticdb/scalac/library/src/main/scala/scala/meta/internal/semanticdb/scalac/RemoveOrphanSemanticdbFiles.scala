@@ -21,7 +21,7 @@ object RemoveOrphanSemanticdbFiles {
       semanticdbroot,
       new SimpleFileVisitor[Path] {
         override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
-          if (PathIO.extension(file.getFileName) == SemanticdbPaths.semanticdbExtension) {
+          if (PathIO.fileExtension(file.getFileName) == SemanticdbPaths.DbExtension) {
             val scalafile = SemanticdbPaths.toScala(AbsolutePath(file), sourceroot, targetroot)
             if (!scalafile.isFile || !config.fileFilter.matches(scalafile.toString)) Files
               .deleteIfExists(file)
