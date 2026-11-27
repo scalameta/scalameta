@@ -52,7 +52,7 @@ class ExpectSuite extends FunSuite {
     val settings = scala.meta.metacp.Settings()
     val out = newOutput("metacp_")
     FileIO.listAllFilesRecursively(classDirectory).foreach(file =>
-      if (PathIO.extension(file.toNIO) == "class" && Files.size(file.toNIO) > 0) ClassfileInfos
+      if (PathIO.fileExtension(file.toNIO) == ".class" && Files.size(file.toNIO) > 0) ClassfileInfos
         .fromClassNode(file.toClassNode, index, settings, reporter).foreach(_.save(out)),
     )
     assertNoDiff(metap(out.toNIO), expected("metacp.expect"))

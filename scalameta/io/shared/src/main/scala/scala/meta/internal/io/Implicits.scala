@@ -18,8 +18,8 @@ object Implicits {
     def foreach(fn: ClasspathFile => Unit): Unit = {
       def processEntry(base: AbsolutePath, manifestJar: Option[ClasspathFile]): Unit =
         if (base.isDirectory) fn(ClasspathFile(base, None, manifestJar))
-        else if (base.isFile) PathIO.extension(base.toNIO) match {
-          case "jar" => FileIO.withJarFileSystem(base, create = false, close = true) { root =>
+        else if (base.isFile) PathIO.fileExtension(base.toNIO) match {
+          case ".jar" => FileIO.withJarFileSystem(base, create = false, close = true) { root =>
               val classpathFile =
                 ClasspathFile(root, enclosingJar = Some(base), enclosingManifestJar = manifestJar)
               fn(classpathFile)

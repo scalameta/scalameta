@@ -23,7 +23,7 @@ trait MetacpSnippets {
 
   def symtab(root: AbsolutePath): Map[String, s.SymbolInformation] = FileIO
     .listAllFilesRecursively(root).iterator
-    .filter(file => PathIO.extension(file.toNIO) == "semanticdb")
+    .filter(file => PathIO.fileExtension(file.toNIO) == ".semanticdb")
     .flatMap(file => s.TextDocuments.parseFrom(file.readAllBytes).documents).flatMap(_.symbols)
     .map(info => info.symbol -> info).toMap
 

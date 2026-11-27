@@ -33,7 +33,7 @@ class SignatureSuite extends FunSuite {
     library.classpath().visit { root =>
       new java.nio.file.SimpleFileVisitor[Path] {
         override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
-          if (PathIO.extension(file) == "class") {
+          if (PathIO.fileExtension(file) == ".class") {
             val node = AbsolutePath(file).toClassNode
             val tests = checkAllSignatures(node)
             tests.foreach { case (signature, unsafe) =>

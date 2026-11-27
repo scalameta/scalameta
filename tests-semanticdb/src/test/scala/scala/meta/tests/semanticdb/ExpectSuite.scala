@@ -103,7 +103,7 @@ trait ExpectHelpers extends munit.Assertions {
   protected def loadMiniSymtab(path: Path): Map[String, SymbolInformation] = {
     for {
       file <- FileIO.listAllFilesRecursively(AbsolutePath(path)).iterator
-      if PathIO.extension(file.toNIO) == "semanticdb"
+      if PathIO.fileExtension(file.toNIO) == ".semanticdb"
       doc <- TextDocuments.parseFrom(file.readAllBytes).documents
       sym <- doc.symbols
     } yield sym.symbol -> sym

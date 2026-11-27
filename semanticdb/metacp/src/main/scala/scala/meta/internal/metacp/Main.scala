@@ -135,7 +135,7 @@ class Main(settings: Settings, reporter: Reporter) {
 
   private def withOutputEntry[T](entry: AbsolutePath)(f: OutputEntry => T): T = {
     val name = entry.toNIO.normalize().getFileName.toString
-    if (PathIO.extension(entry.toNIO) == "jar") {
+    if (PathIO.fileExtension(entry.toNIO) == ".jar") {
       val freeJar = jarNameAlternatives(name).filter(!_.isFile).next()
       PlatformFileIO
         .withJarFileSystem(freeJar, create = true)(jarRoot => f(OutputEntry(freeJar, jarRoot)))
@@ -160,7 +160,7 @@ class Main(settings: Settings, reporter: Reporter) {
     classpath.visit { _ =>
       new SimpleFileVisitor[Path] {
         override def visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult = {
-          if (PathIO.extension(path) == "class" && Files.size(path) > 0)
+          if (PathIO.fileExtension(path) == ".class" && Files.size(path) > 0)
             try {
               val abspath = AbsolutePath(path)
               val node = abspath.toClassNode
