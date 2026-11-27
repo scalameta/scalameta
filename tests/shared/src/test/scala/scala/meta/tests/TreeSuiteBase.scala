@@ -1,13 +1,14 @@
 package scala.meta.tests
 
-import org.scalameta.internal.ScalaCompat
 import scala.meta._
+import scala.meta.internal.common.Implicits
 import scala.meta.internal.inputs._
 import scala.meta.internal.tokenizers.ScalametaTokenizer
 import scala.meta.tests.parsers.CommonTrees
 import scala.meta.tokenizers.{Tokenize, TokenizerOptions}
 import scala.meta.trees.Origin
 
+import scala.language.implicitConversions
 import scala.util.control.NonFatal
 
 import munit._
@@ -116,11 +117,8 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
     def reprint(implicit dialect: Dialect): String = TreeSyntax.reprint(tree).toString
   }
 
-  protected implicit class ImplicitString(value: String) {
-    def tq(repl: String = "QQQ"): String = value.replace(repl, "\"\"\"")
-    def lf2nl: String = if (ScalaCompat.EOL == "\n") value else value.replace("\n", ScalaCompat.EOL)
-    def nl2lf: String = if (ScalaCompat.EOL == "\n") value else value.replace(ScalaCompat.EOL, "\n")
-  }
+  protected implicit def implicitString(value: String): Implicits.ImplicitString =
+    new Implicits.ImplicitString(value)
 
   protected def assertOriginalSyntax(tree: Tree, original: String)(implicit loc: Location): Unit =
     assertNoDiff(tree.toString, original, tree.structure)
