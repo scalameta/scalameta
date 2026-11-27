@@ -73,6 +73,12 @@ class Scala3SpecificSuccessSuite extends TreeSuiteBase {
     )
   }
 
+  test("comments: single-line: a literal in braces and an escaped dollar") {
+    def lit(s: String) = Lit.String(s)
+    val tree = q"0 // ${lit("one")}$$y"
+    assertNoDiff(tree.reprint, "0 // one$$")
+  }
+
   test("#4434 quasiquote in braces") {
     val fooTypes = Seq(q"Foo", q"Bar")
     val quoted: Tree = q"""${fooTypes(0)}; "any message""""

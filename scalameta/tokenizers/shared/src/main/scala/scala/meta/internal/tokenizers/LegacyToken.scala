@@ -131,6 +131,7 @@ private[meta] object LegacyToken {
   final val COMMENT_PART = 301
   final val COMMENT_END = 302
   final val COMMENT_UNQUOTE = 303
+  final val COMMENT_START = 304
 
   final val UNQUOTE = 400
   final val ELLIPSIS = 401
