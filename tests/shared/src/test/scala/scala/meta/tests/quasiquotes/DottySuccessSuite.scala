@@ -583,16 +583,16 @@ $unquoted */ def g = 1""",
   */ b + c"""
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Defn.Def [java.util.NoSuchElementException: token 22 out of 21]
+      """|0 Defn.Def [def f =\n  a\n  /* $unquoted\n  */ b + c]
          |1 Term.Name [f]
-         |2 Term.Block [java.util.NoSuchElementException: token 21 out of 21]
+         |2 Term.Block [a\n  /* $unquoted\n  */ b + c]
          |3 Term.Name [a]
-         |4 Term.ApplyInfix [java.util.NoSuchElementException: token 21 out of 21]
-         |5 Term.Name [+]
-         |6 Term.Name [c]
-         |7 Type.ArgClause [java.util.NoSuchElementException: token 21 out of 21]
-         |8 Term.ArgClause [java.util.NoSuchElementException: token 21 out of 21]
-         |9 Term.Name [java.util.NoSuchElementException: token 21 out of 21]
+         |4 Term.ApplyInfix [b + c]
+         |5 Term.Name [b]
+         |6 Term.Name [+]
+         |7 Type.ArgClause []
+         |8 Term.ArgClause [c]
+         |9 Term.Name [c]
          |""".stripMargin,
     )
   }
@@ -608,16 +608,16 @@ $unquoted */ def g = 1""",
   b + c"""
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Defn.Def [java.util.NoSuchElementException: token 24 out of 23]
+      """|0 Defn.Def [def f =\n  a\n  // $unquoted here\n  b + c]
          |1 Term.Name [f]
-         |2 Term.Block [java.util.NoSuchElementException: token 23 out of 23]
+         |2 Term.Block [a\n  // $unquoted here\n  b + c]
          |3 Term.Name [a]
-         |4 Term.ApplyInfix [java.util.NoSuchElementException: token 23 out of 23]
-         |5 Term.Name [+]
-         |6 Term.Name [c]
-         |7 Type.ArgClause [java.util.NoSuchElementException: token 23 out of 23]
-         |8 Term.ArgClause [java.util.NoSuchElementException: token 23 out of 23]
-         |9 Term.Name [java.util.NoSuchElementException: token 23 out of 23]
+         |4 Term.ApplyInfix [b + c]
+         |5 Term.Name [b]
+         |6 Term.Name [+]
+         |7 Type.ArgClause []
+         |8 Term.ArgClause [c]
+         |9 Term.Name [c]
          |""".stripMargin,
     )
   }
@@ -634,11 +634,11 @@ $unquoted */ def g = 1""",
     val b = tree.collect { case t @ Term.Name("b") => t }.head
     assertNoDiff(
       positionsOrErrors(b.begComment.get),
-      """|0 Tree.Comments [/* $unquoted\n  */ b]
-         |1 Tree.Comment [/* $unquoted\n  */ b]
+      """|0 Tree.Comments [/* $unquoted\n  */]
+         |1 Tree.Comment [/* $unquoted\n  */]
          |2 Lit.String [/* $unquoted\n  */]
          |3 Lit.String ["x"]
-         |4 Lit.String [b]
+         |4 Lit.String [/* $unquoted\n  */]
          |""".stripMargin,
     )
   }
@@ -650,7 +650,7 @@ $unquoted */ def g = 1""",
     val tree = q"""/* $unquoted */ type T = F[_]"""
     assertNoDiff(
       tree.syntax,
-      """|type T = F[?]
+      """|type T = F[_]
          |""".stripMargin,
     )
   }

@@ -2061,9 +2061,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     """|BOF [0..0)
        |Ident(a) [0..1)
        |Space [1..2)
-       |CommentStart( foo ) [2..9)
-       |CommentUnquote($x) [9..11)
-       |CommentEnd( bar ) [11..18)
+       |CommentWithUnquotes( foo $x bar ) [2..18)
        |EOF [18..18)
        |""".stripMargin,
   )

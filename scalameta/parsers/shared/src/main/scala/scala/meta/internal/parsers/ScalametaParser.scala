@@ -383,9 +383,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
   private def asString(token: Token, origin: Origin): Lit.String = Lit.String
     ._ctor(origin = origin, value = token.text)
-  private def asString(token: Token, idx: Int): Lit.String = asString(token, asOrigin(idx))
-  private def unquoteAsString(token: CommentUnquote, idx: Int): Lit.String =
-    unquoteAt[Lit.String](idx, token)
+
+  /** Returns the quasi at the unquote's position, by which the macro finds the quasi's value. */
+  private def unquoteAsString(token: CommentUnquote): Lit.String = unquoteAt[Lit.String](-1, token)
 
   private def asComment(parts: List[Lit.String], origin: Origin, lastIdx: Int): Tree.Comment = {
     val newlinesAfter = Tokens.countOf(tokens.newlinesAfter(lastIdx))
@@ -394,11 +394,15 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
 
   private def asComment(token: Token, idx: Int): Tree.Comment = {
     val origin = asOrigin(idx)
-    asComment(asString(token, origin) :: Nil, origin, idx)
+    val parts = token match {
+      case t: CommentWithUnquotes => t.tokens.map {
+          case u: CommentUnquote => unquoteAsString(u)
+          case p => asString(p, origin)
+        }
+      case _ => asString(token, origin) :: Nil
+    }
+    asComment(parts, origin, idx)
   }
-
-  private def asComment(parts: List[Lit.String], beg: Int, end: Int): Tree.Comment =
-    asComment(parts, asOrigin(beg, end), end - 1)
 
   private def concatComments(one: Tree.Comments, two: Tree.Comments): Tree.Comments =
     if (null eq one) two
@@ -661,10 +665,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
   private def commentsAmong(from: Int, until: Int): Tree.Comments = {
     trailingBuf.clear()
     var idx = from
-    while (idx < until) idx = tokens(idx) match {
-      case _: HSpace => idx + 1
-      case _: HTrivia => appendComment(trailingBuf, idx)
-      case _ => idx + 1
+    while (idx < until) {
+      appendComment(trailingBuf, idx)
+      idx += 1
     }
     asComments(trailingBuf)
   }
@@ -719,33 +722,9 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     // an outdent ends the comments of the tree before this one
     while ((!isOutdentAt(idx) || isIndentAt(idx)) &&
       (tokens.getOrNull(idx) match {
-        case t: Comment =>
+        case t @ (_: Comment | _: CommentWithUnquotes) =>
           if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
           begBuf.prepend(asComment(t, idx))
-          true
-        case endPart: CommentEnd =>
-          val endIdx = idx + 1
-          val parts = new ListBuffer[Lit.String]
-          parts.prepend(asString(endPart, idx))
-          while ({
-            idx -= 1
-            tokens.getOrNull(idx) match {
-              case t: CommentStart =>
-                parts.prepend(asString(t, idx))
-                false
-              case t: CommentPart =>
-                parts.prepend(asString(t, idx))
-                true
-              case t: CommentUnquote =>
-                parts.prepend(unquoteAsString(t, idx))
-                true
-              case _ =>
-                idx += 1
-                false
-            }
-          }) {}
-          if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
-          begBuf.prepend(asComment(parts.toList, idx, endIdx))
           true
         // a blank line ends the comments of the tree before this one
         case _: AtEOL =>
@@ -854,7 +833,7 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     val prevNonWS = prevNonWhitespaceAt(nlIdx + 1)
     if (!tokens.getOrNull(prevNonWS).isInstanceOf[CommentLike]) return false
 
-    val commentIndent = countIndent(tokens.rskipIf(!_.isAny[Comment, CommentStart], prevNonWS))
+    val commentIndent = countIndent(prevNonWS)
     commentIndent >= 0 && commentIndent <= indent
   }
 
@@ -910,8 +889,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
         case _: HTrivia =>
           if (!detached || newlines > 0 || end > from) {
             newlines = 0
-            end = if (buf eq null) idx + 1 else appendComment(buf, idx)
-            idx = end - 1
+            if (buf ne null) appendComment(buf, idx)
+            end = idx + 1
           }
           true
         case _: BOF => // the input starts a line
@@ -983,33 +962,10 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
     end
   }
 
-  // append the comment that starts at `idx`; return the index after it
-  private def appendComment(buf: ListBuffer[Tree.Comment], idx: Int): Int = tokens(idx) match {
-    case t: Comment =>
-      buf.append(asComment(t, idx))
-      idx + 1
-    case begPart: CommentStart =>
-      val parts = new ListBuffer[Lit.String]
-      parts.append(asString(begPart, idx))
-      var end = idx + 1
-      while (tokens.getOrNull(end) match {
-          case t: CommentEnd =>
-            parts.append(asString(t, end))
-            end += 1
-            false
-          case t: CommentPart =>
-            parts.append(asString(t, end))
-            end += 1
-            true
-          case t: CommentUnquote =>
-            parts.append(unquoteAsString(t, end))
-            end += 1
-            true
-          case _ => false
-        }) {}
-      buf.append(asComment(parts.toList, idx, end))
-      end
-    case _ => idx + 1
+  // append the comment that starts at `idx`
+  private def appendComment(buf: ListBuffer[Tree.Comment], idx: Int): Unit = tokens(idx) match {
+    case t @ (_: Comment | _: CommentWithUnquotes) => buf.append(asComment(t, idx))
+    case _ =>
   }
 
   // the indentation of the line that holds the token at `idx`
@@ -1265,8 +1221,8 @@ final class ScalametaParser private (scannerTokens: ScannerTokens)(implicit
       if (dialect.allowTermUnquotes) parseUnquote(classOf[Term], _.parseUnquoteTerm())
       else if (dialect.allowPatUnquotes) parseUnquote(classOf[Pat], _.parseUnquotePat())
       else unreachable
-    // the unquote's own parser attached its comments; here it takes only its position
-    parsed.privateSetOrigin(asOrigin(idx))
+    // set only the origin, as the unquote's own parser already attached the comments
+    if (idx >= 0) parsed.privateSetOrigin(asOrigin(idx))
     copyPos(parsed)(quasi[T](0, parsed))
   }
 

@@ -2505,14 +2505,14 @@ final def f = 1"""
 }"""
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.Block [java.util.NoSuchElementException: token 20 out of 19]
+      """|0 Term.Block [{\n  a\n  /* $content */ b + c\n}]
          |1 Term.Name [a]
-         |2 Term.ApplyInfix [+ c\n}]
-         |3 Term.Name [+]
-         |4 Term.Name [c]
+         |2 Term.ApplyInfix [b + c]
+         |3 Term.Name [b]
+         |4 Term.Name [+]
          |5 Type.ArgClause []
-         |6 Term.ArgClause [}]
-         |7 Term.Name [}]
+         |6 Term.ArgClause [c]
+         |7 Term.Name [c]
          |""".stripMargin,
     )
   }
@@ -2526,14 +2526,14 @@ final def f = 1"""
 }"""
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.Block [java.util.NoSuchElementException: token 22 out of 19]
+      """|0 Term.Block [{\n  a\n  /* $content and $content */ b + c\n}]
          |1 Term.Name [a]
-         |2 Term.ApplyInfix [java.util.NoSuchElementException: token 19 out of 19]
-         |3 Term.Name [c]
-         |4 Term.Name [}]
-         |5 Type.ArgClause [java.util.NoSuchElementException: token 19 out of 19]
-         |6 Term.ArgClause [java.util.NoSuchElementException: token 19 out of 19]
-         |7 Term.Name [java.util.NoSuchElementException: token 19 out of 19]
+         |2 Term.ApplyInfix [b + c]
+         |3 Term.Name [b]
+         |4 Term.Name [+]
+         |5 Type.ArgClause []
+         |6 Term.ArgClause [c]
+         |7 Term.Name [c]
          |""".stripMargin,
     )
   }
@@ -2548,14 +2548,14 @@ final def f = 1"""
 }"""
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.Block [java.util.NoSuchElementException: token 22 out of 21]
+      """|0 Term.Block [{\n  a\n  // $content here\n  b + c\n}]
          |1 Term.Name [a]
-         |2 Term.ApplyInfix [+ c\n}]
-         |3 Term.Name [+]
-         |4 Term.Name [c]
+         |2 Term.ApplyInfix [b + c]
+         |3 Term.Name [b]
+         |4 Term.Name [+]
          |5 Type.ArgClause []
-         |6 Term.ArgClause [}]
-         |7 Term.Name [}]
+         |6 Term.ArgClause [c]
+         |7 Term.Name [c]
          |""".stripMargin,
     )
   }
@@ -2570,11 +2570,11 @@ final def f = 1"""
     val b = tree.collect { case t @ Term.Name("b") => t }.head
     assertNoDiff(
       positionsOrErrors(b.begComment.get),
-      """|0 Tree.Comments [/* $content here */ b]
-         |1 Tree.Comment [/* $content here */ b]
+      """|0 Tree.Comments [/* $content here */]
+         |1 Tree.Comment [/* $content here */]
          |2 Lit.String [/* $content here */]
          |3 Lit.String ["real content"]
-         |4 Lit.String [b]
+         |4 Lit.String [/* $content here */]
          |""".stripMargin,
     )
   }
@@ -2588,14 +2588,14 @@ final def f = 1"""
 }"""
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.Block [java.util.NoSuchElementException: token 20 out of 19]
+      """|0 Term.Block [{\n  a\n  b /* $content */ + c\n}]
          |1 Term.Name [a]
-         |2 Term.ApplyInfix [b /* $content */ + c\n}]
+         |2 Term.ApplyInfix [b /* $content */ + c]
          |3 Term.Name [b]
-         |4 Term.Name [c]
+         |4 Term.Name [+]
          |5 Type.ArgClause []
-         |6 Term.ArgClause [}]
-         |7 Term.Name [}]
+         |6 Term.ArgClause [c]
+         |7 Term.Name [c]
          |""".stripMargin,
     )
   }
@@ -2608,14 +2608,14 @@ final def f = 1"""
 }"""
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.Block [java.util.NoSuchElementException: token 20 out of 19]
+      """|0 Term.Block [{\n  a\n  /* ${Lit.String("real content")} */ b + c\n}]
          |1 Term.Name [a]
-         |2 Term.ApplyInfix [+ c\n}]
-         |3 Term.Name [+]
-         |4 Term.Name [c]
+         |2 Term.ApplyInfix [b + c]
+         |3 Term.Name [b]
+         |4 Term.Name [+]
          |5 Type.ArgClause []
-         |6 Term.ArgClause [}]
-         |7 Term.Name [}]
+         |6 Term.ArgClause [c]
+         |7 Term.Name [c]
          |""".stripMargin,
     )
   }
@@ -2631,11 +2631,11 @@ final def f = 1"""
     val b = tree.collect { case t @ Term.Name("b") => t }.head
     assertNoDiff(
       positionsOrErrors(b.begComment.get),
-      """|0 Tree.Comments [// $content here\n ]
-         |1 Tree.Comment [// $content here\n ]
+      """|0 Tree.Comments [// $content here]
+         |1 Tree.Comment [// $content here]
          |2 Lit.String [// $content here]
          |3 Lit.String ["real content"]
-         |4 Lit.String [ ]
+         |4 Lit.String [// $content here]
          |""".stripMargin,
     )
   }
@@ -2650,14 +2650,14 @@ final def f = 1"""
 }"""
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.Block [java.util.NoSuchElementException: token 26 out of 23]
+      """|0 Term.Block [{\n  a /* $content */\n  // $content here\n  b + c\n}]
          |1 Term.Name [a]
-         |2 Term.ApplyInfix [java.util.NoSuchElementException: token 23 out of 23]
-         |3 Term.Name [c]
-         |4 Term.Name [}]
-         |5 Type.ArgClause [java.util.NoSuchElementException: token 23 out of 23]
-         |6 Term.ArgClause [java.util.NoSuchElementException: token 23 out of 23]
-         |7 Term.Name [java.util.NoSuchElementException: token 23 out of 23]
+         |2 Term.ApplyInfix [b + c]
+         |3 Term.Name [b]
+         |4 Term.Name [+]
+         |5 Type.ArgClause []
+         |6 Term.ArgClause [c]
+         |7 Term.Name [c]
          |""".stripMargin,
     )
   }
@@ -2667,12 +2667,12 @@ final def f = 1"""
     val tree = q"/* $content */ b + c"
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.ApplyInfix [java.util.NoSuchElementException: token 10 out of 9]
-         |1 Term.Name [+]
-         |2 Term.Name [c]
-         |3 Type.ArgClause [java.util.NoSuchElementException: token 9 out of 9]
-         |4 Term.ArgClause [java.util.NoSuchElementException: token 9 out of 9]
-         |5 Term.Name [java.util.NoSuchElementException: token 9 out of 9]
+      """|0 Term.ApplyInfix [/* $content */ b + c]
+         |1 Term.Name [b]
+         |2 Term.Name [+]
+         |3 Type.ArgClause []
+         |4 Term.ArgClause [c]
+         |5 Term.Name [c]
          |""".stripMargin,
     )
   }
@@ -2683,11 +2683,11 @@ final def f = 1"""
     val commented = tree.collect { case t if t.begComment.isDefined => t }.head
     assertNoDiff(
       positionsOrErrors(commented.begComment.get),
-      """|0 Tree.Comments [/* $content */ b]
-         |1 Tree.Comment [/* $content */ b]
+      """|0 Tree.Comments [/* $content */]
+         |1 Tree.Comment [/* $content */]
          |2 Lit.String [/* $content */]
          |3 Lit.String ["real content"]
-         |4 Lit.String [b]
+         |4 Lit.String [/* $content */]
          |""".stripMargin,
     )
   }
@@ -2700,18 +2700,18 @@ final def f = 1"""
 }"""
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.Block [java.util.NoSuchElementException: token 20 out of 19]
-         |1 Term.ApplyInfix [b + `{$}content` /* $content */ + c\n}]
+      """|0 Term.Block [{\n  b + `{$}content` /* $content */ + c\n}]
+         |1 Term.ApplyInfix [b + `{$}content` /* $content */ + c]
          |2 Term.ApplyInfix [b + `{$}content`]
          |3 Term.Name [b]
          |4 Term.Name [+]
          |5 Type.ArgClause []
          |6 Term.ArgClause [`{$}content`]
          |7 Lit.String ["real content"]
-         |8 Term.Name [c]
+         |8 Term.Name [+]
          |9 Type.ArgClause []
-         |10 Term.ArgClause [}]
-         |11 Term.Name [}]
+         |10 Term.ArgClause [c]
+         |11 Term.Name [c]
          |""".stripMargin,
     )
   }
@@ -2724,18 +2724,18 @@ final def f = 1"""
 }"""
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.Block [java.util.NoSuchElementException: token 19 out of 18]
-         |1 Term.ApplyInfix [b + `{$}content`/* $content */ + c\n}]
+      """|0 Term.Block [{\n  b + `{$}content`/* $content */ + c\n}]
+         |1 Term.ApplyInfix [b + `{$}content`/* $content */ + c]
          |2 Term.ApplyInfix [b + `{$}content`]
          |3 Term.Name [b]
          |4 Term.Name [+]
          |5 Type.ArgClause []
          |6 Term.ArgClause [`{$}content`]
          |7 Lit.String ["real content"]
-         |8 Term.Name [c]
+         |8 Term.Name [+]
          |9 Type.ArgClause []
-         |10 Term.ArgClause [}]
-         |11 Term.Name [}]
+         |10 Term.ArgClause [c]
+         |11 Term.Name [c]
          |""".stripMargin,
     )
   }
@@ -2746,20 +2746,18 @@ final def f = 1"""
     val tree = q"0 /* $first and $second */"
     assertNoDiff(
       tree.endComment.get.values.map(_.parts.map(_.value).mkString("|")).mkString("\n"),
-      """|/* |one
-         | and |two| */
+      """|/* |one| and |two| */
          |""".stripMargin,
     )
     assertNoDiff(
       positionsOrErrors(tree.endComment.get),
-      """|0 Tree.Comments [java.util.NoSuchElementException: token 7 out of 5]
+      """|0 Tree.Comments [/* $first and $second */]
          |1 Tree.Comment [/* $first and $second */]
          |2 Lit.String [/* $first and $second */]
          |3 Lit.String ["one"]
-         |4 Tree.Comment [java.util.NoSuchElementException: token 5 out of 5]
-         |5 Lit.String [java.util.NoSuchElementException: token 5 out of 5]
-         |6 Lit.String ["two"]
-         |7 Lit.String [java.util.NoSuchElementException: token 7 out of 5]
+         |4 Lit.String [/* $first and $second */]
+         |5 Lit.String ["two"]
+         |6 Lit.String [/* $first and $second */]
          |""".stripMargin,
     )
   }
@@ -2775,15 +2773,14 @@ final def f = 1"""
     val a = tree.collect { case t @ Term.Name("a") => t }.head
     assertNoDiff(
       a.endComment.get.values.map(_.parts.map(_.value).mkString("|")).mkString("\n"),
-      """|// |one
-         | and |two| here
+      """|// |one| and |two| here
          |""".stripMargin,
     )
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.Block [java.util.NoSuchElementException: token 18 out of 15]
+      """|0 Term.Block [{\n  a // $first and $second here\n  b\n}]
          |1 Term.Name [a]
-         |2 Term.Name [java.util.NoSuchElementException: token 15 out of 15]
+         |2 Term.Name [b]
          |""".stripMargin,
     )
   }
@@ -2798,7 +2795,7 @@ final def f = 1"""
 }"""
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.Block [{\n  a\n  // $content\n  b\n]
+      """|0 Term.Block [{\n  a\n  // $content\n  ]
          |1 Term.Name [a]
          |""".stripMargin,
     )
@@ -2809,20 +2806,18 @@ final def f = 1"""
     val tree = q"0 /* ${lit("one")} and ${lit("two")} */"
     assertNoDiff(
       tree.endComment.get.values.map(_.parts.map(_.value).mkString("|")).mkString("\n"),
-      """|/* |one
-         | and |two| */
+      """|/* |one| and |two| */
          |""".stripMargin,
     )
     assertNoDiff(
       positionsOrErrors(tree.endComment.get),
-      """|0 Tree.Comments [java.util.NoSuchElementException: token 7 out of 5]
+      """|0 Tree.Comments [/* ${lit("one")} and ${lit("two")} */]
          |1 Tree.Comment [/* ${lit("one")} and ${lit("two")} */]
          |2 Lit.String [/* ${lit("one")} and ${lit("two")} */]
          |3 Lit.String []
-         |4 Tree.Comment [java.util.NoSuchElementException: token 5 out of 5]
-         |5 Lit.String [java.util.NoSuchElementException: token 5 out of 5]
-         |6 Lit.String []
-         |7 Lit.String [java.util.NoSuchElementException: token 7 out of 5]
+         |4 Lit.String [/* ${lit("one")} and ${lit("two")} */]
+         |5 Lit.String []
+         |6 Lit.String [/* ${lit("one")} and ${lit("two")} */]
          |""".stripMargin,
     )
   }
@@ -2837,22 +2832,21 @@ final def f = 1"""
     val b = tree.collect { case t @ Term.Name("b") => t }.head
     assertNoDiff(
       b.begComment.get.values.map(_.parts.map(_.value).mkString("|")).mkString("\n"),
-      """| and |real content| bar */
+      """|/* foo |real content| and |real content| bar */
          |""".stripMargin,
     )
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.Block [java.util.NoSuchElementException: token 18 out of 15]
+      """|0 Term.Block [{\n  a\n  /* foo $content and $content bar */ b\n}]
          |1 Term.Name [a]
-         |2 Term.Name [java.util.NoSuchElementException: token 15 out of 15]
+         |2 Term.Name [b]
          |""".stripMargin,
     )
     assertNoDiff(
       tree.reprint,
       """|{
          |  a
-         |    /* foo real content
-         |    and real content bar */ b
+         |  /* foo real content and real content bar */ b
          |}
          |""".stripMargin,
     )
@@ -2864,7 +2858,7 @@ final def f = 1"""
     val c = tree.collect { case t @ Term.Name("c") => t }.head
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.ApplyInfix [java.util.NoSuchElementException: token 10 out of 9]
+      """|0 Term.ApplyInfix [b + c // $content]
          |1 Term.Name [b]
          |2 Term.Name [+]
          |3 Type.ArgClause []
@@ -2874,11 +2868,11 @@ final def f = 1"""
     )
     assertNoDiff(
       positionsOrErrors(c.endComment.get),
-      """|0 Tree.Comments [java.util.NoSuchElementException: token 9 out of 9]
-         |1 Tree.Comment [java.util.NoSuchElementException: token 9 out of 9]
+      """|0 Tree.Comments [// $content]
+         |1 Tree.Comment [// $content]
          |2 Lit.String [// $content]
          |3 Lit.String ["real content"]
-         |4 Lit.String [java.util.NoSuchElementException: token 9 out of 9]
+         |4 Lit.String [// $content]
          |""".stripMargin,
     )
   }
@@ -2888,7 +2882,7 @@ final def f = 1"""
     val tree = q"""/* $content */ f("a")"""
     assertNoDiff(
       tree.syntax,
-      """|f()
+      """|f("a")
          |""".stripMargin,
     )
   }
@@ -2898,7 +2892,7 @@ final def f = 1"""
     val tree = q"b + c /* $content */"
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.ApplyInfix [java.util.NoSuchElementException: token 10 out of 9]
+      """|0 Term.ApplyInfix [b + c /* $content */]
          |1 Term.Name [b]
          |2 Term.Name [+]
          |3 Type.ArgClause []
@@ -2914,11 +2908,11 @@ final def f = 1"""
     val c = tree.collect { case t @ Term.Name("c") => t }.head
     assertNoDiff(
       positionsOrErrors(c.endComment.get),
-      """|0 Tree.Comments [java.util.NoSuchElementException: token 9 out of 9]
-         |1 Tree.Comment [java.util.NoSuchElementException: token 9 out of 9]
+      """|0 Tree.Comments [/* $content */]
+         |1 Tree.Comment [/* $content */]
          |2 Lit.String [/* $content */]
          |3 Lit.String ["real content"]
-         |4 Lit.String [java.util.NoSuchElementException: token 9 out of 9]
+         |4 Lit.String [/* $content */]
          |""".stripMargin,
     )
   }
@@ -2929,12 +2923,12 @@ final def f = 1"""
     val tree = q"f(..$args, /* $content */ c)"
     assertNoDiff(
       positionsOrErrors(tree),
-      """|0 Term.Apply [java.util.NoSuchElementException: token 13 out of 12]
+      """|0 Term.Apply [f(/* .. */`{$}args`, /* $content */ c)]
          |1 Term.Name [f]
-         |2 Term.ArgClause [java.util.NoSuchElementException: token 12 out of 12]
+         |2 Term.ArgClause [(/* .. */`{$}args`, /* $content */ c)]
          |3 Term.Name [x]
          |4 Term.Name [y]
-         |5 Term.Name []
+         |5 Term.Name [c]
          |""".stripMargin,
     )
   }
