@@ -2061,7 +2061,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
     """|BOF [0..0)
        |Ident(a) [0..1)
        |Space [1..2)
-       |CommentWithUnquotes( foo $x\nb) [2..13)
+       |CommentWithUnquotes( foo $x) [2..11)
+       |LF [11..12)
+       |Ident(b) [12..13)
        |EOF [13..13)
        |""".stripMargin,
   )
@@ -2074,8 +2076,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
     """|BOF [0..0)
        |Ident(a) [0..1)
        |Space [1..2)
-       |CommentWithUnquotes( foo $x\r) [2..12)
-       |LF [12..13)
+       |CommentWithUnquotes( foo $x) [2..11)
+       |CRLF [11..13)
        |Ident(b) [13..14)
        |EOF [14..14)
        |""".stripMargin,
@@ -2089,7 +2091,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
     """|BOF [0..0)
        |Ident(a) [0..1)
        |Space [1..2)
-       |CommentWithUnquotes( foo $x\rb) [2..13)
+       |CommentWithUnquotes( foo $x) [2..11)
+       |CR [11..12)
+       |Ident(b) [12..13)
        |EOF [13..13)
        |""".stripMargin,
   )
@@ -2117,7 +2121,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
     """|BOF [0..0)
        |Ident(a) [0..1)
        |Space [1..2)
-       |CommentWithUnquotes($x\nb) [2..8)
+       |CommentWithUnquotes($x) [2..6)
+       |LF [6..7)
+       |Ident(b) [7..8)
        |EOF [8..8)
        |""".stripMargin,
   )
@@ -2133,7 +2139,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |CommentWithUnquotes( ${x}${y}) [2..13)
          |CommentStart( ) [2..5)
          |CommentUnquote(${x}) [5..9)
-         |CommentEnd(${y}) [9..13)
+         |CommentPart() [9..9)
+         |CommentUnquote(${y}) [9..13)
+         |CommentEnd() [13..13)
          |LF [13..14)
          |Ident(b) [14..15)
          |EOF [15..15)
@@ -2178,7 +2186,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |CommentWithUnquotes( foo $x and $y bar ) [2..25)
          |CommentStart( foo ) [2..9)
          |CommentUnquote($x) [9..11)
-         |CommentStart(nd ) [11..16)
+         |CommentPart( and ) [11..16)
          |CommentUnquote($y) [16..18)
          |CommentEnd( bar ) [18..25)
          |EOF [25..25)
@@ -2196,7 +2204,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Space [1..2)
          |CommentWithUnquotes( foo $x$y bar ) [2..20)
          |CommentStart( foo ) [2..9)
-         |CommentUnquote($x$y) [9..13)
+         |CommentUnquote($x) [9..11)
+         |CommentPart() [11..11)
+         |CommentUnquote($y) [11..13)
          |CommentEnd( bar ) [13..20)
          |EOF [20..20)
          |""".stripMargin,
@@ -2206,13 +2216,39 @@ class TokenizerSuite extends BaseTokenizerSuite {
   test("comment with two unquotes and one character between them within multi-line quasiquotes") {
     implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
     def tokens() = tokenize("a /* $x $y */")
-    intercept[StringIndexOutOfBoundsException](tokens())
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( $x $y ) [2..13)
+         |CommentStart( ) [2..5)
+         |CommentUnquote($x) [5..7)
+         |CommentPart( ) [7..8)
+         |CommentUnquote($y) [8..10)
+         |CommentEnd( ) [10..13)
+         |EOF [13..13)
+         |""".stripMargin,
+    )
   }
 
   test("comment with two adjacent unquotes in braces within multi-line quasiquotes") {
     implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
     def tokens() = tokenize("a /* ${x}${y} */")
-    intercept[StringIndexOutOfBoundsException](tokens())
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( ${x}${y} ) [2..16)
+         |CommentStart( ) [2..5)
+         |CommentUnquote(${x}) [5..9)
+         |CommentPart() [9..9)
+         |CommentUnquote(${y}) [9..13)
+         |CommentEnd( ) [13..16)
+         |EOF [16..16)
+         |""".stripMargin,
+    )
   }
 
   test("comment with an unquote and an adjacent unquote in braces within multi-line quasiquotes") {
@@ -2225,8 +2261,10 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Space [1..2)
          |CommentWithUnquotes( $x${y} ) [2..14)
          |CommentStart( ) [2..5)
-         |CommentUnquote($x$) [5..8)
-         |CommentEnd({y} ) [8..14)
+         |CommentUnquote($x) [5..7)
+         |CommentPart() [7..7)
+         |CommentUnquote(${y}) [7..11)
+         |CommentEnd( ) [11..14)
          |EOF [14..14)
          |""".stripMargin,
     )
@@ -2235,7 +2273,20 @@ class TokenizerSuite extends BaseTokenizerSuite {
   test("comment with an unquote in braces and an adjacent unquote within multi-line quasiquotes") {
     implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
     def tokens() = tokenize("a /* ${x}$y */")
-    intercept[StringIndexOutOfBoundsException](tokens())
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( ${x}$y ) [2..14)
+         |CommentStart( ) [2..5)
+         |CommentUnquote(${x}) [5..9)
+         |CommentPart() [9..9)
+         |CommentUnquote($y) [9..11)
+         |CommentEnd( ) [11..14)
+         |EOF [14..14)
+         |""".stripMargin,
+    )
   }
 
   test("comment with three unquotes within multi-line quasiquotes") {
@@ -2249,9 +2300,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |CommentWithUnquotes( $x and $y and $z ) [2..24)
          |CommentStart( ) [2..5)
          |CommentUnquote($x) [5..7)
-         |CommentStart(nd ) [7..12)
+         |CommentPart( and ) [7..12)
          |CommentUnquote($y) [12..14)
-         |CommentStart(nd ) [14..19)
+         |CommentPart( and ) [14..19)
          |CommentUnquote($z) [19..21)
          |CommentEnd( ) [21..24)
          |EOF [24..24)
@@ -2313,7 +2364,19 @@ class TokenizerSuite extends BaseTokenizerSuite {
   test("unclosed comment with an unquote within multi-line quasiquotes") {
     implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
     def tokens() = tokenize("a /* foo $x")
-    intercept[StringIndexOutOfBoundsException](tokens())
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( foo $x) [2..11)
+         |CommentStart( foo ) [2..9)
+         |CommentUnquote($x) [9..11)
+         |CommentEnd() [11..11)
+         |Invalid(unclosed comment) [11..11)
+         |EOF [11..11)
+         |""".stripMargin,
+    )
   }
 
   test("unclosed comment without an unquote within multi-line quasiquotes") {
@@ -2339,11 +2402,11 @@ class TokenizerSuite extends BaseTokenizerSuite {
       """|BOF [0..0)
          |Ident(a) [0..1)
          |Space [1..2)
-         |Invalid(unclosed comment) [10..10)
          |CommentWithUnquotes( $x foo) [2..11)
          |CommentStart( ) [2..5)
          |CommentUnquote($x) [5..7)
-         |CommentStart(oo) [7..11)
+         |CommentEnd( foo) [7..11)
+         |Invalid(unclosed comment) [10..10)
          |EOF [11..11)
          |""".stripMargin,
     )
@@ -2352,7 +2415,22 @@ class TokenizerSuite extends BaseTokenizerSuite {
   test("line comment with two unquotes and one character between them within multi-line quasiquotes") {
     implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
     def tokens() = tokenize("a // $x $y\nb")
-    intercept[StringIndexOutOfBoundsException](tokens())
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( $x $y) [2..10)
+         |CommentStart( ) [2..5)
+         |CommentUnquote($x) [5..7)
+         |CommentPart( ) [7..8)
+         |CommentUnquote($y) [8..10)
+         |CommentEnd() [10..10)
+         |LF [10..11)
+         |Ident(b) [11..12)
+         |EOF [12..12)
+         |""".stripMargin,
+    )
   }
 
   test("line comment with two adjacent unquotes within multi-line quasiquotes") {
@@ -2363,10 +2441,14 @@ class TokenizerSuite extends BaseTokenizerSuite {
       """|BOF [0..0)
          |Ident(a) [0..1)
          |Space [1..2)
-         |CommentWithUnquotes( $x$y\nb) [2..11)
+         |CommentWithUnquotes( $x$y) [2..9)
          |CommentStart( ) [2..5)
-         |CommentUnquote($x$y) [5..9)
-         |CommentEnd(\nb) [9..11)
+         |CommentUnquote($x) [5..7)
+         |CommentPart() [7..7)
+         |CommentUnquote($y) [7..9)
+         |CommentEnd() [9..9)
+         |LF [9..10)
+         |Ident(b) [10..11)
          |EOF [11..11)
          |""".stripMargin,
     )
@@ -2385,7 +2467,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |CommentWithUnquotes( ${x}$y) [2..11)
          |CommentStart( ) [2..5)
          |CommentUnquote(${x}) [5..9)
-         |CommentEnd($y) [9..11)
+         |CommentPart() [9..9)
+         |CommentUnquote($y) [9..11)
+         |CommentEnd() [11..11)
          |LF [11..12)
          |Ident(b) [12..13)
          |EOF [13..13)
@@ -2396,7 +2480,20 @@ class TokenizerSuite extends BaseTokenizerSuite {
   test("line comment with an unquote in braces and an escaped dollar within multi-line quasiquotes") {
     implicit val dialect: Dialect = dialects.Scala213.unquoteTerm(multiline = true)
     def tokens() = tokenize("a // ${x}$$y\nb")
-    intercept[StringIndexOutOfBoundsException](tokens())
+    assertTokensAsStructureLines(
+      withCommentPieces(tokens()),
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Space [1..2)
+         |CommentWithUnquotes( ${x}$$y) [2..12)
+         |CommentStart( ) [2..5)
+         |CommentUnquote(${x}) [5..9)
+         |CommentEnd($$y) [9..12)
+         |LF [12..13)
+         |Ident(b) [13..14)
+         |EOF [14..14)
+         |""".stripMargin,
+    )
   }
 
   test("comment with an unquote in braces and an escaped dollar within multi-line quasiquotes") {
@@ -2426,8 +2523,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Space [1..2)
          |CommentWithUnquotes( $x$$y ) [2..13)
          |CommentStart( ) [2..5)
-         |CommentUnquote($x$$y) [5..10)
-         |CommentEnd( ) [10..13)
+         |CommentUnquote($x) [5..7)
+         |CommentEnd($$y ) [7..13)
          |EOF [13..13)
          |""".stripMargin,
     )
@@ -2441,7 +2538,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
     """|BOF [0..0)
        |Ident(f) [0..1)
        |LeftParen [1..2)
-       |Unquote($x$y) [2..6)
+       |Unquote($x) [2..4)
+       |Unquote($y) [4..6)
        |RightParen [6..7)
        |EOF [7..7)
        |""".stripMargin,
@@ -2455,7 +2553,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
     """|BOF [0..0)
        |Ident(f) [0..1)
        |LeftParen [1..2)
-       |Unquote($x$$y) [2..7)
+       |Unquote($x) [2..4)
+       |Ident($y) [4..7)
        |RightParen [7..8)
        |EOF [8..8)
        |""".stripMargin,

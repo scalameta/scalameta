@@ -890,12 +890,7 @@ class ErrorSuite extends TreeSuiteBase {
         b)QQQ
     """,
     )
-    assertNoDiff(
-      error,
-      """|<macro>:6: illegal start of simple expression
-         |        b)QQQ
-         |          ^""".stripMargin.replace("QQQ", "\"\"\""),
-    )
+    assertNoDiff(error, "")
   }
 
   test("comments: a hole of the wrong type in a comment") {
@@ -942,9 +937,12 @@ class ErrorSuite extends TreeSuiteBase {
       q"0 /* $name"
     """,
     )
-    val expected =
-      "<macro>:5: exception during macro expansion: \njava.lang.StringIndexOutOfBoundsException"
-    assertNoDiff(error.take(expected.length), expected)
+    assertNoDiff(
+      error,
+      """|<macro>:5: unclosed comment
+         |      q"0 /* $name"
+         |                  ^""".stripMargin,
+    )
   }
 
   test("comments: two unquotes and one character between them") {
@@ -956,9 +954,7 @@ class ErrorSuite extends TreeSuiteBase {
       q"0 /* $name $name */"
     """,
     )
-    val expected =
-      "<macro>:5: exception during macro expansion: \njava.lang.StringIndexOutOfBoundsException"
-    assertNoDiff(error.take(expected.length), expected)
+    assertNoDiff(error, "")
   }
 
   test("comments: two adjacent unquotes in braces") {
@@ -970,9 +966,7 @@ class ErrorSuite extends TreeSuiteBase {
       q"0 /* ${name}${name} */"
     """,
     )
-    val expected =
-      "<macro>:5: exception during macro expansion: \njava.lang.StringIndexOutOfBoundsException"
-    assertNoDiff(error.take(expected.length), expected)
+    assertNoDiff(error, "")
   }
 
   test("comments: an unquote in braces and an escaped dollar in a line comment") {
@@ -984,9 +978,7 @@ class ErrorSuite extends TreeSuiteBase {
       q"0 // ${name}$$y"
     """,
     )
-    val expected =
-      "<macro>:5: exception during macro expansion: \njava.lang.StringIndexOutOfBoundsException"
-    assertNoDiff(error.take(expected.length), expected)
+    assertNoDiff(error, "")
   }
 
   test("comments: an unquote in braces and an adjacent unquote") {
@@ -998,9 +990,7 @@ class ErrorSuite extends TreeSuiteBase {
       q"0 /* ${name}$name */"
     """,
     )
-    val expected =
-      "<macro>:5: exception during macro expansion: \njava.lang.StringIndexOutOfBoundsException"
-    assertNoDiff(error.take(expected.length), expected)
+    assertNoDiff(error, "")
   }
 
 }

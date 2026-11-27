@@ -29,13 +29,12 @@ private[meta] final class LegacyScanner(input: Input, dialect: Dialect) {
   private[tokenizers] var openComments = -1
 
   @tailrec
-  private def skipLineComment(): Unit = {
-    nextCommentChar()
-    ch match {
-      case SU | CR | LF => if (token != COMMENT) token = COMMENT_END
-      case '$' if isUnquoteNextNoDollar() => token = COMMENT_PART
-      case _ => skipLineComment()
-    }
+  private def skipLineComment(): Unit = ch match {
+    case SU | CR | LF => if (token != COMMENT) token = COMMENT_END
+    case '$' if isUnquoteNextNoDollar() => if (token == COMMENT) token = COMMENT_START
+    case _ =>
+      nextCommentChar()
+      skipLineComment()
   }
   @tailrec
   private final def skipNestedComments(): Unit = ch match {
@@ -60,8 +59,10 @@ private[meta] final class LegacyScanner(input: Input, dialect: Dialect) {
         }
       }
       if (stillOpen) skipNestedComments()
-    case SU => setInvalidToken(next)("unclosed comment")
-    case '$' if isUnquoteNextNoDollar() => token = COMMENT_PART
+    case SU =>
+      if (token != COMMENT) token = COMMENT_END
+      setInvalidToken(next)("unclosed comment")
+    case '$' if isUnquoteNextNoDollar() => if (token == COMMENT) token = COMMENT_START
     case _ =>
       nextCommentChar()
       skipNestedComments()
@@ -208,8 +209,6 @@ private[meta] final class LegacyScanner(input: Input, dialect: Dialect) {
 
   @inline
   def nextTokenOrEof(): LegacyTokenData = nextToken(throwOnEof = false)
-
-  private[tokenizers] def prevToken: LegacyTokenData = prev
 
   /**
    * Produce next token, filling curr TokenData fields of Scanner.
@@ -373,6 +372,7 @@ private[meta] final class LegacyScanner(input: Input, dialect: Dialect) {
           case '/' =>
             token = COMMENT
             openComments = -1
+            nextCommentChar()
             skipLineComment()
           case '*' =>
             token = COMMENT
@@ -1001,8 +1001,17 @@ private[meta] final class LegacyScanner(input: Input, dialect: Dialect) {
         }
         return reader.nextCharFrom(start + ltd.endOffset)
     }
-    val nexttoken = if (token == COMMENT_PART) COMMENT_UNQUOTE else UNQUOTE
-    finishComposite(nexttoken, start + ltdEnd.endOffset)
+    val nexttoken =
+      if (token == COMMENT_START || token == COMMENT_PART) COMMENT_UNQUOTE else UNQUOTE
+    val end = start + ltdEnd.endOffset
+    // end the name at its first `$`, where the splice ends
+    finishComposite(nexttoken, if (ltdEnd.token == IDENTIFIER) dollarOrEnd(start, end) else end)
+  }
+
+  private def dollarOrEnd(beg: Int, end: Int): Int = {
+    var idx = beg
+    while (idx < end && chars(idx) != '$') idx += 1
+    idx
   }
 
 // Errors -----------------------------------------------------------------
